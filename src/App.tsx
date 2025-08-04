@@ -201,8 +201,13 @@ function App() {
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 Azure AKS Documentation Tracker
               </h1>
-              <p className="text-muted-foreground">
-                Monitor meaningful changes to Azure Kubernetes Service documentation from the past 7 days
+              <p className="text-muted-foreground leading-relaxed">
+                Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation. <br /><br />
+                It filters out typos, minor edits, and bot changes, so you only see what really matters. <br />
+                Check back often or hit "Refresh" to explore what's new in the last 7 days.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2 italic">
+                <br />Powered by GitHub Spark and GitHub Copilot — built to keep your AKS knowledge up to date with less noise.
               </p>
             </div>
             
