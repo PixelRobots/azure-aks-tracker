@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ReleaseCard } from '@/components/ReleaseCard';
 import { EnhancedRelease } from '@/lib/types';
 import { ReleasesService } from '@/lib/releases';
-import { RefreshCw, Rocket, AlertTriangle, Trash2, Bug } from '@phosphor-icons/react';
+import { RefreshCw, Rocket, AlertTriangle, Trash2 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export function ReleasesPage() {
@@ -14,21 +14,17 @@ export function ReleasesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastFetch, setLastFetch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
 
   const releasesService = new ReleasesService();
 
   const fetchReleases = async () => {
     setIsLoading(true);
     setError(null);
-    setDebugInfo('Starting fetch...');
 
     try {
       console.log('Starting to fetch releases...');
-      const enhancedReleases = await releasesService.getEnhancedReleases(10);
+      const enhancedReleases = await releasesService.getEnhancedReleases(5); // Only fetch 5 releases
       console.log('Fetch completed, releases:', enhancedReleases);
-      
-      setDebugInfo(`Fetched ${enhancedReleases.length} releases successfully`);
       
       if (enhancedReleases.length === 0) {
         toast.info('No releases found');
@@ -43,7 +39,7 @@ export function ReleasesPage() {
       if (newReleases.length > 0 || releases.length === 0) {
         const allReleases = [...newReleases, ...releases]
           .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-          .slice(0, 50); // Keep last 50 releases
+          .slice(0, 5); // Keep only last 5 releases
         
         setReleases(allReleases);
         
@@ -60,7 +56,6 @@ export function ReleasesPage() {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Fetch failed:', error);
       setError(errorMessage);
-      setDebugInfo(`Error: ${errorMessage}`);
       toast.error(`Failed to fetch releases: ${errorMessage}`);
     } finally {
       setIsLoading(false);
@@ -69,36 +64,7 @@ export function ReleasesPage() {
 
   const clearData = () => {
     setReleases([]);
-    setDebugInfo('Data cleared');
     toast.success('All release data cleared');
-  };
-
-  // Test GitHub API directly
-  const testGitHubAPI = async () => {
-    setIsLoading(true);
-    setDebugInfo('Testing GitHub API...');
-    
-    try {
-      const response = await fetch('https://api.github.com/repos/Azure/AKS/releases?per_page=5');
-      console.log('Test response:', response.status, response.statusText);
-      
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Test data:', data);
-      setDebugInfo(`GitHub API working: Found ${data.length} releases. Latest: ${data[0]?.tag_name || 'none'}`);
-      toast.success('GitHub API test successful!');
-      
-    } catch (error) {
-      console.error('API test failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setDebugInfo(`GitHub API test failed: ${errorMessage}`);
-      toast.error(`API test failed: ${errorMessage}`);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // Statistics
@@ -123,16 +89,6 @@ export function ReleasesPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={testGitHubAPI}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <Bug size={14} />
-            Test API
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={clearData}
             className="flex items-center gap-2"
           >
@@ -154,16 +110,6 @@ export function ReleasesPage() {
         <div className="text-sm text-muted-foreground">
           Last updated: {new Date(lastFetch).toLocaleString()}
         </div>
-      )}
-
-      {/* Debug Info */}
-      {debugInfo && (
-        <Alert>
-          <AlertTriangle size={16} />
-          <AlertDescription>
-            Debug: {debugInfo}
-          </AlertDescription>
-        </Alert>
       )}
 
       {/* Error Alert */}
@@ -217,18 +163,12 @@ export function ReleasesPage() {
           <Rocket size={48} className="mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Releases Found</h3>
           <p className="text-muted-foreground mb-4">
-            Click "Refresh" to fetch the latest AKS releases from GitHub
+            Click "Refresh" to fetch the latest 5 AKS releases from GitHub
           </p>
-          <div className="flex justify-center gap-2">
-            <Button onClick={testGitHubAPI} variant="outline" disabled={isLoading}>
-              <Bug size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
-              Test API Connection
-            </Button>
-            <Button onClick={fetchReleases} disabled={isLoading}>
-              <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
-              Fetch Releases
-            </Button>
-          </div>
+          <Button onClick={fetchReleases} disabled={isLoading}>
+            <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
+            Fetch Releases
+          </Button>
         </div>
       )}
     </div>
