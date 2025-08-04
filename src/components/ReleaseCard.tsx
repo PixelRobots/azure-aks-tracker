@@ -116,7 +116,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
         {release.keyFeatures.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={16} className="text-primary" />
+              <Key size={16} className="text-primary" />
               <h4 className="font-medium text-sm">Key Features</h4>
             </div>
             <ul className="space-y-1">
