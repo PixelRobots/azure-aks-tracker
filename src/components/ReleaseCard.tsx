@@ -30,11 +30,11 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'critical': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';
+      case 'high': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
+      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800';
+      case 'low': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
+      default: return 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -134,12 +134,12 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
         {release.goodToKnow.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb size={16} className="text-blue-600" />
+              <Lightbulb size={16} className="text-blue-600 dark:text-blue-400" />
               <h4 className="font-medium text-sm">Good to Know</h4>
             </div>
             <ul className="space-y-1">
               {release.goodToKnow.map((item, index) => (
-                <li key={index} className="text-sm text-muted-foreground pl-4 border-l-2 border-blue-200">
+                <li key={index} className="text-sm text-muted-foreground pl-4 border-l-2 border-blue-200 dark:border-blue-800">
                   {item}
                 </li>
               ))}
@@ -153,7 +153,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
             <Separator />
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Bug size={16} className="text-orange-600" />
+                <Bug size={16} className="text-orange-600 dark:text-orange-400" />
                 <h4 className="font-medium text-sm">Security Issues (CVEs)</h4>
               </div>
               <div className="space-y-2">
@@ -169,7 +169,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
                           {cve.severity}
                         </Badge>
                         {cve.mitigated && (
-                          <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-200">
+                          <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
                             Mitigated
                           </Badge>
                         )}
@@ -191,7 +191,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
             <Separator />
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <MapPin size={16} className="text-green-600" />
+                <MapPin size={16} className="text-green-600 dark:text-green-400" />
                 <h4 className="font-medium text-sm">Available Regions</h4>
                 {release.rolloutStatus && (
                   <Badge variant="outline" className="text-xs">

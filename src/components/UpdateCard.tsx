@@ -11,29 +11,29 @@ interface UpdateCardProps {
 
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
-    'Reliability': 'bg-green-100 text-green-800 border-green-200',
-    'Networking/DNS': 'bg-blue-100 text-blue-800 border-blue-200',
-    'Networking': 'bg-blue-100 text-blue-800 border-blue-200',
-    'Upgrade': 'bg-purple-100 text-purple-800 border-purple-200',
-    'Fleet Manager': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    'Security': 'bg-red-100 text-red-800 border-red-200',
-    'Monitoring': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    'Troubleshooting': 'bg-orange-100 text-orange-800 border-orange-200',
-    'Concepts': 'bg-gray-100 text-gray-800 border-gray-200',
-    'Tutorial': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    'Quickstart': 'bg-teal-100 text-teal-800 border-teal-200',
-    'Best Practices': 'bg-violet-100 text-violet-800 border-violet-200',
-    'Cluster Management': 'bg-rose-100 text-rose-800 border-rose-200',
-    'Node Management': 'bg-pink-100 text-pink-800 border-pink-200',
-    'Workloads': 'bg-cyan-100 text-cyan-800 border-cyan-200',
-    'Storage': 'bg-amber-100 text-amber-800 border-amber-200',
-    'Ingress': 'bg-lime-100 text-lime-800 border-lime-200',
-    'Autoscaling': 'bg-sky-100 text-sky-800 border-sky-200',
-    'GPU/Compute': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
-    'Windows Containers': 'bg-slate-100 text-slate-800 border-slate-200'
+    'Reliability': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800',
+    'Networking/DNS': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
+    'Networking': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
+    'Upgrade': 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800',
+    'Fleet Manager': 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800',
+    'Security': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800',
+    'Monitoring': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
+    'Troubleshooting': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
+    'Concepts': 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700',
+    'Tutorial': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800',
+    'Quickstart': 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800',
+    'Best Practices': 'bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800',
+    'Cluster Management': 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800',
+    'Node Management': 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-800',
+    'Workloads': 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800',
+    'Storage': 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800',
+    'Ingress': 'bg-lime-100 dark:bg-lime-900/30 text-lime-800 dark:text-lime-200 border-lime-200 dark:border-lime-800',
+    'Autoscaling': 'bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-800',
+    'GPU/Compute': 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-800 dark:text-fuchsia-200 border-fuchsia-200 dark:border-fuchsia-800',
+    'Windows Containers': 'bg-slate-100 dark:bg-slate-800/30 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
   };
   
-  return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
+  return colors[category] || 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
 };
 
 export function UpdateCard({ update }: UpdateCardProps) {

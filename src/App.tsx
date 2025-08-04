@@ -2,10 +2,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DocumentationPage } from '@/components/DocumentationPage';
 import { ReleasesPage } from '@/components/ReleasesPage';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Warning } from '@phosphor-icons/react';
 import { Toaster } from '@/components/ui/sonner';
+import { useTheme } from '@/hooks/useTheme';
 
 function App() {
+  // Initialize theme
+  useTheme();
   return (
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" />
@@ -13,23 +17,30 @@ function App() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Azure AKS Documentation Tracker
-          </h1>
-          <p className="text-muted-foreground leading-relaxed">
-            Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases. <br /><br />
-            It filters out typos, minor edits, and bot changes, so you only see what really matters. <br />
-            Check back often or hit "Refresh" to explore what's new.
-          </p>
-          <p className="text-sm text-muted-foreground mt-2 italic">
-            <br />Powered by GitHub Spark and GitHub Copilot — built to keep your AKS knowledge up to date with less noise.
-          </p>
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Azure AKS Documentation Tracker
+              </h1>
+              <p className="text-muted-foreground leading-relaxed">
+                Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases. <br /><br />
+                It filters out typos, minor edits, and bot changes, so you only see what really matters. <br />
+                Check back often or hit "Refresh" to explore what's new.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2 italic">
+                <br />Powered by GitHub Spark and GitHub Copilot — built to keep your AKS knowledge up to date with less noise.
+              </p>
+            </div>
+            <div className="ml-4 flex-shrink-0">
+              <ThemeToggle />
+            </div>
+          </div>
         </div>
 
         {/* Warning Alert */}
-        <Alert className="mb-6 border-amber-200 bg-amber-50/50">
-          <Warning size={16} className="text-amber-600" />
-          <AlertDescription className="text-amber-800">
+        <Alert className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20">
+          <Warning size={16} className="text-amber-600 dark:text-amber-400" />
+          <AlertDescription className="text-amber-800 dark:text-amber-200">
             <span>This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>.</span> Expect occasional changes or interruptions as it evolves.
           </AlertDescription>
         </Alert>
