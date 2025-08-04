@@ -238,8 +238,8 @@ function App() {
         </div>
 
         {/* Warning Alert */}
-        <Alert className="mb-6" variant="default">
-          <Info size={16} />
+        <Alert className="mb-6" variant="destructive">
+          <AlertTriangle size={16} />
           <AlertDescription>
             <span>This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>.</span> Expect occasional changes or interruptions as it evolves.
           </AlertDescription>
