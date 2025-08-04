@@ -8,7 +8,7 @@ import { UpdateCard } from '@/components/UpdateCard';
 import { Update } from '@/lib/types';
 import { GitHubService } from '@/lib/github';
 import { isNoiseCommit, groupCommitsByRelatedness, createUpdateFromCommits } from '@/lib/processing';
-import { RefreshCw, GitBranch, AlertTriangle, Info } from '@phosphor-icons/react';
+import { RefreshCw, GitBranch, AlertTriangle, Info, Trash2 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -137,6 +137,18 @@ function App() {
             </div>
             
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setUpdates([]);
+                  toast.success('Data cleared');
+                }}
+                className="flex items-center gap-2"
+              >
+                <Trash2 size={14} />
+                Clear
+              </Button>
               <Button
                 onClick={fetchUpdates}
                 disabled={isLoading}

@@ -1,6 +1,7 @@
 import { Update } from '@/lib/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ExternalLink, GitCommit } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -95,11 +96,33 @@ export function UpdateCard({ update }: UpdateCardProps) {
             </p>
           </div>
           
-          {update.commits.length > 1 && (
+          {update.commits.length > 1 ? (
             <div className="text-xs text-muted-foreground pt-2 border-t">
               Consolidated from {update.commits.length} related commits • Last updated {formattedDate}
             </div>
+          ) : (
+            <div className="text-xs text-muted-foreground pt-2 border-t">
+              Last updated {formattedDate}
+            </div>
           )}
+          
+          <div className="pt-3">
+            <Button 
+              asChild 
+              size="sm" 
+              className="w-full"
+            >
+              <a 
+                href={update.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <ExternalLink size={14} />
+                View Documentation
+              </a>
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

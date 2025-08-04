@@ -83,22 +83,62 @@ export function extractTitle(content: string): string {
 export function groupCommitsByRelatedness(commits: Commit[]): Commit[][] {
   const groups: Commit[][] = [];
   
-  for (const commit of commits) {
-    // Find existing group that affects the same document (URL)
+  // Sort commits by date to ensure we process them in chronological order
+  const sortedCommits = commits.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+  for (const commit of sortedCommits) {
+    // Find existing group that affects the same document(s)
     const existingGroup = groups.find(group => {
       // Check if any files in this commit match any files in the existing group
-      const hasSharedDocument = commit.files.some(file => 
+      const hasSharedDocument = commit.files.some(commitFile => 
         group.some(groupCommit => 
           groupCommit.files.some(groupFile => {
-            // Same file or files that would generate the same URL
-            const commitUrl = generateDocsUrl(file);
+            // Same exact file path - this is the primary matching criteria
+            if (commitFile === groupFile) {
+              return true;
+            }
+            
+            // Files that would generate the same documentation URL
+            const commitUrl = generateDocsUrl(commitFile);
             const groupUrl = generateDocsUrl(groupFile);
             return commitUrl === groupUrl;
           })
         )
       );
       
-      return hasSharedDocument;
+      // Additional check: if commits are within the same timeframe and have similar patterns
+      if (hasSharedDocument) {
+        return true;
+      }
+      
+      // Check for commits within the same day affecting related files
+      const commitDate = new Date(commit.date).toDateString();
+      const groupDate = new Date(group[0].date).toDateString();
+      
+      if (commitDate === groupDate) {
+        // Check if commit messages suggest they're related to the same change
+        const commitMessage = commit.message.toLowerCase();
+        const groupMessages = group.map(c => c.message.toLowerCase());
+        
+        // Look for similar patterns in commit messages
+        const hasRelatedMessage = groupMessages.some(groupMessage => {
+          const commitWords = commitMessage.split(/\s+/);
+          const groupWords = groupMessage.split(/\s+/);
+          const commonWords = commitWords.filter(word => 
+            word.length > 3 && groupWords.includes(word)
+          );
+          return commonWords.length >= 2; // At least 2 common meaningful words
+        });
+        
+        if (hasRelatedMessage && commit.files.length > 0 && group[0].files.length > 0) {
+          // Check if files are in the same directory or related
+          const commitDir = commit.files[0].split('/').slice(0, -1).join('/');
+          const groupDir = group[0].files[0].split('/').slice(0, -1).join('/');
+          return commitDir === groupDir;
+        }
+      }
+      
+      return false;
     });
     
     if (existingGroup) {
@@ -155,8 +195,19 @@ export function createUpdateFromCommits(commits: Commit[]): Update {
   const category = extractCategory(primaryFile);
   const url = generateDocsUrl(primaryFile);
   
-  // Extract title from the primary file (would need file content in real implementation)
-  const title = `${category} Documentation Update`;
+  // Generate a better title based on the number of commits and category
+  let title: string;
+  if (commits.length > 1) {
+    title = `${category} Documentation Update`;
+  } else {
+    // For single commits, try to extract more specific information
+    const commitMessage = commits[0].message;
+    if (commitMessage.length > 50) {
+      title = `${category}: ${commitMessage.substring(0, 50)}...`;
+    } else {
+      title = `${category}: ${commitMessage}`;
+    }
+  }
   
   return {
     partitionKey,
