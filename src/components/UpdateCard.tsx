@@ -11,40 +11,57 @@ interface UpdateCardProps {
 
 // Helper function to format text with bullet points
 const formatTextWithBullets = (text: string) => {
-  // Check if text contains bullet points (•, -, *, or numbered lists)
-  const hasBulletPoints = /^[\s]*[•\-\*]|\d+\./.test(text) || text.includes('\n•') || text.includes('\n-') || text.includes('\n*');
+  // Check if text contains bullet points anywhere
+  const hasBulletPoints = text.includes('•') || text.includes('\n-') || text.includes('\n*') || /\d+\./.test(text);
   
   if (!hasBulletPoints) {
     return <span>{text}</span>;
   }
   
-  // Split by newlines and process each line
-  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  // Split by bullet points (•) and create bullet list
+  const parts = text.split('•').map(part => part.trim()).filter(part => part.length > 0);
   
+  if (parts.length <= 1) {
+    // No bullet points found, try splitting by newlines for other patterns
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    return (
+      <div className="space-y-1">
+        {lines.map((line, index) => {
+          // Check if line starts with bullet point
+          const isBulletPoint = /^[•\-\*]\s/.test(line) || /^\d+\.\s/.test(line);
+          
+          if (isBulletPoint) {
+            // Remove the bullet/number and return as list item
+            const cleanedLine = line.replace(/^[•\-\*]\s/, '').replace(/^\d+\.\s/, '');
+            return (
+              <div key={index} className="flex items-start gap-2">
+                <span className="text-primary mt-1 flex-shrink-0">•</span>
+                <span className="flex-1">{cleanedLine}</span>
+              </div>
+            );
+          } else {
+            // Regular text line
+            return (
+              <div key={index} className={index > 0 ? 'mt-2' : ''}>
+                {line}
+              </div>
+            );
+          }
+        })}
+      </div>
+    );
+  }
+  
+  // Handle bullet points split by •
   return (
-    <div className="space-y-1">
-      {lines.map((line, index) => {
-        // Check if line starts with bullet point
-        const isBulletPoint = /^[•\-\*]\s/.test(line) || /^\d+\.\s/.test(line);
-        
-        if (isBulletPoint) {
-          // Remove the bullet/number and return as list item
-          const cleanedLine = line.replace(/^[•\-\*]\s/, '').replace(/^\d+\.\s/, '');
-          return (
-            <div key={index} className="flex items-start gap-2">
-              <span className="text-primary mt-1 flex-shrink-0">•</span>
-              <span className="flex-1">{cleanedLine}</span>
-            </div>
-          );
-        } else {
-          // Regular text line
-          return (
-            <div key={index} className={index > 0 ? 'mt-2' : ''}>
-              {line}
-            </div>
-          );
-        }
-      })}
+    <div className="space-y-2">
+      {parts.map((part, index) => (
+        <div key={index} className="flex items-start gap-2">
+          <span className="text-primary mt-1 flex-shrink-0">•</span>
+          <span className="flex-1">{part}</span>
+        </div>
+      ))}
     </div>
   );
 };
