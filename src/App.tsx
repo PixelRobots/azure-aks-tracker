@@ -241,10 +241,10 @@ function App() {
         <Alert className="mb-6">
           <Info size={16} />
           <AlertDescription>
-            This app monitors the past 7 days of changes to the public MicrosoftDocs/azure-aks-docs repository, 
-            grouping updates by documentation page for better organization.
+            <span>This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>.</span> Expect occasional changes or interruptions as it evolves.
           </AlertDescription>
         </Alert>
+
 
         {/* Error Alert */}
         {error && (
