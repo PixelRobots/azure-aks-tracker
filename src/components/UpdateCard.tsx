@@ -2,7 +2,7 @@ import { Update } from '@/lib/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from '@phosphor-icons/react';
+import { ExternalLink, BookOpen } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UpdateCardProps {
@@ -107,7 +107,7 @@ export function UpdateCard({ update }: UpdateCardProps) {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"
               >
-                <ExternalLink size={14} />
+                <BookOpen size={14} />
                 View Documentation
               </a>
             </Button>
