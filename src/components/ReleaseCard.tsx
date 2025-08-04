@@ -8,7 +8,7 @@ import {
   ExternalLink, 
   AlertTriangle, 
   Shield, 
-  Info, 
+  Key, 
   Sparkles,
   MapPin,
   Bug
@@ -133,7 +133,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
         {release.goodToKnow.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Info size={16} className="text-blue-600" />
+              <Key size={16} className="text-blue-600" />
               <h4 className="font-medium text-sm">Good to Know</h4>
             </div>
             <ul className="space-y-1">
