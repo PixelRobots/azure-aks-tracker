@@ -38,15 +38,20 @@ function App() {
         </div>
 
         {/* Warning Alert */}
-        <Alert className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
-          <Warning size={16} className="text-amber-600 dark:text-amber-400" />
-          <AlertDescription className="text-black dark:text-amber-200 [&_strong]:text-inherit [&_em]:text-inherit">
-            <span>
-              This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>.
-            </span>{' '}
-            Expect occasional changes or interruptions as it evolves.
-          </AlertDescription>
-        </Alert>
+        <div className="mb-6 bg-amber-100 dark:bg-amber-900/20 border-t-4 border-amber-500 dark:border-amber-400 rounded-b text-amber-900 dark:text-amber-200 px-4 py-3 shadow-md" role="alert">
+          <div className="flex">
+            <div className="py-1">
+              <Warning size={24} className="text-amber-500 dark:text-amber-400 mr-4" />
+            </div>
+            <div>
+              <p className="font-bold">Alpha Version Notice</p>
+              <p className="text-sm">
+                This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>. 
+                Expect occasional changes or interruptions as it evolves.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Tabs */}
         <Tabs defaultValue="documentation" className="w-full">
