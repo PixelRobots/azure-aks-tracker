@@ -38,7 +38,7 @@ function App() {
         </div>
 
         {/* Warning Alert */}
-        <div className="mb-6 bg-amber-100 dark:bg-amber-900/20 border-t-4 border-amber-500 dark:border-amber-400 rounded-b text-amber-900 dark:text-amber-200 px-4 py-3 shadow-md" role="alert">
+        <div className="mb-6 bg-amber-100 dark:bg-amber-900/20 border-t-4 border-amber-500 dark:border-amber-400 rounded-b text-black dark:text-amber-200 px-4 py-3 shadow-md" role="alert">
           <div className="flex">
             <div className="py-1">
               <Warning size={24} className="text-amber-500 dark:text-amber-400 mr-4" />
