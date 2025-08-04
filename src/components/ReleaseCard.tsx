@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
   Calendar, 
-  ExternalLink, 
+  ArrowSquareOut, 
   XCircle, 
   Shield, 
   Key, 
@@ -74,14 +74,14 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
             </div>
           </div>
           
-          <Button variant="outline" size="sm" asChild>
+          <Button size="sm" asChild>
             <a 
               href={release.htmlUrl} 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-1"
             >
-              <ExternalLink size={14} />
+              <ArrowSquareOut size={14} />
               View Release
             </a>
           </Button>
