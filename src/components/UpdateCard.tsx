@@ -2,7 +2,7 @@ import { Update } from '@/lib/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, GitCommit } from '@phosphor-icons/react';
+import { ExternalLink } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UpdateCardProps {
@@ -66,17 +66,6 @@ export function UpdateCard({ update }: UpdateCardProps) {
           >
             {update.category}
           </Badge>
-          
-          <div className="flex items-center gap-1 font-mono text-xs">
-            <GitCommit size={14} />
-            <span>{update.rowKey.substring(0, 7)}</span>
-          </div>
-          
-          {update.commits && update.commits.length > 1 && (
-            <Badge variant="secondary" className="text-xs">
-              {update.commits.length} commits merged
-            </Badge>
-          )}
         </div>
       </CardHeader>
       
