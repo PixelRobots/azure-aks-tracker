@@ -39,8 +39,8 @@ function App() {
 
         {/* Warning Alert */}
         <Alert className="mb-6 border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20">
-          <Warning size={16} className="text-amber-600 dark:text-amber-400" />
-          <AlertDescription className="text-amber-800 dark:text-amber-200">
+          <Warning size={16} className="text-amber-700 dark:text-amber-400" />
+          <AlertDescription className="text-amber-900 dark:text-amber-200">
             <span>This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>.</span> Expect occasional changes or interruptions as it evolves.
           </AlertDescription>
         </Alert>
