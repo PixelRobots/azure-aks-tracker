@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Calendar, 
   ExternalLink, 
-  AlertTriangle, 
+  XCircle, 
   Shield, 
   Key, 
   Sparkles,
@@ -100,7 +100,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
         {release.breakingChanges.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle size={16} className="text-destructive" />
+              <XCircle size={16} className="text-destructive" />
               <h4 className="font-medium text-sm">Breaking Changes</h4>
             </div>
             <ul className="space-y-1">
