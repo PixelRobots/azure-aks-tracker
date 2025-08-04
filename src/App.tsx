@@ -65,7 +65,16 @@ function App() {
     return mergedUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
-  const mergedUpdates = mergeUpdatesByUrl(updates);
+  // Filter updates to only show those from the last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  const recentUpdates = updates.filter(update => {
+    const updateDate = new Date(update.date);
+    return updateDate >= sevenDaysAgo;
+  });
+
+  const mergedUpdates = mergeUpdatesByUrl(recentUpdates);
   const categories = ['All', ...Array.from(new Set(mergedUpdates.map(u => u.category))).sort()];
   const filteredUpdates = selectedCategory === 'All' 
     ? mergedUpdates 
@@ -138,17 +147,33 @@ function App() {
         }
       }
 
-      // Merge with existing updates, avoiding duplicates
-      const existingKeys = new Set(updates.map(u => u.rowKey));
+      // Merge with existing updates, avoiding duplicates and filtering old data
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      // Filter existing updates to only keep recent ones
+      const recentExistingUpdates = updates.filter(update => {
+        const updateDate = new Date(update.date);
+        return updateDate >= sevenDaysAgo;
+      });
+      
+      const existingKeys = new Set(recentExistingUpdates.map(u => u.rowKey));
       const uniqueNewUpdates = newUpdates.filter(u => !existingKeys.has(u.rowKey));
       
-      if (uniqueNewUpdates.length > 0) {
-        const allUpdates = [...uniqueNewUpdates, ...updates]
+      if (uniqueNewUpdates.length > 0 || recentExistingUpdates.length !== updates.length) {
+        const allUpdates = [...uniqueNewUpdates, ...recentExistingUpdates]
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 100); // Keep last 100 updates
         
         setUpdates(allUpdates);
-        toast.success(`Found ${uniqueNewUpdates.length} new updates`);
+        
+        if (uniqueNewUpdates.length > 0) {
+          toast.success(`Found ${uniqueNewUpdates.length} new updates`);
+        }
+        
+        if (recentExistingUpdates.length !== updates.length) {
+          toast.info(`Cleaned up ${updates.length - recentExistingUpdates.length} old updates`);
+        }
       } else {
         toast.info('No new updates found');
       }
@@ -187,12 +212,12 @@ function App() {
                 size="sm"
                 onClick={() => {
                   setUpdates([]);
-                  toast.success('Data cleared');
+                  toast.success('All stored data cleared');
                 }}
                 className="flex items-center gap-2"
               >
                 <Trash2 size={14} />
-                Clear
+                Clear Data
               </Button>
               <Button
                 onClick={fetchUpdates}
@@ -266,7 +291,7 @@ function App() {
                 Recent Updates {selectedCategory !== 'All' && `- ${selectedCategory}`}
               </h2>
               <Badge variant="secondary">
-                {filteredUpdates.length} update{filteredUpdates.length !== 1 ? 's' : ''}
+                {filteredUpdates.length} update{filteredUpdates.length !== 1 ? 's' : ''} (last 7 days)
               </Badge>
             </div>
             
@@ -279,9 +304,12 @@ function App() {
         ) : (
           <div className="text-center py-12">
             <GitBranch size={48} className="mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Updates Found</h3>
+            <h3 className="text-lg font-semibold mb-2">No Recent Updates Found</h3>
             <p className="text-muted-foreground mb-4">
-              Click "Refresh" to fetch the latest documentation changes from the past 7 days
+              {updates.length > 0 
+                ? "No updates found in the last 7 days. Click \"Refresh\" to check for newer changes."
+                : "Click \"Refresh\" to fetch the latest documentation changes from the past 7 days"
+              }
             </p>
             <Button onClick={fetchUpdates} disabled={isLoading}>
               <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
