@@ -8,7 +8,7 @@ import { UpdateCard } from '@/components/UpdateCard';
 import { Update } from '@/lib/types';
 import { GitHubService } from '@/lib/github';
 import { isNoiseCommit, groupCommitsByRelatedness, createUpdateFromCommits } from '@/lib/processing';
-import { RefreshCw, GitBranch, AlertTriangle, Trash2 } from '@phosphor-icons/react';
+import { Download, GitBranch, AlertTriangle, Trash2 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export function DocumentationPage() {
@@ -207,7 +207,7 @@ export function DocumentationPage() {
             disabled={isLoading}
             className="flex items-center gap-2"
           >
-            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            <Download size={16} className={isLoading ? 'animate-pulse' : ''} />
             {isLoading ? 'Fetching...' : 'Refresh'}
           </Button>
         </div>
@@ -285,7 +285,7 @@ export function DocumentationPage() {
             }
           </p>
           <Button onClick={fetchUpdates} disabled={isLoading}>
-            <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
+            <Download size={16} className={isLoading ? 'animate-pulse mr-2' : 'mr-2'} />
             Fetch Updates
           </Button>
         </div>
