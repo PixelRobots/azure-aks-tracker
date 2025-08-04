@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ReleaseCard } from '@/components/ReleaseCard';
 import { EnhancedRelease } from '@/lib/types';
 import { ReleasesService } from '@/lib/releases';
-import { RefreshCw, Rocket, AlertTriangle, Trash2 } from '@phosphor-icons/react';
+import { Download, Rocket, AlertTriangle, Trash2 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export function ReleasesPage() {
@@ -87,7 +87,7 @@ export function ReleasesPage() {
             disabled={isLoading}
             className="flex items-center gap-2"
           >
-            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+            <Download size={16} className={isLoading ? 'animate-pulse' : ''} />
             {isLoading ? 'Fetching...' : 'Refresh'}
           </Button>
         </div>
@@ -131,7 +131,7 @@ export function ReleasesPage() {
             Click "Refresh" to fetch the latest 5 AKS releases from GitHub
           </p>
           <Button onClick={fetchReleases} disabled={isLoading}>
-            <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
+            <Download size={16} className={isLoading ? 'animate-pulse mr-2' : 'mr-2'} />
             Fetch Releases
           </Button>
         </div>
