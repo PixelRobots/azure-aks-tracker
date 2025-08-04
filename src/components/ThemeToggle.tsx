@@ -36,7 +36,7 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       onClick={toggleTheme}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 hover:text-gray-500 dark:hover:text-gray-400"
       title={`Switch to ${getThemeLabel()} theme`}
     >
       {getThemeIcon()}
