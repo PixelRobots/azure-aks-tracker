@@ -1,36 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { UpdateCard } from '@/components/UpdateCard';
-import { Settings } from '@/components/Settings';
 import { Update } from '@/lib/types';
 import { GitHubService } from '@/lib/github';
 import { isNoiseCommit, groupCommitsByRelatedness, createUpdateFromCommits } from '@/lib/processing';
-import { RefreshCw, Settings as SettingsIcon, GitBranch, AlertTriangle } from '@phosphor-icons/react';
+import { RefreshCw, GitBranch, AlertTriangle, Info } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   const [updates, setUpdates] = useKV<Update[]>('aks-updates', []);
-  const [token] = useKV<string>('github-token', '');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [lastFetch, setLastFetch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const githubService = new GitHubService(token);
-
-  useEffect(() => {
-    if (!token) {
-      setShowSettings(true);
-    } else {
-      setShowSettings(false);
-    }
-  }, [token]);
+  const githubService = new GitHubService(); // No token needed for public repo
 
   const categories = ['All', ...Array.from(new Set(updates.map(u => u.category))).sort()];
   const filteredUpdates = selectedCategory === 'All' 
@@ -38,18 +27,10 @@ function App() {
     : updates.filter(u => u.category === selectedCategory);
 
   const fetchUpdates = async () => {
-    if (!token) {
-      toast.error('Please configure your GitHub token first');
-      setShowSettings(true);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      githubService.setToken(token);
-      
       // Fetch commits from the last 30 days
       const since = new Date();
       since.setDate(since.getDate() - 30);
@@ -157,17 +138,8 @@ function App() {
             
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettings(!showSettings)}
-              >
-                <SettingsIcon size={16} />
-                Settings
-              </Button>
-              
-              <Button
                 onClick={fetchUpdates}
-                disabled={isLoading || !token}
+                disabled={isLoading}
                 className="flex items-center gap-2"
               >
                 <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
@@ -183,28 +155,20 @@ function App() {
           )}
         </div>
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <div className="mb-8">
-            <Settings onTokenSaved={() => setShowSettings(false)} />
-          </div>
-        )}
+        {/* Info Alert */}
+        <Alert className="mb-6">
+          <Info size={16} />
+          <AlertDescription>
+            This app monitors the public MicrosoftDocs/azure-aks-docs repository for meaningful documentation changes.
+            No authentication required.
+          </AlertDescription>
+        </Alert>
 
         {/* Error Alert */}
         {error && (
           <Alert className="mb-6" variant="destructive">
             <AlertTriangle size={16} />
             <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* No Token Warning */}
-        {!token && !showSettings && (
-          <Alert className="mb-6">
-            <SettingsIcon size={16} />
-            <AlertDescription>
-              Please configure your GitHub token in Settings to fetch documentation updates.
-            </AlertDescription>
           </Alert>
         )}
 
@@ -260,17 +224,12 @@ function App() {
             <GitBranch size={48} className="mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Updates Found</h3>
             <p className="text-muted-foreground mb-4">
-              {token 
-                ? 'Click "Refresh" to fetch the latest documentation changes'
-                : 'Configure your GitHub token to start tracking updates'
-              }
+              Click "Refresh" to fetch the latest documentation changes from the Azure AKS repository
             </p>
-            {token && (
-              <Button onClick={fetchUpdates} disabled={isLoading}>
-                <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
-                Fetch Updates
-              </Button>
-            )}
+            <Button onClick={fetchUpdates} disabled={isLoading}>
+              <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />
+              Fetch Updates
+            </Button>
           </div>
         )}
       </div>
