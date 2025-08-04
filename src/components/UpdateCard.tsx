@@ -72,10 +72,10 @@ export function UpdateCard({ update }: UpdateCardProps) {
             <span>{update.rowKey.substring(0, 7)}</span>
           </div>
           
-          {update.commits.length > 1 && (
-            <div className="text-xs text-muted-foreground">
-              {update.commits.length} commits
-            </div>
+          {update.commits && update.commits.length > 1 && (
+            <Badge variant="secondary" className="text-xs">
+              {update.commits.length} commits merged
+            </Badge>
           )}
         </div>
       </CardHeader>
@@ -96,7 +96,7 @@ export function UpdateCard({ update }: UpdateCardProps) {
             </p>
           </div>
           
-          {update.commits.length > 1 ? (
+          {update.commits && update.commits.length > 1 ? (
             <div className="text-xs text-muted-foreground pt-2 border-t">
               Consolidated from {update.commits.length} related commits • Last updated {formattedDate}
             </div>
