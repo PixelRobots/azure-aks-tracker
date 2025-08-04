@@ -77,7 +77,7 @@ export function ReleasesPage() {
             AKS Releases
           </h2>
           <p className="text-muted-foreground">
-            Latest AKS releases with AI-generated summaries, breaking changes, and Good to Know information.
+            Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.
           </p>
         </div>
         

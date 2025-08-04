@@ -20,7 +20,7 @@ function App() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                Azure AKS Documentation Tracker
+                Azure AKS Documentation and Release Tracker
               </h1>
               <p className="text-muted-foreground leading-relaxed">
                 Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases. <br /><br />
