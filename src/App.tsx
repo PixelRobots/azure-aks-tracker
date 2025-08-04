@@ -8,7 +8,7 @@ import { UpdateCard } from '@/components/UpdateCard';
 import { Update } from '@/lib/types';
 import { GitHubService } from '@/lib/github';
 import { isNoiseCommit, groupCommitsByRelatedness, createUpdateFromCommits } from '@/lib/processing';
-import { RefreshCw, GitBranch, AlertTriangle, Info, Trash2 } from '@phosphor-icons/react';
+import { RefreshCw, GitBranch, AlertTriangle, Warning, Trash2 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -238,9 +238,9 @@ function App() {
         </div>
 
         {/* Warning Alert */}
-        <Alert className="mb-6">
-          <AlertTriangle size={16} />
-          <AlertDescription>
+        <Alert className="mb-6 border-amber-200 bg-amber-50/50">
+          <Warning size={16} className="text-amber-600" />
+          <AlertDescription className="text-amber-800">
             <span>This app is built with <strong>GitHub Spark</strong> and is currently in <em>alpha</em>.</span> Expect occasional changes or interruptions as it evolves.
           </AlertDescription>
         </Alert>
