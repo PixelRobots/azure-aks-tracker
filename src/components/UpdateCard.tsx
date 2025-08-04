@@ -9,6 +9,46 @@ interface UpdateCardProps {
   update: Update;
 }
 
+// Helper function to format text with bullet points
+const formatTextWithBullets = (text: string) => {
+  // Check if text contains bullet points (•, -, *, or numbered lists)
+  const hasBulletPoints = /^[\s]*[•\-\*]|\d+\./.test(text) || text.includes('\n•') || text.includes('\n-') || text.includes('\n*');
+  
+  if (!hasBulletPoints) {
+    return <span>{text}</span>;
+  }
+  
+  // Split by newlines and process each line
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  return (
+    <div className="space-y-1">
+      {lines.map((line, index) => {
+        // Check if line starts with bullet point
+        const isBulletPoint = /^[•\-\*]\s/.test(line) || /^\d+\.\s/.test(line);
+        
+        if (isBulletPoint) {
+          // Remove the bullet/number and return as list item
+          const cleanedLine = line.replace(/^[•\-\*]\s/, '').replace(/^\d+\.\s/, '');
+          return (
+            <div key={index} className="flex items-start gap-2">
+              <span className="text-primary mt-1 flex-shrink-0">•</span>
+              <span className="flex-1">{cleanedLine}</span>
+            </div>
+          );
+        } else {
+          // Regular text line
+          return (
+            <div key={index} className={index > 0 ? 'mt-2' : ''}>
+              {line}
+            </div>
+          );
+        }
+      })}
+    </div>
+  );
+};
+
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
     'Reliability': 'bg-green-100/80 dark:bg-green-900/30 text-green-900 dark:text-green-200 border-green-300 dark:border-green-800',
@@ -73,16 +113,16 @@ export function UpdateCard({ update }: UpdateCardProps) {
         <div className="space-y-3">
           <div>
             <h4 className="font-medium text-sm text-foreground mb-1">Summary</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {update.summary}
-            </p>
+            <div className="text-sm text-muted-foreground leading-relaxed">
+              {formatTextWithBullets(update.summary)}
+            </div>
           </div>
           
           <div>
             <h4 className="font-medium text-sm text-foreground mb-1">Impact</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {update.impact}
-            </p>
+            <div className="text-sm text-muted-foreground leading-relaxed">
+              {formatTextWithBullets(update.impact)}
+            </div>
           </div>
           
           {update.commits && update.commits.length > 1 ? (
