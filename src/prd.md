@@ -1,50 +1,54 @@
-# Azure AKS Documentation Tracker - Product Requirements Document
+# Azure AKS Documentation & Release Tracker - Product Requirements Document
 
 ## Core Purpose & Success
 
-**Mission Statement**: Track and analyze meaningful changes to the Azure Kubernetes Service documentation from the public MicrosoftDocs/azure-aks-docs GitHub repository, filtering out noise to present only substantive updates that impact AKS users.
+**Mission Statement**: Track and analyze meaningful changes to the Azure Kubernetes Service documentation and releases from GitHub repositories, filtering out noise to present only substantive updates that impact AKS users.
 
 **Success Indicators**:
-- Users can quickly identify recent meaningful documentation changes
+- Users can quickly identify recent meaningful documentation changes and releases
 - Noise commits (typos, formatting, bot merges) are automatically filtered out
-- Changes are categorized and enhanced with AI-generated summaries and impact assessments
-- Updates are presented in an easily scannable format with direct links to documentation
+- Changes and releases are categorized and enhanced with AI-generated summaries and impact assessments
+- Updates are presented in an easily scannable format with direct links to documentation and release pages
+- Release information includes security (CVE) data and regional rollout status
 
 **Experience Qualities**: Professional, Informative, Efficient
 
 ## Project Classification & Approach
 
 **Complexity Level**: Light Application (multiple features with basic state)
-- Data fetching and processing from GitHub API
-- Persistent storage of processed updates
+- Data fetching and processing from GitHub APIs
+- Persistent storage of processed updates and releases
 - AI-enhanced content analysis
 - Categorized filtering interface
+- Multi-tab navigation for different content types
 
-**Primary User Activity**: Consuming - Users primarily read and browse documentation changes
+**Primary User Activity**: Consuming - Users primarily read and browse documentation changes and release information
 
 ## Thought Process for Feature Selection
 
-**Core Problem Analysis**: Azure AKS documentation changes frequently, but most commits are minor edits, typos, or automated changes. Users need to identify only the substantive changes that affect their AKS usage.
+**Core Problem Analysis**: Azure AKS documentation and releases change frequently, but most commits are minor edits, typos, or automated changes. Users need to identify substantive changes that affect their AKS usage and understand new releases with their security implications.
 
-**User Context**: DevOps engineers, Azure administrators, and AKS users who need to stay current with documentation changes that might impact their clusters or workflows.
+**User Context**: DevOps engineers, Azure administrators, and AKS users who need to stay current with documentation changes and releases that might impact their clusters or workflows.
 
 **Critical Path**: 
 1. User opens the app
-2. Fetches latest meaningful changes (no authentication required)
-3. Browses categorized updates with AI-enhanced summaries
-4. Clicks through to relevant documentation pages
+2. Chooses between Documentation Updates or AKS Releases tabs
+3. Fetches latest meaningful changes/releases (no authentication required)
+4. Browses categorized updates with AI-enhanced summaries
+5. Clicks through to relevant documentation pages or release notes
 
 **Key Moments**:
-1. First successful data fetch showing meaningful updates
-2. Finding a relevant change through category filtering
-3. Understanding the impact of a change through AI summary
+1. First successful data fetch showing meaningful updates/releases
+2. Finding a relevant change/release through category filtering
+3. Understanding the impact of a change/release through AI summary
+4. Identifying security issues and regional availability
 
 ## Essential Features
 
-### GitHub Integration (Public API)
-- **Functionality**: Fetch commits from MicrosoftDocs/azure-aks-docs repository using public GitHub API
-- **Purpose**: Access commit data without requiring user authentication
-- **Success Criteria**: Successfully retrieves commit data for the last 7 days
+### GitHub Integration (Public APIs)
+- **Functionality**: Fetch commits from MicrosoftDocs/azure-aks-docs and releases from Azure/AKS repositories using public GitHub APIs
+- **Purpose**: Access commit and release data without requiring user authentication
+- **Success Criteria**: Successfully retrieves data for documentation changes and releases
 
 ### Intelligent Filtering
 - **Functionality**: Filter out noise commits using heuristics (typo fixes, grammar corrections, bot merges)
@@ -56,9 +60,19 @@
 - **Purpose**: Present coherent updates rather than fragmented individual commits, consolidating all changes to the same document
 - **Success Criteria**: Related changes to the same documentation page are consolidated into single update entries
 
+### AKS Release Tracking
+- **Functionality**: Fetch and display AKS releases from Azure/AKS GitHub repository with AI-enhanced analysis
+- **Purpose**: Track new AKS releases with breaking changes, key features, and good-to-know information
+- **Success Criteria**: Latest releases are displayed with comprehensive analysis and categorization
+
+### Security & Regional Information
+- **Functionality**: Enrich release data with CVE information and regional rollout status from releases.aks.azure.com
+- **Purpose**: Provide security context and availability information for each release
+- **Success Criteria**: CVE data and regional information is accurately displayed when available
+
 ### AI-Enhanced Summaries
-- **Functionality**: Use AI to generate concise summaries and impact assessments for each update
-- **Purpose**: Help users quickly understand the significance of changes
+- **Functionality**: Use AI to generate concise summaries and impact assessments for each update and release
+- **Purpose**: Help users quickly understand the significance of changes and releases
 - **Success Criteria**: Summaries accurately convey the nature and impact of changes
 
 ### Category-Based Organization
@@ -66,8 +80,13 @@
 - **Purpose**: Enable users to filter updates by their areas of interest
 - **Success Criteria**: 90%+ of updates are correctly categorized
 
+### Tab-Based Navigation
+- **Functionality**: Separate interface for documentation updates and AKS releases
+- **Purpose**: Allow users to focus on their specific information needs
+- **Success Criteria**: Clean separation between documentation and release information
+
 ### Persistent Data Storage
-- **Functionality**: Store processed updates using Spark's built-in KV storage
+- **Functionality**: Store processed updates and releases using Spark's built-in KV storage
 - **Purpose**: Avoid reprocessing data and provide fast load times
 - **Success Criteria**: Data persists between sessions, duplicates are avoided
 

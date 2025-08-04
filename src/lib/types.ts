@@ -35,6 +35,55 @@ export interface GitHubCommit {
   }>;
 }
 
+// Types for AKS releases
+
+export interface GitHubRelease {
+  id: number;
+  tag_name: string;
+  name: string;
+  body: string;
+  published_at: string;
+  html_url: string;
+  prerelease: boolean;
+  draft: boolean;
+}
+
+export interface ReleaseRegionInfo {
+  regions: string[];
+  cves: CVEInfo[];
+  rolloutStatus?: string;
+}
+
+export interface CVEInfo {
+  id: string;
+  severity: string;
+  description: string;
+  mitigated: boolean;
+}
+
+export interface EnhancedRelease {
+  id: string;
+  version: string;
+  title: string;
+  publishedAt: string;
+  htmlUrl: string;
+  isPrerelease: boolean;
+  
+  // AI-generated content
+  summary: string;
+  breakingChanges: string[];
+  goodToKnow: string[];
+  keyFeatures: string[];
+  
+  // Enriched data from releases.aks.azure.com
+  regions: string[];
+  cves: CVEInfo[];
+  rolloutStatus?: string;
+  
+  // Raw data
+  rawBody: string;
+}
+
 export const CATEGORY_MAPPINGS: Record<string, string> = {
   'reliability-': 'Reliability',
   'localdns': 'Networking/DNS',
