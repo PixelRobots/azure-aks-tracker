@@ -30,11 +30,11 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
-      case 'critical': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';
-      case 'high': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
-      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800';
-      case 'low': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
-      default: return 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+      case 'critical': return 'bg-red-100/80 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-red-300 dark:border-red-800';
+      case 'high': return 'bg-orange-100/80 dark:bg-orange-900/30 text-orange-900 dark:text-orange-200 border-orange-300 dark:border-orange-800';
+      case 'medium': return 'bg-yellow-100/80 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200 border-yellow-300 dark:border-yellow-800';
+      case 'low': return 'bg-blue-100/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-800';
+      default: return 'bg-gray-100/80 dark:bg-gray-800/30 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-700';
     }
   };
 
@@ -169,7 +169,7 @@ export function ReleaseCard({ release }: ReleaseCardProps) {
                           {cve.severity}
                         </Badge>
                         {cve.mitigated && (
-                          <Badge variant="outline" className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800">
+                          <Badge variant="outline" className="text-xs bg-green-100/80 dark:bg-green-900/30 text-green-900 dark:text-green-200 border-green-300 dark:border-green-800">
                             Mitigated
                           </Badge>
                         )}

@@ -11,29 +11,29 @@ interface UpdateCardProps {
 
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
-    'Reliability': 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800',
-    'Networking/DNS': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
-    'Networking': 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800',
-    'Upgrade': 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800',
-    'Fleet Manager': 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-800',
-    'Security': 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800',
-    'Monitoring': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800',
-    'Troubleshooting': 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800',
-    'Concepts': 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700',
-    'Tutorial': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800',
-    'Quickstart': 'bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800',
-    'Best Practices': 'bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800',
-    'Cluster Management': 'bg-rose-100 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-200 dark:border-rose-800',
-    'Node Management': 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-800',
-    'Workloads': 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-800',
-    'Storage': 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800',
-    'Ingress': 'bg-lime-100 dark:bg-lime-900/30 text-lime-800 dark:text-lime-200 border-lime-200 dark:border-lime-800',
-    'Autoscaling': 'bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-800',
-    'GPU/Compute': 'bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-800 dark:text-fuchsia-200 border-fuchsia-200 dark:border-fuchsia-800',
-    'Windows Containers': 'bg-slate-100 dark:bg-slate-800/30 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+    'Reliability': 'bg-green-100/80 dark:bg-green-900/30 text-green-900 dark:text-green-200 border-green-300 dark:border-green-800',
+    'Networking/DNS': 'bg-blue-100/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-800',
+    'Networking': 'bg-blue-100/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200 border-blue-300 dark:border-blue-800',
+    'Upgrade': 'bg-purple-100/80 dark:bg-purple-900/30 text-purple-900 dark:text-purple-200 border-purple-300 dark:border-purple-800',
+    'Fleet Manager': 'bg-indigo-100/80 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-200 border-indigo-300 dark:border-indigo-800',
+    'Security': 'bg-red-100/80 dark:bg-red-900/30 text-red-900 dark:text-red-200 border-red-300 dark:border-red-800',
+    'Monitoring': 'bg-yellow-100/80 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-200 border-yellow-300 dark:border-yellow-800',
+    'Troubleshooting': 'bg-orange-100/80 dark:bg-orange-900/30 text-orange-900 dark:text-orange-200 border-orange-300 dark:border-orange-800',
+    'Concepts': 'bg-gray-100/80 dark:bg-gray-800/30 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-700',
+    'Tutorial': 'bg-emerald-100/80 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-800',
+    'Quickstart': 'bg-teal-100/80 dark:bg-teal-900/30 text-teal-900 dark:text-teal-200 border-teal-300 dark:border-teal-800',
+    'Best Practices': 'bg-violet-100/80 dark:bg-violet-900/30 text-violet-900 dark:text-violet-200 border-violet-300 dark:border-violet-800',
+    'Cluster Management': 'bg-rose-100/80 dark:bg-rose-900/30 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-800',
+    'Node Management': 'bg-pink-100/80 dark:bg-pink-900/30 text-pink-900 dark:text-pink-200 border-pink-300 dark:border-pink-800',
+    'Workloads': 'bg-cyan-100/80 dark:bg-cyan-900/30 text-cyan-900 dark:text-cyan-200 border-cyan-300 dark:border-cyan-800',
+    'Storage': 'bg-amber-100/80 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800',
+    'Ingress': 'bg-lime-100/80 dark:bg-lime-900/30 text-lime-900 dark:text-lime-200 border-lime-300 dark:border-lime-800',
+    'Autoscaling': 'bg-sky-100/80 dark:bg-sky-900/30 text-sky-900 dark:text-sky-200 border-sky-300 dark:border-sky-800',
+    'GPU/Compute': 'bg-fuchsia-100/80 dark:bg-fuchsia-900/30 text-fuchsia-900 dark:text-fuchsia-200 border-fuchsia-300 dark:border-fuchsia-800',
+    'Windows Containers': 'bg-slate-100/80 dark:bg-slate-800/30 text-slate-900 dark:text-slate-200 border-slate-300 dark:border-slate-700'
   };
   
-  return colors[category] || 'bg-gray-100 dark:bg-gray-800/30 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+  return colors[category] || 'bg-gray-100/80 dark:bg-gray-800/30 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-700';
 };
 
 export function UpdateCard({ update }: UpdateCardProps) {
