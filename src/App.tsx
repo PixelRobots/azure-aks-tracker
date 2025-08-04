@@ -323,6 +323,32 @@ function App() {
           </div>
         )}
       </div>
+      
+      {/* Footer */}
+      <footer className="mt-16 border-t bg-muted/30">
+        <div className="container mx-auto px-4 py-6 max-w-6xl">
+          <div className="text-center text-sm text-muted-foreground">
+            Built by{' '}
+            <a 
+              href="https://pixelrobots.co.uk" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              pixelrobots.co.uk
+            </a>
+            {' '}with the help of{' '}
+            <a 
+              href="https://github.com/features/spark" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              GitHub Spark
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
