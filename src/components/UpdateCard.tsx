@@ -62,7 +62,7 @@ export function UpdateCard({ update }: UpdateCardProps) {
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <Badge 
             variant="outline" 
-            className={`font-medium ${getCategoryColor(update.category)}`}
+            className={`font-medium ${getCategoryColor(update.category)} text-black dark:text-inherit`}
           >
             {update.category}
           </Badge>
