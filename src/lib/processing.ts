@@ -84,25 +84,21 @@ export function groupCommitsByRelatedness(commits: Commit[]): Commit[][] {
   const groups: Commit[][] = [];
   
   for (const commit of commits) {
-    const commitDate = commit.date.split('T')[0]; // Get YYYY-MM-DD
-    
-    // Find existing group for same day with overlapping files or similar message
+    // Find existing group that affects the same document (URL)
     const existingGroup = groups.find(group => {
-      const groupDate = group[0].date.split('T')[0];
-      if (groupDate !== commitDate) return false;
-      
-      // Check for overlapping files
-      const hasOverlappingFiles = commit.files.some(file => 
-        group.some(groupCommit => groupCommit.files.includes(file))
+      // Check if any files in this commit match any files in the existing group
+      const hasSharedDocument = commit.files.some(file => 
+        group.some(groupCommit => 
+          groupCommit.files.some(groupFile => {
+            // Same file or files that would generate the same URL
+            const commitUrl = generateDocsUrl(file);
+            const groupUrl = generateDocsUrl(groupFile);
+            return commitUrl === groupUrl;
+          })
+        )
       );
       
-      // Check for similar message patterns (first 50 chars)
-      const commitMessageStart = commit.message.substring(0, 50).toLowerCase();
-      const hasSimilarMessage = group.some(groupCommit => 
-        groupCommit.message.substring(0, 50).toLowerCase() === commitMessageStart
-      );
-      
-      return hasOverlappingFiles || hasSimilarMessage;
+      return hasSharedDocument;
     });
     
     if (existingGroup) {

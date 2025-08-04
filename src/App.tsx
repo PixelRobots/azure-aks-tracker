@@ -31,9 +31,9 @@ function App() {
     setError(null);
 
     try {
-      // Fetch commits from the last 30 days
+      // Fetch commits from the last 7 days
       const since = new Date();
-      since.setDate(since.getDate() - 30);
+      since.setDate(since.getDate() - 7);
       
       const commits = await githubService.getRecentCommits(since.toISOString());
       
@@ -132,7 +132,7 @@ function App() {
                 Azure AKS Documentation Tracker
               </h1>
               <p className="text-muted-foreground">
-                Monitor meaningful changes to the Azure Kubernetes Service documentation
+                Monitor meaningful changes to Azure Kubernetes Service documentation from the past 7 days
               </p>
             </div>
             
@@ -159,8 +159,8 @@ function App() {
         <Alert className="mb-6">
           <Info size={16} />
           <AlertDescription>
-            This app monitors the public MicrosoftDocs/azure-aks-docs repository for meaningful documentation changes.
-            No authentication required.
+            This app monitors the past 7 days of changes to the public MicrosoftDocs/azure-aks-docs repository, 
+            grouping updates by documentation page for better organization.
           </AlertDescription>
         </Alert>
 
@@ -224,7 +224,7 @@ function App() {
             <GitBranch size={48} className="mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Updates Found</h3>
             <p className="text-muted-foreground mb-4">
-              Click "Refresh" to fetch the latest documentation changes from the Azure AKS repository
+              Click "Refresh" to fetch the latest documentation changes from the past 7 days
             </p>
             <Button onClick={fetchUpdates} disabled={isLoading}>
               <RefreshCw size={16} className={isLoading ? 'animate-spin mr-2' : 'mr-2'} />

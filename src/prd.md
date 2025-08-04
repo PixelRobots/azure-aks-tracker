@@ -44,7 +44,7 @@
 ### GitHub Integration (Public API)
 - **Functionality**: Fetch commits from MicrosoftDocs/azure-aks-docs repository using public GitHub API
 - **Purpose**: Access commit data without requiring user authentication
-- **Success Criteria**: Successfully retrieves commit data for the last 30 days
+- **Success Criteria**: Successfully retrieves commit data for the last 7 days
 
 ### Intelligent Filtering
 - **Functionality**: Filter out noise commits using heuristics (typo fixes, grammar corrections, bot merges)
@@ -52,9 +52,9 @@
 - **Success Criteria**: <5% of displayed updates are noise commits
 
 ### Commit Grouping & Analysis
-- **Functionality**: Group related commits by file changes and timing, extract metadata (title, category, URL)
-- **Purpose**: Present coherent updates rather than fragmented individual commits
-- **Success Criteria**: Related changes are consolidated into single update entries
+- **Functionality**: Group related commits by shared documentation URLs (same page), extract metadata (title, category, URL)
+- **Purpose**: Present coherent updates rather than fragmented individual commits, consolidating all changes to the same document
+- **Success Criteria**: Related changes to the same documentation page are consolidated into single update entries
 
 ### AI-Enhanced Summaries
 - **Functionality**: Use AI to generate concise summaries and impact assessments for each update
