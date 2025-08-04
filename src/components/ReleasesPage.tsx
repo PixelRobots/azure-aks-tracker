@@ -67,10 +67,6 @@ export function ReleasesPage() {
     toast.success('All release data cleared');
   };
 
-  // Statistics
-  const totalCVEs = releases.reduce((acc, release) => acc + release.cves.length, 0);
-  const totalRegions = new Set(releases.flatMap(r => r.regions)).size;
-  const prereleases = releases.filter(r => r.isPrerelease).length;
 
   return (
     <div className="space-y-6">
@@ -81,20 +77,11 @@ export function ReleasesPage() {
             AKS Releases
           </h2>
           <p className="text-muted-foreground">
-            Latest AKS releases with AI-generated summaries, breaking changes, and regional rollout information.
+            Latest AKS releases with AI-generated summaries, breaking changes, and Good to Know information.
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={clearData}
-            className="flex items-center gap-2"
-          >
-            <Trash2 size={14} />
-            Clear Data
-          </Button>
           <Button
             onClick={fetchReleases}
             disabled={isLoading}
@@ -118,28 +105,6 @@ export function ReleasesPage() {
           <AlertTriangle size={16} />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      )}
-
-      {/* Statistics */}
-      {releases.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 rounded-lg border bg-card">
-            <div className="text-2xl font-bold text-primary">{releases.length}</div>
-            <div className="text-sm text-muted-foreground">Total Releases</div>
-          </div>
-          <div className="text-center p-4 rounded-lg border bg-card">
-            <div className="text-2xl font-bold text-orange-600">{totalCVEs}</div>
-            <div className="text-sm text-muted-foreground">CVEs Tracked</div>
-          </div>
-          <div className="text-center p-4 rounded-lg border bg-card">
-            <div className="text-2xl font-bold text-green-600">{totalRegions}</div>
-            <div className="text-sm text-muted-foreground">Regions</div>
-          </div>
-          <div className="text-center p-4 rounded-lg border bg-card">
-            <div className="text-2xl font-bold text-blue-600">{prereleases}</div>
-            <div className="text-sm text-muted-foreground">Pre-releases</div>
-          </div>
-        </div>
       )}
 
       {/* Releases List */}

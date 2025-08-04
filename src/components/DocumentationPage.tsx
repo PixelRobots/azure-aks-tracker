@@ -203,18 +203,6 @@ export function DocumentationPage() {
         
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setUpdates([]);
-              toast.success('All stored data cleared');
-            }}
-            className="flex items-center gap-2"
-          >
-            <Trash2 size={14} />
-            Clear Data
-          </Button>
-          <Button
             onClick={fetchUpdates}
             disabled={isLoading}
             className="flex items-center gap-2"
