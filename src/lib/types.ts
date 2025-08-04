@@ -16,7 +16,7 @@ export interface Update {
   url: string;
   summary: string;
   impact: string;
-  commits: string[]; // Array of commit SHAs that contributed to this update
+  commits?: string[]; // Array of commit SHAs that contributed to this update
 }
 
 export interface GitHubCommit {

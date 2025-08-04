@@ -106,7 +106,7 @@ export function groupCommitsByRelatedness(commits: Commit[]): Commit[][] {
         )
       );
       
-      // If we found shared documents, group them regardless of date
+      // Group them if they share documents, regardless of date
       // since we're only looking at the last 7 days anyway
       return hasSharedDocument;
     });

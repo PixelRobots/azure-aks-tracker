@@ -21,10 +21,55 @@ function App() {
 
   const githubService = new GitHubService(); // No token needed for public repo
 
-  const categories = ['All', ...Array.from(new Set(updates.map(u => u.category))).sort()];
+  // Helper function to merge updates with the same URL
+  const mergeUpdatesByUrl = (updates: Update[]): Update[] => {
+    const urlGroups = new Map<string, Update[]>();
+    
+    // Group updates by URL
+    for (const update of updates) {
+      const existing = urlGroups.get(update.url) || [];
+      existing.push(update);
+      urlGroups.set(update.url, existing);
+    }
+    
+    // Merge each group into a single update
+    const mergedUpdates: Update[] = [];
+    for (const [url, groupUpdates] of urlGroups) {
+      if (groupUpdates.length === 1) {
+        mergedUpdates.push(groupUpdates[0]);
+      } else {
+        // Sort by date to get the earliest and latest
+        const sortedByDate = groupUpdates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const earliest = sortedByDate[0];
+        const latest = sortedByDate[sortedByDate.length - 1];
+        
+        // Combine unique summaries and impacts
+        const uniqueSummaries = Array.from(new Set(groupUpdates.map(u => u.summary.trim())));
+        const uniqueImpacts = Array.from(new Set(groupUpdates.map(u => u.impact.trim())));
+        
+        // Create merged update
+        const mergedUpdate: Update = {
+          ...earliest, // Use earliest as base
+          rowKey: `merged-${latest.rowKey}`, // Create unique key
+          title: `${earliest.title.replace(/ \(\d+ updates?\)$/, '')} (${groupUpdates.length} updates)`,
+          summary: uniqueSummaries.length > 1 ? uniqueSummaries.join(' • ') : uniqueSummaries[0],
+          impact: uniqueImpacts.length > 1 ? uniqueImpacts.join(' • ') : uniqueImpacts[0],
+          commits: Array.from(new Set(groupUpdates.flatMap(u => u.commits || []))),
+          date: latest.date // Use latest date for sorting
+        };
+        
+        mergedUpdates.push(mergedUpdate);
+      }
+    }
+    
+    return mergedUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
+
+  const mergedUpdates = mergeUpdatesByUrl(updates);
+  const categories = ['All', ...Array.from(new Set(mergedUpdates.map(u => u.category))).sort()];
   const filteredUpdates = selectedCategory === 'All' 
-    ? updates 
-    : updates.filter(u => u.category === selectedCategory);
+    ? mergedUpdates 
+    : mergedUpdates.filter(u => u.category === selectedCategory);
 
   const fetchUpdates = async () => {
     setIsLoading(true);
@@ -202,7 +247,7 @@ function App() {
                   {category}
                   {category !== 'All' && (
                     <span className="ml-1 text-xs">
-                      ({updates.filter(u => u.category === category).length})
+                      ({mergedUpdates.filter(u => u.category === category).length})
                     </span>
                   )}
                 </Badge>
