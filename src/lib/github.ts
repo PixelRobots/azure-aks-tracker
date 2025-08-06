@@ -44,34 +44,37 @@ export class GitHubService {
   }
 
   async getRecentCommits(since?: string, perPage = 15): Promise<Commit[]> {
+    const CACHE_KEY = 'github_commits_cache';
+    const CACHE_TIME_KEY = 'github_commits_cache_time';
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
     try {
+      // Check cache
+      const cached = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+      const now = Date.now();
+      if (cached && cachedTime && now - parseInt(cachedTime) < TWELVE_HOURS) {
+        return JSON.parse(cached);
+      }
       let endpoint = `/repos/${REPO_OWNER}/${REPO_NAME}/commits?per_page=${perPage}`;
-      
       if (since) {
         endpoint += `&since=${since}`;
       }
-
       const commits: GitHubCommit[] = await this.makeRequest(endpoint);
       const processedCommits: Commit[] = [];
 
       // Process fewer commits to reduce API calls
       const limitedCommits = commits.slice(0, Math.min(commits.length, 10));
-
       for (const commit of limitedCommits) {
         try {
           // Add a small delay between requests to be respectful to the API
           await new Promise(resolve => setTimeout(resolve, 100));
-          
           // Get detailed commit info including files
           const detailedCommit = await this.makeRequest(`/repos/${REPO_OWNER}/${REPO_NAME}/commits/${commit.sha}`);
-          
           const files = detailedCommit.files?.map((file: any) => file.filename) || [];
-          
           // Filter to only include markdown files in articles/aks directory
           const relevantFiles = files.filter((file: string) => 
             file.startsWith('articles/aks/') && file.endsWith('.md')
           );
-
           if (relevantFiles.length > 0) {
             processedCommits.push({
               sha: commit.sha,
@@ -87,7 +90,9 @@ export class GitHubService {
           // Don't break the loop, just skip this commit
         }
       }
-
+      // Cache the result
+      localStorage.setItem(CACHE_KEY, JSON.stringify(processedCommits));
+      localStorage.setItem(CACHE_TIME_KEY, now.toString());
       return processedCommits;
     } catch (error) {
       console.error('Failed to fetch commits:', error);
@@ -112,18 +117,28 @@ export class GitHubService {
   }
 
   async getFileContent(path: string, ref?: string): Promise<string> {
+    const CACHE_KEY = `github_file_cache_${path}_${ref || 'main'}`;
+    const CACHE_TIME_KEY = `github_file_cache_time_${path}_${ref || 'main'}`;
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
     try {
+      // Check cache
+      const cached = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+      const now = Date.now();
+      if (cached && cachedTime && now - parseInt(cachedTime) < TWELVE_HOURS) {
+        return cached;
+      }
       let endpoint = `/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
       if (ref) {
         endpoint += `?ref=${ref}`;
       }
-
       const response = await this.makeRequest(endpoint);
-      
       if (response.content) {
-        return atob(response.content);
+        const content = atob(response.content);
+        localStorage.setItem(CACHE_KEY, content);
+        localStorage.setItem(CACHE_TIME_KEY, now.toString());
+        return content;
       }
-      
       return '';
     } catch (error) {
       console.warn(`Failed to get file content for ${path}:`, error);
