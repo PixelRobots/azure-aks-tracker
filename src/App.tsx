@@ -25,7 +25,7 @@ function App() {
               <p className="text-muted-foreground leading-relaxed">
                 Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases. <br /><br />
                 It filters out typos, minor edits, and bot changes, so you only see what really matters. <br />
-                Check back often or hit "Refresh" to explore what's new.
+                Check back often as data is automatically refreshed every 12 hours.
               </p>
               <p className="text-sm text-muted-foreground mt-2 italic">
                 <br />Powered by GitHub Spark and GitHub Copilot — built to keep your AKS knowledge up to date with less noise.

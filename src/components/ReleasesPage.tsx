@@ -1,33 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ReleaseCard } from '@/components/ReleaseCard';
 import { EnhancedRelease } from '@/lib/types';
 import { ReleasesService } from '@/lib/releases';
-import { Download, Rocket, AlertTriangle, Trash2 } from '@phosphor-icons/react';
+import { Rocket, AlertTriangle, Clock } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export function ReleasesPage() {
   const [releases, setReleases] = useKV<EnhancedRelease[]>('aks-releases', []);
+  const [lastFetch, setLastFetch] = useKV<string>('aks-releases-last-fetch', '');
   const [isLoading, setIsLoading] = useState(false);
-  const [lastFetch, setLastFetch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const releasesService = new ReleasesService();
 
-  const fetchReleases = async () => {
+  // Check if we need to fetch data
+  const shouldFetchData = () => {
+    if (!lastFetch) return true;
+    
+    const lastFetchTime = new Date(lastFetch);
+    const now = new Date();
+    const hoursSinceLastFetch = (now.getTime() - lastFetchTime.getTime()) / (1000 * 60 * 60);
+    
+    // Fetch data every 12 hours
+    return hoursSinceLastFetch >= 12;
+  };
+
+  const fetchReleases = async (showToasts = true) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('Starting to fetch releases...');
       const enhancedReleases = await releasesService.getEnhancedReleases(5); // Only fetch 5 releases
-      console.log('Fetch completed, releases:', enhancedReleases);
       
       if (enhancedReleases.length === 0) {
-        toast.info('No releases found');
+        if (showToasts) toast.info('No releases found');
         setLastFetch(new Date().toISOString());
         return;
       }
@@ -43,29 +52,30 @@ export function ReleasesPage() {
         
         setReleases(allReleases);
         
-        if (newReleases.length > 0) {
+        if (showToasts && newReleases.length > 0) {
           toast.success(`Found ${newReleases.length} new release${newReleases.length !== 1 ? 's' : ''}`);
         }
       } else {
-        toast.info('No new releases found');
+        if (showToasts) toast.info('No new releases found');
       }
       
       setLastFetch(new Date().toISOString());
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('Fetch failed:', error);
       setError(errorMessage);
-      toast.error(`Failed to fetch releases: ${errorMessage}`);
+      if (showToasts) toast.error(`Failed to fetch releases: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const clearData = () => {
-    setReleases([]);
-    toast.success('All release data cleared');
-  };
+  // Auto-fetch data on component mount and when needed
+  useEffect(() => {
+    if (shouldFetchData()) {
+      fetchReleases(false); // Don't show toasts for automatic fetches
+    }
+  }, []);
 
 
   return (
@@ -82,20 +92,21 @@ export function ReleasesPage() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            onClick={fetchReleases}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <Download size={16} className={isLoading ? 'animate-pulse' : ''} />
-            {isLoading ? 'Fetching...' : 'Refresh'}
-          </Button>
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock size={16} className="animate-pulse" />
+              <span className="text-sm">Updating...</span>
+            </div>
+          )}
         </div>
       </div>
 
       {lastFetch && (
         <div className="text-sm text-muted-foreground">
           Last updated: {new Date(lastFetch).toLocaleString()}
+          {shouldFetchData() && !isLoading && (
+            <span className="ml-2 text-primary">• Next update available</span>
+          )}
         </div>
       )}
 
@@ -128,12 +139,16 @@ export function ReleasesPage() {
           <Rocket size={48} className="mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Releases Found</h3>
           <p className="text-muted-foreground mb-4">
-            Click "Refresh" to fetch the latest 5 AKS releases from GitHub
+            Release data is automatically fetched from GitHub every 12 hours.
           </p>
-          <Button onClick={fetchReleases} disabled={isLoading}>
-            <Download size={16} className={isLoading ? 'animate-pulse mr-2' : 'mr-2'} />
-            Fetch Releases
-          </Button>
+          {shouldFetchData() && !isLoading && (
+            <button 
+              onClick={() => fetchReleases(true)} 
+              className="text-primary hover:text-primary/80 text-sm underline"
+            >
+              Check for updates now
+            </button>
+          )}
         </div>
       )}
     </div>

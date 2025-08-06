@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -8,17 +7,29 @@ import { UpdateCard } from '@/components/UpdateCard';
 import { Update } from '@/lib/types';
 import { GitHubService } from '@/lib/github';
 import { isNoiseCommit, groupCommitsByRelatedness, createUpdateFromCommits } from '@/lib/processing';
-import { Download, GitBranch, AlertTriangle, Trash2 } from '@phosphor-icons/react';
+import { GitBranch, AlertTriangle, Clock } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export function DocumentationPage() {
   const [updates, setUpdates] = useKV<Update[]>('aks-updates', []);
+  const [lastFetch, setLastFetch] = useKV<string>('aks-last-fetch', '');
   const [isLoading, setIsLoading] = useState(false);
-  const [lastFetch, setLastFetch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   const githubService = new GitHubService(); // No token needed for public repo
+
+  // Check if we need to fetch data
+  const shouldFetchData = () => {
+    if (!lastFetch) return true;
+    
+    const lastFetchTime = new Date(lastFetch);
+    const now = new Date();
+    const hoursSinceLastFetch = (now.getTime() - lastFetchTime.getTime()) / (1000 * 60 * 60);
+    
+    // Fetch data every 12 hours
+    return hoursSinceLastFetch >= 12;
+  };
 
   // Helper function to merge updates with the same URL
   const mergeUpdatesByUrl = (updates: Update[]): Update[] => {
@@ -35,7 +46,10 @@ export function DocumentationPage() {
     const mergedUpdates: Update[] = [];
     for (const [url, groupUpdates] of urlGroups) {
       if (groupUpdates.length === 1) {
-        mergedUpdates.push(groupUpdates[0]);
+        const singleUpdate = { ...groupUpdates[0] };
+        singleUpdate.summary = cleanBulletPoints(singleUpdate.summary);
+        singleUpdate.impact = cleanBulletPoints(singleUpdate.impact);
+        mergedUpdates.push(singleUpdate);
       } else {
         // Sort by date to get the earliest and latest
         const sortedByDate = groupUpdates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -51,8 +65,8 @@ export function DocumentationPage() {
           ...earliest, // Use earliest as base
           rowKey: `merged-${latest.rowKey}`, // Create unique key
           title: `${earliest.title.replace(/ \(\d+ updates?\)$/, '')} (${groupUpdates.length} updates)`,
-          summary: uniqueSummaries.length > 1 ? uniqueSummaries.join(' • ') : uniqueSummaries[0],
-          impact: uniqueImpacts.length > 1 ? uniqueImpacts.join(' • ') : uniqueImpacts[0],
+          summary: cleanBulletPoints(uniqueSummaries.length > 1 ? uniqueSummaries.join('\n• ') : uniqueSummaries[0]),
+          impact: cleanBulletPoints(uniqueImpacts.length > 1 ? uniqueImpacts.join('\n• ') : uniqueImpacts[0]),
           commits: Array.from(new Set(groupUpdates.flatMap(u => u.commits || []))),
           date: latest.date // Use latest date for sorting
         };
@@ -79,7 +93,7 @@ export function DocumentationPage() {
     ? mergedUpdates 
     : mergedUpdates.filter(u => u.category === selectedCategory);
 
-  const fetchUpdates = async () => {
+  const fetchUpdates = async (showToasts = true) => {
     setIsLoading(true);
     setError(null);
 
@@ -91,7 +105,7 @@ export function DocumentationPage() {
       const commits = await githubService.getRecentCommits(since.toISOString());
       
       if (commits.length === 0) {
-        toast.info('No recent commits found');
+        if (showToasts) toast.info('No recent commits found');
         setLastFetch(new Date().toISOString());
         return;
       }
@@ -100,7 +114,7 @@ export function DocumentationPage() {
       const meaningfulCommits = commits.filter(commit => !isNoiseCommit(commit));
       
       if (meaningfulCommits.length === 0) {
-        toast.info('No meaningful changes found in recent commits');
+        if (showToasts) toast.info('No meaningful changes found in recent commits');
         setLastFetch(new Date().toISOString());
         return;
       }
@@ -166,15 +180,15 @@ export function DocumentationPage() {
         
         setUpdates(allUpdates);
         
-        if (uniqueNewUpdates.length > 0) {
+        if (showToasts && uniqueNewUpdates.length > 0) {
           toast.success(`Found ${uniqueNewUpdates.length} new updates`);
         }
         
-        if (recentExistingUpdates.length !== updates.length) {
+        if (showToasts && recentExistingUpdates.length !== updates.length) {
           toast.info(`Cleaned up ${updates.length - recentExistingUpdates.length} old updates`);
         }
       } else {
-        toast.info('No new updates found');
+        if (showToasts) toast.info('No new updates found');
       }
       
       setLastFetch(new Date().toISOString());
@@ -182,10 +196,22 @@ export function DocumentationPage() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setError(errorMessage);
-      toast.error(`Failed to fetch updates: ${errorMessage}`);
+      if (showToasts) toast.error(`Failed to fetch updates: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Auto-fetch data on component mount and when needed
+  useEffect(() => {
+    if (shouldFetchData()) {
+      fetchUpdates(false); // Don't show toasts for automatic fetches
+    }
+  }, []);
+
+  // Clean old bullet points from summary and impact
+  const cleanBulletPoints = (text: string): string => {
+    return text.replace(/\s*•\s*/g, '\n• ').trim();
   };
 
   return (
@@ -202,20 +228,21 @@ export function DocumentationPage() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            onClick={fetchUpdates}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <Download size={16} className={isLoading ? 'animate-pulse' : ''} />
-            {isLoading ? 'Fetching...' : 'Refresh'}
-          </Button>
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock size={16} className="animate-pulse" />
+              <span className="text-sm">Updating...</span>
+            </div>
+          )}
         </div>
       </div>
 
       {lastFetch && (
         <div className="text-sm text-muted-foreground">
           Last updated: {new Date(lastFetch).toLocaleString()}
+          {shouldFetchData() && !isLoading && (
+            <span className="ml-2 text-primary">• Next update available</span>
+          )}
         </div>
       )}
 
@@ -280,14 +307,18 @@ export function DocumentationPage() {
           <h3 className="text-lg font-semibold mb-2">No Recent Updates Found</h3>
           <p className="text-muted-foreground mb-4">
             {updates.length > 0 
-              ? "No updates found in the last 7 days. Click \"Refresh\" to check for newer changes."
-              : "Click \"Refresh\" to fetch the latest documentation changes from the past 7 days"
+              ? "No updates found in the last 7 days. Updates are checked automatically every 12 hours."
+              : "Data will be automatically fetched from the Azure AKS documentation repository every 12 hours."
             }
           </p>
-          <Button onClick={fetchUpdates} disabled={isLoading}>
-            <Download size={16} className={isLoading ? 'animate-pulse mr-2' : 'mr-2'} />
-            Fetch Updates
-          </Button>
+          {shouldFetchData() && !isLoading && (
+            <button 
+              onClick={() => fetchUpdates(true)} 
+              className="text-primary hover:text-primary/80 text-sm underline"
+            >
+              Check for updates now
+            </button>
+          )}
         </div>
       )}
     </div>
