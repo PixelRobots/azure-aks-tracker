@@ -24,13 +24,26 @@ export class GitHubService {
     const response = await fetch(`${GITHUB_API_BASE}${endpoint}`, { headers });
     
     if (!response.ok) {
+      // Provide more specific error messages for common issues
+      if (response.status === 403) {
+        const remaining = response.headers.get('x-ratelimit-remaining');
+        const resetTime = response.headers.get('x-ratelimit-reset');
+        
+        if (remaining === '0') {
+          const resetDate = resetTime ? new Date(parseInt(resetTime) * 1000) : new Date();
+          throw new Error(`GitHub API rate limit exceeded. Resets at ${resetDate.toLocaleTimeString()}.`);
+        } else {
+          throw new Error(`GitHub API access forbidden (403). This may be due to rate limiting or repository access restrictions.`);
+        }
+      }
+      
       throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
     }
 
     return response.json();
   }
 
-  async getRecentCommits(since?: string, perPage = 30): Promise<Commit[]> {
+  async getRecentCommits(since?: string, perPage = 15): Promise<Commit[]> {
     try {
       let endpoint = `/repos/${REPO_OWNER}/${REPO_NAME}/commits?per_page=${perPage}`;
       
@@ -41,8 +54,14 @@ export class GitHubService {
       const commits: GitHubCommit[] = await this.makeRequest(endpoint);
       const processedCommits: Commit[] = [];
 
-      for (const commit of commits) {
+      // Process fewer commits to reduce API calls
+      const limitedCommits = commits.slice(0, Math.min(commits.length, 10));
+
+      for (const commit of limitedCommits) {
         try {
+          // Add a small delay between requests to be respectful to the API
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           // Get detailed commit info including files
           const detailedCommit = await this.makeRequest(`/repos/${REPO_OWNER}/${REPO_NAME}/commits/${commit.sha}`);
           
@@ -65,6 +84,7 @@ export class GitHubService {
           }
         } catch (error) {
           console.warn(`Failed to process commit ${commit.sha}:`, error);
+          // Don't break the loop, just skip this commit
         }
       }
 
