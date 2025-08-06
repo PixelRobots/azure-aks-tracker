@@ -1,86 +1,102 @@
 # Azure AKS Documentation & Release Tracker
 
-A comprehensive tracking tool built with GitHub Spark that automatically monitors meaningful changes to the Azure Kubernetes Service (AKS) documentation and releases.
+Welcome to the Azure AKS Tracker by PixelRobots! 🚀
 
-## 🚀 Features
+This web app helps you stay up to date with meaningful changes to Azure Kubernetes Service (AKS) documentation and releases. It automatically fetches, filters, and summarizes updates from official Microsoft GitHub repositories—so you only see what matters.
 
-### Documentation Updates
-- **Automatic Monitoring**: Tracks commits to the [MicrosoftDocs/azure-aks-docs](https://github.com/MicrosoftDocs/azure-aks-docs) repository
-- **Intelligent Filtering**: Filters out noise like typos, grammar fixes, and bot merges to show only meaningful changes
-- **Smart Grouping**: Combines related commits that touch the same files or have similar messages within a 7-day window
-- **AI-Enhanced Summaries**: Uses AI to generate clear summaries and impact assessments for each change
-- **Category Classification**: Automatically categorizes updates (Reliability, Networking, Security, etc.)
-- **Bullet Point Formatting**: Properly displays multi-point summaries and impacts with clear formatting
+---
 
-### AKS Releases
-- **Latest Releases**: Shows the 5 most recent AKS releases from GitHub
-- **AI Analysis**: Automatically extracts and categorizes:
-  - Key Features
-  - Breaking Changes  
-  - Good to Know information
-- **Release Enhancement**: Enriches release data with deployment information from releases.aks.azure.com
-- **CVE Mitigation**: Highlights security-related updates and mitigated vulnerabilities
+## What Does It Do?
 
-### User Experience
-- **Automatic Updates**: Data refreshes every 12 hours without manual intervention
-- **Dark/Light/System Theme**: Responsive theme switching with system preference detection
-- **Category Filtering**: Filter documentation updates by category
-- **Direct Links**: Quick access to documentation pages and GitHub releases
-- **Mobile Responsive**: Works seamlessly across all device sizes
+- **Tracks AKS Documentation Updates:**  
+  Fetches recent commits from the [MicrosoftDocs/azure-aks-docs](https://github.com/MicrosoftDocs/azure-aks-docs) repo, filters out noise (typos, bot merges, trivial edits), and groups related changes by documentation page.
+- **Monitors AKS Releases:**  
+  Pulls the latest release data from the [Azure/AKS](https://github.com/Azure/AKS) repo, including security (CVE) and regional rollout info.
+- **AI-Enhanced Summaries:**  
+  Uses AI to generate concise summaries and impact assessments for each documentation update and release.
+- **Category-Based Filtering:**  
+  Organizes updates by category (e.g., Reliability, Networking, Upgrade) for easy browsing.
+- **Tab-Based Navigation:**  
+  Switch between Documentation Updates and AKS Releases with a single click.
+- **Persistent Storage:**  
+  Caches processed updates and releases for fast reloads and offline access.
 
-## 🛠️ Technical Implementation
+---
 
-- **Built with GitHub Spark**: Leverages the Spark runtime for AI integration and persistent storage
-- **React + TypeScript**: Modern, type-safe frontend development
-- **Tailwind CSS + shadcn/ui**: Beautiful, consistent UI components
-- **AI Integration**: Uses GPT-4o-mini for content analysis and enhancement
-- **Smart Caching**: Efficient data storage and retrieval with automatic cleanup
-- **Rate Limit Aware**: Respects GitHub API limits with intelligent request management
+## How It Works
 
-## 📊 Data Processing
+- **Data Fetching:**  
+  Uses public GitHub APIs (no login required) to fetch commits and releases.
+- **Noise Filtering:**  
+  Applies heuristics to exclude trivial commits (e.g., typos, grammar, bot changes).
+- **Commit Grouping:**  
+  Groups related commits by documentation page for a cleaner update list.
+- **AI Summarization:**  
+  Calls an LLM to generate human-friendly summaries and impact notes for each update.
+- **Categorization:**  
+  Classifies updates/releases by topic using file paths and content.
+- **UI Components:**  
+  - **Update Cards:** Show summary, impact, category, and links.
+  - **Badges:** Indicate update categories.
+  - **Tabs:** Switch between Documentation and Releases.
+  - **Refresh Button:** Manually fetch the latest data.
+  - **Alerts/Toasts:** Show errors, loading, and status messages.
 
-### Documentation Updates
-1. **Fetching**: Retrieves commits from the last 7 days via GitHub API
-2. **Filtering**: Removes noise commits (typos, grammar, bot merges)
-3. **Grouping**: Combines related commits by file path and similarity
-4. **Enhancement**: AI analyzes changes to generate meaningful summaries
-5. **Storage**: Persists processed updates with smart deduplication
+---
 
-### Release Analysis
-1. **GitHub Integration**: Fetches latest releases from azure/aks repository
-2. **Content Analysis**: AI extracts key features, breaking changes, and important notes
-3. **Enhancement**: Enriches with deployment status and CVE information
-4. **Presentation**: Organizes information in user-friendly cards
+## Code Structure
 
-## 🎯 Use Cases
+- `src/components/` — UI components (pages, cards, toggles, etc.)
+- `src/hooks/` — Custom React hooks (theme, mobile)
+- `src/lib/` — GitHub API logic, data processing, types, and utilities
+- `src/styles/` — Theme and global styles
+- `packages/spark-tools/` — Shared tools and utilities
 
-- **AKS Administrators**: Stay informed about documentation changes affecting your clusters
-- **DevOps Teams**: Track new features, breaking changes, and best practices
-- **Security Teams**: Monitor CVE mitigations and security-related updates
-- **Technical Writers**: Understand documentation evolution and patterns
-- **Developers**: Keep up with AKS capabilities without information overload
+---
 
-## 🔧 Installation & Usage
+## Getting Started
 
-This application runs entirely within GitHub Spark:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/PixelRobots/azure-aks-tracker.git
+   cd azure-aks-tracker
+   ```
 
-1. **Access**: Open the Spark application in your browser
-2. **Automatic Loading**: Data begins loading automatically on first visit
-3. **Navigation**: Use tabs to switch between Documentation Updates and AKS Releases
-4. **Filtering**: Use category badges to filter documentation updates
-5. **Manual Refresh**: Click "Check for updates now" if you want to force a refresh
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-## 📈 Benefits
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-- **Time Saving**: No need to manually monitor multiple documentation pages
-- **Noise Reduction**: Focus on meaningful changes, not editorial fixes
-- **Context Aware**: AI-generated summaries explain the impact of changes
-- **Comprehensive Coverage**: Tracks both documentation and release changes
-- **Always Current**: Automatic updates ensure you never miss important changes
+4. Open your browser at `http://localhost:5173`
 
-## 📄 License
+---
 
-The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
+## Usage
+
+- View your AKS clusters and their status.
+- Track release notes and updates.
+- Customize the dashboard to fit your workflow.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please fork the repo and submit a pull request. For major changes, open an issue to discuss your ideas.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+*Created with ❤️ by PixelRobots*
 
 ---
 
