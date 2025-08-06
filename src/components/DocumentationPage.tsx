@@ -19,6 +19,11 @@ export function DocumentationPage() {
 
   const githubService = new GitHubService(); // No token needed for public repo
 
+  // Clean old bullet points from summary and impact
+  const cleanBulletPoints = (text: string): string => {
+    return text.replace(/\s*•\s*/g, '\n• ').trim();
+  };
+
   // Check if we need to fetch data
   const shouldFetchData = () => {
     if (!lastFetch) return true;
@@ -208,11 +213,6 @@ export function DocumentationPage() {
       fetchUpdates(false); // Don't show toasts for automatic fetches
     }
   }, []);
-
-  // Clean old bullet points from summary and impact
-  const cleanBulletPoints = (text: string): string => {
-    return text.replace(/\s*•\s*/g, '\n• ').trim();
-  };
 
   return (
     <div className="space-y-6">
