@@ -137,15 +137,34 @@ export function DocumentationPage() {
           // Use AI to enhance summary and impact if available
           try {
             const prompt = spark.llmPrompt`
-            Analyze these Azure AKS documentation commits and provide a concise summary and impact assessment:
-            
-            Commits: ${group.map(c => `- ${c.message} (files: ${c.files.join(', ')})`).join('\n')}
-            
-            Please respond with JSON in this format:
-            {
-              "summary": "1-2 sentences describing what changed",
-              "impact": "1-2 sentences describing how this affects AKS users"
-            }
+              Analyze the following Azure AKS documentation commits by focusing on the content changes inside the files, not the commit messages or code diffs.
+              
+              Scoring priority for your analysis (highest to lowest importance):
+              1. Substantive content changes (new topics, new sections, expanded explanations, new features covered)
+              2. New or updated examples, code snippets, or diagrams that improve understanding
+              3. Reorganization or restructuring of sections for clarity
+              4. Formatting or style-only changes (mention only if no other substantive changes are present)
+              
+              Inference step:
+              - When a section is reworded or updated, infer the likely intent and explain it in plain language (e.g., "The introduction was rewritten to better explain when to use managed namespaces" instead of "clarity improvements").
+              - When something is added, briefly describe the new information and why it might be useful.
+              - When something is removed, briefly note what was removed and the possible reason if apparent.
+              
+              Your goal:
+              - Identify and clearly describe the topics or features affected.
+              - Indicate if this is a new document or an update to existing content.
+              - For updates, specify what sections or content areas were changed and in what way (e.g., "A new troubleshooting section was added for MCP Server connectivity issues").
+              - Avoid generic statements like "minor updates" or "formatting changes" unless there truly is no substantive change.
+              - Use clear, reader-friendly language that an AKS end user would understand.
+              
+              Commits:
+              ${group.map(c => `- ${c.message} (files: ${c.files.join(', ')})`).join('\n')}
+              
+              Please respond with JSON in this format:
+              {
+                "summary": "1-2 sentences summarizing the actual content changes (e.g., 'A new section on configuring AKS MCP Server was added, and the managed namespaces guide now includes troubleshooting tips.')",
+                "impact": "1-2 sentences explaining how these content changes affect or help AKS users."
+              }
             `;
             
             const analysis = await spark.llm(prompt, 'gpt-4o-mini', true);
