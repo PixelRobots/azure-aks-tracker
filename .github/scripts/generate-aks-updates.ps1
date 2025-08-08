@@ -341,15 +341,18 @@ $html = @"
 
     <!-- Put the NON-default panels first -->
     <div class="aks-tab-panel" id="aks-tab-releases">
+    </br>
       <p>No AKS release notes are available yet. Check back soon.</p>
     </div>
 
     <!-- Put the DEFAULT panel LAST and add class 'default' -->
     <div class="aks-tab-panel default" id="aks-tab-docs">
+    </br>
       <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
-      <span class="aks-doc-updated-pill">Last updated: $lastUpdated
-        <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
-      </span>
+      <div class="aks-docs-updated-main">
+        <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
+        <span class="aks-pill aks-pill-count">$updateCount updates</span>
+      </div>
       <div class="aks-docs-list">
         $($sections -join "`n")
       </div>
