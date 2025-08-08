@@ -264,13 +264,27 @@ foreach ($file in $groups.Keys) {
     "<li><a href=""$($x.pr_url)"">$(Escape-Html $x.pr_title)</a> <small>$($x.merged_at.ToString('yyyy-MM-dd'))</small></li>"
   }
 
-  $section = @"
-<section class="aks-doc-update">
-  <h3><a href="$fileUrl">$(Escape-Html (ShortTitle $file))</a></h3>
-  $(if ($summary) { "<p>$(Escape-Html $summary)</p>" } else { "" })
+$category = "General" # You can set this dynamically if you have category info
+$lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+$summaryText = $summary
+$impactText = "" # If you want to split summary/impact, parse from $summary or AI output
+
+$section = @"
+<section class=\"aks-doc-update\">
+  <div class=\"aks-doc-header\">
+    <span class=\"aks-doc-category\">$category</span>
+    <span class=\"aks-doc-updated\">Last updated: $lastUpdated</span>
+  </div>
+  <h3><a href=\"$fileUrl\">$(Escape-Html (ShortTitle $file))</a></h3>
+  <div class=\"aks-doc-summary\">
+    <strong>Summary</strong>
+    <p>$(Escape-Html $summaryText)</p>
+  </div>
+  $(if ($impactText) { "<div class=\"aks-doc-impact\"><strong>Impact</strong><p>$(Escape-Html $impactText)</p></div>" } else { "" })
   <ul>
-    $($lis -join "`n")
+    $($lis -join \"`n\")
   </ul>
+  <a class=\"aks-doc-link\" href=\"$fileUrl\" target=\"_blank\">View Documentation</a>
 </section>
 "@
   $section = $section.Trim()
