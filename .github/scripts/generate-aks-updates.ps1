@@ -387,7 +387,7 @@ foreach ($file in $groups.Keys) {
 }
 
 # =========================
-# MAIN FLOW — RELEASES (AI-enhanced via vector store)
+# MAIN FLOW — RELEASES
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
@@ -458,7 +458,7 @@ foreach ($r in $releases) {
   if ($ai.breaking_changes -and $ai.breaking_changes.Count) {
     $sectionsHtml += @"
 <div class="aks-rel-sec">
-  <div class="aks-rel-sec-head"><span class="aks-rel-ico">❌</span><h4>Breaking Changes</h4></div>
+  <div class="aks-rel-sec-head"><span class="aks-rel-ico">❌</span><h3>Breaking Changes</h3></div>
   $(ToListHtml $ai.breaking_changes)
 </div>
 "@
@@ -466,7 +466,7 @@ foreach ($r in $releases) {
   if ($ai.key_features -and $ai.key_features.Count) {
     $sectionsHtml += @"
 <div class="aks-rel-sec">
-  <div class="aks-rel-sec-head"><span class="aks-rel-ico">🔑</span><h4>Key Features</h4></div>
+  <div class="aks-rel-sec-head"><span class="aks-rel-ico">🔑</span><h3>Key Features</h3></div>
   $(ToListHtml $ai.key_features)
 </div>
 "@
@@ -474,7 +474,7 @@ foreach ($r in $releases) {
   if ($ai.good_to_know -and $ai.good_to_know.Count) {
     $sectionsHtml += @"
 <div class="aks-rel-sec">
-  <div class="aks-rel-sec-head"><span class="aks-rel-ico">💡</span><h4>Good to Know</h4></div>
+  <div class="aks-rel-sec-head"><span class="aks-rel-ico">💡</span><h3>Good to Know</h3></div>
   $(ToListHtml $ai.good_to_know)
 </div>
 "@
@@ -486,13 +486,12 @@ foreach ($r in $releases) {
 <div class="aks-rel-card">
   <div class="aks-rel-head">
     <div class="aks-rel-title">
-      <h3>$title</h3>$badge
+      <h2>$title</h2>$badge
     </div>
     <a class="aks-rel-link" href="$url" target="_blank" rel="noopener">View Release</a>
   </div>
   <div class="aks-rel-meta">
-    <span class="aks-rel-date">$publishedAt</span>
-    <span class="aks-rel-version">$version</span>
+    <span class="aks-rel-date">📅 $publishedAt</span>
   </div>
   <div class="aks-rel-summary">
     $summaryHtml
@@ -531,11 +530,13 @@ $html = @"
 
     <div class="aks-tab-panel" id="aks-tab-releases">
       <div class="aks-releases">
-        <div class="aks-rel-header">
-          <h2>AKS Releases</h2>
+      <div class="aks-rel-header">
+          <div class="aks-rel-title-row">
+              <h2>AKS Releases</h2>
+              <span class="aks-pill aks-pill-count">$releasesCountLabel</span>
+          </div>
           <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
-          <span class="aks-pill aks-pill-count">$releasesCountLabel</span>
-        </div>
+      </div>
         $releasesHtml
       </div>
     </div>
