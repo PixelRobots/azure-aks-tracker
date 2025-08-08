@@ -27,12 +27,18 @@ jobs:
           Add-Content -Path $env:GITHUB_OUTPUT -Value $json.html
           Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
       
-          # Single-line output for hash
+          # Single line for hash
           Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OpenAIKey:     ${{ secrets.OPENAI_API_KEY }}   # PSAI
-          OPENAI_MODEL:  ${{ secrets.OPENAI_MODEL }}     # optional
+          # Choose either OpenAI or Azure OpenAI by setting envs:
+          # OpenAI.com:
+          OpenAIKey:        ${{ secrets.OPENAI_API_KEY }}        # enables summaries via PSAI
+          # Azure OpenAI (alternative):
+          AZURE_OPENAI_APIURI:       ${{ secrets.AZURE_OPENAI_APIURI }}
+          AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
+          AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_OPENAI_DEPLOYMENT:   ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
       - name: Get current WP page
         id: get
