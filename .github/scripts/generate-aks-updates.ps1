@@ -107,6 +107,26 @@ function Convert-MarkdownToPlain([string]$md) {
   $t.Trim()
 }
 
+# ===== Commits: helpers =====
+function Get-RecentCommits {
+  param([string]$SinceIso)
+  $all = @()
+  for ($page = 1; $page -le 5; $page++) {
+    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?since=$SinceIso&per_page=100&page=$page"
+    $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    if (-not $resp) { break }
+    $all += $resp
+    if ($resp.Count -lt 100) { break }
+  }
+  return $all
+}
+function Get-CommitFiles {
+  param([string]$Sha)
+  $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
+  Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+}
+
+
 # ---------- Title & Kind helpers (short titles) ----------
 function Get-FirstSentence([string]$text) {
   if ([string]::IsNullOrWhiteSpace($text)) { return "" }
@@ -173,8 +193,8 @@ function Test-IsBot($Item) {
   return ($login -match '(bot|actions|github-actions|dependabot)')
 }
 function Test-IsDocsNoisePath([string]$Path) {
-  # ALLOW all .md under aks — includes `/includes` and TOC; AI will filter noise
-  if ($Path -notmatch '^articles/(azure/)?aks/.*\.md$') { return $true }
+  # Allow AKS + Fleet markdown
+  if ($Path -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { return $true }
   return $false
 }
 
@@ -264,7 +284,7 @@ You receive file-sessions with:
 - file, total_additions, total_deletions, commits_count
 - commit_titles[], patch_sample (first ~600 +/- lines)
 
-For each session, write a short, factual 1–2 sentence summary of what changed.
+For each session, write a short, factual 1-2 sentence summary of what changed.
 Focus on concrete details visible in the patch, such as section names, parameter changes, new examples, or removals.
 
 Always provide a "verdict" of "keep".
@@ -353,6 +373,45 @@ foreach ($pr in $prs) {
       additions    = $f.additions
       deletions    = $f.deletions
       patch        = $f.patch
+    }
+  }
+}
+
+# ------- ALSO: add commit-based events (to catch non-PR or old-authored commits) -------
+Log "Fetching individual commits in last 7 days..."
+$commitList = Get-RecentCommits -SinceIso $SINCE_ISO | Where-Object { -not (Test-IsBot $_) }
+Log "Found $($commitList.Count) commits in window."
+
+foreach ($c in $commitList) {
+  $sha = $c.sha
+  $detail = Get-CommitFiles -Sha $sha
+  if (-not $detail) { continue }
+
+  # Prefer committer date (when it landed in main) over author date
+  $when = if ($detail.commit.committer.date) { [DateTime]::Parse($detail.commit.committer.date).ToUniversalTime() }
+          elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
+          else { [DateTime]::UtcNow }
+
+  $author = $detail.commit.author.name
+  $msg    = $detail.commit.message
+  $url    = $detail.html_url
+
+  foreach ($f in $detail.files) {
+    # Only AKS/Fleet markdown; reuse your noise filter
+    if ($f.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $f.filename)) {
+      $events += [pscustomobject]@{
+        filename     = $f.filename
+        status       = $f.status          # added | modified | removed | renamed
+        committed_at = $when
+        author       = $author
+        pr_number    = $null              # commit source (not PR)
+        pr_url       = $null
+        commit_msg   = $msg
+        commit_url   = $url
+        additions    = $f.additions
+        deletions    = $f.deletions
+        patch        = $f.patch
+      }
     }
   }
 }
