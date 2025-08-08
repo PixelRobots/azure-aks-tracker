@@ -287,28 +287,30 @@ function Get-FileSessionVerdictsViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You are an assistant that summarizes Azure AKS documentation file changes.
+You are an assistant that summarizes meaningful updates to Azure AKS documentation.
 
-You receive file-sessions with:
-- file, total_additions, total_deletions, commits_count
-- commit_titles[], patch_sample (first ~600 +/- lines)
+You receive "file sessions", each describing recent changes to one documentation page. Each includes:
+- File name
+- Number of commits, lines added/removed
+- Git diffs (patches) for context
+- Commit titles
 
-For each session, write a short, factual 1-2 sentence summary of what changed.
-Focus on concrete details visible in the patch, such as section names, parameter changes, new examples, or removals.
+For each session:
+- Decide if it is meaningful to users (e.g., feature additions, rewrites, new examples).
+- If it is meaningful, respond with:
+  {
+    "key": "<same key>",
+    "verdict": "keep",
+    "score": <confidence from 0.0 to 1.0>,
+    "category": "<Networking | Security | Compute | Storage | Operations | General>",
+    "summary": "Short summary of the key changes (1–2 sentences)"
+  }
+- If it is **not** meaningful (e.g., typo fixes, formatting, trivial edits), skip it completely — do not return an object.
 
-Always provide a "verdict" of "keep".
-Also include:
-- "score": 1.0
-- "category": one of Networking, Security, Compute, Storage, Operations, General (best guess)
-- "summary": your short summary
-
-Never skip a session. If unsure, say "Minor text changes" in summary.
-
-Output ONLY JSON array:
-[
-  { "key": "<same key>", "verdict": "keep", "score": 1.0, "reason": "always kept", "category": "General", "summary": "..." }
-]
-Plain strings only.
+Tips:
+- If unsure, err on the side of skipping.
+- Don’t return more than 1 entry per file, even if there are multiple small commits.
+- Be concise and specific in summaries.
 "@
 
 
