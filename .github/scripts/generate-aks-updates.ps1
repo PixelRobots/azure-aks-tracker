@@ -271,28 +271,29 @@ foreach ($file in $groups.Keys) {
   $summary = $summaries[$file].summary
   $impactArr = $summaries[$file].impact
   $category = $summaries[$file].category
+  $catClass = 'aks-doc-category aks-cat-' + ($category -replace '[^a-zA-Z0-9]', '').ToLower()
 
-  $lis = ""
-  foreach ($x in $arr) {
-    $prUrl = $x.pr_url
-    $prTitle = Escape-Html $x.pr_title
-    $prDate = $x.merged_at.ToString('yyyy-MM-dd')
-    # $lis += '<li><a href="' + $prUrl + '">' + $prTitle + '</a> <small>' + $prDate + '</small></li>'
-  }
-
-  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
-  $summaryText = $summary
-  $impactHtml = ""
-  if ($impactArr -and $impactArr.Count -gt 0) {
-    $impactHtml = '<div class="aks-doc-impact"><strong>Impact</strong><ul>'
-    foreach ($impactItem in $impactArr) {
-      $impactHtml += '<li>' + (Escape-Html $impactItem) + '</li>'
-    }
-    $impactHtml += '</ul></div>'
-  }
-
-  $prLink = $arr[0].pr_url
-  # Prefer PR title for card header, fallback to file name
+  $section = @"
+<section class="aks-doc-update">
+  <h2><a href="$fileUrl">$(Escape-Html $cardTitle)</a></h2>
+  <div class="aks-doc-header">
+    <span class="$catClass">$category</span>
+    <span class="aks-doc-updated">Last updated: $lastUpdated</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>$(Escape-Html $summary)</p>
+  </div>
+  $impactHtml
+  <ul>
+    $lis
+  </ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="$fileUrl" target="_blank">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank">View PR</a>
+  </div>
+</section>
+"@
   $cardTitle = $arr[0].pr_title
   if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
   $section = @"
