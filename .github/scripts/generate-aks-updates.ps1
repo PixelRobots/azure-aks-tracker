@@ -64,7 +64,7 @@ function Test-IsTinyDocsChange($Detail) {
   return ($allMd -and ($adds + $dels) -le 3)
 }
 
-function Get-GitHubCommitsSince([string]MicrosoftDocs,[string]azure-aks-docs,[string]$SinceIso) {
+function Get-GitHubCommitsSince([string]$SinceIso) {
   $all = @()
   for ($page=1; $page -le 6; $page++) {
     $uri = "https://api.github.com/repos/MicrosoftDocs/azure-aks-docs/commits?since=$([uri]::EscapeDataString($SinceIso))&per_page=100&page=$page"
@@ -77,7 +77,7 @@ function Get-GitHubCommitsSince([string]MicrosoftDocs,[string]azure-aks-docs,[st
   return $all | Where-Object { -not (Test-IsBot $_) -and -not (Test-IsNoiseMessage $_.commit.message) }
 }
 
-function Get-GitHubCommitDetail([string]MicrosoftDocs,[string]azure-aks-docs,[string]$Sha) {
+function Get-GitHubCommitDetail([string]$Sha) {
   $uri = "https://api.github.com/repos/MicrosoftDocs/azure-aks-docs/commits/$Sha"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
