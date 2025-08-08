@@ -19,8 +19,8 @@ $sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
-$ReleasesOwner = "Azure"   # <-- change if needed
-$ReleasesRepo  = "AKS"     # <-- change to the repo that actually publishes AKS releases
+$ReleasesOwner = "Azure"   # change if needed
+$ReleasesRepo  = "AKS"     # change to the repo that actually publishes AKS releases
 $ReleasesCount = 5
 
 $ghHeaders = @{
@@ -39,11 +39,11 @@ function Escape-Html([string]$s) {
   $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
-function Get-LiveDocsUrl([string]$FilePath, [string]$Locale = "en-us") {
+function Get-LiveDocsUrl([string]$FilePath) {
   if ($FilePath -match '^articles/(.+?)\.md$') {
     $p = $Matches[1] -replace '\\', '/'
     if ($p -notmatch '^azure/') { $p = "azure/$p" }
-    return "https://learn.microsoft.com/$Locale/$p"
+    return "https://learn.microsoft.com/$p"
   }
   return "https://github.com/$Owner/$Repo/blob/main/$FilePath"
 }
@@ -52,6 +52,30 @@ function Truncate([string]$text, [int]$max = 400) {
   $t = $text.Trim()
   if ($t.Length -le $max) { return $t }
   return $t.Substring(0, $max).TrimEnd() + "…"
+}
+
+# Aggressive Markdown→plain fallback for release notes
+function Convert-MarkdownToPlain([string]$md) {
+  if (-not $md) { return "" }
+  $t = $md
+  # Remove code blocks
+  $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')
+  # Images ![alt](url) -> alt
+  $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')
+  # Links [text](url) -> text
+  $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')
+  # Headings, emphasis, inline code, lists markers
+  $t = $t -replace '(^|\n)#{1,6}\s*', '$1'
+  $t = $t -replace '(\*\*|__)(.*?)\1', '$2'
+  $t = $t -replace '(\*|_)(.*?)\1', '$2'
+  $t = $t -replace '`([^`]+)`', '$1'
+  $t = $t -replace '^\s*([-*+]|\d+\.)\s+', '', 'Multiline'
+  # Blockquotes
+  $t = $t -replace '^\s*>\s?', '', 'Multiline'
+  # Excess whitespace
+  $t = [regex]::Replace($t, '\r', '')
+  $t = [regex]::Replace($t, '\n{3,}', "`n`n")
+  $t.Trim()
 }
 
 # =========================
@@ -142,6 +166,7 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
+# ===== Docs AI (vector-store) =====
 function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
@@ -162,10 +187,7 @@ function Get-PerFileSummariesViaAssistant {
     $instructions = @"
 You are summarizing substantive Azure AKS documentation changes from PRs.
 Ignore trivial edits (typos, link fixes).
-For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences about what changed", "impact": ["bullet point 1", "bullet point 2"], "category": "<category>" } ]
-Category should be a short, meaningful tag like 'General', 'Ingress', 'Security', etc.
-Summary should be 2–4 sentences describing the change for a reader.
-Impact should be 1–3 bullet points about how this change affects users/readers.
+For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences", "impact": ["..."], "category": "<short tag>" } ]
 Only return the JSON array.
 "@
 
@@ -202,7 +224,81 @@ Only return the JSON array.
     return $map
   }
   catch {
-    Write-Warning "AI summaries failed: $_"
+    Write-Warning "AI summaries (docs) failed: $_"
+    return @{}
+  }
+}
+
+# ===== Releases AI (vector-store) =====
+function Get-ReleaseSummariesViaAssistant {
+  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
+  if (-not $PSAIReady) { return @{} }
+  try {
+    Log "Uploading Releases JSON to AI provider..."
+    $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
+
+    $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
+    Log "Waiting on releases vector store..."
+    do {
+      Start-Sleep -Seconds 2
+      $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
+      if ($current) { $vs = $current }
+      Log "Releases VS status: $($vs.status)"
+    } while ($vs.status -ne 'completed')
+
+    $instructions = @"
+You are summarizing AKS GitHub Releases.
+The uploaded JSON contains an array of objects with: id, title, tag_name, published_at, body (markdown).
+Return ONLY JSON with this exact shape:
+[
+  {
+    "id": <same id as input>,
+    "summary": "1–2 sentences plain text",
+    "breaking_changes": ["..."],
+    "key_features": ["..."],
+    "good_to_know": ["..."]
+  }
+]
+- Keep bullets concise (3–8 per section when applicable).
+- No markdown in values, plain strings only.
+"@
+
+    $assistant = New-OAIAssistant `
+      -Name "AKS-Releases-Summarizer" `
+      -Instructions $instructions `
+      -Tools @{ type = 'file_search' } `
+      -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
+      -Model $Model
+
+    $userMsg = "Summarize each release in the uploaded JSON by ID. Only return the JSON array described in the instructions."
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
+    $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
+
+    $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
+      Where-Object { $_.type -eq 'text' } |
+      ForEach-Object { $_.text.value } |
+      Out-String
+
+    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
+    if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
+
+    $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
+    $map = @{}
+    foreach ($i in $arr) {
+      $map[$i.id] = @{
+        summary          = $i.summary
+        breaking_changes = $i.PSObject.Properties['breaking_changes'] ? $i.breaking_changes : @()
+        key_features     = $i.PSObject.Properties['key_features']     ? $i.key_features     : @()
+        good_to_know     = $i.PSObject.Properties['good_to_know']     ? $i.good_to_know     : @()
+      }
+    }
+    Log "AI: Release summaries ready for $($map.Keys.Count) releases."
+    return $map
+  }
+  catch {
+    Write-Warning "AI summaries (releases) failed: $_"
     return @{}
   }
 }
@@ -290,62 +386,8 @@ foreach ($file in $groups.Keys) {
   $sections.Add($section.Trim())
 }
 
-
-function Get-ReleaseAISummary {
-  param(
-    [string]$Title,
-    [string]$Body,
-    [string]$Model = "gpt-4o-mini"  # or your Azure deployment name if using Azure OpenAI
-  )
-  # Fallback quickly if AI not ready or body empty
-  if (-not $PSAIReady -or [string]::IsNullOrWhiteSpace($Body)) {
-    return $null
-  }
-
-  $sys = @"
-You are an assistant that reads a GitHub release note and extracts a structured summary.
-Return ONLY valid JSON with this shape:
-{
-  "summary": "1-2 sentences top-level summary in plain text",
-  "breaking_changes": ["..."],
-  "key_features": ["..."],
-  "good_to_know": ["..."]
-}
-Make bullets concise, 3-8 items per section when applicable. Omit marketing fluff. No markdown in values.
-"@
-
-  $user = @"
-TITLE: $Title
-
-BODY (GitHub Markdown):
-$Body
-"@
-
-  try {
-    # Ask the model for JSON
-    $resp = Invoke-OAIChatCompletion -Model $Model -System $sys -Input $user -MaxTokens 800 -Temperature 0.2
-
-    # Extract JSON robustly (strip fences if present)
-    $text = $resp.Content | Out-String
-    $clean = $text -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
-
-    # Try parse; if it fails, try to find the first {...} object in the text
-    try {
-      return ($clean | ConvertFrom-Json -ErrorAction Stop)
-    } catch {
-      $m = [regex]::Match($clean, '\{(?:[^{}]|(?<o>\{)|(?<-o>\}))*\}(?(o)(?!))', 'Singleline')
-      if ($m.Success) { return ($m.Value | ConvertFrom-Json -ErrorAction Stop) }
-      throw
-    }
-  }
-  catch {
-    Write-Warning "AI release summary failed for '$Title': $($_.Exception.Message)"
-    return $null
-  }
-}
-
 # =========================
-# MAIN FLOW — RELEASES (AI-enhanced)
+# MAIN FLOW — RELEASES (AI-enhanced via vector store)
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
@@ -357,8 +399,31 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
     return @()
   }
 }
-
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
+
+# Build releases JSON for AI
+$relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+$relInput = @(
+  foreach ($r in $releases) {
+    [pscustomobject]@{
+      id           = $r.id
+      title        = ($r.name ?? $r.tag_name)
+      tag_name     = $r.tag_name
+      published_at = $r.published_at
+      body         = $r.body
+      html_url     = $r.html_url
+      prerelease   = [bool]$r.prerelease
+    }
+  }
+)
+$relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding UTF8
+
+$releaseSummaries = @{}
+if ($PreferProvider -and $releases.Count -gt 0) {
+  $releaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
+} else {
+  Log "AI disabled or no releases."
+}
 
 function ToListHtml($arr) {
   if (-not $arr -or $arr.Count -eq 0) { return "" }
@@ -367,7 +432,6 @@ function ToListHtml($arr) {
 }
 
 $releaseCards = New-Object System.Collections.Generic.List[string]
-
 foreach ($r in $releases) {
   $version      = Escape-Html ($r.tag_name ?? $r.name)
   $titleRaw     = ($r.name ?? $r.tag_name)
@@ -376,16 +440,12 @@ foreach ($r in $releases) {
   $isPrerelease = [bool]$r.prerelease
   $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
-  # Try AI summary first
-  $ai = Get-ReleaseAISummary -Title $titleRaw -Body ($r.body ?? "")
+  # Get AI structured summary by release id; fallback to cleaned/truncated body
+  $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
-    # Fallback to crude summary
-    $bodyRaw = ($r.body ?? "") -replace '```[\s\S]*?```','' `
-                               -replace '!\[[^\]]*\]\([^)]+\)','' `
-                               -replace '\[[^\]]*\]\([^)]+\)','' `
-                               -replace '\r',''
+    $bodyPlain = Convert-MarkdownToPlain ($r.body ?? "")
     $ai = @{
-      summary          = Truncate $bodyRaw 400
+      summary          = Truncate $bodyPlain 400
       breaking_changes = @()
       key_features     = @()
       good_to_know     = @()
@@ -393,6 +453,7 @@ foreach ($r in $releases) {
   }
 
   $summaryHtml = "<p>" + (Escape-Html $ai.summary) + "</p>"
+
   $sectionsHtml = ""
   if ($ai.breaking_changes -and $ai.breaking_changes.Count) {
     $sectionsHtml += @"
@@ -450,10 +511,8 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 $updateCount = $groups.Keys.Count
 
-# Build "N release(s)" label safely outside the here-string
 [string]$relPlural = if ($releases.Count -ne 1) { 's' } else { '' }
 $releasesCountLabel = "$($releases.Count) release$relPlural"
-
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
