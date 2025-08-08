@@ -277,7 +277,7 @@ foreach ($file in $groups.Keys) {
     $prUrl = $x.pr_url
     $prTitle = Escape-Html $x.pr_title
     $prDate = $x.merged_at.ToString('yyyy-MM-dd')
-    $lis += '<li><a href="' + $prUrl + '">' + $prTitle + '</a> <small>' + $prDate + '</small></li>'
+    # $lis += '<li><a href="' + $prUrl + '">' + $prTitle + '</a> <small>' + $prDate + '</small></li>'
   }
 
   $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
