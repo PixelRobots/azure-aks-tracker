@@ -83,27 +83,61 @@ function Convert-MarkdownToPlain([string]$md) {
 # =========================
 function Test-IsBot($Item) {
   $login = $Item.user.login
-  return ($login -match '(bot|actions)')
+  return ($login -match '(bot|actions|github-actions|dependabot)')
 }
 function Test-IsNoiseMessage([string]$Message) {
   if (-not $Message) { return $false }
   $patterns = @(
-    '^merge\b', '^sync\b', 'publish from', 'update submodule',
+    '^\s*merge\b', '^\s*sync\b', 'publish from', 'update submodule',
     '\btypo\b', '\bgrammar\b', '\blink[- ]?fix\b', '\bformat(ting)?\b',
-    '\breadme\b', '^chore\b'
+    '\breadme\b', '^\s*chore\b', '^\s*ci\b', '^\s*build\b', 'automation',
+    'localization', '\bloc\b', 'update\s+(metadata|front[- ]?matter)'
   )
   foreach ($p in $patterns) { if ($Message -imatch $p) { return $true } }
   return $false
 }
-function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
-  $allMd = (($Files | Where-Object { $_.filename -notmatch '\.md$' }).Count -eq 0)
-  $total = $Adds + $Dels
+
+# Commit-file trivial detector (front-matter/link-only/tiny)
+function Test-IsDocsTrivialCommit {
+  param(
+    [object[]]$Files,
+    [string]$Title = ''
+  )
+  if (-not $Files -or $Files.Count -eq 0) { return $true }
+
+  # Only .md touched? If other assets changed, treat as non-trivial
+  $allMd = ($Files | Where-Object { $_.filename -match '\.md$' }).Count -eq $Files.Count
   if (-not $allMd) { return $false }
-  if ($total -gt 2) { return $false }
-  $tokens = 'true|false|default|kubectl|az |MutatingWebhook|ValidatingWebhook|load balanc|port|TLS|deprecate|breaking'
-  $diffText = ($Files | ForEach-Object { $_.patch }) -join ' '
-  $prTitle = ($Files | ForEach-Object { $_.pr_title }) -join ' '
-  if ($diffText -match $tokens -or $prTitle -match $tokens) { return $false }
+
+  # Super tiny across all files
+  $adds = ($Files | Measure-Object -Sum -Property additions).Sum
+  $dels = ($Files | Measure-Object -Sum -Property deletions).Sum
+  if (($adds + $dels) -le 4 -and $Files.Count -le 2) { return $true }
+
+  foreach ($f in $Files) {
+    $p = $f.patch
+    if (-not $p) { continue }
+    $lines = ($p -split "`n") | Where-Object { $_ -match '^[\+\-]' }
+    foreach ($line in $lines) {
+      $content = $line.Substring(1)
+
+      # front matter bumps
+      if ($content -match '^\s*ms\.(date|service|topic|author|reviewer|custom|subservice)\s*:') { continue }
+      # link-only edits
+      if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)' -or $content -match 'https?://') { continue }
+      # whitespace/punctuation-only
+      $stripped = ($content -replace '[\s\p{P}]','')
+      if ([string]::IsNullOrWhiteSpace($stripped)) { continue }
+
+      # Non-trivial content found
+      return $false
+    }
+  }
+
+  # commit title hints
+  if ($Title -imatch 'typo|grammar|spelling|link(s)?|format(ting)?|whitespace|lint|style|loc') { return $true }
+
+  # If we got here, all changes seen were trivial
   return $true
 }
 
@@ -164,15 +198,15 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
-# ===== Docs AI (vector-store) =====
-function Get-PerFileSummariesViaAssistant {
+# ===== File-session AI (vector-store) =====
+function Get-FileSessionSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
   try {
     Log "Uploading JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
 
-    $vsName = "aks-docs-prs-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    $vsName = "aks-docs-file-sessions-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on vector store processing..."
     do {
@@ -183,21 +217,31 @@ function Get-PerFileSummariesViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You are summarizing substantive Azure AKS documentation changes from PRs.
-Ignore trivial edits (typos, link fixes).
-For each file, return JSON: [ { "file": "<path>", "summary": "2-4 sentences", "impact": ["..."], "category": "<short tag>" } ]
-Only return the JSON array.
+You receive AKS docs *file sessions*. Each item has:
+- key: stable identifier for the session
+- file: markdown doc path
+- commit_titles: commit messages (unique)
+- patch_sample: first ~150 +/- lines across commits in the session
+
+Task: Summarize only *substantive* content changes (new sections/steps/parameters, breaking notes, meaningful rewrites).
+Ignore trivial edits (typos, link target changes, ms.date/front-matter, whitespace).
+
+Return ONLY a JSON array like:
+[
+  { "key":"<same key>", "file":"<path>", "summary":"2-3 sentences", "category":"Networking|Security|Compute|Storage|Operations|General" }
+]
+No markdown in values.
 "@
 
     $assistant = New-OAIAssistant `
-      -Name "AKS-Docs-Summarizer" `
+      -Name "AKS-Docs-FileSession-Summarizer" `
       -Instructions $instructions `
       -Tools @{ type = 'file_search' } `
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Summarize each file listed in the uploaded JSON per the instructions. Only return the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1200
+    $userMsg = "Summarize each file session by key and return ONLY the JSON array as described."
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1200 -Temperature 0.2
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -212,177 +256,191 @@ Only return the JSON array.
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
     $map = @{}
     foreach ($i in $arr) {
-      $map[$i.file] = @{
+      $k = $i.key
+      if (-not $k) { continue }
+      $map[$k] = @{
+        file     = $i.file
         summary  = $i.summary
-        impact   = $i.PSObject.Properties['impact'] ? $i.impact : @()
         category = $i.PSObject.Properties['category'] ? $i.category : 'General'
       }
     }
-    Log "AI: Summaries ready for $($map.Keys.Count) files."
+    Log "AI: Summaries ready for $($map.Keys.Count) file sessions."
     return $map
   }
   catch {
-    Write-Warning "AI summaries (docs) failed: $_"
-    return @{}
-  }
-}
-
-# ===== Releases AI (vector-store) =====
-function Get-ReleaseSummariesViaAssistant {
-  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
-  if (-not $PSAIReady) { return @{} }
-  try {
-    Log "Uploading Releases JSON to AI provider..."
-    $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
-
-    $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
-    $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
-    Log "Waiting on releases vector store..."
-    do {
-      Start-Sleep -Seconds 2
-      $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
-      if ($current) { $vs = $current }
-      Log "Releases VS status: $($vs.status)"
-    } while ($vs.status -ne 'completed')
-
-    $instructions = @"
-You are summarizing AKS GitHub Releases.
-The uploaded JSON contains an array of objects with: id, title, tag_name, published_at, body (markdown).
-Return ONLY JSON with this exact shape:
-[
-  {
-    "id": <same id as input>,
-    "summary": "1-3 sentences plain text",
-    "breaking_changes": ["..."],
-    "key_features": ["..."],
-    "good_to_know": ["..."]
-  }
-]
-- Keep bullets concise (3-8 per section when applicable).
-- No markdown in values, plain strings only.
-"@
-
-    $assistant = New-OAIAssistant `
-      -Name "AKS-Releases-Summarizer" `
-      -Instructions $instructions `
-      -Tools @{ type = 'file_search' } `
-      -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
-      -Model $Model
-
-    $userMsg = "Summarize each release in the uploaded JSON by ID. Only return the JSON array described in the instructions."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
-    $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
-
-    $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-      Where-Object { $_.type -eq 'text' } |
-      ForEach-Object { $_.text.value } |
-      Out-String
-
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
-    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
-
-    $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
-    $map = @{}
-    foreach ($i in $arr) {
-      $map[$i.id] = @{
-        summary          = $i.summary
-        breaking_changes = $i.PSObject.Properties['breaking_changes'] ? $i.breaking_changes : @()
-        key_features     = $i.PSObject.Properties['key_features']     ? $i.key_features     : @()
-        good_to_know     = $i.PSObject.Properties['good_to_know']     ? $i.good_to_know     : @()
-      }
-    }
-    Log "AI: Release summaries ready for $($map.Keys.Count) releases."
-    return $map
-  }
-  catch {
-    Write-Warning "AI summaries (releases) failed: $_"
+    Write-Warning "AI summaries (file sessions) failed: $_"
     return @{}
   }
 }
 
 # =========================
-# MAIN FLOW — DOCS
+# MAIN FLOW — DOCS (commit → file sessions)
 # =========================
-Log "Fetching PRs merged in last 7 days..."
+Log "Fetching commits merged in last 7 days..."
 $commits = Get-RecentCommits | Where-Object { -not (Test-IsBot $_) }
 Log "Found $($commits.Count) commit(s) in window."
 
-$groups = @{}
+# Collect commit-file events (already filtered)
+$events = @()
 foreach ($commit in $commits) {
   $msg = $commit.commit.message
   if (Test-IsNoiseMessage $msg) { continue }
-  $sha = $commit.sha
+
+  $sha    = $commit.sha
   $author = $commit.commit.author.name
-  $date = [DateTime]::Parse($commit.commit.author.date).ToUniversalTime()
-  $url = $commit.html_url
-  $files = Get-CommitFiles $sha
+  $date   = [DateTime]::Parse($commit.commit.author.date).ToUniversalTime()
+  $url    = $commit.html_url
+
+  $files = Get-CommitFiles $sha | Where-Object {
+    $_.filename -match '^articles/.*\.md$' -and $_.filename -notmatch '/includes/|/media/'
+  }
+  if (-not $files) { continue }
+  if (Test-IsDocsTrivialCommit -Files $files -Title $msg) { continue }
+
   foreach ($f in $files) {
-    if ($f.filename -notmatch '\.md$') { continue }
-    if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
-    if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
-    $groups[$f.filename] += [pscustomobject]@{
-      commit_msg = $msg
-      commit_url = $url
-      author     = $author
+    # Keep per-file event; store patch so AI can see actual +/- lines
+    $events += [pscustomobject]@{
+      filename     = $f.filename
       committed_at = $date
-      filename   = $f.filename
+      author       = $author
+      commit_msg   = $msg
+      commit_url   = $url
+      additions    = $f.additions
+      deletions    = $f.deletions
+      patch        = $f.patch
     }
   }
 }
 
-# AI summaries input (optional)
-$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
-$aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+# Group by file into time-boxed sessions (6-hour window)
+function Group-FileChangeSessions {
+  param(
+    [Parameter(Mandatory)] [object[]]$Events,
+    [int]$GapHours = 6
+  )
+  $byFile = $Events | Group-Object filename
+  $sessions = @()
 
-$aiInput = [pscustomobject]@{
-  since  = $SINCE_ISO
-  groups = @(
-    foreach ($k in $groups.Keys) {
-      [pscustomobject]@{
-        file     = $k
-  subjects = ($groups[$k] | ForEach-Object { $_.commit_msg } | Select-Object -Unique)
+  foreach ($g in $byFile) {
+    $items = $g.Group | Sort-Object committed_at
+    if (-not $items) { continue }
+
+    $current = @()
+    $lastAt = [DateTime]::MinValue
+
+    foreach ($it in $items) {
+      if ($current.Count -eq 0) {
+        $current += $it; $lastAt = $it.committed_at; continue
+      }
+      $gap = ($it.committed_at - $lastAt).TotalHours
+      if ($gap -le $GapHours) {
+        $current += $it
+      } else {
+        $sessions += [pscustomobject]@{
+          file        = $g.Name
+          start_at    = $current[0].committed_at
+          end_at      = $current[-1].committed_at
+          items       = $current
+        }
+        $current = @($it)
+      }
+      $lastAt = $it.committed_at
+    }
+
+    if ($current.Count -gt 0) {
+      $sessions += [pscustomobject]@{
+        file     = $g.Name
+        start_at = $current[0].committed_at
+        end_at   = $current[-1].committed_at
+        items    = $current
       }
     }
-  )
+  }
+
+  return $sessions
+}
+
+$sessions = Group-FileChangeSessions -Events $events -GapHours 6
+
+# Build AI input for file sessions
+$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
+$aiJsonPath = Join-Path $TmpRoot ("aks-file-sessions-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+
+# Create stable keys so we can map summaries back (file|start|end)
+$fileSessionPayload = @(
+  foreach ($s in $sessions) {
+    $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
+    $lines = @()
+    foreach ($it in $s.items) {
+      if ($it.patch) {
+        $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' })
+      }
+    }
+    $patchSample = ($lines | Select-Object -First 150) -join "`n"
+    [pscustomobject]@{
+      key           = $key
+      file          = $s.file
+      start_at      = $s.start_at.ToString('o')
+      end_at        = $s.end_at.ToString('o')
+      commit_titles = ($s.items.commit_msg | Select-Object -Unique)
+      patch_sample  = $patchSample
+    }
+  }
+)
+
+$aiInput = [pscustomobject]@{
+  since = $SINCE_ISO
+  file_sessions = $fileSessionPayload
 }
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
+
 Log "AI Summaries"
 Log "  [AKS] Prepared AI input: $aiJsonPath"
 
 $summaries = @{}
-if ($PreferProvider) { $summaries = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath }
-else { Log "AI disabled (no provider env configured)." }
+if ($PreferProvider -and $sessions.Count -gt 0) {
+  $summaries = Get-FileSessionSummariesViaAssistant -JsonPath $aiJsonPath
+} else {
+  Log "AI disabled or no file sessions."
+}
 
-# Render DOCS sections
+# Render DOCS sections (one card per file-session)
 $sections = New-Object System.Collections.Generic.List[string]
-foreach ($file in $groups.Keys) {
-  $arr = $groups[$file] | Sort-Object committed_at -Descending
-  $fileUrl  = Get-LiveDocsUrl -FilePath $file
-  $summary  = $summaries[$file].summary
-  $category = $summaries[$file].category
+foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
+  $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
+  $title    = ($s.items | Sort-Object committed_at -Descending | Select-Object -First 1).commit_msg
+  if (-not $title -or $title -eq "") { $title = ShortTitle $s.file }
+  $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
 
-  $lastUpdated = $arr[0].committed_at.ToString('yyyy-MM-dd HH:mm')
+  $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
+  $summary  = $summaries[$key].summary
+  $category = $summaries[$key].category
 
-  $cardTitle = $arr[0].commit_msg
-  if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
-  $commitLink = $arr[0].commit_url
+  # Minimum substance guard (if AI didn't produce a summary and delta is tiny)
+  $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
+             ($s.items | Measure-Object -Sum -Property deletions).Sum )
+  if ($delta -lt 6 -and [string]::IsNullOrWhiteSpace($summary)) { continue }
+
+  $commitsList = ($s.items | Sort-Object committed_at -Descending | Select-Object -First 3 |
+    ForEach-Object { "<li><a href=""$($_.commit_url)"" target=""_blank"" rel=""noopener"">$(Escape-Html (Truncate $_.commit_msg 120))</a></li>" }) -join ''
 
   $section = @"
 <div class="aks-doc-update">
-  <h2><a href="$fileUrl">$(Escape-Html $cardTitle)</a></h2>
+  <h2><a href="$fileUrl">$(Escape-Html (Truncate $title 140))</a></h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
-    <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
+    <span class="aks-doc-updated-pill">Last updated: $lastAt</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
     <p>$(Escape-Html $summary)</p>
   </div>
-  <ul></ul>
+  <ul class="aks-doc-files">
+    <li>File: <a href="$fileUrl" target="_blank" rel="noopener">$(Escape-Html $s.file)</a></li>
+  </ul>
+  <details class="aks-commits"><summary>Recent commits in this session</summary><ul>$commitsList</ul></details>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
-    <!-- Commit button removed as requested -->
   </div>
 </div>
 "@
@@ -405,6 +463,7 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
 # Build releases JSON for AI
+$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }  # re-ensure
 $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 $relInput = @(
   foreach ($r in $releases) {
@@ -423,6 +482,79 @@ $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding U
 
 $releaseSummaries = @{}
 if ($PreferProvider -and $releases.Count -gt 0) {
+  # Reuse your existing releases assistant
+  function Get-ReleaseSummariesViaAssistant {
+    param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
+    if (-not $PSAIReady) { return @{} }
+    try {
+      Log "Uploading Releases JSON to AI provider..."
+      $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
+
+      $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
+      $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
+      Log "Waiting on releases vector store..."
+      do {
+        Start-Sleep -Seconds 2
+        $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
+        if ($current) { $vs = $current }
+        Log "Releases VS status: $($vs.status)"
+      } while ($vs.status -ne 'completed')
+
+      $instructions = @"
+You are summarizing AKS GitHub Releases.
+The uploaded JSON contains an array of objects with: id, title, tag_name, published_at, body (markdown).
+Return ONLY JSON with this exact shape:
+[
+  {
+    "id": <same id as input>,
+    "summary": "1-3 sentences plain text",
+    "breaking_changes": ["..."],
+    "key_features": ["..."],
+    "good_to_know": ["..."]
+  }
+]
+- Keep bullets concise (3-8 per section when applicable).
+- No markdown in values, plain strings only.
+"@
+
+      $assistant = New-OAIAssistant `
+        -Name "AKS-Releases-Summarizer" `
+        -Instructions $instructions `
+        -Tools @{ type = 'file_search' } `
+        -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
+        -Model $Model
+
+      $userMsg = "Summarize each release in the uploaded JSON by ID. Only return the JSON array described in the instructions."
+      $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
+      $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
+
+      $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
+        Where-Object { $_.type -eq 'text' } |
+        ForEach-Object { $_.text.value } |
+        Out-String
+
+      $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+      $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
+      if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
+
+      $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
+      $map = @{}
+      foreach ($i in $arr) {
+        $map[$i.id] = @{
+          summary          = $i.summary
+          breaking_changes = $i.PSObject.Properties['breaking_changes'] ? $i.breaking_changes : @()
+          key_features     = $i.PSObject.Properties['key_features']     ? $i.key_features     : @()
+          good_to_know     = $i.PSObject.Properties['good_to_know']     ? $i.good_to_know     : @()
+        }
+      }
+      Log "AI: Release summaries ready for $($map.Keys.Count) releases."
+      return $map
+    }
+    catch {
+      Write-Warning "AI summaries (releases) failed: $_"
+      return @{}
+    }
+  }
   $releaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
 } else {
   Log "AI disabled or no releases."
@@ -511,7 +643,7 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels)
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = $groups.Keys.Count
+$updateCount = $sessions.Count
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
