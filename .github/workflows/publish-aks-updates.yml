@@ -56,15 +56,13 @@ jobs:
         if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          # Write HTML to a file safely using a here-document
           cat > html.txt <<'EOF'
           ${{ steps.gen.outputs.html }}
           EOF
       
-          # Build JSON with HTML as a raw string
+          # Build JSON safely (interpolation variant)
           PAYLOAD=$(jq -n --rawfile content html.txt \
-          '{content: "<!-- wp:html -->\n" + $content + "\n<!-- /wp:html -->", status: "publish"}')
-
+            '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}')
       
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
