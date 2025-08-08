@@ -419,61 +419,52 @@ if ($PreferProvider -and $sessions.Count -gt 0) { $aiVerdicts = Get-FileSessionV
 else { Log "AI disabled or no file sessions." }
 
 # =========================
-# RENDER DOCS — lenient keep (replicates my fuller list)
+# RENDER DOCS — lightly lenient (AI helps, but doesn't veto)
 # =========================
 $sections = New-Object System.Collections.Generic.List[string]
 
-function HasHeadingChange([string]$patch) {
+function Has-HeadingChange([string]$patch) {
   if (-not $patch) { return $false }
-  # lines that add/remove headings like "#", "##", etc.
+  # +/- lines that look like markdown headings
   return ($patch -split "`n" | Where-Object { $_ -match '^[\+\-]\s*#{1,6}\s' }).Count -gt 0
 }
 
 foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
   $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
-  $v = $aiVerdicts[$key]  # may be $null if AI skipped/failed
-  $score = if ($v) { [double]$v.score } else { 0.0 }
-  $verdict = if ($v) { $v.verdict } else { "skip" }
-  $summary = if ($v) { $v.summary } else { "" }
-  $category = if ($v -and $v.category) { $v.category } else { "General" }
+  $v = $aiVerdicts[$key]  # may be $null
 
-  # ---- LENIENT KEEP RULES ----
+  # --- signals ---
   $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
   $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
-  $delta = ($adds + $dels)
-  $hasAdded   = ($s.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
-  $hasRemoved = ($s.items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
-  $hasHeadings = ($s.items | Where-Object { HasHeadingChange $_.patch }).Count -gt 0
+  $delta = $adds + $dels
+  $hasAdded    = ($s.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
+  $hasRemoved  = ($s.items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
+  $hasHeadings = ($s.items | Where-Object { Has-HeadingChange $_.patch }).Count -gt 0
 
-  $keep =
-    # If AI likes it, keep it regardless of score (AI summarization still helpful)
-    ($v -and $verdict -eq 'keep') -or
-    # New page or removal is always interesting
-    $hasAdded -or $hasRemoved -or
-    # Small but real content edits
-    ($delta -ge 2) -or
-    # Section/heading structure changed
-    $hasHeadings
-
+  # --- keep rule (softer): trust AI "keep" regardless of score, OR obvious content change
+  $aiSaysKeep = ($v -and $v.verdict -eq 'keep')
+  $keep = $aiSaysKeep -or $hasAdded -or $hasRemoved -or $hasHeadings -or ($delta -ge 3)
   if (-not $keep) { continue }
 
-  # Build link/title/pills
-  $fileUrl = Get-LiveDocsUrl -FilePath $s.file
-  $display = Get-DocDisplayName $s.file
-  $kind    = Get-SessionKind -session $s -verdict $v
-  $title   = Build-ShortTitle -display $display -summary $summary -kind $kind
-  $lastAt  = $s.end_at.ToString('yyyy-MM-dd HH:mm')
+  # --- fields (with safe fallbacks if AI is null)
+  $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
+  $display  = Get-DocDisplayName $s.file
+  $summary  = if ($v) { $v.summary } else { "" }
+  $category = if ($v -and $v.category) { $v.category } else { "General" }
+  $kind     = Get-SessionKind -session $s -verdict $v
+  $title    = Build-ShortTitle -display $display -summary $summary -kind $kind
+  $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
   $kindPill = KindToPillHtml $kind
 
-  # PR link (first item is fine)
+  # PR link (use first item; good enough for the session)
   $prNum = $s.items[0].pr_number
   $prUrl = $s.items[0].pr_url
   $prLink = if ($prNum) { "<a class=""aks-doc-pr"" href=""$prUrl"" target=""_blank"" rel=""noopener"">PR #$prNum</a>" } else { "" }
 
-  # If AI didn’t produce a summary, synthesize something tiny
+  # If AI didn’t give a summary, synthesize a tiny factual one
   if ([string]::IsNullOrWhiteSpace($summary)) {
     $statusSet = ($s.items.status | Select-Object -Unique) -join ', '
-    $summary = "Changes ($statusSet): +$adds/-$dels. Headings changed: $hasHeadings."
+    $summary = "Changes ($statusSet): +$adds / -$dels." + ($(if ($hasHeadings) { " Headings updated." } else { "" }))
   }
 
   $section = @"
@@ -496,6 +487,7 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
 "@
   $sections.Add($section.Trim())
 }
+
 
 # =========================
 # MAIN FLOW — RELEASES (unchanged)
