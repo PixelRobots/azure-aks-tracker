@@ -337,8 +337,6 @@ $html = @"
   <div class="aks-docs-list">
     $($sections -join "`n")
   </div>
-  </br>
-  </br>
 </div>
 "@.Trim()
 
