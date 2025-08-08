@@ -60,8 +60,10 @@ jobs:
           cat > html.txt <<'EOF'
           ${{ steps.gen.outputs.html }}
           EOF
-          # Use jq to read from the file
-          PAYLOAD=$(jq -n --slurpfile content html.txt '{content: $content[0]}')
+      
+          # Build JSON with HTML as a raw string
+          PAYLOAD=$(jq -n --rawfile content html.txt '{content: $content, status: "publish"}')
+      
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
