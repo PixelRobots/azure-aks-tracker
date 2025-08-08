@@ -188,7 +188,7 @@ Write-Host "::endgroup::"
 # Filter & Group
 # ====================================================================================
 Write-Host "::group::Filter & Group"
-$prFiltered = $prDetails | Where-Object { ($_ .user -notmatch '(bot|actions)') -and (-not (Test-IsNoiseMessage $_.title)) }
+$prFiltered = $prDetails | Where-Object { ($_.user -notmatch '(bot|actions)') -and (-not (Test-IsNoiseMessage $_.title)) }
 
 $entries = foreach ($pr in $prFiltered) {
   foreach ($f in $pr.files) {
