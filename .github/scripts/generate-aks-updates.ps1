@@ -95,14 +95,15 @@ function Test-IsNoiseMessage([string]$Message) {
 
 # Path allow/deny: AKS only, exclude TOCs, includes, media, templates, samples
 function Test-IsDocsNoisePath([string]$Path) {
-  # allowlist: only AKS user docs
-  if ($Path -notmatch '^articles/azure/aks/.*\.md$') { return $true }
+  # allow AKS docs whether they live under articles/azure/aks/ or articles/aks/
+  if ($Path -notmatch '^articles/(azure/)?aks/.*\.md$') { return $true }
 
-  # denylist
+  # deny common noise
   if ($Path -match '/includes/|/media/|/templates?/|/samples?/') { return $true }
   if ($Path -match '/TOC\.md$' -or $Path -match '/toc\.yml$') { return $true }
   return $false
 }
+
 
 # Commit-file trivial detector (front-matter/link-only/tiny)
 function Test-IsDocsTrivialCommit {
@@ -112,22 +113,17 @@ function Test-IsDocsTrivialCommit {
   )
   if (-not $Files -or $Files.Count -eq 0) { return $true }
 
-  # Extract only files we actually care about for triviality analysis
-  $docFiles = $Files | Where-Object { $_.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $_.filename) }
-  if (-not $docFiles -or $docFiles.Count -eq 0) { return $true }  # nothing relevant
-
-  # If any non-md relevant assets exist, treat as potentially substantive
-  $allMd = ($docFiles.Count -eq $Files.Count)
-
-  # Super tiny (total over relevant files)
-  $adds = ($docFiles | Measure-Object -Sum -Property additions).Sum
-  $dels = ($docFiles | Measure-Object -Sum -Property deletions).Sum
-  if (($adds + $dels) -le 4 -and $docFiles.Count -le 2) { return $true }
+  # Super tiny across the files we already pre-filtered
+  $adds = ($Files | Measure-Object -Sum -Property additions).Sum
+  $dels = ($Files | Measure-Object -Sum -Property deletions).Sum
+  if (($adds + $dels) -le 4 -and $Files.Count -le 2) { return $true }
 
   $frontMatterOrLinksOnly = $true
-  foreach ($f in $docFiles) {
+  foreach ($f in $Files) {
     $p = $f.patch
-    if (-not $p) { continue }
+    # If we don't get a patch (large diff etc.), assume it's NOT trivial
+    if (-not $p) { $frontMatterOrLinksOnly = $false; break }
+
     $lines = ($p -split "`n") | Where-Object { $_ -match '^[\+\-]' }
     foreach ($line in $lines) {
       $content = $line.Substring(1)
@@ -136,10 +132,9 @@ function Test-IsDocsTrivialCommit {
       if ($content -match '^\s*(ms|author|manager|ms\.author|ms\.date|ms\.service|ms\.subservice|ms\.topic|ms\.custom|ms\.collection|ms\.devlang)\s*:\s*') { continue }
 
       # link-only edits or bare urls
-      if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)') { continue }
-      if ($content -match 'https?://') { continue }
+      if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)' -or $content -match 'https?://') { continue }
 
-      # heading/whitespace/punct-only line
+      # whitespace/heading-only
       $stripped = ($content -replace '[\s\p{P}]','')
       if ([string]::IsNullOrWhiteSpace($stripped)) { continue }
       if ($content -match '^\s*#{1,6}\s*[A-Za-z0-9\p{P}\s]*$') {
@@ -147,7 +142,7 @@ function Test-IsDocsTrivialCommit {
         if ($letters.Length -le 4) { continue }
       }
 
-      # looks substantive
+      # anything else looks substantive
       $frontMatterOrLinksOnly = $false
       break
     }
@@ -156,11 +151,12 @@ function Test-IsDocsTrivialCommit {
 
   if ($frontMatterOrLinksOnly) { return $true }
 
-  # Title hints: typo/format/loc/etc.
+  # title hints
   if ($Title -imatch 'typo|grammar|spelling|link(s)?|format(ting)?|whitespace|lint|style|loc|broken\s*link|fix links?') { return $true }
 
   return $false
 }
+
 
 # =========================
 # FETCH COMMITS LAST 7 DAYS
@@ -386,7 +382,13 @@ function Group-FileChangeSessions {
   return $sessions
 }
 
-$sessions = Group-FileChangeSessions -Events $events -GapHours 6
+if (-not $events -or $events.Count -eq 0) {
+  Log "No qualifying doc events found in window (after filters)."
+  $sessions = @()
+} else {
+  $sessions = Group-FileChangeSessions -Events $events -GapHours 6
+}
+
 
 # PRE-AI: Drop featherweight sessions (< 8 lines changed) unless multiple commits
 $sessions = @(
