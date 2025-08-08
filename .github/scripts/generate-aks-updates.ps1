@@ -160,8 +160,11 @@ function Get-PerFileSummariesViaAssistant {
   $instructions = @"
 You are summarizing substantive Azure AKS documentation changes from PRs.
 Ignore trivial edits (typos, link fixes).
-For each file, return JSON: [ { "file": "<path>", "summary": "1–2 sentences", "category": "<category>" } ]
-Category should be a short, meaningful tag like 'General', 'Ingress', 'Security', etc. Only return the JSON array.
+For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences about what changed", "impact": ["bullet point 1", "bullet point 2"], "category": "<category>" } ]
+Category should be a short, meaningful tag like 'General', 'Ingress', 'Security', etc.
+Summary should be 2–4 sentences describing the change for a reader.
+Impact should be 1–3 bullet points about how this change affects users/readers (e.g., new features, improved clarity, breaking changes, etc.).
+Only return the JSON array.
 "@
 
     Log "Creating assistant + run..."
@@ -191,6 +194,7 @@ Category should be a short, meaningful tag like 'General', 'Ingress', 'Security'
     foreach ($i in $arr) {
       $map[$i.file] = @{
         summary = $i.summary
+        impact = $i.PSObject.Properties['impact'] ? $i.impact : @()
         category = $i.PSObject.Properties['category'] ? $i.category : 'General'
       }
     }
@@ -265,6 +269,7 @@ foreach ($file in $groups.Keys) {
   $arr = $groups[$file] | Sort-Object merged_at -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
   $summary = $summaries[$file].summary
+  $impactArr = $summaries[$file].impact
   $category = $summaries[$file].category
 
   $lis = ""
@@ -277,29 +282,38 @@ foreach ($file in $groups.Keys) {
 
   $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
   $summaryText = $summary
-  $impactText = "" # If you want to split summary/impact, parse from $summary or AI output
-
   $impactHtml = ""
-  if ($impactText) {
-    $impactHtml = '<div class="aks-doc-impact"><strong>Impact</strong><p>' + (Escape-Html $impactText) + '</p></div>'
+  if ($impactArr -and $impactArr.Count -gt 0) {
+    $impactHtml = '<div class="aks-doc-impact"><strong>Impact</strong><ul>'
+    foreach ($impactItem in $impactArr) {
+      $impactHtml += '<li>' + (Escape-Html $impactItem) + '</li>'
+    }
+    $impactHtml += '</ul></div>'
   }
 
+  $prLink = $arr[0].pr_url
+  # Prefer PR title for card header, fallback to file name
+  $cardTitle = $arr[0].pr_title
+  if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
   $section = @"
 <section class=\"aks-doc-update\">
+  <h2><a href=\"$fileUrl\">$(Escape-Html $cardTitle)</a></h2>
   <div class=\"aks-doc-header\">
     <span class=\"aks-doc-category\">$category</span>
     <span class=\"aks-doc-updated\">Last updated: $lastUpdated</span>
   </div>
-  <h3><a href=\"$fileUrl\">$(Escape-Html (ShortTitle $file))</a></h3>
   <div class=\"aks-doc-summary\">
     <strong>Summary</strong>
-    <p>$(Escape-Html $summaryText)</p>
+    <p>$(Escape-Html $summary)</p>
   </div>
   $impactHtml
   <ul>
     $lis
   </ul>
-  <a class=\"aks-doc-link\" href=\"$fileUrl\" target=\"_blank\">View Documentation</a>
+  <div class=\"aks-doc-buttons\">
+    <a class=\"aks-doc-link\" href=\"$fileUrl\" target=\"_blank\">View Documentation</a>
+    <a class=\"aks-doc-link aks-doc-link-pr\" href=\"$prLink\" target=\"_blank\">View PR</a>
+  </div>
 </section>
 "@
   $section = $section.Trim()
