@@ -112,7 +112,7 @@ function Get-FirstSentence([string]$text) {
   if ([string]::IsNullOrWhiteSpace($text)) { return "" }
   $t = $text.Trim()
   $parts = [regex]::Split($t, '(?<=[\.!?])\s+')
-  if ($parts.Count -gt 0) { return $parts[0].Trim(' ', '`"', '''') }
+  if ($parts.Count -gt 0) { return $parts[0].Trim(@([char]' ', [char]'"', [char]0x27)) }
   return $t
 }
 function Build-Title([string]$display, [string]$summary, [string]$kind) {
