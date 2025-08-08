@@ -452,7 +452,7 @@ function Group-FileChangeSessions {
 }
 
 if (-not $events -or $events.Count -eq 0) { Log "No qualifying doc events found in window."; $sessions = @() }
-else { $sessions = Group-FileChangeSessions -Events $events -GapHours 6 }
+else { $sessions = Group-FileChangeSessions -Events $events -GapHours 3 }
 
 # Build AI input for file sessions (NO pre-AI trimming)
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
