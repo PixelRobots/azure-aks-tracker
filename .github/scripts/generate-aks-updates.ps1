@@ -333,20 +333,15 @@ $html = @"
     Check back often as data is automatically refreshed every 12 hours.</p>
   </div>
 
-  <!-- SINGLE WRAPPER: radios, labels, and panels are siblings -->
+  <!-- :target-based tabs (no inputs) -->
   <div class="aks-tabs">
-    <!-- radios (hidden by CSS) -->
-    <input type="radio" name="aks-tab" id="aks-tab-docs" class="aks-tab-input" checked>
-    <input type="radio" name="aks-tab" id="aks-tab-releases" class="aks-tab-input">
+    <nav class="aks-tabs-nav">
+      <a class="aks-tab-link" href="#aks-tab-docs">Documentation Updates</a>
+      <a class="aks-tab-link" href="#aks-tab-releases">AKS Releases</a>
+    </nav>
 
-    <!-- labels -->
-    <div class="aks-tabs-nav">
-      <label for="aks-tab-docs" class="aks-tab-label">Documentation Updates</label>
-      <label for="aks-tab-releases" class="aks-tab-label">AKS Releases</label>
-    </div>
-
-    <!-- panels -->
-    <div class="aks-tab-panel" data-for="docs">
+    <!-- Panels -->
+    <div class="aks-tab-panel" id="aks-tab-docs">
       <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
       <span class="aks-doc-updated-pill">Last updated: $lastUpdated
         <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
@@ -356,7 +351,7 @@ $html = @"
       </div>
     </div>
 
-    <div class="aks-tab-panel" data-for="releases">
+    <div class="aks-tab-panel" id="aks-tab-releases">
       <p>No AKS release notes are available yet. Check back soon.</p>
     </div>
   </div>
@@ -365,6 +360,7 @@ $html = @"
   </br>
 </div>
 "@.Trim()
+
 
 
 # Hash for idempotency
