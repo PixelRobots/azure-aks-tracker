@@ -330,7 +330,7 @@ $html = @"
   </div>
   <h2>Documentation Updates</h2>
   <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
-  <div class="aks-docs-updated">Last updated: $lastUpdated</div>
+  <div class="aks-doc-updated-pill">Last updated: $lastUpdated</div>
   <div class="aks-docs-list">
     $($sections -join "`n")
   </div>
