@@ -269,7 +269,6 @@ foreach ($file in $groups.Keys) {
   $arr = $groups[$file] | Sort-Object merged_at -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
   $summary = $summaries[$file].summary
-  $impactArr = $summaries[$file].impact
   $category = $summaries[$file].category
 
   $lis = ""
@@ -300,7 +299,7 @@ foreach ($file in $groups.Keys) {
   <h2><a href=\"$fileUrl\">$(Escape-Html $cardTitle)</a></h2>
   <div class=\"aks-doc-header\">
     <span class=\"aks-doc-category\">$category</span>
-    <span class=\"aks-doc-updated\">Last updated: $lastUpdated</span>
+  <span class=\"aks-doc-updated-pill\">Last updated: $lastUpdated</span>
   </div>
   <div class=\"aks-doc-summary\">
     <strong>Summary</strong>
