@@ -394,7 +394,7 @@ $fileSessionPayload = @(
     $commitsCount = $s.items.Count
     $lines = @()
     foreach ($it in $s.items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
-    $patchSample = ($lines | Select-Object -First 250) -join "`n"
+    $patchSample = ($lines | Select-Object -First 600) -join "`n"
     [pscustomobject]@{
       key             = $key
       file            = $s.file
@@ -419,53 +419,34 @@ if ($PreferProvider -and $sessions.Count -gt 0) { $aiVerdicts = Get-FileSessionV
 else { Log "AI disabled or no file sessions." }
 
 # =========================
-# RENDER DOCS — lightly lenient (AI helps, but doesn't veto)
+# RENDER DOCS — show everything; AI only decorates
 # =========================
 $sections = New-Object System.Collections.Generic.List[string]
-
-function Has-HeadingChange([string]$patch) {
-  if (-not $patch) { return $false }
-  # +/- lines that look like markdown headings
-  return ($patch -split "`n" | Where-Object { $_ -match '^[\+\-]\s*#{1,6}\s' }).Count -gt 0
-}
 
 foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
   $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
   $v = $aiVerdicts[$key]  # may be $null
 
-  # --- signals ---
-  $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
-  $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
-  $delta = $adds + $dels
-  $hasAdded    = ($s.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
-  $hasRemoved  = ($s.items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
-  $hasHeadings = ($s.items | Where-Object { Has-HeadingChange $_.patch }).Count -gt 0
-
-  # --- keep rule (softer): trust AI "keep" regardless of score, OR obvious content change
-  $aiSaysKeep = ($v -and $v.verdict -eq 'keep')
-  $keep = $aiSaysKeep -or $hasAdded -or $hasRemoved -or $hasHeadings -or ($delta -ge 3)
-  if (-not $keep) { continue }
-
   # --- fields (with safe fallbacks if AI is null)
   $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
   $display  = Get-DocDisplayName $s.file
-  $summary  = if ($v) { $v.summary } else { "" }
+
+  $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
+  $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
+  $statusSet = ($s.items.status | Select-Object -Unique) -join ', '
+
+  $summary  = if ($v -and $v.summary) { $v.summary } else { "Changes ($statusSet): +$adds / -$dels." }
   $category = if ($v -and $v.category) { $v.category } else { "General" }
+
   $kind     = Get-SessionKind -session $s -verdict $v
   $title    = Build-ShortTitle -display $display -summary $summary -kind $kind
   $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
   $kindPill = KindToPillHtml $kind
 
-  # PR link (use first item; good enough for the session)
+  # PR link (use first item)
   $prNum = $s.items[0].pr_number
   $prUrl = $s.items[0].pr_url
   $prLink = if ($prNum) { "<a class=""aks-doc-pr"" href=""$prUrl"" target=""_blank"" rel=""noopener"">PR #$prNum</a>" } else { "" }
-
-  # If AI didn’t give a summary, synthesize a tiny factual one
-  if ([string]::IsNullOrWhiteSpace($summary)) {
-    $statusSet = ($s.items.status | Select-Object -Unique) -join ', '
-    $summary = "Changes ($statusSet): +$adds / -$dels." + ($(if ($hasHeadings) { " Headings updated." } else { "" }))
-  }
 
   $section = @"
 <div class="aks-doc-update">
@@ -487,7 +468,6 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
 "@
   $sections.Add($section.Trim())
 }
-
 
 # =========================
 # MAIN FLOW — RELEASES (unchanged)
