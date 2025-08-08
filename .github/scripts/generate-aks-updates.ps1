@@ -60,7 +60,15 @@ function Test-IsNoiseMessage([string]$Message) {
 }
 function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
   $allMd = (($Files | Where-Object { $_.filename -notmatch '\.md$' }).Count -eq 0)
-  return ($allMd -and ($Adds + $Dels) -le 3)
+  $total = $Adds + $Dels
+  if (-not $allMd) { return $false }
+  if ($total > 2) { return $false }
+  # Check for important tokens in diff or PR title
+  $tokens = 'true|false|default|kubectl|az |MutatingWebhook|ValidatingWebhook|load balanc|port|TLS|deprecate|breaking'
+  $diffText = ($Files | ForEach-Object { $_.patch }) -join ' '
+  $prTitle = ($Files | ForEach-Object { $_.pr_title }) -join ' '
+  if ($diffText -match $tokens -or $prTitle -match $tokens) { return $false }
+  return $true
 }
 
 # =========================
@@ -202,8 +210,10 @@ foreach ($pr in $prs) {
 
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
-    if ($f.filename -notmatch '\.md$') { continue }
-    if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
+  if ($f.filename -notmatch '\.md$') { continue }
+  # Attach PR title to file object for filter
+  $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
+  if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
       pr_title = $pr.title
@@ -280,4 +290,4 @@ $bytes  = [Text.Encoding]::UTF8.GetBytes($html)
 $hash   = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
 # Emit JSON (Action step will read this)
-[pscustomobject]@{ html = $html; hash = $hash } | ConvertTo-Json -Depth 6
+[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $summaries } | ConvertTo-Json -Depth 6
