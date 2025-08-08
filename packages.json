@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "scripts": {
+    "ci": "npm ci"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2"
+  }
+}
