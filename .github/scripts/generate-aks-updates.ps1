@@ -13,6 +13,9 @@ if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 # Prefer OpenAI if OpenAIKey exists, else AzureOpenAI if all vars exist, else disabled
 $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' } else { '' }
 
+# AI gate threshold (higher = stricter)
+$MinAIScore = 0.60
+
 # Docs window: last 7 days from UTC midnight
 $now = [DateTime]::UtcNow
 $sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-7)
@@ -93,17 +96,15 @@ function Test-IsNoiseMessage([string]$Message) {
   return $false
 }
 
-# Path allow/deny: AKS only, exclude TOCs, includes, media, templates, samples
+# Path allow/deny: Only AKS user docs; exclude TOCs, includes, media, templates, samples
 function Test-IsDocsNoisePath([string]$Path) {
-  # allow AKS docs whether they live under articles/azure/aks/ or articles/aks/
+  # allow AKS docs whether under articles/azure/aks/ or articles/aks/
   if ($Path -notmatch '^articles/(azure/)?aks/.*\.md$') { return $true }
-
   # deny common noise
   if ($Path -match '/includes/|/media/|/templates?/|/samples?/') { return $true }
   if ($Path -match '/TOC\.md$' -or $Path -match '/toc\.yml$') { return $true }
   return $false
 }
-
 
 # Commit-file trivial detector (front-matter/link-only/tiny)
 function Test-IsDocsTrivialCommit {
@@ -113,7 +114,7 @@ function Test-IsDocsTrivialCommit {
   )
   if (-not $Files -or $Files.Count -eq 0) { return $true }
 
-  # Super tiny across the files we already pre-filtered
+  # Tiny across these files
   $adds = ($Files | Measure-Object -Sum -Property additions).Sum
   $dels = ($Files | Measure-Object -Sum -Property deletions).Sum
   if (($adds + $dels) -le 4 -and $Files.Count -le 2) { return $true }
@@ -156,7 +157,6 @@ function Test-IsDocsTrivialCommit {
 
   return $false
 }
-
 
 # =========================
 # FETCH COMMITS LAST 7 DAYS
@@ -215,15 +215,15 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
-# ===== File-session AI (vector-store) =====
-function Get-FileSessionSummariesViaAssistant {
+# ===== File-session AI (verdicting vector-store) =====
+function Get-FileSessionVerdictsViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
   try {
     Log "Uploading JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
 
-    $vsName = "aks-docs-file-sessions-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    $vsName = "aks-docs-file-verdicts-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on vector store processing..."
     do {
@@ -234,31 +234,43 @@ function Get-FileSessionSummariesViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You receive AKS docs *file sessions*. Each item has:
-- key: stable identifier for the session
-- file: markdown doc path
-- commit_titles: commit messages (unique)
-- patch_sample: ~150 +/- lines across commits
+You are a strict filter for Azure AKS documentation updates.
 
-Summarize only *substantive* content changes (new sections/steps/parameters, breaking notes, meaningful rewrites).
-Ignore trivial edits (typos, link target changes, ms.date/front-matter, whitespace).
+You receive file-sessions with:
+- file, total_additions, total_deletions, commits_count
+- commit_titles[], patch_sample (first ~250 +/- lines)
+Goal: decide if the session is SUBSTANTIVE for AKS users.
 
-Return ONLY a JSON array like:
+KEEP only if it changes user-facing behavior, procedures, parameters, compatibility, version support, limits/quotas, security posture, networking, pricing/regions, or adds/removes meaningful sections.
+SKIP if it's typos, grammar, whitespace, link retargets, front-matter/ms.* metadata, heading casing, table/TOC shuffles, localization, formatting-only, image/link path fixes, or trivial notes.
+
+Output ONLY JSON array:
 [
-  { "key":"<same key>", "file":"<path>", "summary":"2-3 sentences", "category":"Networking|Security|Compute|Storage|Operations|General" }
+  {
+    ""key"": ""<same key>"",
+    ""verdict"": ""keep"" | ""skip"",
+    ""score"": 0.0-1.0,
+    ""reason"": ""short plain text"",
+    ""category"": ""Networking|Security|Compute|Storage|Operations|General"",
+    ""summary"": ""2-3 sentences""   // REQUIRED when verdict=keep; empty string when skip
+  }
 ]
-No markdown in values.
+
+Rules:
+- When in doubt, use verdict=skip and score <= 0.4.
+- Do NOT invent content not supported by patch_sample/commit_titles.
+- Plain strings only; no markdown.
 "@
 
     $assistant = New-OAIAssistant `
-      -Name "AKS-Docs-FileSession-Summarizer" `
+      -Name "AKS-Docs-FileVerdict-Summarizer" `
       -Instructions $instructions `
       -Tools @{ type = 'file_search' } `
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Summarize each file session by key and return ONLY the JSON array as described."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1200 -Temperature 0.2
+    $userMsg = "Return ONLY the JSON array of verdicts as specified."
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.1
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -276,16 +288,18 @@ No markdown in values.
       $k = $i.key
       if (-not $k) { continue }
       $map[$k] = @{
-        file     = $i.file
-        summary  = $i.summary
-        category = $i.PSObject.Properties['category'] ? $i.category : 'General'
+        verdict  = ($i.verdict ?? "skip")
+        score    = [double]($i.score ?? 0)
+        reason   = ($i.reason ?? "")
+        category = ($i.PSObject.Properties['category'] ? $i.category : 'General')
+        summary  = ($i.PSObject.Properties['summary']  ? $i.summary  : "")
       }
     }
-    Log "AI: Summaries ready for $($map.Keys.Count) file sessions."
+    Log "AI: Verdicts ready for $($map.Keys.Count) file sessions."
     return $map
   }
   catch {
-    Write-Warning "AI summaries (file sessions) failed: $_"
+    Write-Warning "AI verdicts failed: $_"
     return @{}
   }
 }
@@ -337,7 +351,9 @@ foreach ($commit in $commits) {
 # Group by file into time-boxed sessions (6-hour window)
 function Group-FileChangeSessions {
   param(
-    [Parameter(Mandatory)] [object[]]$Events,
+    [Parameter(Mandatory)]
+    [AllowEmptyCollection()]
+    [object[]]$Events,
     [int]$GapHours = 6
   )
   $byFile = $Events | Group-Object filename
@@ -389,7 +405,6 @@ if (-not $events -or $events.Count -eq 0) {
   $sessions = Group-FileChangeSessions -Events $events -GapHours 6
 }
 
-
 # PRE-AI: Drop featherweight sessions (< 8 lines changed) unless multiple commits
 $sessions = @(
   foreach ($s in $sessions) {
@@ -400,27 +415,36 @@ $sessions = @(
   }
 )
 
-# Build AI input for file sessions
+# Build AI input for file sessions (richer features)
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-file-sessions-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 
 $fileSessionPayload = @(
   foreach ($s in $sessions) {
     $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
+
+    $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
+    $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
+    $commitsCount = $s.items.Count
+
     $lines = @()
     foreach ($it in $s.items) {
       if ($it.patch) {
         $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' })
       }
     }
-    $patchSample = ($lines | Select-Object -First 150) -join "`n"
+    $patchSample = ($lines | Select-Object -First 250) -join "`n"
+
     [pscustomobject]@{
-      key           = $key
-      file          = $s.file
-      start_at      = $s.start_at.ToString('o')
-      end_at        = $s.end_at.ToString('o')
-      commit_titles = ($s.items.commit_msg | Select-Object -Unique)
-      patch_sample  = $patchSample
+      key              = $key
+      file             = $s.file
+      start_at         = $s.start_at.ToString('o')
+      end_at           = $s.end_at.ToString('o')
+      total_additions  = $adds
+      total_deletions  = $dels
+      commits_count    = $commitsCount
+      commit_titles    = ($s.items.commit_msg | Select-Object -Unique)
+      patch_sample     = $patchSample
     }
   }
 )
@@ -430,29 +454,34 @@ $aiInput = [pscustomobject]@{
   file_sessions = $fileSessionPayload
 }
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
-Log "AI Summaries"
+
+Log "AI Verdicts"
 Log "  [AKS] Prepared AI input: $aiJsonPath"
 
-$summaries = @{}
+$aiVerdicts = @{}
 if ($PreferProvider -and $sessions.Count -gt 0) {
-  $summaries = Get-FileSessionSummariesViaAssistant -JsonPath $aiJsonPath
+  $aiVerdicts = Get-FileSessionVerdictsViaAssistant -JsonPath $aiJsonPath
 } else {
   Log "AI disabled or no file sessions."
 }
 
-# Render DOCS sections (one card per file-session)
+# Render DOCS sections (one card per file-session) — only AI-kept ones
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
+  $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
+  $v = $aiVerdicts[$key]
+  if (-not $v) { continue }
+  if ($v.verdict -ne 'keep' -or $v.score -lt $MinAIScore) { continue }
+
   $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
   $title    = ($s.items | Sort-Object committed_at -Descending | Select-Object -First 1).commit_msg
   if (-not $title -or $title -eq "") { $title = ShortTitle $s.file }
   $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
 
-  $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
-  $summary  = $summaries[$key].summary
-  $category = $summaries[$key].category
+  $summary  = $v.summary
+  $category = $v.category
 
-  # POST-AI: guard — if no summary AND still tiny, bin it
+  # Backstop: still featherweight AND no summary? skip
   $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
              ($s.items | Measure-Object -Sum -Property deletions).Sum )
   if ([string]::IsNullOrWhiteSpace($summary) -and $delta -lt 8) { continue }
@@ -538,7 +567,7 @@ You are summarizing AKS GitHub Releases.
 The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
 Return ONLY JSON:
 [
-  { "id": <same id>, "summary": "1-3 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."] }
+  { ""id"": <same id>, ""summary"": ""1-3 sentences"", ""breaking_changes"": [""...""], ""key_features"": [""...""], ""good_to_know"": [""...""] }
 ]
 Plain strings only.
 "@
@@ -668,7 +697,7 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels)
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = $sessions.Count
+$updateCount = $sections.Count   # count of AI-kept sessions
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
@@ -723,4 +752,5 @@ $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
-[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $summaries } | ConvertTo-Json -Depth 6
+# Keep the output field name for compatibility (contains verdicts)
+[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $aiVerdicts } | ConvertTo-Json -Depth 6
