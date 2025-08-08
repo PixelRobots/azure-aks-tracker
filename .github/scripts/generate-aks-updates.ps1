@@ -296,14 +296,14 @@ foreach ($file in $groups.Keys) {
   # Prefer PR title for card header, fallback to file name
   $cardTitle = $arr[0].pr_title
   if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
-  $section = @"
-<section class=\"aks-doc-update\">
-  <h2><a href=\"$fileUrl\">$(Escape-Html $cardTitle)</a></h2>
-  <div class=\"aks-doc-header\">
-    <span class=\"aks-doc-category\">$category</span>
-  <span class=\"aks-doc-updated-pill\">Last updated: $lastUpdated</span>
+$section = @"
+<div class="aks-doc-update">
+  <h2><a href="$fileUrl">$(Escape-Html $cardTitle)</a></h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category">$category</span>
+    <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
   </div>
-  <div class=\"aks-doc-summary\">
+  <div class="aks-doc-summary">
     <strong>Summary</strong>
     <p>$(Escape-Html $summary)</p>
   </div>
@@ -311,11 +311,11 @@ foreach ($file in $groups.Keys) {
   <ul>
     $lis
   </ul>
-  <div class=\"aks-doc-buttons\">
-    <a class=\"aks-doc-link\" href=\"$fileUrl\" target=\"_blank\">View Documentation</a>
-    <a class=\"aks-doc-link aks-doc-link-pr\" href=\"$prLink\" target=\"_blank\">View PR</a>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="$fileUrl" target="_blank">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank">View PR</a>
   </div>
-</section>
+</div>
 "@
   $section = $section.Trim()
   $sections.Add($section)
