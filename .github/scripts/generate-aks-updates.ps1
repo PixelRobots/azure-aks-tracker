@@ -5,7 +5,7 @@
 # CONFIG / ENV
 # =========================
 $Owner = "MicrosoftDocs"
-$Repo  = "azure-aks-docs"
+$Repo = "azure-aks-docs"
 
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
@@ -23,7 +23,7 @@ $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
 $ReleasesOwner = "Azure"
-$ReleasesRepo  = "AKS"
+$ReleasesRepo = "AKS"
 $ReleasesCount = 5
 
 $ghHeaders = @{
@@ -41,6 +41,40 @@ function Escape-Html([string]$s) {
   if ($null -eq $s) { return "" }
   $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
 }
+function Get-DocDisplayName([string]$Path) {
+  # take last segment, strip .md, replace -/_ with space, collapse spaces
+  $name = [System.IO.Path]::GetFileNameWithoutExtension($Path) `
+    -replace '[-_]+', ' ' `
+    -replace '\s{2,}', ' ' `
+    -replace '^\s+|\s+$', ''
+  $name = Convert-ToTitleCase $name
+  # common acronyms you want preserved
+  $name = $name -replace '\bAks\b', 'AKS' `
+    -replace '\bAad\b', 'AAD' `
+    -replace '\bCli\b', 'CLI' `
+    -replace '\bRbac\b', 'RBAC' `
+    -replace '\bIp\b', 'IP' `
+    -replace '\bIps\b', 'IPs' `
+    -replace '\bVm(s)?\b', 'VM$1' `
+    -replace '\bVnet(s)?\b', 'VNet$1' `
+    -replace '\bApi\b', 'API' `
+    -replace '\bUrl(s)?\b', 'URL$1'
+  return $name
+}
+
+function Convert-ToTitleCase([string]$s) {
+  if ([string]::IsNullOrWhiteSpace($s)) { return $s }
+  $textInfo = (Get-Culture).TextInfo
+  $tc = $textInfo.ToTitleCase($s.ToLower())
+  # keep common stop-words lowercase unless first word
+  $words = $tc -split ' '
+  $stops = 'a|an|and|as|at|but|by|for|in|of|on|or|the|to|with'
+  for ($i = 1; $i -lt $words.Count; $i++) {
+    if ($words[$i] -match "^(?:$stops)$") { $words[$i] = $words[$i].ToLower() }
+  }
+  ($words -join ' ')
+}
+
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath) {
   if ($FilePath -match '^articles/(.+?)\.md$') {
@@ -136,10 +170,10 @@ function Test-IsDocsTrivialCommit {
       if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)' -or $content -match 'https?://') { continue }
 
       # whitespace/heading-only
-      $stripped = ($content -replace '[\s\p{P}]','')
+      $stripped = ($content -replace '[\s\p{P}]', '')
       if ([string]::IsNullOrWhiteSpace($stripped)) { continue }
       if ($content -match '^\s*#{1,6}\s*[A-Za-z0-9\p{P}\s]*$') {
-        $letters = ($content -replace '[^A-Za-z0-9]','')
+        $letters = ($content -replace '[^A-Za-z0-9]', '')
         if ($letters.Length -le 4) { continue }
       }
 
@@ -196,7 +230,7 @@ function Initialize-AIProvider {
     return $false
   }
   switch ($Provider) {
-    'OpenAI'      { if (-not $env:OpenAIKey) { Write-Warning "OpenAIKey not set"; return $false }; Set-OAIProvider -Provider OpenAI | Out-Null; return $true }
+    'OpenAI' { if (-not $env:OpenAIKey) { Write-Warning "OpenAIKey not set"; return $false }; Set-OAIProvider -Provider OpenAI | Out-Null; return $true }
     'AzureOpenAI' {
       $secrets = @{
         apiURI         = $env:AZURE_OPENAI_APIURI
@@ -274,11 +308,11 @@ Rules:
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-      Where-Object { $_.type -eq 'text' } |
-      ForEach-Object { $_.text.value } |
-      Out-String
+    Where-Object { $_.type -eq 'text' } |
+    ForEach-Object { $_.text.value } |
+    Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{} }
 
@@ -317,10 +351,10 @@ foreach ($commit in $commits) {
   $msg = $commit.commit.message
   if (Test-IsNoiseMessage $msg) { continue }
 
-  $sha    = $commit.sha
+  $sha = $commit.sha
   $author = $commit.commit.author.name
-  $date   = [DateTime]::Parse($commit.commit.author.date).ToUniversalTime()
-  $url    = $commit.html_url
+  $date = [DateTime]::Parse($commit.commit.author.date).ToUniversalTime()
+  $url = $commit.html_url
 
   $files = Get-CommitFiles $sha
   if (-not $files) { continue }
@@ -373,7 +407,8 @@ function Group-FileChangeSessions {
       $gap = ($it.committed_at - $lastAt).TotalHours
       if ($gap -le $GapHours) {
         $current += $it
-      } else {
+      }
+      else {
         $sessions += [pscustomobject]@{
           file     = $g.Name
           start_at = $current[0].committed_at
@@ -401,7 +436,8 @@ function Group-FileChangeSessions {
 if (-not $events -or $events.Count -eq 0) {
   Log "No qualifying doc events found in window (after filters)."
   $sessions = @()
-} else {
+}
+else {
   $sessions = Group-FileChangeSessions -Events $events -GapHours 6
 }
 
@@ -409,7 +445,7 @@ if (-not $events -or $events.Count -eq 0) {
 $sessions = @(
   foreach ($s in $sessions) {
     $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
-               ($s.items | Measure-Object -Sum -Property deletions).Sum )
+      ($s.items | Measure-Object -Sum -Property deletions).Sum )
     if ($delta -lt 8 -and $s.items.Count -lt 2) { continue }
     $s
   }
@@ -436,21 +472,21 @@ $fileSessionPayload = @(
     $patchSample = ($lines | Select-Object -First 250) -join "`n"
 
     [pscustomobject]@{
-      key              = $key
-      file             = $s.file
-      start_at         = $s.start_at.ToString('o')
-      end_at           = $s.end_at.ToString('o')
-      total_additions  = $adds
-      total_deletions  = $dels
-      commits_count    = $commitsCount
-      commit_titles    = ($s.items.commit_msg | Select-Object -Unique)
-      patch_sample     = $patchSample
+      key             = $key
+      file            = $s.file
+      start_at        = $s.start_at.ToString('o')
+      end_at          = $s.end_at.ToString('o')
+      total_additions = $adds
+      total_deletions = $dels
+      commits_count   = $commitsCount
+      commit_titles   = ($s.items.commit_msg | Select-Object -Unique)
+      patch_sample    = $patchSample
     }
   }
 )
 
 $aiInput = [pscustomobject]@{
-  since = $SINCE_ISO
+  since         = $SINCE_ISO
   file_sessions = $fileSessionPayload
 }
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
@@ -461,7 +497,8 @@ Log "  [AKS] Prepared AI input: $aiJsonPath"
 $aiVerdicts = @{}
 if ($PreferProvider -and $sessions.Count -gt 0) {
   $aiVerdicts = Get-FileSessionVerdictsViaAssistant -JsonPath $aiJsonPath
-} else {
+}
+else {
   Log "AI disabled or no file sessions."
 }
 
@@ -473,21 +510,18 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
   if (-not $v) { continue }
   if ($v.verdict -ne 'keep' -or $v.score -lt $MinAIScore) { continue }
 
-  $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
-  $title    = ($s.items | Sort-Object committed_at -Descending | Select-Object -First 1).commit_msg
-  if (-not $title -or $title -eq "") { $title = ShortTitle $s.file }
-  $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
+  $fileUrl = Get-LiveDocsUrl -FilePath $s.file
+  $display = Get-DocDisplayName $s.file
+  $title = "Docs page $display has been updated"
+  $lastAt = $s.end_at.ToString('yyyy-MM-dd HH:mm')
 
-  $summary  = $v.summary
+  $summary = $v.summary
   $category = $v.category
 
   # Backstop: still featherweight AND no summary? skip
   $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
-             ($s.items | Measure-Object -Sum -Property deletions).Sum )
+    ($s.items | Measure-Object -Sum -Property deletions).Sum )
   if ([string]::IsNullOrWhiteSpace($summary) -and $delta -lt 8) { continue }
-
-  $commitsList = ($s.items | Sort-Object committed_at -Descending | Select-Object -First 3 |
-    ForEach-Object { "<li><a href=""$($_.commit_url)"" target=""_blank"" rel=""noopener"">$(Escape-Html (Truncate $_.commit_msg 120))</a></li>" }) -join ''
 
   $section = @"
 <div class="aks-doc-update">
@@ -500,10 +534,6 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
     <strong>Summary</strong>
     <p>$(Escape-Html $summary)</p>
   </div>
-  <ul class="aks-doc-files">
-    <li>File: <a href="$fileUrl" target="_blank" rel="noopener">$(Escape-Html $s.file)</a></li>
-  </ul>
-  <details class="aks-commits"><summary>Recent commits in this session</summary><ul>$commitsList</ul></details>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
   </div>
@@ -584,11 +614,11 @@ Plain strings only.
       $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
       $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-        Where-Object { $_.type -eq 'text' } |
-        ForEach-Object { $_.text.value } |
-        Out-String
+      Where-Object { $_.type -eq 'text' } |
+      ForEach-Object { $_.text.value } |
+      Out-String
 
-      $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+      $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
       $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
       if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
 
@@ -611,7 +641,8 @@ Plain strings only.
     }
   }
   $releaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
-} else {
+}
+else {
   Log "AI disabled or no releases."
 }
 
@@ -623,12 +654,12 @@ function ToListHtml($arr) {
 
 $releaseCards = New-Object System.Collections.Generic.List[string]
 foreach ($r in $releases) {
-  $version      = Escape-Html ($r.tag_name ?? $r.name)
-  $titleRaw     = ($r.name ?? $r.tag_name)
-  $title        = Escape-Html $titleRaw
-  $url          = $r.html_url
+  $version = Escape-Html ($r.tag_name ?? $r.name)
+  $titleRaw = ($r.name ?? $r.tag_name)
+  $title = Escape-Html $titleRaw
+  $url = $r.html_url
   $isPrerelease = [bool]$r.prerelease
-  $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+  $publishedAt = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
