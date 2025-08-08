@@ -56,7 +56,10 @@ jobs:
         if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          PAYLOAD=$(jq -n --arg content "${{ steps.gen.outputs.html }}" '{content: $content}')
+          # Write HTML to a file
+          echo "${{ steps.gen.outputs.html }}" > html.txt
+          # Use jq to read from the file
+          PAYLOAD=$(jq -n --slurpfile content html.txt '{content: $content[0]}')
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
