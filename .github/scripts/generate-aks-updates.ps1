@@ -230,7 +230,16 @@ foreach ($k in @($groups.Keys)) {
 # ====================================================================================
 # Build AI input JSON per your style, upload, get summaries
 # ====================================================================================
-$tempJsonPath = Join-Path $env:TEMP ("aks-doc-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+# Robust temp folder (GitHub Actions + local)
+$TmpRoot = $env:RUNNER_TEMP
+if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = $env:TEMP }
+if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = $env:TMPDIR }
+if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = [System.IO.Path]::GetTempPath() }
+if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = "." }  # absolute last resort
+New-Item -ItemType Directory -Force -Path $TmpRoot | Out-Null
+
+$tempJsonPath = Join-Path $TmpRoot ("aks-doc-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+
 $aiInput = [pscustomobject]@{
   since = $SINCE_ISO
   groups = @(
