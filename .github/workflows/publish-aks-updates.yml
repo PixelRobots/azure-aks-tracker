@@ -19,15 +19,27 @@ jobs:
         id: gen
         shell: pwsh
         run: |
-          $out = ./.github/scripts/generate-aks-updates.ps1 | Out-String
-          $json = $out | ConvertFrom-Json
-          "html=$($json.html)" >> $env:GITHUB_OUTPUT
-          "hash=$($json.hash)" >> $env:GITHUB_OUTPUT
+          # Run script; redirect only stdout (success stream) to out.json
+          ./.github/scripts/generate-aks-updates.ps1 1> out.json
+      
+          # Show live confirmation + size in the log
+          Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
+      
+          # Parse JSON and set outputs (multiline for HTML)
+          $json = Get-Content out.json -Raw | ConvertFrom-Json
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "html<<EOF"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value $json.html
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional summaries (PSAI reads OpenAIKey env var)
-          OpenAIKey:     ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL:  ${{ secrets.OPENAI_MODEL }}
+          # Pick ONE provider (optional):
+          OpenAIKey: ${{ secrets.OPENAI_API_KEY }}  # OpenAI.com via PSAI
+          # Azure OpenAI (alternative):
+          AZURE_OPENAI_APIURI:       ${{ secrets.AZURE_OPENAI_APIURI }}
+          AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
+          AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_OPENAI_DEPLOYMENT:   ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
       - name: Get current WP page
         id: get
@@ -44,7 +56,14 @@ jobs:
         if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          PAYLOAD=$(jq -n --arg content "${{ steps.gen.outputs.html }}" '{content: $content}')
+          cat > html.txt <<'EOF'
+          ${{ steps.gen.outputs.html }}
+          EOF
+      
+          # Build JSON safely (interpolation variant)
+          PAYLOAD=$(jq -n --rawfile content html.txt \
+            '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}')
+      
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
