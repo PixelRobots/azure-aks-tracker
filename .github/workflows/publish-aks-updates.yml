@@ -21,21 +21,21 @@ jobs:
         run: |
           # Run script; redirect only stdout (success stream) to out.json
           ./.github/scripts/generate-aks-updates.ps1 1> out.json
-      
+
           # Show live confirmation + size in the log
           Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
-      
-          # Parse JSON and set outputs (multiline for HTML)
+
+          # Parse JSON
           $json = Get-Content out.json -Raw | ConvertFrom-Json
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "html<<EOF"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value $json.html
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
+
+          # Save big HTML to a file (DO NOT put in GITHUB_OUTPUT)
+          Set-Content -LiteralPath content.html -Value $json.html -Encoding UTF8
+
+          # Only output the small hash as a step output
           Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Pick ONE provider (optional):
-          OpenAIKey: ${{ secrets.OPENAI_API_KEY }}  # OpenAI.com via PSAI
-          # Azure OpenAI (alternative):
+          OpenAIKey: ${{ secrets.OPENAI_API_KEY }}
           AZURE_OPENAI_APIURI:       ${{ secrets.AZURE_OPENAI_APIURI }}
           AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
           AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
@@ -56,15 +56,14 @@ jobs:
         if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          cat > html.txt <<'EOF'
-          ${{ steps.gen.outputs.html }}
-          EOF
-      
-          # Build JSON safely (interpolation variant)
-          PAYLOAD=$(jq -n --rawfile content html.txt \
-            '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}')
-      
+
+          # Build JSON safely from file (no giant inline strings)
+          jq -n --rawfile content content.html \
+            '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}' \
+            > "$RUNNER_TEMP/wp-payload.json"
+
+          # Send payload from file to avoid argv limits
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
-            -d "$PAYLOAD"
+            --data-binary @"$RUNNER_TEMP/wp-payload.json"
