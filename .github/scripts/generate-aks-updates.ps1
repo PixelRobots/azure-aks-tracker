@@ -530,18 +530,20 @@ $html = @"
 
     <div class="aks-tab-panel" id="aks-tab-releases">
       <div class="aks-releases">
+      <h2>AKS Releases</h2>
+      <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
-              <h2>AKS Releases</h2>
+              <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
               <span class="aks-pill aks-pill-count">$releasesCountLabel</span>
           </div>
-          <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
       </div>
         $releasesHtml
       </div>
     </div>
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
+      <h2>AKS Documentation Updates</h2>
       <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
@@ -551,6 +553,8 @@ $html = @"
         $($sections -join "`n")
       </div>
     </div>
+    </br>
+    </br>
   </div>
 
 </div>
