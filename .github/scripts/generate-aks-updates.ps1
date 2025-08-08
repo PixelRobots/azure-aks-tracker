@@ -134,14 +134,18 @@ function Get-PerFileSummariesViaAssistant {
     Log "Uploading JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
 
-    # Create vector store and poll by list+filter (no unsupported params)
+    # Create vector store and poll for status by ID (robust pattern)
     $vsName = "aks-docs-prs-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on vector store processing..."
     do {
       Start-Sleep -Seconds 2
-      $allStores = Get-OAIVectorStore -limit 100 -order desc 
-      $vs = $allStores | Where-Object { $_.id -eq $vs.id }
+      $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
+      if (-not $current) {
+        Log "Vector store not found (ID: $($vs.id)). Retrying..."
+        continue
+      }
+      $vs = $current
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
