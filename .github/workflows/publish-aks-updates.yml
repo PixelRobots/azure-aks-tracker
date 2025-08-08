@@ -21,13 +21,18 @@ jobs:
         run: |
           $out = ./.github/scripts/generate-aks-updates.ps1 | Out-String
           $json = $out | ConvertFrom-Json
-          "html=$($json.html)" >> $env:GITHUB_OUTPUT
-          "hash=$($json.hash)" >> $env:GITHUB_OUTPUT
+      
+          # MULTILINE output for HTML
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "html<<EOF"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value $json.html
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
+      
+          # Single-line output for hash
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional summaries (PSAI reads OpenAIKey env var)
-          OpenAIKey:     ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL:  ${{ secrets.OPENAI_MODEL }}
+          OpenAIKey:     ${{ secrets.OPENAI_API_KEY }}   # PSAI
+          OPENAI_MODEL:  ${{ secrets.OPENAI_MODEL }}     # optional
 
       - name: Get current WP page
         id: get

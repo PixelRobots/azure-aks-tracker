@@ -98,7 +98,7 @@ function Get-DocSummary {
     [string]$File,
     [string[]]$Subjects
   )
-  if (-not $usePSAI) { return $null }
+
   # Build prompt
   $joined = $Subjects | Select-Object -First 8 | ForEach-Object { "- $_" } | Out-String
   $user = @"
@@ -112,22 +112,52 @@ Recent commit subjects:
 $joined
 Respond with just the summary sentences.
 "@
-  try {
-    $args = @{
-      Messages = @(
-        @{ role="system"; content="You are a technical writer for Azure AKS documentation." },
-        @{ role="user";   content=$user }
-      )
+
+  # Try PSAI first (if installed and OpenAIKey set)
+  if ($usePSAI) {
+    try {
+      $args = @{
+        User = $user
+        Temperature = 0.2
+        MaxTokens = 120
+      }
+      if ($OpenAIModel) { $args.Model = $OpenAIModel }
+      # Newer PSAI supports -System too; if your version errors, remove the next line.
+      $args.System = "You are a technical writer for Azure AKS documentation."
+      $resp = Invoke-OAIChat @args
+      $text = $resp.choices[0].message.content.Trim()
+      if (-not [string]::IsNullOrWhiteSpace($text)) { return $text }
+    } catch {
+      Write-Warning "AI summary via PSAI failed: $_"
     }
-    if ($OpenAIModel) { $args.Model = $OpenAIModel }
-    $resp = Invoke-OAIChat @args
-    $text = $resp.choices[0].message.content.Trim()
-    if ([string]::IsNullOrWhiteSpace($text)) { return $null }
-    return $text
-  } catch {
-    Write-Warning "AI summary failed: $_"
-    return $null
   }
+
+  # Fallback: OpenAI REST if OPENAI_API_KEY provided
+  if ($env:OPENAI_API_KEY) {
+    try {
+      $model = $env:OPENAI_MODEL
+      if (-not $model) { $model = "gpt-4o-mini" }
+      $body = @{
+        model = $model
+        temperature = 0.2
+        max_tokens = 120
+        messages = @(
+          @{ role = "system"; content = "You are a technical writer for Azure AKS documentation." },
+          @{ role = "user";   content = $user }
+        )
+      } | ConvertTo-Json -Depth 5
+      $resp = Invoke-RestMethod -Method POST -Uri "https://api.openai.com/v1/chat/completions" -Headers @{
+        "Authorization" = "Bearer $($env:OPENAI_API_KEY)"
+        "Content-Type"  = "application/json"
+      } -Body $body
+      $text = $resp.choices[0].message.content.Trim()
+      if (-not [string]::IsNullOrWhiteSpace($text)) { return $text }
+    } catch {
+      Write-Warning "AI summary via OpenAI REST failed: $_"
+    }
+  }
+
+  return $null
 }
 
 function Escape-Html([string]$s) {
