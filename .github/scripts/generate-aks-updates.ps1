@@ -1,31 +1,21 @@
 #!/usr/bin/env pwsh
-# Outputs JSON: { html: "<...>", hash: "<sha256>" }
-# PowerShell 7+. PSAI optional (auto-installs if AI env is set).
-
-param(
-  [string]$Owner = "MicrosoftDocs",
-  [string]$Repo  = "azure-aks-docs",
-  [int]$Days     = 7
-)
-
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$VerbosePreference = 'Continue'
 
-function Log([string]$msg) { Write-Host "[AKS] $msg" }
+# ====================================================================================
+# Config
+# ====================================================================================
+$Owner = "MicrosoftDocs"
+$Repo  = "azure-aks-docs"
 
-# ===== Config / Env =====
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
-$PreferProvider =
-  if     ($env:OpenAIKey) { 'OpenAI' }
-  elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' }
-  else { '' }
+# Prefer OpenAI if OpenAIKey is present; otherwise Azure OpenAI if all vars set
+$PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' } else { '' }
 
 $now = [DateTime]::UtcNow
-$sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-$Days)
+$sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-7)
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
-Log "Window since $SINCE_ISO (UTC)"
 
 $ghHeaders = @{
   "Authorization" = "Bearer $GitHubToken"
@@ -33,50 +23,57 @@ $ghHeaders = @{
   "User-Agent"    = "pixelrobots-aks-updates-pwsh"
 }
 
-# ===== Helpers =====
-function Escape-Html([string]$s) { $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;') }
-function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
-function Test-IsBot($Commit) { $Commit.author.login -match '(bot|actions)' -or $Commit.commit.author.name -match '(bot|actions)' }
-function Test-IsNoiseMessage([string]$Message) {
-  if (-not $Message) { return $false }
-  foreach ($p in @('^merge\b','^sync\b','publish from','update submodule','\btypo\b','\bgrammar\b','\blink[- ]?fix\b','\bformat(ting)?\b','\breadme\b','^chore\b')) {
-    if ($Message -imatch $p) { return $true }
-  }
-  return $false
-}
-function Test-IsTinyDocsChange($Detail) {
-  $adds = $Detail.stats.additions; if ($null -eq $adds) { $adds = 0 }
-  $dels = $Detail.stats.deletions; if ($null -eq $dels) { $dels = 0 }
-  $files = @($Detail.files); if ($files.Count -eq 0) { return $false }
-  $allMd = (($files | Where-Object { $_.filename -notmatch '\.md$' }).Count -eq 0)
-  return ($allMd -and ($adds + $dels) -le 3)
+# ====================================================================================
+# Helpers
+# ====================================================================================
+function Log($msg) { Write-Host "[AKS] $msg" }
+
+function Escape-Html([string]$s) {
+  $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
 }
 
-function Get-GitHubCommitsSince([string]$Owner,[string]$Repo,[string]$SinceIso) {
+function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
+
+function Test-IsNoiseMessage([string]$Message) {
+  if (-not $Message) { return $false }
+  $patterns = @(
+    '^merge\b','^sync\b','publish from','update submodule',
+    '\btypo\b','\bgrammar\b','\blink[- ]?fix\b','\bformat(ting)?\b',
+    '\breadme\b','^chore\b'
+  )
+  foreach ($p in $patterns) { if ($Message -imatch $p) { return $true } }
+  return $false
+}
+
+function Get-RecentMergedPRs {
+  param([string]$Owner,[string]$Repo,[DateTime]$SinceUtc)
   $all = @()
   for ($page=1; $page -le 6; $page++) {
-    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?since=$([uri]::EscapeDataString($SinceIso))&per_page=100&page=$page"
+    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
     $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     if (-not $resp -or $resp.Count -eq 0) { break }
-    $all += $resp
+    $recent = $resp | Where-Object { $_.merged_at -and ([DateTime]::Parse($_.merged_at).ToUniversalTime() -ge $SinceUtc) }
+    $all += $recent
+    $oldestMerged = ($resp | Where-Object merged_at | Sort-Object { [DateTime]$_.merged_at } | Select-Object -First 1).merged_at
+    if ($oldestMerged -and ([DateTime]::Parse($oldestMerged).ToUniversalTime() -lt $SinceUtc)) { break }
     if ($resp.Count -lt 100) { break }
   }
-  $all | Where-Object { -not (Test-IsBot $_) -and -not (Test-IsNoiseMessage $_.commit.message) }
+  return $all
 }
-function Get-GitHubCommitDetail([string]$Owner,[string]$Repo,[string]$Sha) {
-  $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
+
+function Get-PRFiles { param([string]$Owner,[string]$Repo,[int]$Number)
+  $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files?per_page=100"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
 
-# ===== AI via PSAI (optional) =====
+# ====================================================================================
+# AI (PSAI) init — optional, never fatal
+# ====================================================================================
 $PSAIReady = $false
-function Initialize-AIProvider {
-  param([ValidateSet('OpenAI','AzureOpenAI')][string]$Provider)
+function Initialize-AIProvider { param([ValidateSet('OpenAI','AzureOpenAI')][string]$Provider)
   try {
     if (-not (Get-Module -ListAvailable -Name PSAI)) {
-      Write-Host "::group::Install PSAI"
       Install-Module PSAI -Scope CurrentUser -Force -ErrorAction Stop
-      Write-Host "::endgroup::"
     }
     Import-Module PSAI -ErrorAction Stop
   } catch {
@@ -97,7 +94,7 @@ function Initialize-AIProvider {
         deploymentName = $env:AZURE_OPENAI_DEPLOYMENT
       }
       if ($secrets.Values -contains $null -or ($secrets.Values | Where-Object { [string]::IsNullOrWhiteSpace($_) })) {
-        Write-Warning "Azure OpenAI envs incomplete."
+        Write-Warning "Azure OpenAI envs incomplete; skipping AI."
         return $false
       }
       Set-OAIProvider -Provider AzureOpenAI | Out-Null
@@ -106,14 +103,17 @@ function Initialize-AIProvider {
     }
   }
 }
+
 if ($PreferProvider) {
   $PSAIReady = Initialize-AIProvider -Provider $PreferProvider
   Log "AI provider: $PreferProvider (PSAI ready: $PSAIReady)"
+} else {
+  Log "AI disabled (no env configured); proceeding without summaries"
 }
 
 function Get-PerFileSummariesViaAssistant {
-  param([Parameter(Mandatory)][string]$JsonPath, [string]$Model = "gpt-4o-mini")
-  if (-not $PSAIReady) { return @{} }
+  param([Parameter(Mandatory)][string]$JsonPath,[string]$Model = "gpt-4o-mini")
+  if (-not $PSAIReady) { Log "AI not ready; returning empty summaries"; return @{} }
   try {
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
     $vsName = "aks-docs-$(Get-Date -Format 'yyyyMMddHHmmss')"
@@ -126,10 +126,10 @@ function Get-PerFileSummariesViaAssistant {
 
     $instructions = @"
 You are a technical writer summarizing Azure AKS documentation changes.
-Ignore trivial changes (typos, formatting, link-only fixes).
-Focus on substantive content (new sections, expanded guidance, examples, reorganizations).
-Return a JSON array of: { "file": "<path>", "summary": "1–2 sentences" }.
-Only include files in the uploaded JSON. No extra keys.
+Input contains per-file groups with recent merged PRs, including titles/bodies and limited patches.
+Write 1–2 clear sentences per file explaining the substantive doc changes (new sections, expanded guidance, new examples, major reorg), not typos.
+Ignore trivial edits. Use PR content/patch hints to infer what changed in the docs.
+Return ONLY a JSON array of: { "file": "<path>", "summary": "…" }.
 "@
 
     $assistant = New-OAIAssistant `
@@ -139,7 +139,7 @@ Only include files in the uploaded JSON. No extra keys.
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Summarize each file in the uploaded JSON and return only the JSON array."
+    $userMsg = "Summarize each file in the uploaded JSON per the instructions and return only the JSON array."
     $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role='user'; content=$userMsg }) } -MaxCompletionTokens 1200
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
@@ -150,58 +150,74 @@ Only include files in the uploaded JSON. No extra keys.
 
     $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
     $match = [regex]::Match($clean,'\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))','Singleline')
-    if (-not $match.Success) { return @{} }
+    if (-not $match.Success) { Log "AI returned no JSON array; skipping"; return @{} }
+
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
-    $map = @{}
-    foreach ($i in $arr) { $map[$i.file] = $i.summary }
-    $map
+    $map = @{}; foreach ($i in $arr) { $map[$i.file] = $i.summary }
+    return $map
   } catch {
     Write-Warning "Assistant summaries failed: $_"
-    @{}
+    return @{}
   }
 }
 
-# ===== Fetch & hydrate =====
-Write-Host "::group::Fetch & Hydrate"
-$commits = Get-GitHubCommitsSince -Owner $Owner -Repo $Repo -SinceIso $SINCE_ISO
-Log "Fetched $($commits.Count) commits (pre-filter)"
+# ====================================================================================
+# Fetch PRs & files
+# ====================================================================================
+Write-Host "::group::Fetch PRs"
+$prs = Get-RecentMergedPRs -Owner $Owner -Repo $Repo -SinceUtc $sinceMidnightUtc
+Log "Recent merged PRs in window: $($prs.Count)"
 
-$details = @()
-if ($commits.Count -gt 0) {
-  $chunk = 10
-  for ($i=0; $i -lt $commits.Count; $i += $chunk) {
-    $end = [Math]::Min($i + $chunk - 1, $commits.Count - 1)
-    $batch = $commits[$i..$end]
-    foreach ($c in $batch) {
-      $d = Get-GitHubCommitDetail -Owner $Owner -Repo $Repo -Sha $c.sha
-      $details += $d
-      Start-Sleep -Milliseconds 150
+$prDetails = @()
+foreach ($pr in $prs) {
+  $files = Get-PRFiles -Owner $Owner -Repo $Repo -Number $pr.number
+  $prDetails += [pscustomobject]@{
+    number     = $pr.number
+    html_url   = $pr.html_url
+    title      = $pr.title
+    body       = $pr.body
+    user       = $pr.user.login
+    merged_at  = $pr.merged_at
+    files      = $files
+  }
+}
+Log "Hydrated PRs with files: $($prDetails.Count)"
+Write-Host "::endgroup::"
+
+# ====================================================================================
+# Filter & Group
+# ====================================================================================
+Write-Host "::group::Filter & Group"
+$prFiltered = $prDetails | Where-Object { ($_ .user -notmatch '(bot|actions)') -and (-not (Test-IsNoiseMessage $_.title)) }
+
+$entries = foreach ($pr in $prFiltered) {
+  foreach ($f in $pr.files) {
+    if ($f.filename -notmatch '\.md$') { continue }
+    $adds = $f.additions; if ($null -eq $adds) { $adds = 0 }
+    $dels = $f.deletions; if ($null -eq $dels) { $dels = 0 }
+    if (($adds + $dels) -le 3) { continue }
+    [pscustomobject]@{
+      file       = $f.filename
+      pr_number  = $pr.number
+      pr_url     = $pr.html_url
+      pr_title   = $pr.title
+      pr_body    = $pr.body
+      merged_at  = ([DateTime]::Parse($pr.merged_at).ToUniversalTime())
+      additions  = $adds
+      deletions  = $dels
+      patch      = $f.patch
     }
   }
 }
-Log "Hydrated $($details.Count) commits with file stats"
-Write-Host "::endgroup::"
-
-# ===== Filter & group =====
-Write-Host "::group::Filter & Group"
-$substantive = $details | Where-Object {
-  -not (Test-IsTinyDocsChange $_) -and -not (Test-IsNoiseMessage $_.commit.message)
-} | Where-Object {
-  $_.files | Where-Object filename -match '\.md$'
-}
-Log "Substantive commits touching .md: $(@($substantive).Count)"
 
 $groups = @{}
-foreach ($d in $substantive) {
-  foreach ($f in $d.files) {
-    if ($f.filename -notmatch '\.md$') { continue }
-    if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
-    $groups[$f.filename] += $d
-  }
+foreach ($e in $entries) {
+  if (-not $groups.ContainsKey($e.file)) { $groups[$e.file] = @() }
+  $groups[$e.file] += $e
 }
 foreach ($k in @($groups.Keys)) {
-  $sorted = $groups[$k] | Sort-Object { [DateTime]$_.commit.committer.date } -Descending
-  if (-not ($sorted | Where-Object { [DateTime]::Parse($_.commit.committer.date).ToUniversalTime() -ge $sinceMidnightUtc })) {
+  $sorted = $groups[$k] | Sort-Object merged_at -Descending
+  if (-not ($sorted | Where-Object { $_.merged_at -ge $sinceMidnightUtc })) {
     $groups.Remove($k)
   } else {
     $groups[$k] = $sorted
@@ -210,31 +226,37 @@ foreach ($k in @($groups.Keys)) {
 Log "Grouped into $($groups.Keys.Count) doc pages"
 Write-Host "::endgroup::"
 
-# ===== AI input & summaries =====
+# ====================================================================================
+# AI input & summaries (never fatal)
+# ====================================================================================
 Write-Host "::group::AI Summaries"
 $TmpRoot = $env:RUNNER_TEMP; if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = $env:TEMP }
 if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = $env:TMPDIR }
 if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 if ([string]::IsNullOrWhiteSpace($TmpRoot)) { $TmpRoot = "." }
 New-Item -ItemType Directory -Force -Path $TmpRoot | Out-Null
-$tempJsonPath = Join-Path $TmpRoot ("aks-doc-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+$tempJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 
 $aiInput = [pscustomobject]@{
-  since = $SINCE_ISO
+  since  = $SINCE_ISO
   groups = @(
     foreach ($k in $groups.Keys) {
       $arr = $groups[$k]
       [pscustomobject]@{
         file = $k
-        subjects = ($arr | ForEach-Object { ($_.commit.message -split "`n")[0] } | Where-Object { $_ } | Select-Object -Unique)
-        commits = @(
-          foreach ($a in $arr) {
+        prs  = @(
+          foreach ($x in $arr | Select-Object -First 8) {
+            $patch = $x.patch
+            if ($patch -and $patch.Length -gt 5000) { $patch = $patch.Substring(0,5000) + "…[truncated]" }
             [pscustomobject]@{
-              message = ($a.commit.message -split "`n")[0]
-              url     = $a.html_url
-              date    = ([DateTime]::Parse($a.commit.committer.date).ToUniversalTime().ToString("o"))
-              additions = $a.stats.additions
-              deletions = $a.stats.deletions
+              number    = $x.pr_number
+              title     = $x.pr_title
+              body      = $x.pr_body
+              merged_at = ($x.merged_at.ToString("o"))
+              additions = $x.additions
+              deletions = $x.deletions
+              patch     = $patch
+              url       = $x.pr_url
             }
           }
         )
@@ -246,22 +268,34 @@ $aiInput | ConvertTo-Json -Depth 8 | Set-Content -Path $tempJsonPath -Encoding U
 Log "Prepared AI input: $tempJsonPath"
 
 $summaries = @{}
-if ($PreferProvider) { $summaries = Get-PerFileSummariesViaAssistant -JsonPath $tempJsonPath }
-Log "Summaries returned for $($summaries.Keys.Count) files"
+try {
+  if ($PreferProvider -and $PSAIReady) {
+    $summaries = Get-PerFileSummariesViaAssistant -JsonPath $tempJsonPath
+    Log "Summaries returned for $($summaries.Keys.Count) files"
+  } else {
+    Log "AI unavailable; skipping summaries"
+  }
+} catch {
+  Write-Warning "AI step failed unexpectedly: $_"
+  $summaries = @{}
+}
 Write-Host "::endgroup::"
 
-# ===== Render HTML =====
-Write-Host "::group::Render & Output"
+# ====================================================================================
+# Render HTML (always)
+# ====================================================================================
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($file in $groups.Keys) {
   $arr = $groups[$file]
   $fileUrl = "https://github.com/$Owner/$Repo/blob/main/$file"
   $summary = $summaries[$file]
-  $lis = foreach ($a in $arr) {
-    $subject = ($a.commit.message -split "`n")[0]; if (-not $subject) { $subject = "(no subject)" }
-    $dateIso = ([DateTime]::Parse($a.commit.committer.date).ToUniversalTime()).ToString('yyyy-MM-dd')
-    "<li><a href=""$($a.html_url)"">$(Escape-Html $subject)</a> <small>$dateIso</small></li>"
+
+  # Prefer PR list per file
+  $lis = foreach ($x in $arr) {
+    $dateIso = $x.merged_at.ToString('yyyy-MM-dd')
+    "<li><a href=""$($x.pr_url)"">$(Escape-Html $x.pr_title)</a> <small>$dateIso</small></li>"
   }
+
   $section = @"
 <section class="aks-doc-update">
   <h3><a href="$fileUrl">$(Escape-Html (ShortTitle $file))</a></h3>
@@ -273,9 +307,10 @@ foreach ($file in $groups.Keys) {
 "@
   $sections.Add($section.Trim())
 }
+
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
-  <h2>AKS documentation updates (last $Days days)</h2>
+  <h2>AKS documentation updates (last 7 days)</h2>
   $($sections -join "`n")
 </div>
 "@.Trim()
@@ -283,8 +318,6 @@ $html = @"
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes  = [Text.Encoding]::UTF8.GetBytes($html)
 $hash   = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
-Log "Rendered $($sections.Count) sections → hash $hash"
-Write-Host "::endgroup::"
 
-# IMPORTANT: Only write the final JSON to stdout (captured by workflow)
+# Always output JSON so the workflow can parse it
 [pscustomobject]@{ html = $html; hash = $hash } | ConvertTo-Json -Depth 6
