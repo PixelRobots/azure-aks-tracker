@@ -5,8 +5,6 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 param(
-  [string]$Owner = "MicrosoftDocs",
-  [string]$Repo  = "azure-aks-docs",
   [int]$Days = 7
 )
 
@@ -66,10 +64,10 @@ function Test-IsTinyDocsChange($Detail) {
   return ($allMd -and ($adds + $dels) -le 3)
 }
 
-function Get-GitHubCommitsSince([string]$Owner,[string]$Repo,[string]$SinceIso) {
+function Get-GitHubCommitsSince([string]MicrosoftDocs,[string]azure-aks-docs,[string]$SinceIso) {
   $all = @()
   for ($page=1; $page -le 6; $page++) {
-    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?since=$([uri]::EscapeDataString($SinceIso))&per_page=100&page=$page"
+    $uri = "https://api.github.com/repos/MicrosoftDocs/azure-aks-docs/commits?since=$([uri]::EscapeDataString($SinceIso))&per_page=100&page=$page"
     $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     if (-not $resp -or $resp.Count -eq 0) { break }
     $all += $resp
@@ -79,8 +77,8 @@ function Get-GitHubCommitsSince([string]$Owner,[string]$Repo,[string]$SinceIso) 
   return $all | Where-Object { -not (Test-IsBot $_) -and -not (Test-IsNoiseMessage $_.commit.message) }
 }
 
-function Get-GitHubCommitDetail([string]$Owner,[string]$Repo,[string]$Sha) {
-  $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
+function Get-GitHubCommitDetail([string]MicrosoftDocs,[string]azure-aks-docs,[string]$Sha) {
+  $uri = "https://api.github.com/repos/MicrosoftDocs/azure-aks-docs/commits/$Sha"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
 
@@ -194,13 +192,13 @@ Rules:
 # ====================================================================================
 # Fetch → hydrate → filter → group
 # ====================================================================================
-$commits = Get-GitHubCommitsSince -Owner $Owner -Repo $Repo -SinceIso $SINCE_ISO
+$commits = Get-GitHubCommitsSince -Owner MicrosoftDocs -Repo azure-aks-docs -SinceIso $SINCE_ISO
 $details = @()
 $chunk = 10
 for ($i=0; $i -lt $commits.Count; $i += $chunk) {
   $batch = $commits[$i..([Math]::Min($i+$chunk-1, $commits.Count-1))]
   foreach ($c in $batch) {
-    $d = Get-GitHubCommitDetail -Owner $Owner -Repo $Repo -Sha $c.sha
+    $d = Get-GitHubCommitDetail -Owner MicrosoftDocs -Repo azure-aks-docs -Sha $c.sha
     $details += $d
     Start-Sleep -Milliseconds 150
   }
@@ -272,7 +270,7 @@ if ($PreferProvider) {
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($file in $groups.Keys) {
   $arr = $groups[$file]
-  $fileUrl = "https://github.com/$Owner/$Repo/blob/main/$file"
+  $fileUrl = "https://github.com/MicrosoftDocs/azure-aks-docs/blob/main/$file"
   $summary = $summaries[$file]
 
   $lis = foreach ($a in $arr) {
