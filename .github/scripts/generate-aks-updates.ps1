@@ -13,7 +13,7 @@ if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 # Prefer OpenAI if OpenAIKey exists, else AzureOpenAI if all vars exist, else disabled
 $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' } else { '' }
 
-# AI gate threshold (higher = stricter) — LOOSER by default; can override via env
+# (Kept for compatibility; not used as a gate in rendering anymore)
 $MinAIScore = if ($env:AI_MIN_SCORE) { [double]$env:AI_MIN_SCORE } else { 0.25 }
 
 # =========================
@@ -120,21 +120,12 @@ function Get-RecentCommits {
   }
   return $all
 }
-function Get-CommitFiles {
-  param([string]$Sha)
+function Get-CommitFiles { param([string]$Sha)
   $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
 
-
 # ---------- Title & Kind helpers (short titles) ----------
-function Get-FirstSentence([string]$text) {
-  if ([string]::IsNullOrWhiteSpace($text)) { return "" }
-  $t = $text.Trim()
-  $parts = [regex]::Split($t, '(?<=[\.!?])\s+')
-  if ($parts.Count -gt 0) { return $parts[0].Trim(@([char]' ', [char]'"', [char]0x27)) }  # fix: Trim takes char[]
-  return $t
-}
 function InferShortAction([string]$summary) {
   if ([string]::IsNullOrWhiteSpace($summary)) { return "Update" }
   $s = $summary.ToLower()
@@ -146,21 +137,17 @@ function InferShortAction([string]$summary) {
   return "Update"
 }
 function Build-ShortTitle([string]$display, [string]$summary, [string]$kind) {
-  # Prefer the kind/action label; keep it compact
   $action = if ($kind) { $kind } else { InferShortAction $summary }
   return "$display — $action"
 }
 function Get-SessionKind($session, $verdict) {
-  $hasAdded = ($session.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
+  $hasAdded   = ($session.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($session.items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
-
   $delta = ( ($session.items | Measure-Object -Sum -Property additions).Sum +
-    ($session.items | Measure-Object -Sum -Property deletions).Sum )
+             ($session.items | Measure-Object -Sum -Property deletions).Sum )
   $commits = $session.items.Count
-
   $summary = ($verdict.summary ?? "")
   $heavySummary = $summary -match '(?i)\b(overhaul|rework|rewrite|significant|major)\b'
-
   if ($hasRemoved -and -not $hasAdded) { return "Removal" }
   if ($hasAdded) { return "New" }
   if ($heavySummary -or $delta -ge 80 -or $commits -ge 3) { return "Rework" }
@@ -168,39 +155,36 @@ function Get-SessionKind($session, $verdict) {
 }
 function KindToPillHtml([string]$kind) {
   $emoji = switch ($kind) {
-    "New" { "🆕" }
-    "Rework" { "♻️" }
-    "Removal" { "🗑️" }
+    "New"         { "🆕" }
+    "Rework"      { "♻️" }
+    "Removal"     { "🗑️" }
     "Deprecation" { "⚠️" }
-    "Migration" { "➡️" }
+    "Migration"   { "➡️" }
     "Clarification" { "ℹ️" }
-    default { "✨" }
+    default       { "✨" }
   }
   $class = switch ($kind) {
-    "New" { "aks-pill-kind aks-pill-new" }
-    "Rework" { "aks-pill-kind aks-pill-rework" }
+    "New"     { "aks-pill-kind aks-pill-new" }
+    "Rework"  { "aks-pill-kind aks-pill-rework" }
     "Removal" { "aks-pill-kind aks-pill-removal" }
-    default { "aks-pill-kind aks-pill-update" }
+    default   { "aks-pill-kind aks-pill-update" }
   }
   "<span class=""$class"">$emoji $kind</span>"
 }
 
 # =========================
-# FILTERS (minimal — only bot + scope to AKS .md)
+# FILTERS (minimal — only bot + docs markdown paths)
 # =========================
 function Test-IsBot($Item) {
   $login = ""
   if ($Item.PSObject.Properties['user'] -and $Item.user -and $Item.user.login) { $login = $Item.user.login }
   elseif ($Item.PSObject.Properties['author'] -and $Item.author -and $Item.author.login) { $login = $Item.author.login }
-  # fallback: sometimes the “commit” author name includes “bot”
   $name = ""
   if ($Item.PSObject.Properties['commit'] -and $Item.commit -and $Item.commit.author -and $Item.commit.author.name) { $name = $Item.commit.author.name }
-
   return ($login -match '(bot|actions|github-actions|dependabot)' -or $name -match '(?i)bot')
 }
-
 function Test-IsDocsNoisePath([string]$Path) {
-  # Allow AKS + Fleet markdown
+  # Allow AKS + Fleet markdown only
   if ($Path -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { return $true }
   return $false
 }
@@ -222,13 +206,11 @@ function Get-RecentMergedPRs {
   } while ($resp.items.Count -eq $perPage)
   return $all
 }
-function Get-PRDetails {
-  param([int]$Number)
+function Get-PRDetails { param([int]$Number)
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
-function Get-PRFiles {
-  param([int]$Number)
+function Get-PRFiles { param([int]$Number)
   $perPage = 100; $page = 1; $files = @()
   do {
     $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files?per_page=$perPage&page=$page"
@@ -286,44 +268,38 @@ function Get-FileSessionVerdictsViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-   $instructions = @"
-You are an assistant that summarizes meaningful updates to Azure AKS documentation.
+    $instructions = @"
+You are a strict filter for Azure AKS documentation updates.
 
-You receive "file sessions", each describing recent changes to one documentation page.
-Each includes:
-- File name
-- Number of commits, lines added/removed
-- Git diffs (patches) for context
-- Commit titles (sometimes from PRs)
+INPUT: A list of file-sessions. Each session corresponds to one docs page and includes:
+- file (path), total_additions, total_deletions, commits_count
+- commit_titles[]
+- patch_sample (unified diff lines)
 
-For each session:
-- If the changes are meaningful to users (e.g., new features, rework, new sections, updated examples), return a verdict:
-  {
-    "key": "<same key>",
-    "verdict": "keep",
-    "score": 1.0,
-    "category": "Networking | Security | Compute | Storage | Operations | General",
-    "summary": "Short description of the real change (2–4 sentences)"
-  }
+TASK: Return ONLY sessions that matter to AKS users. MEANINGFUL includes:
+- Adds/removes sections, steps, tasks, or examples
+- Changes to parameters/flags/values in procedures or CLI
+- Version/support/limits/regions changes
+- Security/networking/compatibility behavior changes
+- New page (status=added) or major rewrite
 
-- If the changes are trivial (e.g., typos, formatting, broken links, whitespace), skip them completely. Do not include them at all.
+SKIP (omit from output) if trivial:
+- Typos, grammar, whitespace, heading casing, formatting-only
+- Front matter/ms.* metadata only
+- Link retargets, bare URL tweaks, image path changes, TOC shuffles
+- Tiny net change (<5 lines) with no headings/commands/code changed
 
-Guidelines:
-- Do not return items that are not meaningful.
-- Be precise. If the patch shows CLI commands added, say so.
-- Use the patch and commit titles as your only evidence.
-- Never speculate beyond the patch.
-- Never return more than one verdict per file.
+RULES:
+- When in doubt, SKIP.
+- Never invent beyond the patch.
+- At most one result per session key.
 
-Output ONLY a JSON array of the verdicts to keep:
+OUTPUT: JSON array of ONLY kept sessions:
 [
-  { "key": "...", "verdict": "keep", "score": 1.0, "category": "General", "summary": "..." },
-  ...
+  { "key": "<same key>", "verdict": "keep", "score": 0.0-1.0, "category": "Networking|Security|Compute|Storage|Operations|General", "summary": "1–2 factual sentences naming sections/params if visible" }
 ]
-Do not return skipped items.
-Plain strings only.
+Return nothing for skipped sessions. Plain strings only.
 "@
-
 
     $assistant = New-OAIAssistant -Name "AKS-Docs-FileVerdict-Summarizer" -Instructions $instructions -Tools @{ type = 'file_search' } -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } -Model $Model
     $userMsg = "Return ONLY the JSON array of verdicts as specified."
@@ -333,29 +309,33 @@ Plain strings only.
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
     $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{} }
+    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{ ordered=@(); byKey=@{} } }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
+
+    # Keep BOTH an ordered list (only kept items) AND a by-key map
+    $ordered = @()
     $map = @{}
     foreach ($i in $arr) {
       $k = $i.key
       if (-not $k) { continue }
+      $ordered += $i
       $map[$k] = @{
-        verdict  = ($i.verdict ?? "skip")
-        score    = [double]($i.score ?? 0)
+        verdict  = ($i.verdict ?? "keep")
+        score    = [double]($i.score ?? 1.0)
         reason   = ($i.reason ?? "")
         category = ($i.PSObject.Properties['category'] ? $i.category : 'General')
         summary  = ($i.PSObject.Properties['summary']  ? $i.summary  : "")
       }
     }
-    Log "AI: Verdicts ready for $($map.Keys.Count) file sessions."
-    return $map
+    Log "AI: Verdicts ready for $($ordered.Count) kept session(s)."
+    return @{ ordered = $ordered; byKey = $map }
   }
-  catch { Write-Warning "AI verdicts failed: $_"; return @{} }
+  catch { Write-Warning "AI verdicts failed: $_"; return @{ ordered=@(); byKey=@{} } }
 }
 
 # =========================
-# MAIN FLOW — DOCS (PRs → file sessions)
+# MAIN FLOW — DOCS (PRs → + commits → sessions)
 # =========================
 Log "Fetching PRs merged in last 7 days..."
 $prs = Get-RecentMergedPRs -Owner $Owner -Repo $Repo -SinceIso $SINCE_ISO
@@ -368,29 +348,29 @@ foreach ($pr in $prs) {
   if (-not $number) { continue }
 
   $prDetail = Get-PRDetails -Number $number
-  if (-not $prDetail.merged_at) { continue }  # safety
+  if (-not $prDetail.merged_at) { continue }
 
   $mergedAt = [DateTime]::Parse($prDetail.merged_at).ToUniversalTime()
-  $author = $prDetail.user.login
-  $title = $prDetail.title
-  $prUrl = $prDetail.html_url
+  $author   = $prDetail.user.login
+  $title    = $prDetail.title
+  $prUrl    = $prDetail.html_url
 
   $files = Get-PRFiles -Number $number
   if (-not $files) { continue }
 
-  # Keep AKS + Fleet markdown (use the helper; no hard-coded aks-only regex)
+  # Keep AKS + Fleet markdown
   $files = $files | Where-Object { $_.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $_.filename) }
   if (-not $files) { continue }
 
   foreach ($f in $files) {
     $events += [pscustomobject]@{
       filename     = $f.filename
-      status       = $f.status             # added | modified | removed | renamed
-      committed_at = $mergedAt             # use merged time for sessioning
+      status       = $f.status
+      committed_at = $mergedAt
       author       = $author
       pr_number    = $number
       pr_url       = $prUrl
-      commit_msg   = $title                # PR title
+      commit_msg   = $title
       commit_url   = $prUrl
       additions    = $f.additions
       deletions    = $f.deletions
@@ -399,7 +379,7 @@ foreach ($pr in $prs) {
   }
 }
 
-# ------- ALSO: add commit-based events (to catch non-PR or old-authored commits) -------
+# Also capture commits directly
 Log "Fetching individual commits in last 7 days..."
 $commitList = Get-RecentCommits -SinceIso $SINCE_ISO | Where-Object { -not (Test-IsBot $_) }
 Log "Found $($commitList.Count) commits in window."
@@ -409,24 +389,22 @@ foreach ($c in $commitList) {
   $detail = Get-CommitFiles -Sha $sha
   if (-not $detail) { continue }
 
-  # Prefer committer date (when it landed in main) over author date
   $when = if ($detail.commit.committer.date) { [DateTime]::Parse($detail.commit.committer.date).ToUniversalTime() }
-  elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
-  else { [DateTime]::UtcNow }
+          elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
+          else { [DateTime]::UtcNow }
 
   $author = $detail.commit.author.name
-  $msg = $detail.commit.message
-  $url = $detail.html_url
+  $msg    = $detail.commit.message
+  $url    = $detail.html_url
 
   foreach ($f in $detail.files) {
-    # Only AKS/Fleet markdown; reuse your noise filter
     if ($f.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $f.filename)) {
       $events += [pscustomobject]@{
         filename     = $f.filename
-        status       = $f.status          # added | modified | removed | renamed
+        status       = $f.status
         committed_at = $when
         author       = $author
-        pr_number    = $null              # commit source (not PR)
+        pr_number    = $null
         pr_url       = $null
         commit_msg   = $msg
         commit_url   = $url
@@ -438,9 +416,9 @@ foreach ($c in $commitList) {
   }
 }
 
-# Group by file into time-boxed sessions (6-hour window)
+# Group by file into time-boxed sessions (3-hour window for tighter grouping)
 function Group-FileChangeSessions {
-  param([Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Events, [int]$GapHours = 6)
+  param([Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Events, [int]$GapHours = 3)
   $byFile = $Events | Group-Object filename
   $sessions = @()
   foreach ($g in $byFile) {
@@ -452,13 +430,13 @@ function Group-FileChangeSessions {
       $gap = ($it.committed_at - $lastAt).TotalHours
       if ($gap -le $GapHours) { $current += $it }
       else {
-        $sessions += [pscustomobject]@{ file = $g.Name; start_at = $current[0].committed_at; end_at = $current[-1].committed_at; items = $current }
+        $sessions += [pscustomobject]@{ file=$g.Name; start_at=$current[0].committed_at; end_at=$current[-1].committed_at; items=$current }
         $current = @($it)
       }
       $lastAt = $it.committed_at
     }
     if ($current.Count -gt 0) {
-      $sessions += [pscustomobject]@{ file = $g.Name; start_at = $current[0].committed_at; end_at = $current[-1].committed_at; items = $current }
+      $sessions += [pscustomobject]@{ file=$g.Name; start_at=$current[0].committed_at; end_at=$current[-1].committed_at; items=$current }
     }
   }
   return $sessions
@@ -467,19 +445,26 @@ function Group-FileChangeSessions {
 if (-not $events -or $events.Count -eq 0) { Log "No qualifying doc events found in window."; $sessions = @() }
 else { $sessions = Group-FileChangeSessions -Events $events -GapHours 3 }
 
-# Build AI input for file sessions (NO pre-AI trimming)
+# =========================
+# Build AI input (NO pre-AI trimming)
+# =========================
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-file-sessions-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+
+# Keep a key->session map so we can render from AI results only
+$sessionByKey = @{}
 
 $fileSessionPayload = @(
   foreach ($s in $sessions) {
     $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
+    $sessionByKey[$key] = $s
+
     $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
     $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
     $commitsCount = $s.items.Count
     $lines = @()
     foreach ($it in $s.items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
-    $patchSample = ($lines | Select-Object -First 600) -join "`n"
+    $patchSample = ($lines | Select-Object -First 800) -join "`n"   # give AI more context
     [pscustomobject]@{
       key             = $key
       file            = $s.file
@@ -499,63 +484,72 @@ $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF
 Log "AI Verdicts"
 Log "  [AKS] Prepared AI input: $aiJsonPath"
 
-$aiVerdicts = @{}
-if ($PreferProvider -and $sessions.Count -gt 0) { $aiVerdicts = Get-FileSessionVerdictsViaAssistant -JsonPath $aiJsonPath }
-else { Log "AI disabled or no file sessions." }
+$aiVerdictsBundle = @{}
+if ($PreferProvider -and $sessions.Count -gt 0) {
+  $aiVerdictsBundle = Get-FileSessionVerdictsViaAssistant -JsonPath $aiJsonPath
+} else {
+  Log "AI disabled or no file sessions."
+  $aiVerdictsBundle = @{ ordered = @(); byKey = @{} }
+}
+
+$aiList = @()
+$aiDict = @{}
+if ($aiVerdictsBundle.PSObject.Properties['ordered']) { $aiList = $aiVerdictsBundle.ordered }
+if ($aiVerdictsBundle.PSObject.Properties['byKey'])    { $aiDict = $aiVerdictsBundle.byKey }
+
+Log "AI will render $($aiList.Count) item(s) out of $($sessions.Count) sessions."
 
 # =========================
-# RENDER DOCS — show everything; AI only decorates
+# RENDER DOCS — render ONLY what AI returned (ordered)
 # =========================
 $sections = New-Object System.Collections.Generic.List[string]
 
-foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
-  $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
-  $v = $aiVerdicts[$key]  # may be $null
+foreach ($v in $aiList) {
+  $key = $v.key
+  $s   = $sessionByKey[$key]
+  if (-not $s) { continue }  # safety
 
-  # --- fields (with safe fallbacks if AI is null)
-  $fileUrl = Get-LiveDocsUrl -FilePath $s.file
-  $display = Get-DocDisplayName $s.file
+  $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
+  $display  = Get-DocDisplayName $s.file
 
   $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
   $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
-  $statusSet = ($s.items.status | Select-Object -Unique) -join ', '
 
-  $summary = if ($v -and $v.summary) { $v.summary } else { "Changes ($statusSet): +$adds / -$dels." }
-  $category = if ($v -and $v.category) { $v.category } else { "General" }
+  $summary  = if ($v.summary)  { $v.summary }  else { "Changes: +$adds / -$dels." }
+  $category = if ($v.category) { $v.category } else { "General" }
 
-  $kind = Get-SessionKind -session $s -verdict $v
-  $title = Build-ShortTitle -display $display -summary $summary -kind $kind
-  $lastAt = $s.end_at.ToString('yyyy-MM-dd HH:mm')
+  $kind     = Get-SessionKind -session $s -verdict $v
+  $title    = Build-ShortTitle -display $display -summary $summary -kind $kind
+  $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
   $kindPill = KindToPillHtml $kind
 
-  # PR link (use first item)
+  # PR link (first item in session if present)
   $prNum = $s.items[0].pr_number
   $prUrl = $s.items[0].pr_url
   $prLink = if ($prNum) { "<a class=""aks-doc-pr"" href=""$prUrl"" target=""_blank"" rel=""noopener"">PR #$prNum</a>" } else { "" }
 
-  $section = @"
-<div class="aks-doc-update">
-  <h2><a href="$fileUrl">$(Escape-Html (Truncate $title 120))</a></h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category">$category</span>
+  $sections.Add(@"
+<div class=""aks-doc-update"">
+  <h2><a href=""$fileUrl"">$(Escape-Html (Truncate $title 120))</a></h2>
+  <div class=""aks-doc-header"">
+    <span class=""aks-doc-category"">$category</span>
     $kindPill
-    <span class="aks-doc-updated-pill">Last updated: $lastAt</span>
+    <span class=""aks-doc-updated-pill"">Last updated: $lastAt</span>
     $prLink
   </div>
-  <div class="aks-doc-summary">
+  <div class=""aks-doc-summary"">
     <strong>Summary</strong>
     <p>$(Escape-Html $summary)</p>
   </div>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
+  <div class=""aks-doc-buttons"">
+    <a class=""aks-doc-link"" href=""$fileUrl"" target=""_blank"" rel=""noopener"">View Documentation</a>
   </div>
 </div>
-"@
-  $sections.Add($section.Trim())
+"@.Trim())
 }
 
 # =========================
-# MAIN FLOW — RELEASES (unchanged)
+# MAIN FLOW — RELEASES (unchanged from your working setup)
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
@@ -599,7 +593,7 @@ if ($PreferProvider -and $releases.Count -gt 0) {
         Log "Releases VS status: $($vs.status)"
       } while ($vs.status -ne 'completed')
 
-      $instructions = @"
+$instructions = @"
 You are summarizing AKS GitHub Releases.
 The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
 Return ONLY JSON:
@@ -655,14 +649,14 @@ foreach ($r in $releases) {
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
     $bodyPlain = Convert-MarkdownToPlain ($r.body ?? "")
-    $ai = @{ summary = Truncate $bodyPlain 400; breaking_changes = @(); key_features = @(); good_to_know = @() }
+    $ai = @{ summary = Truncate $bodyPlain 400; breaking_changes=@(); key_features=@(); good_to_know=@() }
   }
 
   $summaryHtml = "<p>" + (Escape-Html $ai.summary) + "</p>"
   $sectionsHtml = ""
   if ($ai.breaking_changes -and $ai.breaking_changes.Count) { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">❌</span><h3>Breaking Changes</h3></div>$(ToListHtml $ai.breaking_changes)</div>" }
-  if ($ai.key_features -and $ai.key_features.Count) { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">🔑</span><h3>Key Features</h3></div>$(ToListHtml $ai.key_features)</div>" }
-  if ($ai.good_to_know -and $ai.good_to_know.Count) { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">💡</span><h3>Good to Know</h3></div>$(ToListHtml $ai.good_to_know)</div>" }
+  if ($ai.key_features -and $ai.key_features.Count)   { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">🔑</span><h3>Key Features</h3></div>$(ToListHtml $ai.key_features)</div>" }
+  if ($ai.good_to_know -and $ai.good_to_know.Count)   { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">💡</span><h3>Good to Know</h3></div>$(ToListHtml $ai.good_to_know)</div>" }
   $badge = if ($isPrerelease) { '<span class="aks-rel-badge">Pre-release</span>' } else { '' }
 
   $card = @"
@@ -697,8 +691,7 @@ $html = @"
 
   <div class="aks-intro">
     <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases.</p>
-    <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
-    Check back often as data is automatically refreshed every 12 hours.</p>
+    <p>It relies on AI to filter out trivial edits, and surfaces only substantive changes.</p>
   </div>
 
   <div class="aks-tabs">
@@ -706,6 +699,18 @@ $html = @"
       <a class="aks-tab-link active" href="#aks-tab-docs">Documentation Updates</a>
       <a class="aks-tab-link" href="#aks-tab-releases">AKS Releases</a>
     </nav>
+
+    <div class="aks-tab-panel active" id="aks-tab-docs">
+      <h2>AKS Documentation Updates</h2>
+      <div class="aks-docs-desc">PRs and direct commits merged in the last 7 days; AI filters & summarizes page-level changes.</div>
+      <div class="aks-docs-updated-main">
+        <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
+        <span class="aks-pill aks-pill-count">$updateCount updates</span>
+      </div>
+      <div class="aks-docs-list">
+        $($sections -join "`n")
+      </div>
+    </div>
 
     <div class="aks-tab-panel" id="aks-tab-releases">
       <div class="aks-releases">
@@ -717,18 +722,6 @@ $html = @"
           </div>
       </div>
         $releasesHtml
-      </div>
-    </div>
-
-    <div class="aks-tab-panel active" id="aks-tab-docs">
-      <h2>AKS Documentation Updates</h2>
-      <div class="aks-docs-desc">PRs and direct commits merged in the last 7 days; AI summarizes page-level changes.</div>
-      <div class="aks-docs-updated-main">
-        <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
-        <span class="aks-pill aks-pill-count">$updateCount updates</span>
-      </div>
-      <div class="aks-docs-list">
-        $($sections -join "`n")
       </div>
     </div>
     </br>
@@ -745,4 +738,4 @@ $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
-[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $aiVerdicts } | ConvertTo-Json -Depth 6
+[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $aiVerdictsBundle } | ConvertTo-Json -Depth 6
