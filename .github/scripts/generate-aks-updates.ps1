@@ -4,9 +4,6 @@
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-param(
-  [int]$Days = 7
-)
 
 # ====================================================================================
 # Config / Env
@@ -19,7 +16,7 @@ $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_API
 
 # Inclusive UTC-midnight window
 $now = [DateTime]::UtcNow
-$sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-$Days)
+$sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-7)
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # HTTP defaults
@@ -294,7 +291,7 @@ foreach ($file in $groups.Keys) {
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
-  <h2>AKS documentation updates (last $Days days)</h2>
+  <h2>AKS documentation updates (last 7 days)</h2>
   $($sections -join "`n")
 </div>
 "@.Trim()
