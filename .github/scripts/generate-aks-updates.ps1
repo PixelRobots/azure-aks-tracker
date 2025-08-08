@@ -9,8 +9,10 @@ $Repo  = "azure-aks-docs"
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
+# Prefer OpenAI if OpenAIKey exists, else AzureOpenAI if all vars exist, else disabled
 $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' } else { '' }
 
+# Inclusive UTC-midnight window for last 7 days
 $now = [DateTime]::UtcNow
 $sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-7)
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
@@ -31,6 +33,7 @@ function Escape-Html([string]$s) {
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath, [string]$Locale = "en-us") {
+  # Map repo path under articles/ → learn.microsoft.com locale path
   if ($FilePath -match '^articles/(.+?)\.md$') {
     $p = $Matches[1] -replace '\\','/'
     if ($p -notmatch '^azure/') { $p = "azure/$p" }
@@ -42,9 +45,10 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$Locale = "en-us") {
 # =========================
 # FILTERS
 # =========================
-function Test-IsBot($Commit) {
-  $login = $Commit.user.login
-  $name  = $Commit.commit.author.name
+function Test-IsBot($Item) {
+  # PR object has .user.login; commit objects differ but we only use PRs here
+  $login = $Item.user.login
+  $name  = $Item.user.login
   return ($login -match '(bot|actions)' -or $name -match '(bot|actions)')
 }
 function Test-IsNoiseMessage([string]$Message) {
@@ -87,7 +91,7 @@ function Get-PRFiles($Number) {
 }
 
 # =========================
-# AI INIT
+# AI INIT (PSAI)
 # =========================
 $PSAIReady = $false
 function Initialize-AIProvider {
@@ -130,25 +134,33 @@ function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath,[string]$Model="gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
   try {
-    Log "Uploading JSON to AI provider..."
+    Log "AI: Uploading JSON file..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
+
+    Log "AI: Creating vector store..."
     $vsName = "aks-docs-prs-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
 
-    $timeout = [DateTime]::UtcNow.AddMinutes(2)
+    Log "AI: Waiting for vector store to complete..."
+    $timeout = [DateTime]::UtcNow.AddMinutes(3)
     do {
       Start-Sleep -Seconds 2
-      $vs = Get-OAIVectorStore -VectorStoreId $vs.id
-      Log "Vector store status: $($vs.status)"
-      if ($vs.status -eq 'failed') { throw "Vector store failed" }
-    } while ($vs.status -ne 'completed' -and [DateTime]::UtcNow -lt $timeout)
-    if ($vs.status -ne 'completed') { throw "Timed out waiting for vector store" }
+      # PSAI does NOT support -VectorStoreId; list and filter instead (like your working code)
+      $allStores = Get-OAIVectorStore -limit 100 -order desc
+      $current   = $allStores | Where-Object { $_.id -eq $vs.id }
+      $status    = $current.status
+      Log "AI: Vector store status = '$status'"
+      if ($status -eq 'failed') { throw "Vector store failed" }
+    } while ($status -ne 'completed' -and [DateTime]::UtcNow -lt $timeout)
+    if ($status -ne 'completed') { throw "Timed out waiting for vector store" }
 
     $instructions = @"
 You are summarizing substantive Azure AKS documentation changes from PRs.
 Ignore trivial edits (typos, link fixes).
 For each file, return JSON: [ { "file": "<path>", "summary": "1–2 sentences" } ]
+Only return the JSON array.
 "@
+    Log "AI: Creating assistant and running..."
     $assistant = New-OAIAssistant `
       -Name "AKS-Docs-Summarizer" `
       -Instructions $instructions `
@@ -156,7 +168,7 @@ For each file, return JSON: [ { "file": "<path>", "summary": "1–2 sentences" }
       -ToolResources @{ file_search=@{ vector_store_ids=@($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Summarize each file from the uploaded JSON per instructions. Only JSON array in output."
+    $userMsg = "Summarize each file listed in the uploaded JSON per the instructions. Only return the JSON array."
     $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages=@(@{ role='user'; content=$userMsg }) } -MaxCompletionTokens 1200
     $run = Wait-OAIOnRun -Run $run -Thread @{ id=$run.thread_id } -TimeoutSec 120
 
@@ -164,12 +176,15 @@ For each file, return JSON: [ { "file": "<path>", "summary": "1–2 sentences" }
       Where-Object { $_.type -eq 'text' } |
       ForEach-Object { $_.text.value } |
       Out-String
+
+    # Strip fences and extract JSON array
     $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
     $match = [regex]::Match($clean,'\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))','Singleline')
-    if (-not $match.Success) { return @{} }
+    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{} }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
     $map = @{}; foreach ($i in $arr) { $map[$i.file] = $i.summary }
+    Log "AI: Summaries ready for $($map.Keys.Count) files."
     return $map
   }
   catch {
@@ -187,6 +202,9 @@ Log "Found $($prs.Count) PR(s) in window."
 
 $groups = @{}
 foreach ($pr in $prs) {
+  # Noise filter by title (optional, keep loose)
+  if (Test-IsNoiseMessage $pr.title) { continue }
+
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
     if ($f.filename -notmatch '\.md$') { continue }
@@ -203,7 +221,8 @@ foreach ($pr in $prs) {
 
 # Prepare AI input JSON
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
-$tempJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+$aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+
 $aiInput = [pscustomobject]@{
   since  = $SINCE_ISO
   groups = @(
@@ -215,12 +234,16 @@ $aiInput = [pscustomobject]@{
     }
   )
 }
-$aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $tempJsonPath -Encoding UTF8
-Log "AI Summaries - Prepared AI input: $tempJsonPath"
+$aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
+Log "AI Summaries  [AKS] Prepared AI input: $aiJsonPath"
 
-# Get summaries (with timeout)
+# AI summaries (graceful if disabled)
 $summaries = @{}
-if ($PreferProvider) { $summaries = Get-PerFileSummariesViaAssistant -JsonPath $tempJsonPath }
+if ($PreferProvider) {
+  $summaries = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath
+} else {
+  Log "AI disabled (no provider env configured)."
+}
 
 # =========================
 # RENDER HTML
@@ -254,8 +277,10 @@ $html = @"
 </div>
 "@.Trim()
 
+# Hash for idempotency
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes  = [Text.Encoding]::UTF8.GetBytes($html)
 $hash   = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
+# Emit JSON (Action step will read this)
 [pscustomobject]@{ html = $html; hash = $hash } | ConvertTo-Json -Depth 6
