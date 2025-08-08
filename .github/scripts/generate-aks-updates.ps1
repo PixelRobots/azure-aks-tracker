@@ -321,6 +321,7 @@ foreach ($file in $groups.Keys) {
 
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 
+$updateCount = $groups.Keys.Count
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
   <div class="aks-intro">
@@ -330,10 +331,14 @@ $html = @"
   </div>
   <h2>Documentation Updates</h2>
   <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
-  <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
+  <span class="aks-doc-updated-pill">Last updated: $lastUpdated
+    <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
+  </span>
   <div class="aks-docs-list">
     $($sections -join "`n")
   </div>
+  </br>
+  </br>
 </div>
 "@.Trim()
 
