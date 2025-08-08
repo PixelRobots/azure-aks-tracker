@@ -290,8 +290,62 @@ foreach ($file in $groups.Keys) {
   $sections.Add($section.Trim())
 }
 
+
+function Get-ReleaseAISummary {
+  param(
+    [string]$Title,
+    [string]$Body,
+    [string]$Model = "gpt-4o-mini"  # or your Azure deployment name if using Azure OpenAI
+  )
+  # Fallback quickly if AI not ready or body empty
+  if (-not $PSAIReady -or [string]::IsNullOrWhiteSpace($Body)) {
+    return $null
+  }
+
+  $sys = @"
+You are an assistant that reads a GitHub release note and extracts a structured summary.
+Return ONLY valid JSON with this shape:
+{
+  "summary": "1-2 sentences top-level summary in plain text",
+  "breaking_changes": ["..."],
+  "key_features": ["..."],
+  "good_to_know": ["..."]
+}
+Make bullets concise, 3-8 items per section when applicable. Omit marketing fluff. No markdown in values.
+"@
+
+  $user = @"
+TITLE: $Title
+
+BODY (GitHub Markdown):
+$Body
+"@
+
+  try {
+    # Ask the model for JSON
+    $resp = Invoke-OAIChatCompletion -Model $Model -System $sys -Input $user -MaxTokens 800 -Temperature 0.2
+
+    # Extract JSON robustly (strip fences if present)
+    $text = $resp.Content | Out-String
+    $clean = $text -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+
+    # Try parse; if it fails, try to find the first {...} object in the text
+    try {
+      return ($clean | ConvertFrom-Json -ErrorAction Stop)
+    } catch {
+      $m = [regex]::Match($clean, '\{(?:[^{}]|(?<o>\{)|(?<-o>\}))*\}(?(o)(?!))', 'Singleline')
+      if ($m.Success) { return ($m.Value | ConvertFrom-Json -ErrorAction Stop) }
+      throw
+    }
+  }
+  catch {
+    Write-Warning "AI release summary failed for '$Title': $($_.Exception.Message)"
+    return $null
+  }
+}
+
 # =========================
-# MAIN FLOW — RELEASES
+# MAIN FLOW — RELEASES (AI-enhanced)
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
@@ -306,20 +360,64 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
 
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
-$releaseCards = New-Object System.Collections.Generic.List[string]
-foreach ($r in $releases) {
-  $version     = Escape-Html ($r.tag_name ?? $r.name)
-  $title       = Escape-Html ($r.name ?? $r.tag_name)
-  $url         = $r.html_url
-  $isPrerelease= [bool]$r.prerelease
-  $publishedAt = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+function ToListHtml($arr) {
+  if (-not $arr -or $arr.Count -eq 0) { return "" }
+  $lis = ($arr | ForEach-Object { '<li>' + (Escape-Html $_) + '</li>' }) -join ''
+  return "<ul class=""aks-rel-list"">$lis</ul>"
+}
 
-  # summary: crude markdown strip + truncate
-  $bodyRaw = ($r.body ?? "") -replace '```[\s\S]*?```','' `
-                             -replace '!\[[^\]]*\]\([^)]+\)','' `
-                             -replace '\[[^\]]*\]\([^)]+\)','' `
-                             -replace '\r',''
-  $summary = Escape-Html (Truncate $bodyRaw 400)
+$releaseCards = New-Object System.Collections.Generic.List[string]
+
+foreach ($r in $releases) {
+  $version      = Escape-Html ($r.tag_name ?? $r.name)
+  $titleRaw     = ($r.name ?? $r.tag_name)
+  $title        = Escape-Html $titleRaw
+  $url          = $r.html_url
+  $isPrerelease = [bool]$r.prerelease
+  $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+
+  # Try AI summary first
+  $ai = Get-ReleaseAISummary -Title $titleRaw -Body ($r.body ?? "")
+  if (-not $ai) {
+    # Fallback to crude summary
+    $bodyRaw = ($r.body ?? "") -replace '```[\s\S]*?```','' `
+                               -replace '!\[[^\]]*\]\([^)]+\)','' `
+                               -replace '\[[^\]]*\]\([^)]+\)','' `
+                               -replace '\r',''
+    $ai = @{
+      summary          = Truncate $bodyRaw 400
+      breaking_changes = @()
+      key_features     = @()
+      good_to_know     = @()
+    }
+  }
+
+  $summaryHtml = "<p>" + (Escape-Html $ai.summary) + "</p>"
+  $sectionsHtml = ""
+  if ($ai.breaking_changes -and $ai.breaking_changes.Count) {
+    $sectionsHtml += @"
+<div class="aks-rel-sec">
+  <div class="aks-rel-sec-head"><span class="aks-rel-ico">❌</span><h4>Breaking Changes</h4></div>
+  $(ToListHtml $ai.breaking_changes)
+</div>
+"@
+  }
+  if ($ai.key_features -and $ai.key_features.Count) {
+    $sectionsHtml += @"
+<div class="aks-rel-sec">
+  <div class="aks-rel-sec-head"><span class="aks-rel-ico">🔑</span><h4>Key Features</h4></div>
+  $(ToListHtml $ai.key_features)
+</div>
+"@
+  }
+  if ($ai.good_to_know -and $ai.good_to_know.Count) {
+    $sectionsHtml += @"
+<div class="aks-rel-sec">
+  <div class="aks-rel-sec-head"><span class="aks-rel-ico">💡</span><h4>Good to Know</h4></div>
+  $(ToListHtml $ai.good_to_know)
+</div>
+"@
+  }
 
   $badge = if ($isPrerelease) { '<span class="aks-rel-badge">Pre-release</span>' } else { '' }
 
@@ -336,12 +434,14 @@ foreach ($r in $releases) {
     <span class="aks-rel-version">$version</span>
   </div>
   <div class="aks-rel-summary">
-    <p>$summary</p>
+    $summaryHtml
   </div>
+  $sectionsHtml
 </div>
 "@
   $releaseCards.Add($card.Trim())
 }
+
 $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else { '<p class="aks-rel-empty">No releases found (yet).</p>' }
 
 # =========================
@@ -374,7 +474,8 @@ $html = @"
       <div class="aks-releases">
         <div class="aks-rel-header">
           <h2>AKS Releases</h2>
-          <span class="aks-rel-count">$releasesCountLabel</span>
+          <div class="aks-docs-desc">Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</div>
+          <span class="aks-pill aks-pill-count">$releasesCountLabel</span>
         </div>
         $releasesHtml
       </div>
