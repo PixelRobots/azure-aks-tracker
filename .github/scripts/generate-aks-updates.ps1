@@ -349,6 +349,7 @@ $html = @"
     <div class="aks-tab-panel default" id="aks-tab-docs">
     </br>
       <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
+      </br>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
