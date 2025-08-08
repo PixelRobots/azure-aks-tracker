@@ -19,21 +19,22 @@ jobs:
         id: gen
         shell: pwsh
         run: |
-          $out = ./.github/scripts/generate-aks-updates.ps1 | Out-String
-          $json = $out | ConvertFrom-Json
+          # Run script; redirect only stdout (success stream) to out.json
+          ./.github/scripts/generate-aks-updates.ps1 1> out.json
       
-          # MULTILINE output for HTML
+          # Show live confirmation + size in the log
+          Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
+      
+          # Parse JSON and set outputs (multiline for HTML)
+          $json = Get-Content out.json -Raw | ConvertFrom-Json
           Add-Content -Path $env:GITHUB_OUTPUT -Value "html<<EOF"
           Add-Content -Path $env:GITHUB_OUTPUT -Value $json.html
           Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
-      
-          # Single line for hash
           Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Choose either OpenAI or Azure OpenAI by setting envs:
-          # OpenAI.com:
-          OpenAIKey:        ${{ secrets.OPENAI_API_KEY }}        # enables summaries via PSAI
+          # Pick ONE provider (optional):
+          OpenAIKey: ${{ secrets.OPENAI_API_KEY }}  # OpenAI.com via PSAI
           # Azure OpenAI (alternative):
           AZURE_OPENAI_APIURI:       ${{ secrets.AZURE_OPENAI_APIURI }}
           AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
