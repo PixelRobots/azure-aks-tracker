@@ -151,11 +151,11 @@ function Build-ShortTitle([string]$display, [string]$summary, [string]$kind) {
   return "$display — $action"
 }
 function Get-SessionKind($session, $verdict) {
-  $hasAdded   = ($session.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
+  $hasAdded = ($session.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($session.items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
 
   $delta = ( ($session.items | Measure-Object -Sum -Property additions).Sum +
-             ($session.items | Measure-Object -Sum -Property deletions).Sum )
+    ($session.items | Measure-Object -Sum -Property deletions).Sum )
   $commits = $session.items.Count
 
   $summary = ($verdict.summary ?? "")
@@ -168,19 +168,19 @@ function Get-SessionKind($session, $verdict) {
 }
 function KindToPillHtml([string]$kind) {
   $emoji = switch ($kind) {
-    "New"         { "🆕" }
-    "Rework"      { "♻️" }
-    "Removal"     { "🗑️" }
+    "New" { "🆕" }
+    "Rework" { "♻️" }
+    "Removal" { "🗑️" }
     "Deprecation" { "⚠️" }
-    "Migration"   { "➡️" }
+    "Migration" { "➡️" }
     "Clarification" { "ℹ️" }
-    default       { "✨" }
+    default { "✨" }
   }
   $class = switch ($kind) {
-    "New"     { "aks-pill-kind aks-pill-new" }
-    "Rework"  { "aks-pill-kind aks-pill-rework" }
+    "New" { "aks-pill-kind aks-pill-new" }
+    "Rework" { "aks-pill-kind aks-pill-rework" }
     "Removal" { "aks-pill-kind aks-pill-removal" }
-    default   { "aks-pill-kind aks-pill-update" }
+    default { "aks-pill-kind aks-pill-update" }
   }
   "<span class=""$class"">$emoji $kind</span>"
 }
@@ -189,9 +189,16 @@ function KindToPillHtml([string]$kind) {
 # FILTERS (minimal — only bot + scope to AKS .md)
 # =========================
 function Test-IsBot($Item) {
-  $login = $Item.user.login
-  return ($login -match '(bot|actions|github-actions|dependabot)')
+  $login = ""
+  if ($Item.PSObject.Properties['user'] -and $Item.user -and $Item.user.login) { $login = $Item.user.login }
+  elseif ($Item.PSObject.Properties['author'] -and $Item.author -and $Item.author.login) { $login = $Item.author.login }
+  # fallback: sometimes the “commit” author name includes “bot”
+  $name = ""
+  if ($Item.PSObject.Properties['commit'] -and $Item.commit -and $Item.commit.author -and $Item.commit.author.name) { $name = $Item.commit.author.name }
+
+  return ($login -match '(bot|actions|github-actions|dependabot)' -or $name -match '(?i)bot')
 }
+
 function Test-IsDocsNoisePath([string]$Path) {
   # Allow AKS + Fleet markdown
   if ($Path -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { return $true }
@@ -215,11 +222,13 @@ function Get-RecentMergedPRs {
   } while ($resp.items.Count -eq $perPage)
   return $all
 }
-function Get-PRDetails { param([int]$Number)
+function Get-PRDetails {
+  param([int]$Number)
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
-function Get-PRFiles { param([int]$Number)
+function Get-PRFiles {
+  param([int]$Number)
   $perPage = 100; $page = 1; $files = @()
   do {
     $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files?per_page=$perPage&page=$page"
@@ -277,7 +286,7 @@ function Get-FileSessionVerdictsViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-$instructions = @"
+    $instructions = @"
 You are an assistant that summarizes Azure AKS documentation file changes.
 
 You receive file-sessions with:
@@ -349,15 +358,15 @@ foreach ($pr in $prs) {
   if (-not $prDetail.merged_at) { continue }  # safety
 
   $mergedAt = [DateTime]::Parse($prDetail.merged_at).ToUniversalTime()
-  $author   = $prDetail.user.login
-  $title    = $prDetail.title
-  $prUrl    = $prDetail.html_url
+  $author = $prDetail.user.login
+  $title = $prDetail.title
+  $prUrl = $prDetail.html_url
 
   $files = Get-PRFiles -Number $number
   if (-not $files) { continue }
 
-  # Keep all AKS docs markdown (includes `/includes` and TOC)
-  $files = $files | Where-Object { $_.filename -match '^articles/(azure/)?aks/.*\.md$' -and -not (Test-IsDocsNoisePath $_.filename) }
+  # Keep AKS + Fleet markdown (use the helper; no hard-coded aks-only regex)
+  $files = $files | Where-Object { $_.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $_.filename) }
   if (-not $files) { continue }
 
   foreach ($f in $files) {
@@ -389,12 +398,12 @@ foreach ($c in $commitList) {
 
   # Prefer committer date (when it landed in main) over author date
   $when = if ($detail.commit.committer.date) { [DateTime]::Parse($detail.commit.committer.date).ToUniversalTime() }
-          elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
-          else { [DateTime]::UtcNow }
+  elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
+  else { [DateTime]::UtcNow }
 
   $author = $detail.commit.author.name
-  $msg    = $detail.commit.message
-  $url    = $detail.html_url
+  $msg = $detail.commit.message
+  $url = $detail.html_url
 
   foreach ($f in $detail.files) {
     # Only AKS/Fleet markdown; reuse your noise filter
@@ -418,7 +427,7 @@ foreach ($c in $commitList) {
 
 # Group by file into time-boxed sessions (6-hour window)
 function Group-FileChangeSessions {
-  param([Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Events,[int]$GapHours = 6)
+  param([Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Events, [int]$GapHours = 6)
   $byFile = $Events | Group-Object filename
   $sessions = @()
   foreach ($g in $byFile) {
@@ -430,13 +439,13 @@ function Group-FileChangeSessions {
       $gap = ($it.committed_at - $lastAt).TotalHours
       if ($gap -le $GapHours) { $current += $it }
       else {
-        $sessions += [pscustomobject]@{ file=$g.Name; start_at=$current[0].committed_at; end_at=$current[-1].committed_at; items=$current }
+        $sessions += [pscustomobject]@{ file = $g.Name; start_at = $current[0].committed_at; end_at = $current[-1].committed_at; items = $current }
         $current = @($it)
       }
       $lastAt = $it.committed_at
     }
     if ($current.Count -gt 0) {
-      $sessions += [pscustomobject]@{ file=$g.Name; start_at=$current[0].committed_at; end_at=$current[-1].committed_at; items=$current }
+      $sessions += [pscustomobject]@{ file = $g.Name; start_at = $current[0].committed_at; end_at = $current[-1].committed_at; items = $current }
     }
   }
   return $sessions
@@ -491,19 +500,19 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
   $v = $aiVerdicts[$key]  # may be $null
 
   # --- fields (with safe fallbacks if AI is null)
-  $fileUrl  = Get-LiveDocsUrl -FilePath $s.file
-  $display  = Get-DocDisplayName $s.file
+  $fileUrl = Get-LiveDocsUrl -FilePath $s.file
+  $display = Get-DocDisplayName $s.file
 
   $adds = ($s.items | Measure-Object -Sum -Property additions).Sum
   $dels = ($s.items | Measure-Object -Sum -Property deletions).Sum
   $statusSet = ($s.items.status | Select-Object -Unique) -join ', '
 
-  $summary  = if ($v -and $v.summary) { $v.summary } else { "Changes ($statusSet): +$adds / -$dels." }
+  $summary = if ($v -and $v.summary) { $v.summary } else { "Changes ($statusSet): +$adds / -$dels." }
   $category = if ($v -and $v.category) { $v.category } else { "General" }
 
-  $kind     = Get-SessionKind -session $s -verdict $v
-  $title    = Build-ShortTitle -display $display -summary $summary -kind $kind
-  $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
+  $kind = Get-SessionKind -session $s -verdict $v
+  $title = Build-ShortTitle -display $display -summary $summary -kind $kind
+  $lastAt = $s.end_at.ToString('yyyy-MM-dd HH:mm')
   $kindPill = KindToPillHtml $kind
 
   # PR link (use first item)
@@ -577,7 +586,7 @@ if ($PreferProvider -and $releases.Count -gt 0) {
         Log "Releases VS status: $($vs.status)"
       } while ($vs.status -ne 'completed')
 
-$instructions = @"
+      $instructions = @"
 You are summarizing AKS GitHub Releases.
 The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
 Return ONLY JSON:
@@ -633,14 +642,14 @@ foreach ($r in $releases) {
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
     $bodyPlain = Convert-MarkdownToPlain ($r.body ?? "")
-    $ai = @{ summary = Truncate $bodyPlain 400; breaking_changes=@(); key_features=@(); good_to_know=@() }
+    $ai = @{ summary = Truncate $bodyPlain 400; breaking_changes = @(); key_features = @(); good_to_know = @() }
   }
 
   $summaryHtml = "<p>" + (Escape-Html $ai.summary) + "</p>"
   $sectionsHtml = ""
   if ($ai.breaking_changes -and $ai.breaking_changes.Count) { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">❌</span><h3>Breaking Changes</h3></div>$(ToListHtml $ai.breaking_changes)</div>" }
-  if ($ai.key_features -and $ai.key_features.Count)   { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">🔑</span><h3>Key Features</h3></div>$(ToListHtml $ai.key_features)</div>" }
-  if ($ai.good_to_know -and $ai.good_to_know.Count)   { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">💡</span><h3>Good to Know</h3></div>$(ToListHtml $ai.good_to_know)</div>" }
+  if ($ai.key_features -and $ai.key_features.Count) { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">🔑</span><h3>Key Features</h3></div>$(ToListHtml $ai.key_features)</div>" }
+  if ($ai.good_to_know -and $ai.good_to_know.Count) { $sectionsHtml += "<div class=""aks-rel-sec""><div class=""aks-rel-sec-head""><span class=""aks-rel-ico"">💡</span><h3>Good to Know</h3></div>$(ToListHtml $ai.good_to_know)</div>" }
   $badge = if ($isPrerelease) { '<span class="aks-rel-badge">Pre-release</span>' } else { '' }
 
   $card = @"
@@ -700,7 +709,7 @@ $html = @"
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>AKS Documentation Updates</h2>
-      <div class="aks-docs-desc">PRs merged in the last 7 days; AI filters & summarizes page-level changes.</div>
+      <div class="aks-docs-desc">PRs and direct commits merged in the last 7 days; AI summarizes page-level changes.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
