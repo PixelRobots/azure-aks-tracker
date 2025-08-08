@@ -273,10 +273,16 @@ You are a strict filter for Azure AKS documentation updates.
 You receive file-sessions with:
 - file, total_additions, total_deletions, commits_count
 - commit_titles[], patch_sample (first ~250 +/- lines)
-Goal: decide if the session is SUBSTANTIVE for AKS users.
+
+Goal: decide if the session is SUBSTANTIVE for AKS users AND produce a concise summary.
 
 KEEP only if it changes user-facing behavior, procedures, parameters, compatibility, version support, limits/quotas, security posture, networking, pricing/regions, or adds/removes meaningful sections.
 SKIP if it's typos, grammar, whitespace, link retargets, front-matter/ms.* metadata, heading casing, table/TOC shuffles, localization, formatting-only, image/link path fixes, or trivial notes.
+
+Summary format (when verdict=keep):
+- Sentence 1: Briefly say what the docs page is about (topic/purpose).
+- Sentence 2: State exactly what changed, using concrete nouns (e.g., section/heading name, parameter/flag, step/task) if visible in patch_sample. Prefer: “Updated <Section Title> to …”, “Added parameter --foo …”, “Removed section <Heading> …”.
+- If multiple small but related edits, summarize the net effect in one sentence.
 
 Output ONLY JSON array:
 [
@@ -286,13 +292,14 @@ Output ONLY JSON array:
     ""score"": 0.0-1.0,
     ""reason"": ""short plain text"",
     ""category"": ""Networking|Security|Compute|Storage|Operations|General"",
-    ""summary"": ""2-3 sentences""   // REQUIRED when verdict=keep; empty string when skip
+    ""summary"": ""2–3 sentences as described above""
   }
 ]
 
 Rules:
 - When in doubt, use verdict=skip and score <= 0.4.
 - Do NOT invent content not supported by patch_sample/commit_titles.
+- If a section/heading is visible in patch_sample (lines starting with '#' or '##'), prefer to name it in the summary.
 - Plain strings only; no markdown.
 "@
 
