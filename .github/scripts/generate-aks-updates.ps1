@@ -62,7 +62,7 @@ function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
   $allMd = (($Files | Where-Object { $_.filename -notmatch '\.md$' }).Count -eq 0)
   $total = $Adds + $Dels
   if (-not $allMd) { return $false }
-  if ($total > 2) { return $false }
+  if ($total -gt 2) { return $false }
   # Check for important tokens in diff or PR title
   $tokens = 'true|false|default|kubectl|az |MutatingWebhook|ValidatingWebhook|load balanc|port|TLS|deprecate|breaking'
   $diffText = ($Files | ForEach-Object { $_.patch }) -join ' '
@@ -157,11 +157,11 @@ function Get-PerFileSummariesViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
+  $instructions = @"
 You are summarizing substantive Azure AKS documentation changes from PRs.
 Ignore trivial edits (typos, link fixes).
-For each file, return JSON: [ { "file": "<path>", "summary": "1–2 sentences" } ]
-Only return the JSON array.
+For each file, return JSON: [ { "file": "<path>", "summary": "1–2 sentences", "category": "<category>" } ]
+Category should be a short, meaningful tag like 'General', 'Ingress', 'Security', etc. Only return the JSON array.
 "@
 
     Log "Creating assistant + run..."
@@ -187,7 +187,13 @@ Only return the JSON array.
     if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{} }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
-    $map = @{}; foreach ($i in $arr) { $map[$i.file] = $i.summary }
+    $map = @{}
+    foreach ($i in $arr) {
+      $map[$i.file] = @{
+        summary = $i.summary
+        category = $i.PSObject.Properties['category'] ? $i.category : 'General'
+      }
+    }
     Log "AI: Summaries ready for $($map.Keys.Count) files."
     return $map
   }
@@ -258,18 +264,27 @@ $sections = New-Object System.Collections.Generic.List[string]
 foreach ($file in $groups.Keys) {
   $arr = $groups[$file] | Sort-Object merged_at -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
-  $summary = $summaries[$file]
+  $summary = $summaries[$file].summary
+  $category = $summaries[$file].category
 
-  $lis = foreach ($x in $arr) {
-    "<li><a href=""$($x.pr_url)"">$(Escape-Html $x.pr_title)</a> <small>$($x.merged_at.ToString('yyyy-MM-dd'))</small></li>"
+  $lis = ""
+  foreach ($x in $arr) {
+    $prUrl = $x.pr_url
+    $prTitle = Escape-Html $x.pr_title
+    $prDate = $x.merged_at.ToString('yyyy-MM-dd')
+    $lis += '<li><a href="' + $prUrl + '">' + $prTitle + '</a> <small>' + $prDate + '</small></li>'
   }
 
-$category = "General" # You can set this dynamically if you have category info
-$lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
-$summaryText = $summary
-$impactText = "" # If you want to split summary/impact, parse from $summary or AI output
+  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  $summaryText = $summary
+  $impactText = "" # If you want to split summary/impact, parse from $summary or AI output
 
-$section = @"
+  $impactHtml = ""
+  if ($impactText) {
+    $impactHtml = '<div class="aks-doc-impact"><strong>Impact</strong><p>' + (Escape-Html $impactText) + '</p></div>'
+  }
+
+  $section = @"
 <section class=\"aks-doc-update\">
   <div class=\"aks-doc-header\">
     <span class=\"aks-doc-category\">$category</span>
@@ -280,9 +295,9 @@ $section = @"
     <strong>Summary</strong>
     <p>$(Escape-Html $summaryText)</p>
   </div>
-  $(if ($impactText) { "<div class=\"aks-doc-impact\"><strong>Impact</strong><p>$(Escape-Html $impactText)</p></div>" } else { "" })
+  $impactHtml
   <ul>
-    $($lis -join \"`n\")
+    $lis
   </ul>
   <a class=\"aks-doc-link\" href=\"$fileUrl\" target=\"_blank\">View Documentation</a>
 </section>
