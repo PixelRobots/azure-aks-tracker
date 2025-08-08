@@ -19,8 +19,8 @@ $sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
-$ReleasesOwner = "Azure"   # change if needed
-$ReleasesRepo  = "AKS"     # change to the repo that actually publishes AKS releases
+$ReleasesOwner = "Azure"
+$ReleasesRepo  = "AKS"
 $ReleasesCount = 5
 
 $ghHeaders = @{
@@ -58,21 +58,15 @@ function Truncate([string]$text, [int]$max = 400) {
 function Convert-MarkdownToPlain([string]$md) {
   if (-not $md) { return "" }
   $t = $md
-  # Remove code blocks
-  $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')
-  # Images ![alt](url) -> alt
-  $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')
-  # Links [text](url) -> text
-  $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')
-  # Headings, emphasis, inline code, lists markers
+  $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')   # code blocks
+  $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')       # images
+  $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')        # links
   $t = $t -replace '(^|\n)#{1,6}\s*', '$1'
   $t = $t -replace '(\*\*|__)(.*?)\1', '$2'
   $t = $t -replace '(\*|_)(.*?)\1', '$2'
   $t = $t -replace '`([^`]+)`', '$1'
   $t = $t -replace '^\s*([-*+]|\d+\.)\s+', '', 'Multiline'
-  # Blockquotes
   $t = $t -replace '^\s*>\s?', '', 'Multiline'
-  # Excess whitespace
   $t = [regex]::Replace($t, '\r', '')
   $t = [regex]::Replace($t, '\n{3,}', "`n`n")
   $t.Trim()
@@ -85,15 +79,28 @@ function Test-IsBot($Item) {
   $login = $Item.user.login
   return ($login -match '(bot|actions|github-actions|dependabot)')
 }
+
 function Test-IsNoiseMessage([string]$Message) {
   if (-not $Message) { return $false }
   $patterns = @(
     '^\s*merge\b', '^\s*sync\b', 'publish from', 'update submodule',
     '\btypo\b', '\bgrammar\b', '\blink[- ]?fix\b', '\bformat(ting)?\b',
     '\breadme\b', '^\s*chore\b', '^\s*ci\b', '^\s*build\b', 'automation',
-    'localization', '\bloc\b', 'update\s+(metadata|front[- ]?matter)'
+    'localization', '\bloc\b', 'update\s+(metadata|front[- ]?matter)',
+    '\bprettier\b', '\beslint\b', '\bspell(ing)?\b', '\bfmt\b'
   )
   foreach ($p in $patterns) { if ($Message -imatch $p) { return $true } }
+  return $false
+}
+
+# Path allow/deny: AKS only, exclude TOCs, includes, media, templates, samples
+function Test-IsDocsNoisePath([string]$Path) {
+  # allowlist: only AKS user docs
+  if ($Path -notmatch '^articles/azure/aks/.*\.md$') { return $true }
+
+  # denylist
+  if ($Path -match '/includes/|/media/|/templates?/|/samples?/') { return $true }
+  if ($Path -match '/TOC\.md$' -or $Path -match '/toc\.yml$') { return $true }
   return $false
 }
 
@@ -105,40 +112,54 @@ function Test-IsDocsTrivialCommit {
   )
   if (-not $Files -or $Files.Count -eq 0) { return $true }
 
-  # Only .md touched? If other assets changed, treat as non-trivial
-  $allMd = ($Files | Where-Object { $_.filename -match '\.md$' }).Count -eq $Files.Count
-  if (-not $allMd) { return $false }
+  # Extract only files we actually care about for triviality analysis
+  $docFiles = $Files | Where-Object { $_.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $_.filename) }
+  if (-not $docFiles -or $docFiles.Count -eq 0) { return $true }  # nothing relevant
 
-  # Super tiny across all files
-  $adds = ($Files | Measure-Object -Sum -Property additions).Sum
-  $dels = ($Files | Measure-Object -Sum -Property deletions).Sum
-  if (($adds + $dels) -le 4 -and $Files.Count -le 2) { return $true }
+  # If any non-md relevant assets exist, treat as potentially substantive
+  $allMd = ($docFiles.Count -eq $Files.Count)
 
-  foreach ($f in $Files) {
+  # Super tiny (total over relevant files)
+  $adds = ($docFiles | Measure-Object -Sum -Property additions).Sum
+  $dels = ($docFiles | Measure-Object -Sum -Property deletions).Sum
+  if (($adds + $dels) -le 4 -and $docFiles.Count -le 2) { return $true }
+
+  $frontMatterOrLinksOnly = $true
+  foreach ($f in $docFiles) {
     $p = $f.patch
     if (-not $p) { continue }
     $lines = ($p -split "`n") | Where-Object { $_ -match '^[\+\-]' }
     foreach ($line in $lines) {
       $content = $line.Substring(1)
 
-      # front matter bumps
-      if ($content -match '^\s*ms\.(date|service|topic|author|reviewer|custom|subservice)\s*:') { continue }
-      # link-only edits
-      if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)' -or $content -match 'https?://') { continue }
-      # whitespace/punctuation-only
+      # front matter bumps (ms.* and common metadata)
+      if ($content -match '^\s*(ms|author|manager|ms\.author|ms\.date|ms\.service|ms\.subservice|ms\.topic|ms\.custom|ms\.collection|ms\.devlang)\s*:\s*') { continue }
+
+      # link-only edits or bare urls
+      if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)') { continue }
+      if ($content -match 'https?://') { continue }
+
+      # heading/whitespace/punct-only line
       $stripped = ($content -replace '[\s\p{P}]','')
       if ([string]::IsNullOrWhiteSpace($stripped)) { continue }
+      if ($content -match '^\s*#{1,6}\s*[A-Za-z0-9\p{P}\s]*$') {
+        $letters = ($content -replace '[^A-Za-z0-9]','')
+        if ($letters.Length -le 4) { continue }
+      }
 
-      # Non-trivial content found
-      return $false
+      # looks substantive
+      $frontMatterOrLinksOnly = $false
+      break
     }
+    if (-not $frontMatterOrLinksOnly) { break }
   }
 
-  # commit title hints
-  if ($Title -imatch 'typo|grammar|spelling|link(s)?|format(ting)?|whitespace|lint|style|loc') { return $true }
+  if ($frontMatterOrLinksOnly) { return $true }
 
-  # If we got here, all changes seen were trivial
-  return $true
+  # Title hints: typo/format/loc/etc.
+  if ($Title -imatch 'typo|grammar|spelling|link(s)?|format(ting)?|whitespace|lint|style|loc|broken\s*link|fix links?') { return $true }
+
+  return $false
 }
 
 # =========================
@@ -221,9 +242,9 @@ You receive AKS docs *file sessions*. Each item has:
 - key: stable identifier for the session
 - file: markdown doc path
 - commit_titles: commit messages (unique)
-- patch_sample: first ~150 +/- lines across commits in the session
+- patch_sample: ~150 +/- lines across commits
 
-Task: Summarize only *substantive* content changes (new sections/steps/parameters, breaking notes, meaningful rewrites).
+Summarize only *substantive* content changes (new sections/steps/parameters, breaking notes, meaningful rewrites).
 Ignore trivial edits (typos, link target changes, ms.date/front-matter, whitespace).
 
 Return ONLY a JSON array like:
@@ -280,7 +301,7 @@ Log "Fetching commits merged in last 7 days..."
 $commits = Get-RecentCommits | Where-Object { -not (Test-IsBot $_) }
 Log "Found $($commits.Count) commit(s) in window."
 
-# Collect commit-file events (already filtered)
+# Collect commit-file events with aggressive filters
 $events = @()
 foreach ($commit in $commits) {
   $msg = $commit.commit.message
@@ -291,14 +312,19 @@ foreach ($commit in $commits) {
   $date   = [DateTime]::Parse($commit.commit.author.date).ToUniversalTime()
   $url    = $commit.html_url
 
-  $files = Get-CommitFiles $sha | Where-Object {
-    $_.filename -match '^articles/.*\.md$' -and $_.filename -notmatch '/includes/|/media/'
+  $files = Get-CommitFiles $sha
+  if (-not $files) { continue }
+
+  # Filter to relevant doc files and drop noise paths early
+  $files = $files | Where-Object {
+    $_.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $_.filename)
   }
   if (-not $files) { continue }
+
+  # Trivial content? skip
   if (Test-IsDocsTrivialCommit -Files $files -Title $msg) { continue }
 
   foreach ($f in $files) {
-    # Keep per-file event; store patch so AI can see actual +/- lines
     $events += [pscustomobject]@{
       filename     = $f.filename
       committed_at = $date
@@ -337,10 +363,10 @@ function Group-FileChangeSessions {
         $current += $it
       } else {
         $sessions += [pscustomobject]@{
-          file        = $g.Name
-          start_at    = $current[0].committed_at
-          end_at      = $current[-1].committed_at
-          items       = $current
+          file     = $g.Name
+          start_at = $current[0].committed_at
+          end_at   = $current[-1].committed_at
+          items    = $current
         }
         $current = @($it)
       }
@@ -362,11 +388,20 @@ function Group-FileChangeSessions {
 
 $sessions = Group-FileChangeSessions -Events $events -GapHours 6
 
+# PRE-AI: Drop featherweight sessions (< 8 lines changed) unless multiple commits
+$sessions = @(
+  foreach ($s in $sessions) {
+    $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
+               ($s.items | Measure-Object -Sum -Property deletions).Sum )
+    if ($delta -lt 8 -and $s.items.Count -lt 2) { continue }
+    $s
+  }
+)
+
 # Build AI input for file sessions
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-file-sessions-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 
-# Create stable keys so we can map summaries back (file|start|end)
 $fileSessionPayload = @(
   foreach ($s in $sessions) {
     $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
@@ -393,7 +428,6 @@ $aiInput = [pscustomobject]@{
   file_sessions = $fileSessionPayload
 }
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
-
 Log "AI Summaries"
 Log "  [AKS] Prepared AI input: $aiJsonPath"
 
@@ -416,10 +450,10 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
   $summary  = $summaries[$key].summary
   $category = $summaries[$key].category
 
-  # Minimum substance guard (if AI didn't produce a summary and delta is tiny)
+  # POST-AI: guard — if no summary AND still tiny, bin it
   $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
              ($s.items | Measure-Object -Sum -Property deletions).Sum )
-  if ($delta -lt 6 -and [string]::IsNullOrWhiteSpace($summary)) { continue }
+  if ([string]::IsNullOrWhiteSpace($summary) -and $delta -lt 8) { continue }
 
   $commitsList = ($s.items | Sort-Object committed_at -Descending | Select-Object -First 3 |
     ForEach-Object { "<li><a href=""$($_.commit_url)"" target=""_blank"" rel=""noopener"">$(Escape-Html (Truncate $_.commit_msg 120))</a></li>" }) -join ''
@@ -452,9 +486,7 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
-  try {
-    Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
-  }
+  try { Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET }
   catch {
     Write-Warning ("Failed to fetch releases from {0}/{1}: {2}" -f $owner, $repo, $_.Exception.Message)
     return @()
@@ -463,7 +495,7 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
 # Build releases JSON for AI
-$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }  # re-ensure
+$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 $relInput = @(
   foreach ($r in $releases) {
@@ -482,7 +514,6 @@ $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding U
 
 $releaseSummaries = @{}
 if ($PreferProvider -and $releases.Count -gt 0) {
-  # Reuse your existing releases assistant
   function Get-ReleaseSummariesViaAssistant {
     param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
     if (-not $PSAIReady) { return @{} }
@@ -502,19 +533,12 @@ if ($PreferProvider -and $releases.Count -gt 0) {
 
       $instructions = @"
 You are summarizing AKS GitHub Releases.
-The uploaded JSON contains an array of objects with: id, title, tag_name, published_at, body (markdown).
-Return ONLY JSON with this exact shape:
+The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
+Return ONLY JSON:
 [
-  {
-    "id": <same id as input>,
-    "summary": "1-3 sentences plain text",
-    "breaking_changes": ["..."],
-    "key_features": ["..."],
-    "good_to_know": ["..."]
-  }
+  { "id": <same id>, "summary": "1-3 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."] }
 ]
-- Keep bullets concise (3-8 per section when applicable).
-- No markdown in values, plain strings only.
+Plain strings only.
 "@
 
       $assistant = New-OAIAssistant `
@@ -524,7 +548,7 @@ Return ONLY JSON with this exact shape:
         -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
         -Model $Model
 
-      $userMsg = "Summarize each release in the uploaded JSON by ID. Only return the JSON array described in the instructions."
+      $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
       $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
       $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
@@ -575,7 +599,6 @@ foreach ($r in $releases) {
   $isPrerelease = [bool]$r.prerelease
   $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
-  # Get AI structured summary by release id; fallback to cleaned/truncated body
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
     $bodyPlain = Convert-MarkdownToPlain ($r.body ?? "")
