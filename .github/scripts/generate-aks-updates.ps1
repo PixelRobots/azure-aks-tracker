@@ -342,24 +342,14 @@ $html = @"
     <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
     Check back often as data is automatically refreshed every 12 hours.</p>
   </div>
-  <div class="aks-tabs">
-    <button class="aks-tab-btn aks-tab-btn-active" data-tab="docs">Documentation Updates</button>
-    <button class="aks-tab-btn" data-tab="releases">AKS Releases</button>
+  <h2>Documentation Updates</h2>
+  <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
+  <div class="aks-docs-updated">Last updated: $lastUpdated</div>
+  <div class="aks-category-switcher">
+    <span>Filter by category:</span> $categoryButtons
   </div>
-  <div class="aks-tab-content aks-tab-content-docs">
-    <h2>Documentation Updates</h2>
-    <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
-    <div class="aks-docs-updated">Last updated: $lastUpdated</div>
-    <div class="aks-category-switcher">
-      <span>Filter by category:</span> $categoryButtons
-    </div>
-    <div class="aks-docs-list">
-      $($sections -join "`n")
-    </div>
-  </div>
-  <div class="aks-tab-content aks-tab-content-releases" style="display:none">
-    <h2>AKS Releases</h2>
-    <div class="aks-releases-desc">Release notes and changelogs for Azure Kubernetes Service (AKS) will appear here soon.</div>
+  <div class="aks-docs-list">
+    $($sections -join "`n")
   </div>
 </div>
 "@.Trim()
