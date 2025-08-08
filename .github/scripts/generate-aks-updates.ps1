@@ -335,7 +335,85 @@ foreach ($cat in $allCategories) {
 
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 
-$html = @"
+ $css = @"
+<style>
+.aks-updates { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.aks-updates h2 { margin: 0 0 0.75rem }
+.aks-updates section.aks-doc-update {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 18px 0;
+  background: #18181b;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.aks-doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.aks-doc-category {
+  background: #27272a;
+  color: #a3e635;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-right: 8px;
+}
+.aks-doc-updated {
+  color: #a1a1aa;
+  font-size: 0.85em;
+}
+.aks-updates h3 { margin: 0 0 8px; font-size: 1.15rem; }
+.aks-doc-summary, .aks-doc-impact { margin: 10px 0; }
+.aks-doc-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.aks-doc-link {
+  flex: 1 1 0;
+  text-align: center;
+  background: #9f62eb;
+  color: #18181b;
+  padding: 10px 0;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+  min-width: 0;
+}
+.aks-doc-link-pr {
+  background: #9f62eb;
+  color: #fff;
+}
+.aks-doc-link:hover,
+.aks-doc-link-pr:hover {
+  background: #c4b5fd;
+  color: #18181b;
+}
+@media (max-width: 600px) {
+  .aks-doc-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+.aks-updates ul { margin: 8px 0 0 1rem; }
+.aks-updates li { margin: 4px 0; }
+.aks-updates small { color: #a1a1aa; margin-left: .5rem; }
+.aks-cat-general { background: #27272a; color: #a3e635; }
+.aks-cat-ingress { background: #1e293b; color: #38bdf8; }
+.aks-cat-security { background: #2d2a32; color: #f472b6; }
+.aks-cat-upgrade { background: #312e81; color: #facc15; }
+.aks-cat-network { background: #0f766e; color: #fbbf24; }
+.aks-cat-other { background: #3b0764; color: #f9fafb; }
+</style>
+"@
+
+$html = $css + @"
 <div class="aks-updates" data-since="$SINCE_ISO">
   <div class="aks-intro">
     <h1>Azure AKS Documentation and Release Tracker</h1>
