@@ -320,10 +320,47 @@ foreach ($file in $groups.Keys) {
   $sections.Add($section)
 }
 
+
+# Build category filter (unique categories from all sections)
+$allCategories = @('All') + ($sections | ForEach-Object {
+    if ($_ -match 'aks-doc-category">([^<]+)<') { $matches[1] }
+  } | Where-Object { $_ -and $_ -ne '' } | Sort-Object -Unique)
+$categoryButtons = ''
+foreach ($cat in $allCategories) {
+  $catClass = 'aks-cat-btn'
+  if ($cat -eq 'All') { $catClass += ' aks-cat-btn-active' }
+  $categoryButtons += '<button class="' + $catClass + '" data-cat="' + $cat + '">' + $cat + '</button>'
+}
+
+$lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
+
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
-  <h2>AKS documentation updates (last 7 days)</h2>
-  $($sections -join "`n")
+  <div class="aks-intro">
+    <h1>Azure AKS Documentation and Release Tracker</h1>
+    <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases.</p>
+    <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
+    Check back often as data is automatically refreshed every 12 hours.</p>
+  </div>
+  <div class="aks-tabs">
+    <button class="aks-tab-btn aks-tab-btn-active" data-tab="docs">Documentation Updates</button>
+    <button class="aks-tab-btn" data-tab="releases">AKS Releases</button>
+  </div>
+  <div class="aks-tab-content aks-tab-content-docs">
+    <h2>Documentation Updates</h2>
+    <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
+    <div class="aks-docs-updated">Last updated: $lastUpdated</div>
+    <div class="aks-category-switcher">
+      <span>Filter by category:</span> $categoryButtons
+    </div>
+    <div class="aks-docs-list">
+      $($sections -join "`n")
+    </div>
+  </div>
+  <div class="aks-tab-content aks-tab-content-releases" style="display:none">
+    <h2>AKS Releases</h2>
+    <div class="aks-releases-desc">Release notes and changelogs for Azure Kubernetes Service (AKS) will appear here soon.</div>
+  </div>
 </div>
 "@.Trim()
 
