@@ -354,6 +354,7 @@ $html = @"
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
       </div>
+      </br>
       <div class="aks-docs-list">
         $($sections -join "`n")
       </div>
