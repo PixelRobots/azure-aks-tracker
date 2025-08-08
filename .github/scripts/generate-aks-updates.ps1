@@ -286,7 +286,7 @@ function Get-FileSessionVerdictsViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
+   $instructions = @"
 You are an assistant that summarizes meaningful updates to Azure AKS documentation.
 
 You receive "file sessions", each describing recent changes to one documentation page.
@@ -297,8 +297,7 @@ Each includes:
 - Commit titles (sometimes from PRs)
 
 For each session:
-- Decide if this session is meaningful to users (e.g., new features, rework, new sections, updated examples).
-- If yes, return a verdict JSON like:
+- If the changes are meaningful to users (e.g., new features, rework, new sections, updated examples), return a verdict:
   {
     "key": "<same key>",
     "verdict": "keep",
@@ -306,10 +305,11 @@ For each session:
     "category": "Networking | Security | Compute | Storage | Operations | General",
     "summary": "Short description of the real change (2–4 sentences)"
   }
-- If the changes are trivial (e.g., typos, formatting, broken links, whitespace), do NOT include them in your output at all.
+
+- If the changes are trivial (e.g., typos, formatting, broken links, whitespace), skip them completely. Do not include them at all.
 
 Guidelines:
-- Skip unimportant edits completely. Return nothing for those.
+- Do not return items that are not meaningful.
 - Be precise. If the patch shows CLI commands added, say so.
 - Use the patch and commit titles as your only evidence.
 - Never speculate beyond the patch.
@@ -321,6 +321,7 @@ Output ONLY a JSON array of the verdicts to keep:
   ...
 ]
 Do not return skipped items.
+Plain strings only.
 "@
 
 
