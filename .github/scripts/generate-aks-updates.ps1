@@ -258,26 +258,30 @@ function Get-FileSessionVerdictsViaAssistant {
     } while ($vs.status -ne 'completed')
 
 $instructions = @"
-You are a strict filter for Azure AKS documentation updates.
+You are an assistant that summarizes Azure AKS documentation file changes.
 
 You receive file-sessions with:
 - file, total_additions, total_deletions, commits_count
-- commit_titles[], patch_sample (first ~250 +/- lines)
+- commit_titles[], patch_sample (first ~600 +/- lines)
 
-Goal: decide if the session is SUBSTANTIVE for AKS users AND produce a concise summary.
+For each session, write a short, factual 1–2 sentence summary of what changed.
+Focus on concrete details visible in the patch, such as section names, parameter changes, new examples, or removals.
 
-KEEP only if it changes user-facing behavior, procedures, parameters, compatibility, version support, limits/quotas, security posture, networking, pricing/regions, or adds/removes meaningful sections.
-SKIP if it's typos, grammar, whitespace, link retargets, front-matter/ms.* metadata, heading casing, table/TOC shuffles, localization, formatting-only, image/link path fixes, or trivial notes.
+Always provide a "verdict" of "keep".
+Also include:
+- "score": 1.0
+- "category": one of Networking, Security, Compute, Storage, Operations, General (best guess)
+- "summary": your short summary
 
-Summary format (when verdict=keep):
-- 1–2 sentence summary using concrete nouns (e.g., section/parameter names), if visible in patch_sample.
+Never skip a session. If unsure, say "Minor text changes" in summary.
 
 Output ONLY JSON array:
 [
-  { ""key"": ""<same key>"", ""verdict"": ""keep""|""skip"", ""score"": 0.0-1.0, ""reason"": ""..."", ""category"": ""Networking|Security|Compute|Storage|Operations|General"", ""summary"": ""..."" }
+  { "key": "<same key>", "verdict": "keep", "score": 1.0, "reason": "always kept", "category": "General", "summary": "..." }
 ]
 Plain strings only.
 "@
+
 
     $assistant = New-OAIAssistant -Name "AKS-Docs-FileVerdict-Summarizer" -Instructions $instructions -Tools @{ type = 'file_search' } -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } -Model $Model
     $userMsg = "Return ONLY the JSON array of verdicts as specified."
