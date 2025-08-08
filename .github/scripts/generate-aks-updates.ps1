@@ -5,7 +5,7 @@
 # CONFIG / ENV
 # =========================
 $Owner = "MicrosoftDocs"
-$Repo  = "azure-aks-docs"
+$Repo = "azure-aks-docs"
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
@@ -29,12 +29,12 @@ function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
 # HELPERS
 # =========================
 function Escape-Html([string]$s) {
-  $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
+  $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath, [string]$Locale = "en-us") {
   if ($FilePath -match '^articles/(.+?)\.md$') {
-    $p = $Matches[1] -replace '\\','/'
+    $p = $Matches[1] -replace '\\', '/'
     if ($p -notmatch '^azure/') { $p = "azure/$p" }
     return "https://learn.microsoft.com/$Locale/$p"
   }
@@ -51,9 +51,9 @@ function Test-IsBot($Item) {
 function Test-IsNoiseMessage([string]$Message) {
   if (-not $Message) { return $false }
   $patterns = @(
-    '^merge\b','^sync\b','publish from','update submodule',
-    '\btypo\b','\bgrammar\b','\blink[- ]?fix\b','\bformat(ting)?\b',
-    '\breadme\b','^chore\b'
+    '^merge\b', '^sync\b', 'publish from', 'update submodule',
+    '\btypo\b', '\bgrammar\b', '\blink[- ]?fix\b', '\bformat(ting)?\b',
+    '\breadme\b', '^chore\b'
   )
   foreach ($p in $patterns) { if ($Message -imatch $p) { return $true } }
   return $false
@@ -76,7 +76,7 @@ function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
 # =========================
 function Get-RecentMergedPRs {
   $all = @()
-  for ($page=1; $page -le 5; $page++) {
+  for ($page = 1; $page -le 5; $page++) {
     $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=50&page=$page"
     $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     if (-not $resp) { break }
@@ -100,13 +100,14 @@ function Get-PRFiles($Number) {
 # =========================
 $PSAIReady = $false
 function Initialize-AIProvider {
-  param([ValidateSet('OpenAI','AzureOpenAI')][string]$Provider)
+  param([ValidateSet('OpenAI', 'AzureOpenAI')][string]$Provider)
   try {
     if (-not (Get-Module -ListAvailable -Name PSAI)) {
       Install-Module PSAI -Scope CurrentUser -Force -ErrorAction Stop
     }
     Import-Module PSAI -ErrorAction Stop
-  } catch {
+  }
+  catch {
     Write-Warning "PSAI not available; skipping AI. $_"
     return $false
   }
@@ -136,7 +137,7 @@ function Initialize-AIProvider {
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
 function Get-PerFileSummariesViaAssistant {
-  param([string]$JsonPath,[string]$Model="gpt-4o-mini")
+  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
   try {
     Log "Uploading JSON to AI provider..."
@@ -157,7 +158,7 @@ function Get-PerFileSummariesViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-  $instructions = @"
+    $instructions = @"
 You are summarizing substantive Azure AKS documentation changes from PRs.
 Ignore trivial edits (typos, link fixes).
 For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences about what changed", "impact": ["bullet point 1", "bullet point 2"], "category": "<category>" } ]
@@ -180,21 +181,21 @@ Only return the JSON array.
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-      Where-Object { $_.type -eq 'text' } |
-      ForEach-Object { $_.text.value } |
-      Out-String
+    Where-Object { $_.type -eq 'text' } |
+    ForEach-Object { $_.text.value } |
+    Out-String
 
     # Strip fences and extract JSON array
-    $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
-    $match = [regex]::Match($clean,'\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))','Singleline')
+    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
+    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{} }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
     $map = @{}
     foreach ($i in $arr) {
       $map[$i.file] = @{
-        summary = $i.summary
-        impact = $i.PSObject.Properties['impact'] ? $i.impact : @()
+        summary  = $i.summary
+        impact   = $i.PSObject.Properties['impact'] ? $i.impact : @()
         category = $i.PSObject.Properties['category'] ? $i.category : 'General'
       }
     }
@@ -220,16 +221,16 @@ foreach ($pr in $prs) {
 
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
-  if ($f.filename -notmatch '\.md$') { continue }
-  # Attach PR title to file object for filter
-  $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
-  if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
+    if ($f.filename -notmatch '\.md$') { continue }
+    # Attach PR title to file object for filter
+    $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
+    if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
-      pr_title = $pr.title
-      pr_url   = $pr.html_url
-      merged_at= [DateTime]::Parse($pr.merged_at).ToUniversalTime()
-      filename = $f.filename
+      pr_title  = $pr.title
+      pr_url    = $pr.html_url
+      merged_at = [DateTime]::Parse($pr.merged_at).ToUniversalTime()
+      filename  = $f.filename
     }
   }
 }
@@ -257,7 +258,8 @@ Log "  [AKS] Prepared AI input: $aiJsonPath"
 $summaries = @{}
 if ($PreferProvider) {
   $summaries = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath
-} else {
+}
+else {
   Log "AI disabled (no provider env configured)."
 }
 
@@ -329,21 +331,37 @@ $html = @"
     <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
     Check back often as data is automatically refreshed every 12 hours.</p>
   </div>
-  <h2>Documentation Updates</h2>
-  <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
-  <span class="aks-doc-updated-pill">Last updated: $lastUpdated
-    <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
-  </span>
-  <div class="aks-docs-list">
-    $($sections -join "`n")
+
+    <!-- Tabs Navigation -->
+  <div class="aks-tabs">
+    <button class="aks-tab active" data-tab="docs">Documentation Updates</button>
+    <button class="aks-tab" data-tab="releases">AKS Releases</button>
   </div>
+
+  <!-- Tab Content -->
+  <div class="aks-tab-content active" id="tab-docs">
+    <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
+    <span class="aks-doc-updated-pill">Last updated: $lastUpdated
+      <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
+    </span>
+    <div class="aks-docs-list">
+      $($sections -join "`n")
+    </div>
+  </div>
+
+  <div class="aks-tab-content" id="tab-releases">
+    <p>No AKS release notes are available yet. Check back soon.</p>
+  </div>
+
+  </br>
+  </br>
 </div>
 "@.Trim()
 
 # Hash for idempotency
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
-$bytes  = [Text.Encoding]::UTF8.GetBytes($html)
-$hash   = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
+$bytes = [Text.Encoding]::UTF8.GetBytes($html)
+$hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
 # Emit JSON (Action step will read this)
 [pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $summaries } | ConvertTo-Json -Depth 6
