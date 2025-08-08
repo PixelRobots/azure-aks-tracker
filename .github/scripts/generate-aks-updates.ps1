@@ -333,15 +333,19 @@ $html = @"
     Check back often as data is automatically refreshed every 12 hours.</p>
   </div>
 
-  <!-- :target-based tabs (no inputs) -->
   <div class="aks-tabs">
     <nav class="aks-tabs-nav">
       <a class="aks-tab-link" href="#aks-tab-docs">Documentation Updates</a>
       <a class="aks-tab-link" href="#aks-tab-releases">AKS Releases</a>
     </nav>
 
-    <!-- Panels -->
-    <div class="aks-tab-panel" id="aks-tab-docs">
+    <!-- Put the NON-default panels first -->
+    <div class="aks-tab-panel" id="aks-tab-releases">
+      <p>No AKS release notes are available yet. Check back soon.</p>
+    </div>
+
+    <!-- Put the DEFAULT panel LAST and add class 'default' -->
+    <div class="aks-tab-panel default" id="aks-tab-docs">
       <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
       <span class="aks-doc-updated-pill">Last updated: $lastUpdated
         <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
@@ -350,17 +354,12 @@ $html = @"
         $($sections -join "`n")
       </div>
     </div>
-
-    <div class="aks-tab-panel" id="aks-tab-releases">
-      <p>No AKS release notes are available yet. Check back soon.</p>
-    </div>
   </div>
 
   </br>
   </br>
 </div>
 "@.Trim()
-
 
 
 # Hash for idempotency
