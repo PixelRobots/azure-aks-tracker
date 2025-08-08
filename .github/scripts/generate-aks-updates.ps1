@@ -6,6 +6,7 @@
 # =========================
 $Owner = "MicrosoftDocs"
 $Repo  = "azure-aks-docs"
+
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
@@ -262,17 +263,7 @@ foreach ($file in $groups.Keys) {
   $summary  = $summaries[$file].summary
   $category = $summaries[$file].category
 
-  $lis = ""  # (left empty; re-enable if you want PR list under each card)
-
   $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
-  $impactHtml = ""
-  # If you ever populate impact via AI:
-  # $impactArr = $summaries[$file].impact
-  # if ($impactArr -and $impactArr.Count -gt 0) {
-  #   $impactHtml = '<div class="aks-doc-impact"><strong>Impact</strong><ul>' +
-  #                 (($impactArr | ForEach-Object { '<li>' + (Escape-Html $_) + '</li>' }) -join '') +
-  #                 '</ul></div>'
-  # }
 
   $prLink   = $arr[0].pr_url
   $cardTitle = $arr[0].pr_title
@@ -289,8 +280,7 @@ foreach ($file in $groups.Keys) {
     <strong>Summary</strong>
     <p>$(Escape-Html $summary)</p>
   </div>
-  $impactHtml
-  <ul>$lis</ul>
+  <ul></ul>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank" rel="noopener">View PR</a>
@@ -305,8 +295,13 @@ foreach ($file in $groups.Keys) {
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
-  try { Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET }
-  catch { Write-Warning "Failed to fetch releases from $owner/$repo: $_"; return @() }
+  try {
+    Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+  }
+  catch {
+    Write-Warning ("Failed to fetch releases from {0}/{1}: {2}" -f $owner, $repo, $_.Exception.Message)
+    return @()
+  }
 }
 
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
@@ -320,7 +315,10 @@ foreach ($r in $releases) {
   $publishedAt = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
   # summary: crude markdown strip + truncate
-  $bodyRaw = ($r.body ?? "") -replace '```[\s\S]*?```','' -replace '!\[[^\]]*\]\([^)]+\)','' -replace '\[[^\]]*\]\([^)]+\)','' -replace '\r',''
+  $bodyRaw = ($r.body ?? "") -replace '```[\s\S]*?```','' `
+                             -replace '!\[[^\]]*\]\([^)]+\)','' `
+                             -replace '\[[^\]]*\]\([^)]+\)','' `
+                             -replace '\r',''
   $summary = Escape-Html (Truncate $bodyRaw 400)
 
   $badge = if ($isPrerelease) { '<span class="aks-rel-badge">Pre-release</span>' } else { '' }
