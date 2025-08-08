@@ -474,7 +474,7 @@ $html = @"
       <div class="aks-releases">
         <div class="aks-rel-header">
           <h2>AKS Releases</h2>
-          <div class="aks-docs-desc">Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</div>
+          <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
           <span class="aks-pill aks-pill-count">$releasesCountLabel</span>
         </div>
         $releasesHtml
