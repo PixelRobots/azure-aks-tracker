@@ -271,29 +271,28 @@ foreach ($file in $groups.Keys) {
   $summary = $summaries[$file].summary
   $impactArr = $summaries[$file].impact
   $category = $summaries[$file].category
-  $catClass = 'aks-doc-category aks-cat-' + ($category -replace '[^a-zA-Z0-9]', '').ToLower()
 
-  $section = @"
-<section class="aks-doc-update">
-  <h2><a href="$fileUrl">$(Escape-Html $cardTitle)</a></h2>
-  <div class="aks-doc-header">
-    <span class="$catClass">$category</span>
-    <span class="aks-doc-updated">Last updated: $lastUpdated</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>$(Escape-Html $summary)</p>
-  </div>
-  $impactHtml
-  <ul>
-    $lis
-  </ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="$fileUrl" target="_blank">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank">View PR</a>
-  </div>
-</section>
-"@
+  $lis = ""
+  foreach ($x in $arr) {
+    $prUrl = $x.pr_url
+    $prTitle = Escape-Html $x.pr_title
+    $prDate = $x.merged_at.ToString('yyyy-MM-dd')
+    # $lis += '<li><a href="' + $prUrl + '">' + $prTitle + '</a> <small>' + $prDate + '</small></li>'
+  }
+
+  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  $summaryText = $summary
+  $impactHtml = ""
+  if ($impactArr -and $impactArr.Count -gt 0) {
+    $impactHtml = '<div class="aks-doc-impact"><strong>Impact</strong><ul>'
+    foreach ($impactItem in $impactArr) {
+      $impactHtml += '<li>' + (Escape-Html $impactItem) + '</li>'
+    }
+    $impactHtml += '</ul></div>'
+  }
+
+  $prLink = $arr[0].pr_url
+  # Prefer PR title for card header, fallback to file name
   $cardTitle = $arr[0].pr_title
   if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
   $section = @"
@@ -321,102 +320,11 @@ foreach ($file in $groups.Keys) {
   $sections.Add($section)
 }
 
-
-# Build category filter (unique categories from all sections)
-$allCategories = @('All') + ($sections | ForEach-Object {
-    if ($_ -match 'aks-doc-category">([^<]+)<') { $matches[1] }
-  } | Where-Object { $_ -and $_ -ne '' } | Sort-Object -Unique)
-$categoryButtons = ''
-foreach ($cat in $allCategories) {
-  $catClass = 'aks-cat-btn'
-  if ($cat -eq 'All') { $catClass += ' aks-cat-btn-active' }
-  $categoryButtons += '<button class="' + $catClass + '" data-cat="' + $cat + '">' + $cat + '</button>'
-}
-
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 
- $css = @"
-<style>
-.aks-updates { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-.aks-updates h2 { margin: 0 0 0.75rem }
-.aks-updates section.aks-doc-update {
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 20px 24px;
-  margin: 18px 0;
-  background: #18181b;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-}
-.aks-doc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.aks-doc-category {
-  background: #27272a;
-  color: #a3e635;
-  border-radius: 6px;
-  padding: 2px 10px;
-  font-size: 0.85em;
-  font-weight: 600;
-  margin-right: 8px;
-}
-.aks-doc-updated {
-  color: #a1a1aa;
-  font-size: 0.85em;
-}
-.aks-updates h3 { margin: 0 0 8px; font-size: 1.15rem; }
-.aks-doc-summary, .aks-doc-impact { margin: 10px 0; }
-.aks-doc-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-.aks-doc-link {
-  flex: 1 1 0;
-  text-align: center;
-  background: #9f62eb;
-  color: #18181b;
-  padding: 10px 0;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: background 0.2s;
-  min-width: 0;
-}
-.aks-doc-link-pr {
-  background: #9f62eb;
-  color: #fff;
-}
-.aks-doc-link:hover,
-.aks-doc-link-pr:hover {
-  background: #c4b5fd;
-  color: #18181b;
-}
-@media (max-width: 600px) {
-  .aks-doc-buttons {
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-.aks-updates ul { margin: 8px 0 0 1rem; }
-.aks-updates li { margin: 4px 0; }
-.aks-updates small { color: #a1a1aa; margin-left: .5rem; }
-.aks-cat-general { background: #27272a; color: #a3e635; }
-.aks-cat-ingress { background: #1e293b; color: #38bdf8; }
-.aks-cat-security { background: #2d2a32; color: #f472b6; }
-.aks-cat-upgrade { background: #312e81; color: #facc15; }
-.aks-cat-network { background: #0f766e; color: #fbbf24; }
-.aks-cat-other { background: #3b0764; color: #f9fafb; }
-</style>
-"@
-
-$html = $css + @"
+$html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
   <div class="aks-intro">
-    <h1>Azure AKS Documentation and Release Tracker</h1>
     <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases.</p>
     <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
     Check back often as data is automatically refreshed every 12 hours.</p>
@@ -424,9 +332,6 @@ $html = $css + @"
   <h2>Documentation Updates</h2>
   <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
   <div class="aks-docs-updated">Last updated: $lastUpdated</div>
-  <div class="aks-category-switcher">
-    <span>Filter by category:</span> $categoryButtons
-  </div>
   <div class="aks-docs-list">
     $($sections -join "`n")
   </div>

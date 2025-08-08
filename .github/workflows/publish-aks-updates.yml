@@ -25,10 +25,11 @@ jobs:
           # Show live confirmation + size in the log
           Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
       
-          # Parse JSON and set outputs (base64 for HTML)
+          # Parse JSON and set outputs (multiline for HTML)
           $json = Get-Content out.json -Raw | ConvertFrom-Json
-          $htmlB64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($json.html))
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "html_b64=$htmlB64"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "html<<EOF"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value $json.html
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "EOF"
           Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,9 +55,8 @@ jobs:
       - name: Update WordPress page
         if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
         run: |
-          HTML=$(echo "${{ steps.gen.outputs.html_b64 }}" | base64 -d)
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          PAYLOAD=$(jq -n --arg content "$HTML" '{content: $content}')
+          PAYLOAD=$(jq -n --arg content "${{ steps.gen.outputs.html }}" '{content: $content}')
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
