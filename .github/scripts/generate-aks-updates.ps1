@@ -108,26 +108,24 @@ function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
 }
 
 # =========================
-# FETCH PRs MERGED LAST 7 DAYS
+# FETCH COMMITS LAST 7 DAYS
 # =========================
-function Get-RecentMergedPRs {
+function Get-RecentCommits {
   $all = @()
   for ($page = 1; $page -le 5; $page++) {
-    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=50&page=$page"
+    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?since=$SINCE_ISO&per_page=100&page=$page"
     $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     if (-not $resp) { break }
-    foreach ($pr in $resp) {
-      if ($pr.merged_at -and ([DateTime]::Parse($pr.merged_at).ToUniversalTime() -ge $sinceMidnightUtc)) {
-        $all += $pr
-      }
-    }
-    if ($resp.Count -lt 50) { break }
+    $all += $resp
+    if ($resp.Count -lt 100) { break }
   }
   return $all
 }
-function Get-PRFiles($Number) {
-  $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files"
-  Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+
+function Get-CommitFiles($Sha) {
+  $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
+  $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+  return $resp.files
 }
 
 # =========================
@@ -187,7 +185,7 @@ function Get-PerFileSummariesViaAssistant {
     $instructions = @"
 You are summarizing substantive Azure AKS documentation changes from PRs.
 Ignore trivial edits (typos, link fixes).
-For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences", "impact": ["..."], "category": "<short tag>" } ]
+For each file, return JSON: [ { "file": "<path>", "summary": "2-4 sentences", "impact": ["..."], "category": "<short tag>" } ]
 Only return the JSON array.
 "@
 
@@ -254,13 +252,13 @@ Return ONLY JSON with this exact shape:
 [
   {
     "id": <same id as input>,
-    "summary": "1–2 sentences plain text",
+    "summary": "1-3 sentences plain text",
     "breaking_changes": ["..."],
     "key_features": ["..."],
     "good_to_know": ["..."]
   }
 ]
-- Keep bullets concise (3–8 per section when applicable).
+- Keep bullets concise (3-8 per section when applicable).
 - No markdown in values, plain strings only.
 "@
 
@@ -307,23 +305,28 @@ Return ONLY JSON with this exact shape:
 # MAIN FLOW — DOCS
 # =========================
 Log "Fetching PRs merged in last 7 days..."
-$prs = Get-RecentMergedPRs | Where-Object { -not (Test-IsBot $_) }
-Log "Found $($prs.Count) PR(s) in window."
+$commits = Get-RecentCommits | Where-Object { -not (Test-IsBot $_) }
+Log "Found $($commits.Count) commit(s) in window."
 
 $groups = @{}
-foreach ($pr in $prs) {
-  if (Test-IsNoiseMessage $pr.title) { continue }
-  $files = Get-PRFiles $pr.number
+foreach ($commit in $commits) {
+  $msg = $commit.commit.message
+  if (Test-IsNoiseMessage $msg) { continue }
+  $sha = $commit.sha
+  $author = $commit.commit.author.name
+  $date = [DateTime]::Parse($commit.commit.author.date).ToUniversalTime()
+  $url = $commit.html_url
+  $files = Get-CommitFiles $sha
   foreach ($f in $files) {
     if ($f.filename -notmatch '\.md$') { continue }
-    $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
     if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
-      pr_title  = $pr.title
-      pr_url    = $pr.html_url
-      merged_at = [DateTime]::Parse($pr.merged_at).ToUniversalTime()
-      filename  = $f.filename
+      commit_msg = $msg
+      commit_url = $url
+      author     = $author
+      committed_at = $date
+      filename   = $f.filename
     }
   }
 }
@@ -338,7 +341,7 @@ $aiInput = [pscustomobject]@{
     foreach ($k in $groups.Keys) {
       [pscustomobject]@{
         file     = $k
-        subjects = ($groups[$k] | ForEach-Object { $_.pr_title } | Select-Object -Unique)
+  subjects = ($groups[$k] | ForEach-Object { $_.commit_msg } | Select-Object -Unique)
       }
     }
   )
@@ -354,16 +357,16 @@ else { Log "AI disabled (no provider env configured)." }
 # Render DOCS sections
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($file in $groups.Keys) {
-  $arr = $groups[$file] | Sort-Object merged_at -Descending
+  $arr = $groups[$file] | Sort-Object committed_at -Descending
   $fileUrl  = Get-LiveDocsUrl -FilePath $file
   $summary  = $summaries[$file].summary
   $category = $summaries[$file].category
 
-  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  $lastUpdated = $arr[0].committed_at.ToString('yyyy-MM-dd HH:mm')
 
-  $prLink   = $arr[0].pr_url
-  $cardTitle = $arr[0].pr_title
+  $cardTitle = $arr[0].commit_msg
   if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
+  $commitLink = $arr[0].commit_url
 
   $section = @"
 <div class="aks-doc-update">
@@ -379,7 +382,7 @@ foreach ($file in $groups.Keys) {
   <ul></ul>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank" rel="noopener">View PR</a>
+    <!-- Commit button removed as requested -->
   </div>
 </div>
 "@
