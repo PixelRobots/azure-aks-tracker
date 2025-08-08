@@ -333,16 +333,19 @@ $html = @"
     Check back often as data is automatically refreshed every 12 hours.</p>
   </div>
 
-  <!-- CSS-only tabs: inputs + labels -->
+  <!-- SINGLE WRAPPER: radios, labels, and panels are siblings -->
   <div class="aks-tabs">
+    <!-- radios (hidden by CSS) -->
     <input type="radio" name="aks-tab" id="aks-tab-docs" class="aks-tab-input" checked>
-    <label for="aks-tab-docs" class="aks-tab-label">Documentation Updates</label>
-
     <input type="radio" name="aks-tab" id="aks-tab-releases" class="aks-tab-input">
-    <label for="aks-tab-releases" class="aks-tab-label">AKS Releases</label>
-  </div>
 
-  <div class="aks-tabs-panels">
+    <!-- labels -->
+    <div class="aks-tabs-nav">
+      <label for="aks-tab-docs" class="aks-tab-label">Documentation Updates</label>
+      <label for="aks-tab-releases" class="aks-tab-label">AKS Releases</label>
+    </div>
+
+    <!-- panels -->
     <div class="aks-tab-panel" data-for="docs">
       <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
       <span class="aks-doc-updated-pill">Last updated: $lastUpdated
@@ -362,6 +365,7 @@ $html = @"
   </br>
 </div>
 "@.Trim()
+
 
 # Hash for idempotency
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
