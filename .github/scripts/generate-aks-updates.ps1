@@ -19,7 +19,6 @@ $MinAIScore = 0.60
 # =========================
 # DOCS WINDOW (last 7 days from Europe/London midnight)
 # =========================
-# CHANGED: Use Europe/London midnight rather than UTC midnight. Falls back gracefully.
 try {
   $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById("Europe/London")
 }
@@ -55,13 +54,11 @@ function Escape-Html([string]$s) {
   $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
 }
 function Get-DocDisplayName([string]$Path) {
-  # take last segment, strip .md, replace -/_ with space, collapse spaces
   $name = [System.IO.Path]::GetFileNameWithoutExtension($Path) `
     -replace '[-_]+', ' ' `
     -replace '\s{2,}', ' ' `
     -replace '^\s+|\s+$', ''
   $name = Convert-ToTitleCase $name
-  # common acronyms you want preserved
   $name = $name -replace '\bAks\b', 'AKS' `
     -replace '\bAad\b', 'AAD' `
     -replace '\bCli\b', 'CLI' `
@@ -74,12 +71,10 @@ function Get-DocDisplayName([string]$Path) {
     -replace '\bUrl(s)?\b', 'URL$1'
   return $name
 }
-
 function Convert-ToTitleCase([string]$s) {
   if ([string]::IsNullOrWhiteSpace($s)) { return $s }
   $textInfo = (Get-Culture).TextInfo
   $tc = $textInfo.ToTitleCase($s.ToLower())
-  # keep common stop-words lowercase unless first word
   $words = $tc -split ' '
   $stops = 'a|an|and|as|at|but|by|for|in|of|on|or|the|to|with'
   for ($i = 1; $i -lt $words.Count; $i++) {
@@ -87,7 +82,6 @@ function Convert-ToTitleCase([string]$s) {
   }
   ($words -join ' ')
 }
-
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath) {
   if ($FilePath -match '^articles/(.+?)\.md$') {
@@ -103,14 +97,12 @@ function Truncate([string]$text, [int]$max = 400) {
   if ($t.Length -le $max) { return $t }
   return $t.Substring(0, $max).TrimEnd() + "…"
 }
-
-# Aggressive Markdown→plain fallback for release notes
 function Convert-MarkdownToPlain([string]$md) {
   if (-not $md) { return "" }
   $t = $md
-  $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')   # code blocks
-  $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')       # images
-  $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')        # links
+  $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')
+  $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')
+  $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')
   $t = $t -replace '(^|\n)#{1,6}\s*', '$1'
   $t = $t -replace '(\*\*|__)(.*?)\1', '$2'
   $t = $t -replace '(\*|_)(.*?)\1', '$2'
@@ -122,6 +114,51 @@ function Convert-MarkdownToPlain([string]$md) {
   $t.Trim()
 }
 
+# ---------- NEW: Title and Kind helpers ----------
+function Get-FirstSentence([string]$text) {
+  if ([string]::IsNullOrWhiteSpace($text)) { return "" }
+  $t = $text.Trim()
+  # split on period/question/exclamation followed by space/cap or EOL
+  $parts = [regex]::Split($t, '(?<=[\.!?])\s+')
+  if ($parts.Count -gt 0) { return $parts[0].Trim(' ', '`"', '''') }
+  return $t
+}
+function Build-Title([string]$display, [string]$summary, [string]$kind) {
+  $first = Get-FirstSentence $summary
+  if (-not [string]::IsNullOrWhiteSpace($first)) {
+    # keep it compact
+    $first = Truncate $first 120
+    return "$display – $first"
+  }
+  return "Docs page $display has been updated"
+}
+function Get-SessionKind($session, $verdict) {
+  # Signals
+  $hasAdded   = ($session.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
+  $hasRemoved = ($session.items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
+
+  $delta = ( ($session.items | Measure-Object -Sum -Property additions).Sum +
+             ($session.items | Measure-Object -Sum -Property deletions).Sum )
+  $commits = $session.items.Count
+
+  $summary = ($verdict.summary ?? "")
+  $heavySummary = $summary -match '(?i)\b(overhaul|rework|rewrite|significant|major)\b'
+
+  if ($hasRemoved -and -not $hasAdded) { return "Removal" }
+  if ($hasAdded) { return "New" }
+  if ($heavySummary -or $delta -ge 80 -or $commits -ge 3) { return "Rework" }
+  return "Update"
+}
+function KindToPillHtml([string]$kind) {
+  $class = switch ($kind) {
+    "New"     { "aks-pill-kind aks-pill-new" }
+    "Rework"  { "aks-pill-kind aks-pill-rework" }
+    "Removal" { "aks-pill-kind aks-pill-removal" }
+    default   { "aks-pill-kind aks-pill-update" }
+  }
+  "<span class=""$class"">$kind</span>"
+}
+
 # =========================
 # FILTERS
 # =========================
@@ -129,7 +166,6 @@ function Test-IsBot($Item) {
   $login = $Item.user.login
   return ($login -match '(bot|actions|github-actions|dependabot)')
 }
-
 function Test-IsNoiseMessage([string]$Message) {
   if (-not $Message) { return $false }
   $patterns = @(
@@ -142,26 +178,18 @@ function Test-IsNoiseMessage([string]$Message) {
   foreach ($p in $patterns) { if ($Message -imatch $p) { return $true } }
   return $false
 }
-
-# Path allow/deny: Only AKS user docs; exclude TOCs, includes, media, templates, samples
 function Test-IsDocsNoisePath([string]$Path) {
-  # allow AKS docs whether under articles/azure/aks/ or articles/aks/
   if ($Path -notmatch '^articles/(azure/)?aks/.*\.md$') { return $true }
-  # deny common noise
   if ($Path -match '/includes/|/media/|/templates?/|/samples?/') { return $true }
   if ($Path -match '/TOC\.md$' -or $Path -match '/toc\.yml$') { return $true }
   return $false
 }
-
-# Commit-file trivial detector (front-matter/link-only/tiny)
 function Test-IsDocsTrivialCommit {
   param(
     [object[]]$Files,
     [string]$Title = ''
   )
   if (-not $Files -or $Files.Count -eq 0) { return $true }
-
-  # Tiny across these files
   $adds = ($Files | Measure-Object -Sum -Property additions).Sum
   $dels = ($Files | Measure-Object -Sum -Property deletions).Sum
   if (($adds + $dels) -le 4 -and $Files.Count -le 2) { return $true }
@@ -169,39 +197,25 @@ function Test-IsDocsTrivialCommit {
   $frontMatterOrLinksOnly = $true
   foreach ($f in $Files) {
     $p = $f.patch
-    # If we don't get a patch (large diff etc.), assume it's NOT trivial
     if (-not $p) { $frontMatterOrLinksOnly = $false; break }
-
     $lines = ($p -split "`n") | Where-Object { $_ -match '^[\+\-]' }
     foreach ($line in $lines) {
       $content = $line.Substring(1)
-
-      # front matter bumps (ms.* and common metadata)
       if ($content -match '^\s*(ms|author|manager|ms\.author|ms\.date|ms\.service|ms\.subservice|ms\.topic|ms\.custom|ms\.collection|ms\.devlang)\s*:\s*') { continue }
-
-      # link-only edits or bare urls
       if ($content -match '\[[^\]]*\]\((https?://[^)]+)\)' -or $content -match 'https?://') { continue }
-
-      # whitespace/heading-only
       $stripped = ($content -replace '[\s\p{P}]', '')
       if ([string]::IsNullOrWhiteSpace($stripped)) { continue }
       if ($content -match '^\s*#{1,6}\s*[A-Za-z0-9\p{P}\s]*$') {
         $letters = ($content -replace '[^A-Za-z0-9]', '')
         if ($letters.Length -le 4) { continue }
       }
-
-      # anything else looks substantive
       $frontMatterOrLinksOnly = $false
       break
     }
     if (-not $frontMatterOrLinksOnly) { break }
   }
-
   if ($frontMatterOrLinksOnly) { return $true }
-
-  # title hints
   if ($Title -imatch 'typo|grammar|spelling|link(s)?|format(ting)?|whitespace|lint|style|loc|broken\s*link|fix links?') { return $true }
-
   return $false
 }
 
@@ -219,7 +233,6 @@ function Get-RecentCommits {
   }
   return $all
 }
-
 function Get-CommitFiles($Sha) {
   $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
   $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
@@ -262,7 +275,6 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
-# ===== File-session AI (verdicting vector-store) =====
 function Get-FileSessionVerdictsViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
@@ -365,7 +377,6 @@ Log "Fetching commits merged in last 7 days..."
 $commits = Get-RecentCommits | Where-Object { -not (Test-IsBot $_) }
 Log "Found $($commits.Count) commit(s) in window."
 
-# Collect commit-file events with aggressive filters
 $events = @()
 foreach ($commit in $commits) {
   $msg = $commit.commit.message
@@ -379,19 +390,17 @@ foreach ($commit in $commits) {
   $files = Get-CommitFiles $sha
   if (-not $files) { continue }
 
-  # Filter to relevant doc files and drop noise paths early
   $files = $files | Where-Object {
     $_.filename -match '\.md$' -and -not (Test-IsDocsNoisePath $_.filename)
   }
   if (-not $files) { continue }
 
-  # Trivial content? skip
   if (Test-IsDocsTrivialCommit -Files $files -Title $msg) { continue }
 
   foreach ($f in $files) {
     $events += [pscustomobject]@{
       filename     = $f.filename
-      status       = $f.status          # CHANGED: capture added/modified/removed
+      status       = $f.status
       committed_at = $date
       author       = $author
       commit_msg   = $msg
@@ -403,7 +412,6 @@ foreach ($commit in $commits) {
   }
 }
 
-# Group by file into time-boxed sessions (6-hour window)
 function Group-FileChangeSessions {
   param(
     [Parameter(Mandatory)]
@@ -523,7 +531,9 @@ else {
   Log "AI disabled or no file sessions."
 }
 
-# Render DOCS sections (one card per file-session) — only AI-kept ones
+# =========================
+# RENDER DOCS — all AI-kept sessions; smarter titles + kind pill
+# =========================
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
   $key = ("{0}|{1}|{2}" -f $s.file, $s.start_at.ToString('yyyyMMddHHmmss'), $s.end_at.ToString('yyyyMMddHHmmss'))
@@ -533,22 +543,26 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
 
   $fileUrl = Get-LiveDocsUrl -FilePath $s.file
   $display = Get-DocDisplayName $s.file
-  $title = "Docs page $display has been updated"
-  $lastAt = $s.end_at.ToString('yyyy-MM-dd HH:mm')
 
-  $summary = $v.summary
+  $summary  = $v.summary
   $category = $v.category
+  $kind     = Get-SessionKind -session $s -verdict $v
+  $title    = Build-Title -display $display -summary $summary -kind $kind
+  $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
 
   # Backstop: still featherweight AND no summary? skip
   $delta = ( ($s.items | Measure-Object -Sum -Property additions).Sum +
     ($s.items | Measure-Object -Sum -Property deletions).Sum )
   if ([string]::IsNullOrWhiteSpace($summary) -and $delta -lt 8) { continue }
 
+  $kindPill = KindToPillHtml $kind
+
   $section = @"
 <div class="aks-doc-update">
   <h2><a href="$fileUrl">$(Escape-Html (Truncate $title 140))</a></h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
+    $kindPill
     <span class="aks-doc-updated-pill">Last updated: $lastAt</span>
   </div>
   <div class="aks-doc-summary">
@@ -564,7 +578,7 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
 }
 
 # =========================
-# MAIN FLOW — RELEASES
+# MAIN FLOW — RELEASES (unchanged)
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
@@ -576,7 +590,6 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
 }
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
-# Build releases JSON for AI
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 $relInput = @(
@@ -749,7 +762,7 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels)
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = $sections.Count   # count of AI-kept sessions
+$updateCount = $sections.Count
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
@@ -804,5 +817,4 @@ $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
-# Keep the output field name for compatibility (contains verdicts)
 [pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $aiVerdicts } | ConvertTo-Json -Depth 6
