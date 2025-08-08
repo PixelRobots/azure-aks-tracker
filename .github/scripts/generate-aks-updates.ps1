@@ -326,31 +326,36 @@ $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 $updateCount = $groups.Keys.Count
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
+
   <div class="aks-intro">
     <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases.</p>
     <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
     Check back often as data is automatically refreshed every 12 hours.</p>
   </div>
 
-    <!-- Tabs Navigation -->
+  <!-- CSS-only tabs: inputs + labels -->
   <div class="aks-tabs">
-    <button class="aks-tab active" data-tab="docs">Documentation Updates</button>
-    <button class="aks-tab" data-tab="releases">AKS Releases</button>
+    <input type="radio" name="aks-tab" id="aks-tab-docs" class="aks-tab-input" checked>
+    <label for="aks-tab-docs" class="aks-tab-label">Documentation Updates</label>
+
+    <input type="radio" name="aks-tab" id="aks-tab-releases" class="aks-tab-input">
+    <label for="aks-tab-releases" class="aks-tab-label">AKS Releases</label>
   </div>
 
-  <!-- Tab Content -->
-  <div class="aks-tab-content active" id="tab-docs">
-    <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
-    <span class="aks-doc-updated-pill">Last updated: $lastUpdated
-      <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
-    </span>
-    <div class="aks-docs-list">
-      $($sections -join "`n")
+  <div class="aks-tabs-panels">
+    <div class="aks-tab-panel" data-for="docs">
+      <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
+      <span class="aks-doc-updated-pill">Last updated: $lastUpdated
+        <span class="aks-doc-updated-pill" style="margin-left:12px;background:#27272a;color:#38bdf8;">$updateCount updates</span>
+      </span>
+      <div class="aks-docs-list">
+        $($sections -join "`n")
+      </div>
     </div>
-  </div>
 
-  <div class="aks-tab-content" id="tab-releases">
-    <p>No AKS release notes are available yet. Check back soon.</p>
+    <div class="aks-tab-panel" data-for="releases">
+      <p>No AKS release notes are available yet. Check back soon.</p>
+    </div>
   </div>
 
   </br>

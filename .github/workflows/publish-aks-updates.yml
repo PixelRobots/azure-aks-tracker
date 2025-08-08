@@ -62,7 +62,9 @@ jobs:
           EOF
       
           # Build JSON with HTML as a raw string
-          PAYLOAD=$(jq -n --rawfile content html.txt '{content: $content, status: "publish"}')
+          PAYLOAD=$(jq -n --rawfile content html.txt \
+          '{content: "<!-- wp:html -->\n" + $content + "\n<!-- /wp:html -->", status: "publish"}')
+
       
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
