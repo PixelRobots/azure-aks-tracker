@@ -510,9 +510,6 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 $updateCount = $groups.Keys.Count
 
-[string]$relPlural = if ($releases.Count -ne 1) { 's' } else { '' }
-$releasesCountLabel = "$($releases.Count) release$relPlural"
-
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
 
@@ -535,7 +532,6 @@ $html = @"
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
               <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
-              <span class="aks-pill aks-pill-count">$releasesCountLabel</span>
           </div>
       </div>
         $releasesHtml
