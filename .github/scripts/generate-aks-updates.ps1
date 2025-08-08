@@ -16,9 +16,22 @@ $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_API
 # AI gate threshold (higher = stricter)
 $MinAIScore = 0.60
 
-# Docs window: last 7 days from UTC midnight
-$now = [DateTime]::UtcNow
-$sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-7)
+# =========================
+# DOCS WINDOW (last 7 days from Europe/London midnight)
+# =========================
+# CHANGED: Use Europe/London midnight rather than UTC midnight. Falls back gracefully.
+try {
+  $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById("Europe/London")
+}
+catch {
+  try { $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById("GMT Standard Time") }
+  catch { $tz = [System.TimeZoneInfo]::Utc }
+}
+$nowUtc = [DateTime]::UtcNow
+$nowLocal = [System.TimeZoneInfo]::ConvertTimeFromUtc($nowUtc, $tz)
+$sinceLocalMidnight = Get-Date -Date $nowLocal.ToString("yyyy-MM-dd") -Hour 0 -Minute 0 -Second 0
+$sinceLocalMidnight = $sinceLocalMidnight.AddDays(-7)
+$sinceMidnightUtc = [System.TimeZoneInfo]::ConvertTimeToUtc($sinceLocalMidnight, $tz)
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
@@ -378,6 +391,7 @@ foreach ($commit in $commits) {
   foreach ($f in $files) {
     $events += [pscustomobject]@{
       filename     = $f.filename
+      status       = $f.status          # CHANGED: capture added/modified/removed
       committed_at = $date
       author       = $author
       commit_msg   = $msg
