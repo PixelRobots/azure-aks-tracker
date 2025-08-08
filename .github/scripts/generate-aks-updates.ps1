@@ -13,8 +13,8 @@ if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 # Prefer OpenAI if OpenAIKey exists, else AzureOpenAI if all vars exist, else disabled
 $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' } else { '' }
 
-# AI gate threshold (higher = stricter)
-$MinAIScore = 0.60
+# AI gate threshold (higher = stricter) — LOOSER by default; can override via env
+$MinAIScore = if ($env:AI_MIN_SCORE) { [double]$env:AI_MIN_SCORE } else { 0.30 }
 
 # =========================
 # DOCS WINDOW (last 7 days from Europe/London midnight)
@@ -48,6 +48,15 @@ function Escape-Html([string]$s) {
   if ($null -eq $s) { return "" }
   $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
 }
+function Convert-ToTitleCase([string]$s) {
+  if ([string]::IsNullOrWhiteSpace($s)) { return $s }
+  $textInfo = (Get-Culture).TextInfo
+  $tc = $textInfo.ToTitleCase($s.ToLower())
+  $words = $tc -split ' '
+  $stops = 'a|an|and|as|at|but|by|for|in|of|on|or|the|to|with'
+  for ($i = 1; $i -lt $words.Count; $i++) { if ($words[$i] -match "^(?:$stops)$") { $words[$i] = $words[$i].ToLower() } }
+  ($words -join ' ')
+}
 function Get-DocDisplayName([string]$Path) {
   $name = [System.IO.Path]::GetFileNameWithoutExtension($Path) `
     -replace '[-_]+', ' ' `
@@ -65,15 +74,6 @@ function Get-DocDisplayName([string]$Path) {
     -replace '\bApi\b', 'API' `
     -replace '\bUrl(s)?\b', 'URL$1'
   return $name
-}
-function Convert-ToTitleCase([string]$s) {
-  if ([string]::IsNullOrWhiteSpace($s)) { return $s }
-  $textInfo = (Get-Culture).TextInfo
-  $tc = $textInfo.ToTitleCase($s.ToLower())
-  $words = $tc -split ' '
-  $stops = 'a|an|and|as|at|but|by|for|in|of|on|or|the|to|with'
-  for ($i = 1; $i -lt $words.Count; $i++) { if ($words[$i] -match "^(?:$stops)$") { $words[$i] = $words[$i].ToLower() } }
-  ($words -join ' ')
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath) {
@@ -107,21 +107,28 @@ function Convert-MarkdownToPlain([string]$md) {
   $t.Trim()
 }
 
-# ---------- Title & Kind helpers ----------
+# ---------- Title & Kind helpers (short titles) ----------
 function Get-FirstSentence([string]$text) {
   if ([string]::IsNullOrWhiteSpace($text)) { return "" }
   $t = $text.Trim()
   $parts = [regex]::Split($t, '(?<=[\.!?])\s+')
-  if ($parts.Count -gt 0) { return $parts[0].Trim(@([char]' ', [char]'"', [char]0x27)) }
+  if ($parts.Count -gt 0) { return $parts[0].Trim(@([char]' ', [char]'"', [char]0x27)) }  # fix: Trim takes char[]
   return $t
 }
-function Build-Title([string]$display, [string]$summary, [string]$kind) {
-  $first = Get-FirstSentence $summary
-  if (-not [string]::IsNullOrWhiteSpace($first)) {
-    $first = Truncate $first 120
-    return "$display – $first"
-  }
-  return "Docs page $display has been updated"
+function InferShortAction([string]$summary) {
+  if ([string]::IsNullOrWhiteSpace($summary)) { return "Update" }
+  $s = $summary.ToLower()
+  if ($s -match '\b(deprecat|retir)\w*\b') { return "Deprecation" }
+  if ($s -match '\b(new|introduc|add(ed)?|create)\b') { return "New" }
+  if ($s -match '\b(overhaul|rework|rewrite|significant|major)\b') { return "Rework" }
+  if ($s -match '\b(migrat|replace|move)\w*\b') { return "Migration" }
+  if ($s -match '\b(fix|correct|clarif)\w*\b') { return "Clarification" }
+  return "Update"
+}
+function Build-ShortTitle([string]$display, [string]$summary, [string]$kind) {
+  # Prefer the kind/action label; keep it compact
+  $action = if ($kind) { $kind } else { InferShortAction $summary }
+  return "$display — $action"
 }
 function Get-SessionKind($session, $verdict) {
   $hasAdded   = ($session.items | Where-Object { $_.status -eq 'added' }).Count -gt 0
@@ -141,10 +148,13 @@ function Get-SessionKind($session, $verdict) {
 }
 function KindToPillHtml([string]$kind) {
   $emoji = switch ($kind) {
-    "New"     { "🆕" }
-    "Rework"  { "♻️" }
-    "Removal" { "🗑️" }
-    default   { "✨" }
+    "New"         { "🆕" }
+    "Rework"      { "♻️" }
+    "Removal"     { "🗑️" }
+    "Deprecation" { "⚠️" }
+    "Migration"   { "➡️" }
+    "Clarification" { "ℹ️" }
+    default       { "✨" }
   }
   $class = switch ($kind) {
     "New"     { "aks-pill-kind aks-pill-new" }
@@ -156,16 +166,15 @@ function KindToPillHtml([string]$kind) {
 }
 
 # =========================
-# FILTERS (minimal — keep only bot + path filter)
+# FILTERS (minimal — only bot + scope to AKS .md)
 # =========================
 function Test-IsBot($Item) {
   $login = $Item.user.login
   return ($login -match '(bot|actions|github-actions|dependabot)')
 }
 function Test-IsDocsNoisePath([string]$Path) {
+  # ALLOW all .md under aks — includes `/includes` and TOC; AI will filter noise
   if ($Path -notmatch '^articles/(azure/)?aks/.*\.md$') { return $true }
-  if ($Path -match '/includes/|/media/|/templates?/|/samples?/') { return $true }
-  if ($Path -match '/TOC\.md$' -or $Path -match '/toc\.yml$') { return $true }
   return $false
 }
 
@@ -261,27 +270,13 @@ KEEP only if it changes user-facing behavior, procedures, parameters, compatibil
 SKIP if it's typos, grammar, whitespace, link retargets, front-matter/ms.* metadata, heading casing, table/TOC shuffles, localization, formatting-only, image/link path fixes, or trivial notes.
 
 Summary format (when verdict=keep):
-- Sentence 1: Briefly say what the docs page is about (topic/purpose).
-- Sentence 2: State exactly what changed, using concrete nouns (e.g., section/heading name, parameter/flag, step/task) if visible in patch_sample. Prefer: “Updated <Section Title> to …”, “Added parameter --foo …”, “Removed section <Heading> …”.
-- If multiple small but related edits, summarize the net effect in one sentence.
+- 1–2 sentence summary using concrete nouns (e.g., section/parameter names), if visible in patch_sample.
 
 Output ONLY JSON array:
 [
-  {
-    ""key"": ""<same key>"",
-    ""verdict"": ""keep"" | ""skip"",
-    ""score"": 0.0-1.0,
-    ""reason"": ""short plain text"",
-    ""category"": ""Networking|Security|Compute|Storage|Operations|General"",
-    ""summary"": ""2–3 sentences as described above""
-  }
+  { ""key"": ""<same key>"", ""verdict"": ""keep""|""skip"", ""score"": 0.0-1.0, ""reason"": ""..."", ""category"": ""Networking|Security|Compute|Storage|Operations|General"", ""summary"": ""..."" }
 ]
-
-Rules:
-- When in doubt, use verdict=skip and score <= 0.4.
-- Do NOT invent content not supported by patch_sample/commit_titles.
-- If a section/heading is visible in patch_sample (lines starting with '#' or '##'), prefer to name it in the summary.
-- Plain strings only; no markdown.
+Plain strings only.
 "@
 
     $assistant = New-OAIAssistant -Name "AKS-Docs-FileVerdict-Summarizer" -Instructions $instructions -Tools @{ type = 'file_search' } -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } -Model $Model
@@ -337,7 +332,7 @@ foreach ($pr in $prs) {
   $files = Get-PRFiles -Number $number
   if (-not $files) { continue }
 
-  # Keep only AKS docs markdown
+  # Keep all AKS docs markdown (includes `/includes` and TOC)
   $files = $files | Where-Object { $_.filename -match '^articles/(azure/)?aks/.*\.md$' -and -not (Test-IsDocsNoisePath $_.filename) }
   if (-not $files) { continue }
 
@@ -387,7 +382,7 @@ function Group-FileChangeSessions {
 if (-not $events -or $events.Count -eq 0) { Log "No qualifying doc events found in window."; $sessions = @() }
 else { $sessions = Group-FileChangeSessions -Events $events -GapHours 6 }
 
-# Build AI input for file sessions
+# Build AI input for file sessions (NO pre-AI trimming)
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-file-sessions-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 
@@ -424,7 +419,7 @@ if ($PreferProvider -and $sessions.Count -gt 0) { $aiVerdicts = Get-FileSessionV
 else { Log "AI disabled or no file sessions." }
 
 # =========================
-# RENDER DOCS — AI-kept sessions; smart titles + kind + PR link
+# RENDER DOCS — AI-kept sessions; SHORT titles + kind + PR link
 # =========================
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
@@ -435,22 +430,22 @@ foreach ($s in ($sessions | Sort-Object end_at -Descending)) {
 
   $fileUrl = Get-LiveDocsUrl -FilePath $s.file
   $display = Get-DocDisplayName $s.file
+
   $summary  = $v.summary
   $category = $v.category
   $kind     = Get-SessionKind -session $s -verdict $v
-  $title    = Build-Title -display $display -summary $summary -kind $kind
+  $title    = Build-ShortTitle -display $display -summary $summary -kind $kind
   $lastAt   = $s.end_at.ToString('yyyy-MM-dd HH:mm')
 
   $kindPill = KindToPillHtml $kind
 
-  # derive PR info from first item (all from same PR time window anyway)
   $prNum = $s.items[0].pr_number
   $prUrl = $s.items[0].pr_url
   $prLink = if ($prNum) { "<a class=""aks-doc-pr"" href=""$prUrl"" target=""_blank"" rel=""noopener"">PR #$prNum</a>" } else { "" }
 
   $section = @"
 <div class="aks-doc-update">
-  <h2><a href="$fileUrl">$(Escape-Html (Truncate $title 140))</a></h2>
+  <h2><a href="$fileUrl">$(Escape-Html (Truncate $title 120))</a></h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
     $kindPill
@@ -637,7 +632,7 @@ $html = @"
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>AKS Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) docs from PRs merged in the last 7 days.</div>
+      <div class="aks-docs-desc">PRs merged in the last 7 days; AI filters & summarizes page-level changes.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
