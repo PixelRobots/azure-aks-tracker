@@ -597,13 +597,11 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $iconAlt   = $product.alt
   $cardTitle = "$($product.label) - $display"
 
-$prodLabel = ($product.label).ToLower()   # "aks" | "fleet"
-
 $section = @"
 <div class="aks-doc-update"
-     data-product="$prodLabel"
      data-category="$category"
      data-kind="$kind"
+     data-product="$($product.label)">
      data-updated="$($arr[0].merged_at.ToString('o'))"
      data-title="$(Escape-Html $display)">
   <h2 class="aks-doc-title">
