@@ -44,6 +44,19 @@ function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
 # =========================
 # HELPERS
 # =========================
+
+function Compute-Category([string]$file) {
+  $f = $file.ToLower()
+  if ($f -match '/pci-') { return 'Compliance' }
+  if ($f -match '/aks/pci-') { return 'Compliance' }
+  if ($f -match '/network|/cni|/load-balancer|/egress|/ingress|/vnet|/subnet') { return 'Networking' }
+  if ($f -match '/security|/rbac|/aad|/defender|/keyvault|/tls|/certificate') { return 'Security' }
+  if ($f -match '/storage|/disk|/snapshot') { return 'Storage' }
+  if ($f -match '/node|/vm|/cvm|/keda|/gpu|/virt|/compute') { return 'Compute' }
+  if ($f -match '/monitor|/logging|/diagnostic|/troubleshoot|/upgrade|/backup') { return 'Operations' }
+  return 'General'
+}
+
 function Escape-Html([string]$s) {
   if ($null -eq $s) { return "" }
   $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
@@ -287,15 +300,17 @@ SKIP (omit from output) if trivial:
 RULES:
 - When in doubt, SKIP.
 - Never invent beyond the patch.
-- ONE result maximum per key.
+- ONE result maximum per key (per docs page).
 - IMPORTANT: The "key" MUST be copied EXACTLY from the input. Do not alter, shorten, or normalize it. If unsure, SKIP.
+- Treat each page independently; do NOT collapse pages from the same series or folder. If multiple PCI pages changed, output a separate result for each page that meets the criteria.
 
 OUTPUT: JSON array of ONLY kept bundles:
 [
-  { ""key"": ""<same key>"", ""verdict"": ""keep"", ""score"": 0.0-1.0, ""category"": ""Networking|Security|Compute|Storage|Operations|General"", ""summary"": ""1–2 factual sentences naming sections/params if visible"" }
+  { "key": "<same key>", "verdict": "keep", "score": 0.0-1.0, "category": "Networking|Security|Compute|Storage|Operations|General|Compliance", "summary": "1–2 factual sentences naming sections/params if visible" }
 ]
 Return nothing for skipped bundles. Plain JSON only.
 "@
+
 
     $assistant = New-OAIAssistant -Name "AKS-Docs-FileBundle-Summarizer" -Instructions $instructions -Tools @{ type = 'file_search' } -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } -Model $Model
     $userMsg = "Return ONLY the JSON array of verdicts as specified."
@@ -600,7 +615,7 @@ foreach ($v in $aiList) {
   $dels = $b.total_dels
 
   $summary  = if ($v.summary)  { $v.summary }  else { "Changes: +$adds / -$dels." }
-  $category = if ($v.category) { $v.category } else { "General" }
+  $category = if ($v.category) { $v.category } else { Compute-Category $b.file }
 
   $kind     = Get-SessionKind -session $b -verdict $v
   $title    = Build-ShortTitle -display $display -summary $summary -kind $kind
