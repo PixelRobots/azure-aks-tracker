@@ -288,6 +288,7 @@ RULES:
 - When in doubt, SKIP.
 - Never invent beyond the patch.
 - ONE result maximum per key.
+- IMPORTANT: The "key" MUST be copied EXACTLY from the input. Do not alter, shorten, or normalize it. If unsure, SKIP.
 
 OUTPUT: JSON array of ONLY kept bundles:
 [
@@ -493,7 +494,7 @@ $aiInput = [pscustomobject]@{ since = $SINCE_ISO; file_bundles = $fileBundlePayl
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
 
 Log "AI Verdicts"
-Log "  [AKS] Prepared AI input: $aiJsonPath"
+Log "[AKS] Prepared AI input: $aiJsonPath"
 
 $aiVerdictsBundle = @{}
 if ($PreferProvider -and $bundles.Count -gt 0) {
@@ -505,8 +506,33 @@ if ($PreferProvider -and $bundles.Count -gt 0) {
 
 $aiList = @()
 $aiDict = @{}
+
 if ($aiVerdictsBundle.PSObject.Properties['ordered']) { $aiList = $aiVerdictsBundle.ordered }
 if ($aiVerdictsBundle.PSObject.Properties['byKey'])    { $aiDict = $aiVerdictsBundle.byKey }
+
+# Keep only AI rows whose keys we actually have
+$validKeys = [System.Collections.Generic.HashSet[string]]::new([string[]]$bundleByKey.Keys)
+$bad = New-Object System.Collections.Generic.List[object]
+
+$aiList = foreach ($row in $aiList) {
+  $k = [string]$row.key
+  if ($k -and $validKeys.Contains($k)) { $row } else { $bad.Add($row) | Out-Null }
+}
+
+if ($bad.Count -gt 0) {
+  $samples = ($bad | Select-Object -First 3 | ForEach-Object { $_.key }) -join ', '
+  Log "AI returned $($bad.Count) item(s) with unknown key(s). Sample: $samples"
+}
+
+# De-dupe by key (prefer highest score) AFTER filtering
+$aiList = $aiList | Group-Object -Property key | ForEach-Object {
+  $_.Group | Sort-Object @{Expression='score';Descending=$true} | Select-Object -First 1
+}
+
+if ($aiList.Count -gt 0) {
+  $sampleKeys = ($aiList | Select-Object -First 5 | ForEach-Object { $_.key }) -join ' | '
+  Log "AI kept keys (sample): $sampleKeys"
+}
 
 # De-dupe by key (prefer highest score) — belt & braces
 $aiList = $aiList | Group-Object key | ForEach-Object {
