@@ -752,7 +752,7 @@ $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
-    <h2>About this tracker</h2>
+    <h1>About this tracker</h1>
     <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and release notes.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
