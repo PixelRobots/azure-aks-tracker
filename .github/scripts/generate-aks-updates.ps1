@@ -5,7 +5,7 @@
 # CONFIG / ENV
 # =========================
 $Owner = "MicrosoftDocs"
-$Repo = "azure-aks-docs"
+$Repo  = "azure-aks-docs"
 
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
@@ -20,7 +20,7 @@ $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
 $ReleasesOwner = "Azure"
-$ReleasesRepo = "AKS"
+$ReleasesRepo  = "AKS"
 $ReleasesCount = 5
 
 $ghHeaders = @{
@@ -35,19 +35,16 @@ function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
 # HELPERS
 # =========================
 function Get-ProductIconMeta([string]$FilePath) {
-  # Default to AKS
-  $isFleet = $FilePath -match '/kubernetes-fleet/'
-  if ($isFleet) {
+  if ($FilePath -match '/kubernetes-fleet/') {
     return @{
-      url = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg'
-      alt = 'Kubernetes Fleet Manager'
+      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg'
+      alt   = 'Kubernetes Fleet Manager'
       label = 'Fleet'
     }
-  }
-  else {
+  } else {
     return @{
-      url = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
-      alt = 'Azure Kubernetes Service'
+      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
+      alt   = 'Azure Kubernetes Service'
       label = 'AKS'
     }
   }
@@ -55,14 +52,14 @@ function Get-ProductIconMeta([string]$FilePath) {
 
 function Escape-Html([string]$s) {
   if ($null -eq $s) { return "" }
-  $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
+  $s.Replace('&','&amp;').Replace('<','&lt;').Replace('>','&gt;').Replace('"','&quot;')
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath) {
   if ($FilePath -match '^articles/(.+?)\.md$') {
-    $p = $Matches[1] -replace '\\', '/'
+    $p = $Matches[1] -replace '\\','/'
     if ($p -notmatch '^azure/') { $p = "azure/$p" }
-    return "https://learn.microsoft.com/$p"   # keep your original behavior
+    return "https://learn.microsoft.com/$p"
   }
   return "https://github.com/$Owner/$Repo/blob/main/$FilePath"
 }
@@ -70,56 +67,67 @@ function Truncate([string]$text, [int]$max = 400) {
   if (-not $text) { return "" }
   $t = $text.Trim()
   if ($t.Length -le $max) { return $t }
-  return $t.Substring(0, $max).TrimEnd() + "…"
+  return $t.Substring(0,$max).TrimEnd() + "…"
 }
-# Markdown→plain fallback for release notes
 function Convert-MarkdownToPlain([string]$md) {
   if (-not $md) { return "" }
   $t = $md
-  $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')
-  $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')
-  $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')
-  $t = $t -replace '(^|\n)#{1,6}\s*', '$1'
-  $t = $t -replace '(\*\*|__)(.*?)\1', '$2'
-  $t = $t -replace '(\*|_)(.*?)\1', '$2'
-  $t = $t -replace '`([^`]+)`', '$1'
-  $t = $t -replace '^\s*([-*+]|\d+\.)\s+', '', 'Multiline'
-  $t = $t -replace '^\s*>\s?', '', 'Multiline'
-  $t = [regex]::Replace($t, '\r', '')
-  $t = [regex]::Replace($t, '\n{3,}', "`n`n")
+  $t = [regex]::Replace($t,'```[\s\S]*?```','', 'Singleline')
+  $t = [regex]::Replace($t,'!\[([^\]]*)\]\([^)]+\)','$1')
+  $t = [regex]::Replace($t,'\[([^\]]+)\]\([^)]+\)','$1')
+  $t = $t -replace '(^|\n)#{1,6}\s*','$1'
+  $t = $t -replace '(\*\*|__)(.*?)\1','$2'
+  $t = $t -replace '(\*|_)(.*?)\1','$2'
+  $t = $t -replace '`([^`]+)`','$1'
+  $t = $t -replace '^\s*([-*+]|\d+\.)\s+','', 'Multiline'
+  $t = $t -replace '^\s*>\s?','', 'Multiline'
+  $t = [regex]::Replace($t,'\r','')
+  $t = [regex]::Replace($t,'\n{3,}',"`n`n")
   $t.Trim()
 }
 
-# Nice display name from filename (e.g., pci-data -> PCI Data, RBAC, AKS, etc.)
+# Title-casing + acronyms
 function Convert-ToTitleCase([string]$s) {
   if ([string]::IsNullOrWhiteSpace($s)) { return $s }
   $textInfo = (Get-Culture).TextInfo
   $tc = $textInfo.ToTitleCase($s.ToLower())
   $words = $tc -split ' '
   $stops = 'a|an|and|as|at|but|by|for|in|of|on|or|the|to|with'
-  for ($i = 1; $i -lt $words.Count; $i++) { if ($words[$i] -match "^(?:$stops)$") { $words[$i] = $words[$i].ToLower() } }
+  for ($i=1; $i -lt $words.Count; $i++) { if ($words[$i] -match "^(?:$stops)$") { $words[$i] = $words[$i].ToLower() } }
   ($words -join ' ')
 }
 function Get-DocDisplayName([string]$Path) {
   $name = [System.IO.Path]::GetFileNameWithoutExtension($Path) `
     -replace '[-_]+' , ' ' `
     -replace '\s{2,}', ' ' `
-    -replace '^\s+|\s+$', ''
+    -replace '^\s+|\s+$',''
   $name = Convert-ToTitleCase $name
-  $name = $name -replace '\bAks\b', 'AKS' -replace '\bAad\b', 'AAD' -replace '\bCli\b', 'CLI' -replace '\bRbac\b', 'RBAC' `
-    -replace '\bIp\b', 'IP' -replace '\bIps\b', 'IPs' -replace '\bVm(s)?\b', 'VM$1' -replace '\bVnet(s)?\b', 'VNet$1' `
-    -replace '\bApi\b', 'API' -replace '\bUrl(s)?\b', 'URL$1'
+  $name = $name -replace '\bAks\b','AKS' -replace '\bAad\b','AAD' -replace '\bCli\b','CLI' -replace '\bRbac\b','RBAC' `
+                 -replace '\bIp\b','IP' -replace '\bIps\b','IPs' -replace '\bVm(s)?\b','VM$1' -replace '\bVnet(s)?\b','VNet$1' `
+                 -replace '\bApi\b','API' -replace '\bUrl(s)?\b','URL$1'
   return $name
+}
+
+# Rough category fallback (by path)
+function Compute-Category([string]$file) {
+  $f = $file.ToLower()
+  if ($f -match '/pci-') { return 'Compliance' }
+  if ($f -match '/network|/cni|/load-balancer|/egress|/ingress|/vnet|/subnet') { return 'Networking' }
+  if ($f -match '/security|/rbac|/aad|/defender|/keyvault|/tls|/certificate') { return 'Security' }
+  if ($f -match '/storage|/disk|/snapshot') { return 'Storage' }
+  if ($f -match '/node|/vm|/cvm|/keda|/gpu|/virt|/compute') { return 'Compute' }
+  if ($f -match '/monitor|/logging|/diagnostic|/troubleshoot|/upgrade|/backup') { return 'Operations' }
+  return 'General'
 }
 
 # =========================
 # KIND PILL HELPERS
 # =========================
 function Get-SessionKind($items, [string]$summary) {
-  $hasAdded = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
+  $hasAdded   = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
   $delta = ( ($items | Measure-Object -Sum -Property additions).Sum +
-    ($items | Measure-Object -Sum -Property deletions).Sum )
+             ($items | Measure-Object -Sum -Property deletions).Sum )
   $heavySummary = $summary -match '(?i)\b(overhaul|rework|rewrite|significant|major)\b'
   if ($hasRemoved -and -not $hasAdded) { return "Removal" }
   if ($hasAdded) { return "New" }
@@ -128,19 +136,19 @@ function Get-SessionKind($items, [string]$summary) {
 }
 function KindToPillHtml([string]$kind) {
   $emoji = switch ($kind) {
-    "New" { "🆕" }
-    "Rework" { "♻️" }
-    "Removal" { "🗑️" }
-    "Deprecation" { "⚠️" }
-    "Migration" { "➡️" }
+    "New"           { "🆕" }
+    "Rework"        { "♻️" }
+    "Removal"       { "🗑️" }
+    "Deprecation"   { "⚠️" }
+    "Migration"     { "➡️" }
     "Clarification" { "ℹ️" }
-    default { "✨" }
+    default         { "✨" }
   }
   $class = switch ($kind) {
-    "New" { "aks-pill-kind aks-pill-new" }
-    "Rework" { "aks-pill-kind aks-pill-rework" }
+    "New"     { "aks-pill-kind aks-pill-new" }
+    "Rework"  { "aks-pill-kind aks-pill-rework" }
     "Removal" { "aks-pill-kind aks-pill-removal" }
-    default { "aks-pill-kind aks-pill-update" }
+    default   { "aks-pill-kind aks-pill-update" }
   }
   "<span class=""$class"">$emoji $kind</span>"
 }
@@ -194,19 +202,15 @@ function Get-CommitFiles {
 # =========================
 $PSAIReady = $false
 function Initialize-AIProvider {
-  param([ValidateSet('OpenAI', 'AzureOpenAI')][string]$Provider)
+  param([ValidateSet('OpenAI','AzureOpenAI')][string]$Provider)
   try {
     if (-not (Get-Module -ListAvailable -Name PSAI)) {
       Install-Module PSAI -Scope CurrentUser -Force -ErrorAction Stop
     }
     Import-Module PSAI -ErrorAction Stop
-  }
-  catch {
-    Write-Warning "PSAI not available; skipping AI. $_"
-    return $false
-  }
+  } catch { Write-Warning "PSAI not available; skipping AI. $_"; return $false }
   switch ($Provider) {
-    'OpenAI' { if (-not $env:OpenAIKey) { Write-Warning "OpenAIKey not set"; return $false }; Set-OAIProvider -Provider OpenAI | Out-Null; return $true }
+    'OpenAI'      { if (-not $env:OpenAIKey) { Write-Warning "OpenAIKey not set"; return $false }; Set-OAIProvider -Provider OpenAI | Out-Null; return $true }
     'AzureOpenAI' {
       $secrets = @{
         apiURI         = $env:AZURE_OPENAI_APIURI
@@ -214,9 +218,7 @@ function Initialize-AIProvider {
         apiVersion     = $env:AZURE_OPENAI_API_VERSION
         deploymentName = $env:AZURE_OPENAI_DEPLOYMENT
       }
-      if ($secrets.Values -contains $null -or ($secrets.Values | Where-Object { [string]::IsNullOrWhiteSpace($_) })) {
-        Write-Warning "Azure OpenAI envs incomplete."; return $false
-      }
+      if ($secrets.Values -contains $null -or ($secrets.Values | Where-Object { [string]::IsNullOrWhiteSpace($_) })) { Write-Warning "Azure OpenAI envs incomplete."; return $false }
       Set-OAIProvider -Provider AzureOpenAI | Out-Null
       Set-AzOAISecrets @secrets | Out-Null
       return $true
@@ -228,7 +230,7 @@ if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvi
 # ===== Docs AI (vector-store) — STRICT FILTER =====
 function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
-  if (-not $PSAIReady) { return @{ ordered = @(); byFile = @{} } }
+  if (-not $PSAIReady) { return @{ ordered=@(); byFile=@{} } }
   try {
     Log "Uploading JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
@@ -243,7 +245,7 @@ function Get-PerFileSummariesViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
+$instructions = @"
 You are a strict filter for Azure AKS documentation updates.
 
 INPUT JSON contains an array of file groups. Each has:
@@ -260,6 +262,8 @@ KEEP ONLY pages with **user-facing, meaningful** changes:
 - Security/networking/compatibility behavior changes
 - New page or major rewrite
 
+ALWAYS KEEP if any status is ""added"" (brand new page), even if patch_sample is empty.
+
 SKIP (omit from output) if trivial:
 - Typos/grammar/formatting/whitespace/headings case
 - Front matter/ms.* metadata only
@@ -267,7 +271,7 @@ SKIP (omit from output) if trivial:
 - Tiny net change (<5 lines) with no headings/commands/code changed
 
 RULES:
-- When in doubt, SKIP.
+- When in doubt, SKIP (except ""added"" which must be kept).
 - Never invent beyond the diff/subjects.
 - Output at most one result per file.
 - Category must be one of:
@@ -292,17 +296,16 @@ OUTPUT: Return ONLY a JSON array of KEPT items in desired display order:
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-    Where-Object { $_.type -eq 'text' } |
-    ForEach-Object { $_.text.value } |
-    Out-String
+      Where-Object { $_.type -eq 'text' } |
+      ForEach-Object { $_.text.value } |
+      Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
-    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{ ordered = @(); byFile = @{} } }
+    $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
+    $match = [regex]::Match($clean,'\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))','Singleline')
+    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{ ordered=@(); byFile=@{} } }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
 
-    # Build ordered list + map
     $ordered = @()
     $byFile = @{}
     foreach ($i in $arr) {
@@ -316,10 +319,9 @@ OUTPUT: Return ONLY a JSON array of KEPT items in desired display order:
     }
     Log "AI: Kept $($ordered.Count) files after filtering."
     return @{ ordered = $ordered; byFile = $byFile }
-  }
-  catch {
+  } catch {
     Write-Warning "AI summaries (docs) failed: $_"
-    return @{ ordered = @(); byFile = @{} }
+    return @{ ordered=@(); byFile=@{} }
   }
 }
 
@@ -341,7 +343,7 @@ function Get-ReleaseSummariesViaAssistant {
       Log "Releases VS status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
+$instructions = @"
 You are summarizing AKS GitHub Releases.
 The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
 Return ONLY JSON:
@@ -363,12 +365,12 @@ Plain strings only.
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-    Where-Object { $_.type -eq 'text' } |
-    ForEach-Object { $_.text.value } |
-    Out-String
+      Where-Object { $_.type -eq 'text' } |
+      ForEach-Object { $_.text.value } |
+      Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
-    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
+    $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
+    $match = [regex]::Match($clean,'\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))','Singleline')
     if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
@@ -383,8 +385,7 @@ Plain strings only.
     }
     Log "AI: Release summaries ready for $($map.Keys.Count) releases."
     return $map
-  }
-  catch {
+  } catch {
     Write-Warning "AI summaries (releases) failed: $_"
     return @{}
   }
@@ -403,7 +404,6 @@ foreach ($pr in $prs) {
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
     if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
-
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
       pr_title  = $pr.title
@@ -427,14 +427,13 @@ foreach ($c in $commitList) {
   if (-not $detail) { continue }
 
   $when = if ($detail.commit.committer.date) { [DateTime]::Parse($detail.commit.committer.date).ToUniversalTime() }
-  elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
-  else { [DateTime]::UtcNow }
+          elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
+          else { [DateTime]::UtcNow }
 
   $msg = $detail.commit.message.Split("`n")[0]
 
   foreach ($f in $detail.files) {
     if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
-
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
       pr_title  = $msg
@@ -463,7 +462,6 @@ $aiInput = [pscustomobject]@{
       $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
       $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
 
-      # compact +/- sample (first 1200 +/- lines total)
       $lines = @()
       foreach ($it in $items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
       $patchSample = ($lines | Select-Object -First 1200) -join "`n"
@@ -484,9 +482,32 @@ $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF
 Log "AI Summaries"
 Log "  [AKS] Prepared AI input: $aiJsonPath"
 
-$aiVerdicts = @{ ordered = @(); byFile = @{} }
+$aiVerdicts = @{ ordered=@(); byFile=@{} }
 if ($PreferProvider) { $aiVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath }
 else { Log "AI disabled (no provider env configured)." }
+
+# ---- Fallback: force-keep any "added" files that AI missed
+$aiKeptSet = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+foreach ($o in @($aiVerdicts.ordered)) { [void]$aiKeptSet.Add([string]$o.file) }
+
+$forced = New-Object System.Collections.Generic.List[object]
+foreach ($k in $groups.Keys) {
+  $statuses = ($groups[$k].status | Where-Object { $_ } | Select-Object -Unique)
+  if ($statuses -contains 'added' -and -not $aiKeptSet.Contains($k)) {
+    $forced.Add([pscustomobject]@{
+      file     = $k
+      summary  = "New page added."
+      category = Compute-Category $k
+      score    = 1.0
+    }) | Out-Null
+  }
+}
+if ($forced.Count -gt 0) {
+  Log "Force-keeping $($forced.Count) newly added page(s) the AI skipped."
+  # Append forced items to ordered list and map
+  $aiVerdicts.ordered += $forced
+  foreach ($f in $forced) { $aiVerdicts.byFile[$f.file] = @{ summary=$f.summary; category=$f.category; score=$f.score } }
+}
 
 # Render DOCS sections — ONLY what AI kept, preserving AI order
 $sections = New-Object System.Collections.Generic.List[string]
@@ -494,28 +515,26 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $file = $row.file
   if (-not $groups.ContainsKey($file)) { continue }  # safety
 
-  $arr = $groups[$file] | Sort-Object merged_at -Descending
-  $fileUrl = Get-LiveDocsUrl -FilePath $file
-  $summary = $aiVerdicts.byFile[$file].summary
-  $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { "General" }
+  $arr         = $groups[$file] | Sort-Object merged_at -Descending
+  $fileUrl     = Get-LiveDocsUrl -FilePath $file
+  $summary     = $aiVerdicts.byFile[$file].summary
+  $category    = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
   $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
-  $prLink = $arr[0].pr_url
+  $prLink      = $arr[0].pr_url
 
-  # Better, consistent title from file + kind
-  $display = Get-DocDisplayName $file
-  $kind = Get-SessionKind -items $arr -summary ($summary ?? "")
-  $kindPill = KindToPillHtml $kind
-  $product = Get-ProductIconMeta $file
-  $iconUrl = $product.url
-  $iconAlt = $product.alt
-  $cardTitle = "$($product.label) - $display"
-
+  $display   = Get-DocDisplayName $file
+  $kind      = Get-SessionKind -items $arr -summary ($summary ?? "")
+  $kindPill  = KindToPillHtml $kind
+  $product   = Get-ProductIconMeta $file
+  $iconUrl   = $product.url
+  $iconAlt   = $product.alt
+  $cardTitle = "$($product.label) – $display — $kind"
 
   $section = @"
 <div class="aks-doc-update">
   <h2 class="aks-doc-title">
-  <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" width="20" height="20" loading="lazy" />
-  <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
+    <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" width="20" height="20" loading="lazy" />
+    <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
   </h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
@@ -570,8 +589,7 @@ $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding U
 $releaseSummaries = @{}
 if ($PreferProvider -and $releases.Count -gt 0) {
   $releaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
-}
-else {
+} else {
   Log "AI disabled or no releases."
 }
 
@@ -583,11 +601,11 @@ function ToListHtml($arr) {
 
 $releaseCards = New-Object System.Collections.Generic.List[string]
 foreach ($r in $releases) {
-  $titleRaw = ($r.name ?? $r.tag_name)
-  $title = Escape-Html $titleRaw
-  $url = $r.html_url
+  $titleRaw     = ($r.name ?? $r.tag_name)
+  $title        = Escape-Html $titleRaw
+  $url          = $r.html_url
   $isPrerelease = [bool]$r.prerelease
-  $publishedAt = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+  $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
@@ -656,13 +674,13 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels)
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = @($aiVerdicts.ordered).Count  # only kept ones
+$updateCount = @($aiVerdicts.ordered).Count + $forced.Count
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
-    <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases.</p>
+    <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and releases.</p>
     <p>It relies on AI to filter out trivial edits, and surfaces only substantive changes.</p>
   </div>
 
@@ -686,8 +704,8 @@ $html = @"
     </div>
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
-      <h2>AKS Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to the Azure Kubernetes Service (AKS) documentation from the last 7 days.</div>
+      <h2>Documentation Updates</h2>
+      <div class="aks-docs-desc">Meaningful updates to AKS and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
