@@ -597,8 +597,13 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $iconAlt   = $product.alt
   $cardTitle = "$($product.label) - $display"
 
-  $section = @"
-<div class="aks-doc-update">
+$section = @"
+<div class="aks-doc-update"
+     data-category="$category"
+     data-kind="$kind"
+     data-product="$($product.label)"
+     data-updated="$($arr[0].merged_at.ToString('o'))"
+     data-title="$(Escape-Html $display)">
   <h2 class="aks-doc-title">
     <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" width="20" height="20" loading="lazy" />
     <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
@@ -615,6 +620,7 @@ foreach ($row in @($aiVerdicts.ordered)) {
   <ul></ul>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 "@
@@ -746,9 +752,18 @@ $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
-    <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and releases.</p>
-    <p>It relies on AI to filter out trivial edits, and surfaces only substantive changes.</p>
+    <h2>About this tracker</h2>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and release notes.</p>
+    <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
+    <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
+    <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
+    <p><strong>With this tracker, you can:</strong></p>
+    <ul>
+      <li>Quickly scan meaningful AKS and Fleet documentation changes from the past 7 days</li>
+      <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
+    </ul>
   </div>
+
 
   <div class="aks-tabs">
     <nav class="aks-tabs-nav">
