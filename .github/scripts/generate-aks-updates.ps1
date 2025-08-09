@@ -53,7 +53,7 @@ function Truncate([string]$text, [int]$max = 400) {
   if ($t.Length -le $max) { return $t }
   return $t.Substring(0, $max).TrimEnd() + "…"
 }
-# Aggressive Markdown→plain fallback for release notes
+# Markdown→plain fallback for release notes
 function Convert-MarkdownToPlain([string]$md) {
   if (-not $md) { return "" }
   $t = $md
@@ -69,6 +69,28 @@ function Convert-MarkdownToPlain([string]$md) {
   $t = [regex]::Replace($t, '\r', '')
   $t = [regex]::Replace($t, '\n{3,}', "`n`n")
   $t.Trim()
+}
+
+# Nice display name from filename (e.g., pci-data -> PCI Data, RBAC, AKS, etc.)
+function Convert-ToTitleCase([string]$s) {
+  if ([string]::IsNullOrWhiteSpace($s)) { return $s }
+  $textInfo = (Get-Culture).TextInfo
+  $tc = $textInfo.ToTitleCase($s.ToLower())
+  $words = $tc -split ' '
+  $stops = 'a|an|and|as|at|but|by|for|in|of|on|or|the|to|with'
+  for ($i = 1; $i -lt $words.Count; $i++) { if ($words[$i] -match "^(?:$stops)$") { $words[$i] = $words[$i].ToLower() } }
+  ($words -join ' ')
+}
+function Get-DocDisplayName([string]$Path) {
+  $name = [System.IO.Path]::GetFileNameWithoutExtension($Path) `
+    -replace '[-_]+' , ' ' `
+    -replace '\s{2,}', ' ' `
+    -replace '^\s+|\s+$', ''
+  $name = Convert-ToTitleCase $name
+  $name = $name -replace '\bAks\b','AKS' -replace '\bAad\b','AAD' -replace '\bCli\b','CLI' -replace '\bRbac\b','RBAC' `
+                 -replace '\bIp\b','IP'  -replace '\bIps\b','IPs' -replace '\bVm(s)?\b','VM$1' -replace '\bVnet(s)?\b','VNet$1' `
+                 -replace '\bApi\b','API' -replace '\bUrl(s)?\b','URL$1'
+  return $name
 }
 
 # =========================
@@ -222,10 +244,10 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
-# ===== Docs AI (vector-store) =====
+# ===== Docs AI (vector-store) — STRICT FILTER =====
 function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
-  if (-not $PSAIReady) { return @{} }
+  if (-not $PSAIReady) { return @{ ordered=@(); byFile=@{} } }
   try {
     Log "Uploading JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
@@ -240,22 +262,52 @@ function Get-PerFileSummariesViaAssistant {
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
-You are summarizing substantive Azure AKS documentation changes from PRs and direct commits.
-Ignore trivial edits (typos, link fixes).
-For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences", "impact": ["..."], "category": "<short tag>" } ]
-Only return the JSON array.
+$instructions = @"
+You are a strict filter for Azure AKS documentation updates.
+
+INPUT JSON contains an array of file groups. Each has:
+- file: full path (e.g., articles/aks/pci-data.md)
+- subjects: unique PR/commit titles touching this file this week
+- total_additions, total_deletions, commits_count
+- statuses[]: added/modified/removed (from diffs)
+- patch_sample: a compact unified diff subset with +/- lines only
+
+KEEP ONLY pages with **user-facing, meaningful** changes:
+- Adds/removes sections, steps, code blocks, examples
+- Changes to parameters/flags/values in CLI or YAML
+- Version/support/limits/regions/availability changes
+- Security/networking/compatibility behavior changes
+- New page or major rewrite
+
+SKIP (omit from output) if trivial:
+- Typos/grammar/formatting/whitespace/headings case
+- Front matter/ms.* metadata only
+- Link retargets, bare URL tweaks, image path changes, TOC shuffles
+- Tiny net change (<5 lines) with no headings/commands/code changed
+
+RULES:
+- When in doubt, SKIP.
+- Never invent beyond the diff/subjects.
+- Output at most one result per file.
+- Category must be one of:
+  Networking, Security, Compute, Storage, Operations, Compliance, General.
+- Summary: 1–2 factual sentences (plain text) naming sections/params if visible.
+
+OUTPUT: Return ONLY a JSON array of KEPT items in desired display order:
+[
+  { "file": "<same file>", "summary": "…", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0 }
+]
 "@
 
     $assistant = New-OAIAssistant `
-      -Name "AKS-Docs-Summarizer" `
+      -Name "AKS-Docs-Filter" `
       -Instructions $instructions `
       -Tools @{ type = 'file_search' } `
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Summarize each file listed in the uploaded JSON per the instructions. Only return the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1200
+    $userMsg = "Filter and summarize per the instructions. Return ONLY the JSON array."
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.1
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -263,25 +315,30 @@ Only return the JSON array.
       ForEach-Object { $_.text.value } |
       Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+    $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{} }
+    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{ ordered=@(); byFile=@{} } }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
-    $map = @{}
+
+    # Build ordered list + map
+    $ordered = @()
+    $byFile = @{}
     foreach ($i in $arr) {
-      $map[$i.file] = @{
+      if (-not $i.file) { continue }
+      $ordered += $i
+      $byFile[$i.file] = @{
         summary  = $i.summary
-        impact   = $i.PSObject.Properties['impact'] ? $i.impact : @()
-        category = $i.PSObject.Properties['category'] ? $i.category : 'General'
+        category = ($i.PSObject.Properties['category'] ? $i.category : 'General')
+        score    = [double]($i.PSObject.Properties['score'] ? $i.score : 1.0)
       }
     }
-    Log "AI: Summaries ready for $($map.Keys.Count) files."
-    return $map
+    Log "AI: Kept $($ordered.Count) files after filtering."
+    return @{ ordered = $ordered; byFile = $byFile }
   }
   catch {
     Write-Warning "AI summaries (docs) failed: $_"
-    return @{}
+    return @{ ordered=@(); byFile=@{} }
   }
 }
 
@@ -303,21 +360,14 @@ function Get-ReleaseSummariesViaAssistant {
       Log "Releases VS status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
+$instructions = @"
 You are summarizing AKS GitHub Releases.
-The uploaded JSON contains an array of objects with: id, title, tag_name, published_at, body (markdown).
-Return ONLY JSON with this exact shape:
+The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
+Return ONLY JSON:
 [
-  {
-    "id": <same id as input>,
-    "summary": "1–2 sentences plain text",
-    "breaking_changes": ["..."],
-    "key_features": ["..."],
-    "good_to_know": ["..."]
-  }
+  { "id": <same id>, "summary": "1–2 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."] }
 ]
-- Keep bullets concise (3–8 per section when applicable).
-- No markdown in values, plain strings only.
+Plain strings only.
 "@
 
     $assistant = New-OAIAssistant `
@@ -327,7 +377,7 @@ Return ONLY JSON with this exact shape:
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Summarize each release in the uploaded JSON by ID. Only return the JSON array described in the instructions."
+    $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
     $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
@@ -336,7 +386,7 @@ Return ONLY JSON with this exact shape:
       ForEach-Object { $_.text.value } |
       Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$',''
+    $clean = $last -replace '^\s*```(?:json)?\s*','' -replace '\s*```\s*$',''
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
 
@@ -371,8 +421,11 @@ foreach ($pr in $prs) {
   if (Test-IsNoiseMessage $pr.title) { continue }
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
-    if ($f.filename -notmatch '\.md$') { continue }
+    if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
+    # attach PR title for tiny-change heuristic
+    $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
     if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
+
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
       pr_title  = $pr.title
@@ -420,7 +473,7 @@ foreach ($c in $commitList) {
   }
 }
 
-# AI summaries input (optional)
+# ===== Build AI input with enough signal for filtering =====
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 
@@ -428,9 +481,25 @@ $aiInput = [pscustomobject]@{
   since  = $SINCE_ISO
   groups = @(
     foreach ($k in $groups.Keys) {
+      $items = $groups[$k]
+      $adds = ($items | Measure-Object -Sum -Property additions).Sum
+      $dels = ($items | Measure-Object -Sum -Property deletions).Sum
+      $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
+      $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+
+      # compact +/- sample (first 1200 +/- lines total)
+      $lines = @()
+      foreach ($it in $items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
+      $patchSample = ($lines | Select-Object -First 1200) -join "`n"
+
       [pscustomobject]@{
-        file     = $k
-        subjects = ($groups[$k] | ForEach-Object { $_.pr_title } | Select-Object -Unique)
+        file             = $k
+        subjects         = $subjects
+        total_additions  = $adds
+        total_deletions  = $dels
+        commits_count    = $items.Count
+        statuses         = $statuses
+        patch_sample     = $patchSample
       }
     }
   )
@@ -439,23 +508,28 @@ $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF
 Log "AI Summaries"
 Log "  [AKS] Prepared AI input: $aiJsonPath"
 
-$summaries = @{}
-if ($PreferProvider) { $summaries = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath }
+$aiVerdicts = @{ ordered=@(); byFile=@{} }
+if ($PreferProvider) { $aiVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath }
 else { Log "AI disabled (no provider env configured)." }
 
-# Render DOCS sections
+# Render DOCS sections — ONLY what AI kept, preserving AI order
 $sections = New-Object System.Collections.Generic.List[string]
-foreach ($file in $groups.Keys) {
-  $arr = $groups[$file] | Sort-Object merged_at -Descending
+foreach ($row in @($aiVerdicts.ordered)) {
+  $file = $row.file
+  if (-not $groups.ContainsKey($file)) { continue }  # safety
+
+  $arr         = $groups[$file] | Sort-Object merged_at -Descending
   $fileUrl     = Get-LiveDocsUrl -FilePath $file
-  $summary     = $summaries[$file].summary
-  $category    = if ($summaries[$file].category) { $summaries[$file].category } else { "General" }
+  $summary     = $aiVerdicts.byFile[$file].summary
+  $category    = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { "General" }
   $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
   $prLink      = $arr[0].pr_url
-  $cardTitle   = if ($arr[0].pr_title) { $arr[0].pr_title } else { ShortTitle $file }
 
-  $kind     = Get-SessionKind -items $arr -summary ($summary ?? "")
-  $kindPill = KindToPillHtml $kind
+  # Better, consistent title from file + kind
+  $display   = Get-DocDisplayName $file
+  $kind      = Get-SessionKind -items $arr -summary ($summary ?? "")
+  $kindPill  = KindToPillHtml $kind
+  $cardTitle = "AKS – $display — $kind"
 
   $section = @"
 <div class="aks-doc-update">
@@ -493,6 +567,7 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
 # Build releases JSON for AI
+$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 $relInput = @(
   foreach ($r in $releases) {
@@ -597,7 +672,7 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels)
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = $groups.Keys.Count
+$updateCount = @($aiVerdicts.ordered).Count  # only kept ones
 
 $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
@@ -652,4 +727,4 @@ $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
-[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $summaries } | ConvertTo-Json -Depth 6
+[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $aiVerdicts } | ConvertTo-Json -Depth 6
