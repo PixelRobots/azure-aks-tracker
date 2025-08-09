@@ -3,7 +3,8 @@ name: Publish AKS updates to WordPress (PowerShell)
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *'   # Every 6 hours for page updates
+    - cron: '0 9 * * 0'     # Sunday 09:00 UTC for weekly digest
   workflow_dispatch:
 
 jobs:
@@ -19,27 +20,13 @@ jobs:
         id: gen
         shell: pwsh
         run: |
-          # Run script; redirect only stdout (success stream) to out.json
           ./.github/scripts/generate-aks-updates.ps1 1> out.json
-
-          # Show live confirmation + size in the log
           Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
-
-          # Parse JSON
           $json = Get-Content out.json -Raw | ConvertFrom-Json
-
-          # Save big HTML to a file (DO NOT put in GITHUB_OUTPUT)
           Set-Content -LiteralPath content.html -Value $json.html -Encoding UTF8
-
-          # Only output the small hash as a step output
+          Set-Content -LiteralPath digest.html -Value $json.digest_html -Encoding UTF8
+          Set-Content -LiteralPath digest.title -Value $json.digest_title -Encoding UTF8
           Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OpenAIKey: ${{ secrets.OPENAI_API_KEY }}
-          AZURE_OPENAI_APIURI:       ${{ secrets.AZURE_OPENAI_APIURI }}
-          AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
-          AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
-          AZURE_OPENAI_DEPLOYMENT:   ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
 
       - name: Get current WP page
         id: get
@@ -56,14 +43,34 @@ jobs:
         if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-
-          # Build JSON safely from file (no giant inline strings)
           jq -n --rawfile content content.html \
             '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}' \
             > "$RUNNER_TEMP/wp-payload.json"
-
-          # Send payload from file to avoid argv limits
           curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
             --data-binary @"$RUNNER_TEMP/wp-payload.json"
+
+      - name: Create weekly WP post (runs only at Sunday 09:00 UTC)
+        if: github.event.schedule == '0 9 * * 0'
+        run: |
+          if [ ! -s digest.html ]; then
+            echo "No digest content — skipping weekly post."
+            exit 0
+          fi
+
+          WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/posts"
+          TITLE=$(cat digest.title)
+
+          jq -n --rawfile content digest.html --arg title "$TITLE" \
+            '{title: $title,
+              status: "publish",
+              categories: [261],
+              content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->",
+              comment_status: "closed"}' \
+            > "$RUNNER_TEMP/wp-weekly.json"
+
+          curl -sSf -X POST "$WP_API" \
+            -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @"$RUNNER_TEMP/wp-weekly.json"

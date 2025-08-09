@@ -752,7 +752,7 @@ $html = @"
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
-    <h2>About this tracker</h2>
+    <h1>About this tracker</h1>
     <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and release notes.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
@@ -802,6 +802,68 @@ $html = @"
 </div>
 "@.Trim()
 
+# ===== Weekly digest (compact HTML without tabs/filters) =====
+# Sort newest-first by latest merged_at for each file
+$sortedDocs = @($aiVerdicts.ordered) | Sort-Object {
+    $file = $_.file
+    if ($groups.ContainsKey($file)) {
+        ($groups[$file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
+    } else { Get-Date 0 }
+} -Descending
+
+# Build simple list items
+$digestItems = New-Object System.Collections.Generic.List[string]
+foreach ($row in $sortedDocs) {
+  $file = $row.file
+  if (-not $groups.ContainsKey($file)) { continue }
+  $arr         = $groups[$file] | Sort-Object merged_at -Descending
+  $fileUrl     = Get-LiveDocsUrl -FilePath $file
+  $summary     = $aiVerdicts.byFile[$file].summary
+  $category    = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
+  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  $product     = (Get-ProductIconMeta $file).label
+  $title       = "$(Escape-Html ($product + ' - ' + (Get-DocDisplayName $file)))"
+  $prLink      = $arr[0].pr_url
+
+  $li = @"
+<li style="margin:12px 0 18px;">
+  <div style="font-weight:700; font-size:16px; line-height:1.3;">
+    <a href="$fileUrl" style="text-decoration:none; color:#2563eb;">$title</a>
+  </div>
+  <div style="font-size:12px; color:#6b7280; margin:4px 0 6px;">
+    <span>$category</span> · <span>$product</span> · <span>Last updated: $lastUpdated</span>
+  </div>
+  <div style="font-size:14px; color:#111827;">$(Escape-Html $summary)</div>
+  <div style="margin-top:6px;">
+    <a href="$fileUrl" style="font-size:13px; color:#2563eb; text-decoration:none;">View doc</a>
+    <span style="color:#9ca3af;"> · </span>
+    <a href="$prLink" style="font-size:13px; color:#2563eb; text-decoration:none;">View PR</a>
+  </div>
+</li>
+"@
+  $digestItems.Add($li.Trim())
+}
+
+$weekStart = (Get-Date -Date ((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')) -AsUTC).AddDays(-7)
+$weekEnd   = (Get-Date).ToUniversalTime()
+$digestTitle = "AKS & Fleet Docs – Weekly Update (" + $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd') + ")"
+
+$digestHtml = @"
+<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; max-width:800px; margin:0 auto;">
+  <h2 style="margin:0 0 8px; font-size:20px;">$digestTitle</h2>
+  <p style="margin:0 0 14px; font-size:14px; color:#374151;">
+    The most meaningful AKS and Kubernetes Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
+  </p>
+  <ul style="padding-left:18px; margin:0; list-style:disc;">
+    $($digestItems -join "`n")
+  </ul>
+  <p style="margin-top:16px; font-size:12px; color:#6b7280;">
+    Full tracker (with filters): <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb; text-decoration:none;">AKS Docs Tracker</a>
+  </p>
+</div>
+"@.Trim()
+
+
 # =========================
 # OUTPUT (JSON with html + hash)
 # =========================
@@ -809,4 +871,11 @@ $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
-[pscustomobject]@{ html = $html; hash = $hash; ai_summaries = $aiVerdicts } | ConvertTo-Json -Depth 6
+[pscustomobject]@{
+  html         = $html
+  hash         = $hash
+  ai_summaries = $aiVerdicts
+  digest_html  = $digestHtml
+  digest_title = $digestTitle
+} | ConvertTo-Json -Depth 6
+
