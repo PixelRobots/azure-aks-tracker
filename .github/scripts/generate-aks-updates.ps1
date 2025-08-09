@@ -601,7 +601,7 @@ $section = @"
 <div class="aks-doc-update"
      data-category="$category"
      data-kind="$kind"
-     data-product="$($product.label)">
+     data-product="$($product.label)"
      data-updated="$($arr[0].merged_at.ToString('o'))"
      data-title="$(Escape-Html $display)">
   <h2 class="aks-doc-title">
@@ -781,41 +781,6 @@ $html = @"
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
-      </div>
-      <div class="aks-filterbar">
-        <input id="aks-search" type="search" placeholder="Search titles & summaries…" aria-label="Search updates" />
-        <select id="aks-product">
-          <option value="">All products</option>
-          <option value="aks">AKS</option>
-          <option value="fleet">Fleet</option>
-        </select>
-        <select id="aks-category">
-          <option value="">All categories</option>
-          <option>Networking</option>
-          <option>Security</option>
-          <option>Compute</option>
-          <option>Storage</option>
-          <option>Operations</option>
-          <option>Compliance</option>
-          <option>General</option>
-        </select>
-        <select id="aks-kind">
-          <option value="">All kinds</option>
-          <option>New</option>
-          <option>Rework</option>
-          <option>Update</option>
-          <option>Removal</option>
-          <option>Deprecation</option>
-          <option>Migration</option>
-          <option>Clarification</option>
-        </select>
-        <select id="aks-sort">
-          <option value="date-desc">Newest first</option>
-          <option value="date-asc">Oldest first</option>
-          <option value="title-asc">Title A–Z</option>
-          <option value="title-desc">Title Z–A</option>
-        </select>
-        <label class="aks-only-new"><input type="checkbox" id="aks-only-new" /> Show only “New” pages</label>
       </div>
       <div class="aks-docs-list">
         $($sections -join "`n")
