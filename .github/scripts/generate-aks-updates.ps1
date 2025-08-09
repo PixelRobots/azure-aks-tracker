@@ -766,6 +766,8 @@ $html = @"
       <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
     </ul>
 
+    </br>
+    <p><strong>Get the Latest AKS Docs - Every Week, in Your Inbox</strong></p>
     <!-- Inline signup form -->
     <div style="margin-top:1rem;">
       $formShortcode
