@@ -49,6 +49,72 @@ function Get-ProductIconMeta([string]$FilePath) {
     }
   }
 }
+function Get-GitHubContentBase64([string]$path, [string]$ref = "main") {
+  $uri = "https://api.github.com/repos/$Owner/$Repo/contents/$([uri]::EscapeDataString($path))?ref=$([uri]::EscapeDataString($ref))"
+  try {
+    $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    if ($resp.content) { return [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($resp.content)) }
+  } catch { }
+  return $null
+}
+
+function Parse-YamlFrontMatter([string]$md) {
+  # returns @{ title=""; description="" } if front matter exists, else empty values
+  $o = @{ title=""; description="" }
+  if (-not $md) { return $o }
+  $m = [regex]::Match($md, '^(?:\uFEFF)?---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?$', 'Multiline')
+  if (-not $m.Success) { return $o }
+  $yaml = $m.Groups[1].Value
+  $title = [regex]::Match($yaml, '^\s*title\s*:\s*(.+)$', 'Multiline').Groups[1].Value.Trim()
+  $desc  = [regex]::Match($yaml, '^\s*description\s*:\s*(.+)$', 'Multiline').Groups[1].Value.Trim()
+  if ($title) { $o.title = $title.Trim('"').Trim("'") }
+  if ($desc)  { $o.description = $desc.Trim('"').Trim("'") }
+  return $o
+}
+
+function Get-MarkdownLead([string]$md) {
+  if (-not $md) { return "" }
+  # strip front matter
+  $md = [regex]::Replace($md, '^(?:\uFEFF)?---\s*\r?\n[\s\S]*?\r?\n---\s*\r?\n?', '', 'Multiline')
+  # first H1
+  $h1 = [regex]::Match($md, '^\s*#\s+(.+)$', 'Multiline').Groups[1].Value.Trim()
+  # first non-empty paragraph after H1 (skip images, headings, lists, blockquotes)
+  $parts = $md -split "\r?\n\r?\n"
+  $lead = ""
+  $seenH1 = $false
+  foreach ($p in $parts) {
+    $t = $p.Trim()
+    if (-not $t) { continue }
+    if (-not $seenH1) {
+      if ($t -match '^\s*#\s+') { $seenH1 = $true; continue }
+      else { continue }
+    }
+    if ($t -match '^\s*[>#+\-*]') { continue }
+    if ($t -match '!\[.*\]\(.*\)') { continue }
+    $lead = $t
+    break
+  }
+  if (-not $lead) {
+    # fallback: first non-empty line
+    $lead = ($md -split "\r?\n" | Where-Object { $_.Trim() } | Select-Object -First 1)
+  }
+  # clean markdown artifacts
+  $lead = Convert-MarkdownToPlain $lead
+  if ($h1 -and $lead) { return "$h1 — $lead" }
+  if ($lead) { return $lead }
+  if ($h1) { return $h1 }
+  return ""
+}
+
+function Summarize-NewMarkdown([string]$path) {
+  $raw = Get-GitHubContentBase64 -path $path
+  if (-not $raw) { return "New page added." }
+  $fm = Parse-YamlFrontMatter $raw
+  if ($fm.description) { return Truncate $fm.description 280 }
+  $lead = Get-MarkdownLead $raw
+  if ($lead) { return Truncate $lead 280 }
+  return "New page added."
+}
 
 function Escape-Html([string]$s) {
   if ($null -eq $s) { return "" }
@@ -276,7 +342,7 @@ RULES:
 - Output at most one result per file.
 - Category must be one of:
   Networking, Security, Compute, Storage, Operations, Compliance, General.
-- Summary: 1–2 factual sentences (plain text) naming sections/params if visible.
+- Summary: 2-4 factual sentences (plain text) naming sections/params if visible.
 
 OUTPUT: Return ONLY a JSON array of KEPT items in desired display order:
 [
@@ -494,9 +560,10 @@ $forced = New-Object System.Collections.Generic.List[object]
 foreach ($k in $groups.Keys) {
   $statuses = ($groups[$k].status | Where-Object { $_ } | Select-Object -Unique)
   if ($statuses -contains 'added' -and -not $aiKeptSet.Contains($k)) {
+    $forcedSummary = Summarize-NewMarkdown $k   # <<<<<< new
     $forced.Add([pscustomobject]@{
       file     = $k
-      summary  = "New page added."
+      summary  = $forcedSummary
       category = Compute-Category $k
       score    = 1.0
     }) | Out-Null
@@ -528,7 +595,7 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $product   = Get-ProductIconMeta $file
   $iconUrl   = $product.url
   $iconAlt   = $product.alt
-  $cardTitle = "$($product.label) – $display — $kind"
+  $cardTitle = "$($product.label) - $display"
 
   $section = @"
 <div class="aks-doc-update">
@@ -548,7 +615,6 @@ foreach ($row in @($aiVerdicts.ordered)) {
   <ul></ul>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 "@
