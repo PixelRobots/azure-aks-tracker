@@ -19,8 +19,8 @@ $sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
-$ReleasesOwner = "Azure"   # change if needed
-$ReleasesRepo  = "AKS"     # change to the repo that actually publishes AKS releases
+$ReleasesOwner = "Azure"
+$ReleasesRepo  = "AKS"
 $ReleasesCount = 5
 
 $ghHeaders = @{
@@ -43,7 +43,7 @@ function Get-LiveDocsUrl([string]$FilePath) {
   if ($FilePath -match '^articles/(.+?)\.md$') {
     $p = $Matches[1] -replace '\\', '/'
     if ($p -notmatch '^azure/') { $p = "azure/$p" }
-    return "https://learn.microsoft.com/$p"
+    return "https://learn.microsoft.com/$p"   # keep your original behavior
   }
   return "https://github.com/$Owner/$Repo/blob/main/$FilePath"
 }
@@ -53,26 +53,19 @@ function Truncate([string]$text, [int]$max = 400) {
   if ($t.Length -le $max) { return $t }
   return $t.Substring(0, $max).TrimEnd() + "…"
 }
-
 # Aggressive Markdown→plain fallback for release notes
 function Convert-MarkdownToPlain([string]$md) {
   if (-not $md) { return "" }
   $t = $md
-  # Remove code blocks
   $t = [regex]::Replace($t, '```[\s\S]*?```', '', 'Singleline')
-  # Images ![alt](url) -> alt
   $t = [regex]::Replace($t, '!\[([^\]]*)\]\([^)]+\)', '$1')
-  # Links [text](url) -> text
   $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1')
-  # Headings, emphasis, inline code, lists markers
   $t = $t -replace '(^|\n)#{1,6}\s*', '$1'
   $t = $t -replace '(\*\*|__)(.*?)\1', '$2'
   $t = $t -replace '(\*|_)(.*?)\1', '$2'
   $t = $t -replace '`([^`]+)`', '$1'
   $t = $t -replace '^\s*([-*+]|\d+\.)\s+', '', 'Multiline'
-  # Blockquotes
   $t = $t -replace '^\s*>\s?', '', 'Multiline'
-  # Excess whitespace
   $t = [regex]::Replace($t, '\r', '')
   $t = [regex]::Replace($t, '\n{3,}', "`n`n")
   $t.Trim()
@@ -108,6 +101,49 @@ function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
 }
 
 # =========================
+# KIND PILL HELPERS
+# =========================
+function InferShortAction([string]$summary) {
+  if ([string]::IsNullOrWhiteSpace($summary)) { return "Update" }
+  $s = $summary.ToLower()
+  if ($s -match '\b(deprecat|retir)\w*\b') { return "Deprecation" }
+  if ($s -match '\b(new|introduc|add(ed)?|create)\b') { return "New" }
+  if ($s -match '\b(overhaul|rework|rewrite|significant|major)\b') { return "Rework" }
+  if ($s -match '\b(migrat|replace|move)\w*\b') { return "Migration" }
+  if ($s -match '\b(fix|correct|clarif)\w*\b') { return "Clarification" }
+  return "Update"
+}
+function Get-SessionKind($items, [string]$summary) {
+  $hasAdded   = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
+  $hasRemoved = ($items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
+  $delta = ( ($items | Measure-Object -Sum -Property additions).Sum +
+             ($items | Measure-Object -Sum -Property deletions).Sum )
+  $heavySummary = $summary -match '(?i)\b(overhaul|rework|rewrite|significant|major)\b'
+  if ($hasRemoved -and -not $hasAdded) { return "Removal" }
+  if ($hasAdded) { return "New" }
+  if ($heavySummary -or $delta -ge 80 -or $items.Count -ge 3) { return "Rework" }
+  return "Update"
+}
+function KindToPillHtml([string]$kind) {
+  $emoji = switch ($kind) {
+    "New"           { "🆕" }
+    "Rework"        { "♻️" }
+    "Removal"       { "🗑️" }
+    "Deprecation"   { "⚠️" }
+    "Migration"     { "➡️" }
+    "Clarification" { "ℹ️" }
+    default         { "✨" }
+  }
+  $class = switch ($kind) {
+    "New"     { "aks-pill-kind aks-pill-new" }
+    "Rework"  { "aks-pill-kind aks-pill-rework" }
+    "Removal" { "aks-pill-kind aks-pill-removal" }
+    default   { "aks-pill-kind aks-pill-update" }
+  }
+  "<span class=""$class"">$emoji $kind</span>"
+}
+
+# =========================
 # FETCH PRs MERGED LAST 7 DAYS
 # =========================
 function Get-RecentMergedPRs {
@@ -127,6 +163,26 @@ function Get-RecentMergedPRs {
 }
 function Get-PRFiles($Number) {
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files"
+  Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+}
+
+# =========================
+# ALSO FETCH DIRECT COMMITS (NO PR)
+# =========================
+function Get-RecentCommits {
+  param([string]$SinceIso)
+  $all = @()
+  for ($page = 1; $page -le 5; $page++) {
+    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?since=$SinceIso&per_page=100&page=$page"
+    $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    if (-not $resp) { break }
+    $all += $resp
+    if ($resp.Count -lt 100) { break }
+  }
+  return $all
+}
+function Get-CommitFiles { param([string]$Sha)
+  $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$Sha"
   Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
 }
 
@@ -185,7 +241,7 @@ function Get-PerFileSummariesViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You are summarizing substantive Azure AKS documentation changes from PRs.
+You are summarizing substantive Azure AKS documentation changes from PRs and direct commits.
 Ignore trivial edits (typos, link fixes).
 For each file, return JSON: [ { "file": "<path>", "summary": "2–4 sentences", "impact": ["..."], "category": "<short tag>" } ]
 Only return the JSON array.
@@ -316,7 +372,6 @@ foreach ($pr in $prs) {
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
     if ($f.filename -notmatch '\.md$') { continue }
-    $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
     if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
@@ -324,6 +379,43 @@ foreach ($pr in $prs) {
       pr_url    = $pr.html_url
       merged_at = [DateTime]::Parse($pr.merged_at).ToUniversalTime()
       filename  = $f.filename
+      additions = $f.additions
+      deletions = $f.deletions
+      status    = $f.status
+      patch     = $f.patch
+    }
+  }
+}
+
+# ---- Direct commits (no PR) ----
+Log "Fetching individual commits in last 7 days..."
+$commitList = Get-RecentCommits -SinceIso $SINCE_ISO
+$commitList = $commitList | Where-Object { -not (Test-IsBot $_) }
+
+foreach ($c in $commitList) {
+  $detail = Get-CommitFiles -Sha $c.sha
+  if (-not $detail) { continue }
+
+  $when = if ($detail.commit.committer.date) { [DateTime]::Parse($detail.commit.committer.date).ToUniversalTime() }
+          elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
+          else { [DateTime]::UtcNow }
+
+  $msg = $detail.commit.message.Split("`n")[0]
+
+  foreach ($f in $detail.files) {
+    if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
+    if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
+
+    if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
+    $groups[$f.filename] += [pscustomobject]@{
+      pr_title  = $msg
+      pr_url    = $detail.html_url
+      merged_at = $when
+      filename  = $f.filename
+      additions = $f.additions
+      deletions = $f.deletions
+      status    = $f.status
+      patch     = $f.patch
     }
   }
 }
@@ -355,21 +447,22 @@ else { Log "AI disabled (no provider env configured)." }
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($file in $groups.Keys) {
   $arr = $groups[$file] | Sort-Object merged_at -Descending
-  $fileUrl  = Get-LiveDocsUrl -FilePath $file
-  $summary  = $summaries[$file].summary
-  $category = $summaries[$file].category
-
+  $fileUrl     = Get-LiveDocsUrl -FilePath $file
+  $summary     = $summaries[$file].summary
+  $category    = if ($summaries[$file].category) { $summaries[$file].category } else { "General" }
   $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  $prLink      = $arr[0].pr_url
+  $cardTitle   = if ($arr[0].pr_title) { $arr[0].pr_title } else { ShortTitle $file }
 
-  $prLink   = $arr[0].pr_url
-  $cardTitle = $arr[0].pr_title
-  if (-not $cardTitle -or $cardTitle -eq "") { $cardTitle = ShortTitle $file }
+  $kind     = Get-SessionKind -items $arr -summary ($summary ?? "")
+  $kindPill = KindToPillHtml $kind
 
   $section = @"
 <div class="aks-doc-update">
   <h2><a href="$fileUrl">$(Escape-Html $cardTitle)</a></h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
+    $kindPill
     <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
@@ -391,9 +484,7 @@ foreach ($file in $groups.Keys) {
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
-  try {
-    Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
-  }
+  try { Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET }
   catch {
     Write-Warning ("Failed to fetch releases from {0}/{1}: {2}" -f $owner, $repo, $_.Exception.Message)
     return @()
@@ -433,14 +524,12 @@ function ToListHtml($arr) {
 
 $releaseCards = New-Object System.Collections.Generic.List[string]
 foreach ($r in $releases) {
-  $version      = Escape-Html ($r.tag_name ?? $r.name)
   $titleRaw     = ($r.name ?? $r.tag_name)
   $title        = Escape-Html $titleRaw
   $url          = $r.html_url
   $isPrerelease = [bool]$r.prerelease
   $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
-  # Get AI structured summary by release id; fallback to cleaned/truncated body
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
     $bodyPlain = Convert-MarkdownToPlain ($r.body ?? "")
