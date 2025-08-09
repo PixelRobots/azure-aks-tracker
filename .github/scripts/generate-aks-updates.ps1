@@ -186,7 +186,7 @@ function Test-IsDocsNoisePath([string]$Path) {
 # FETCH PRs MERGED LAST 7 DAYS (use merged_at)
 # =========================
 function Get-RecentMergedPRs {
-  param([string]$Owner, [string]$Repo, [string]$SinceIso])
+  param([string]$Owner, [string]$Repo, [string]$SinceIso)
   $sinceDate = ([DateTime]::Parse($SinceIso)).ToString('yyyy-MM-dd')
   $q = "repo:$Owner/$Repo is:pr is:merged merged:>=$sinceDate"
   $perPage = 100; $page = 1; $all = @()
