@@ -493,6 +493,9 @@ $fileBundlePayload = @(
 $aiInput = [pscustomobject]@{ since = $SINCE_ISO; file_bundles = $fileBundlePayload }
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
 
+# =========================
+# AI Verdicts (load + robust key matching + diagnostics)
+# =========================
 Log "AI Verdicts"
 Log "[AKS] Prepared AI input: $aiJsonPath"
 
@@ -506,37 +509,64 @@ if ($PreferProvider -and $bundles.Count -gt 0) {
 
 $aiList = @()
 $aiDict = @{}
-
 if ($aiVerdictsBundle.PSObject.Properties['ordered']) { $aiList = $aiVerdictsBundle.ordered }
 if ($aiVerdictsBundle.PSObject.Properties['byKey'])    { $aiDict = $aiVerdictsBundle.byKey }
 
-# Keep only AI rows whose keys we actually have
-$validKeys = [System.Collections.Generic.HashSet[string]]::new([string[]]$bundleByKey.Keys)
-$bad = New-Object System.Collections.Generic.List[object]
+# --- Diagnostics: dump raw AI response count + sample keys
+$rawCount = @($aiList).Count
+if ($rawCount -gt 0) {
+  $rawSample = (@($aiList) | Select-Object -First 5 | ForEach-Object { [string]($_.key) }) -join ' | '
+  Log "AI raw kept count: $rawCount (sample keys: $rawSample)"
+} else {
+  Log "AI returned 0 kept bundles in its JSON array."
+}
 
-$aiList = foreach ($row in $aiList) {
-  $k = [string]$row.key
-  if ($k -and $validKeys.Contains($k)) { $row } else { $bad.Add($row) | Out-Null }
+# Save raw AI list for post-mortem (non-fatal)
+try {
+  $aiRawPath = Join-Path $TmpRoot ("aks-ai-raw-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+  @($aiList) | ConvertTo-Json -Depth 6 | Set-Content -Path $aiRawPath -Encoding UTF8
+  Log "AI raw output saved to: $aiRawPath"
+} catch { Log "Warn: failed to write AI raw output: $($_.Exception.Message)" }
+
+# --- Build a case-insensitive key map from bundles
+$keyMap = @{}   # lower -> original
+foreach ($k in $bundleByKey.Keys) { $keyMap[$k.ToLower()] = $k }
+
+# --- Keep only rows whose keys map back to a known bundle (case-insensitive, trimmed)
+$bad = New-Object System.Collections.Generic.List[object]
+$normed = New-Object System.Collections.Generic.List[object]
+
+foreach ($row in @($aiList)) {
+  $k = ([string]$row.key).Trim()
+  if (-not $k) { $bad.Add($row) | Out-Null; continue }
+  $lk = $k.ToLower()
+  if ($keyMap.ContainsKey($lk)) {
+    # normalize key back to the exact original so downstream lookups work
+    $row.key = $keyMap[$lk]
+    $normed.Add($row) | Out-Null
+  } else {
+    $bad.Add($row) | Out-Null
+  }
 }
 
 if ($bad.Count -gt 0) {
-  $samples = ($bad | Select-Object -First 3 | ForEach-Object { $_.key }) -join ', '
-  Log "AI returned $($bad.Count) item(s) with unknown key(s). Sample: $samples"
+  $samples = ($bad | Select-Object -First 5 | ForEach-Object { [string]$_.key }) -join ' | '
+  Log "AI returned $($bad.Count) item(s) with unknown key(s) after normalization. Sample: $samples"
 }
 
-# De-dupe by key (prefer highest score) AFTER filtering
-$aiList = $aiList | Group-Object -Property key | ForEach-Object {
-  $_.Group | Sort-Object @{Expression='score';Descending=$true} | Select-Object -First 1
-}
+$aiList = @($normed)
 
+# --- De-dupe by key (prefer highest score)
 if ($aiList.Count -gt 0) {
+  $aiList = $aiList | Group-Object -Property key | ForEach-Object {
+    $_.Group | Sort-Object @{Expression='score';Descending=$true} | Select-Object -First 1
+  }
   $sampleKeys = ($aiList | Select-Object -First 5 | ForEach-Object { $_.key }) -join ' | '
-  Log "AI kept keys (sample): $sampleKeys"
-}
-
-# De-dupe by key (prefer highest score) — belt & braces
-$aiList = $aiList | Group-Object key | ForEach-Object {
-  $_.Group | Sort-Object @{Expression='score';Descending=$true}, @{Expression='key'} | Select-Object -First 1
+  Log "AI kept keys after filtering: $($aiList.Count) (sample: $sampleKeys)"
+} else {
+  # Extra help when zero: show a few known bundle keys to compare
+  $bundleSample = ($bundleByKey.Keys | Select-Object -First 5) -join ' | '
+  Log "After filtering, 0 AI items remain. Bundle key sample (expected format): $bundleSample"
 }
 
 Log "AI will render $($aiList.Count) item(s) out of $($bundles.Count) bundles."
