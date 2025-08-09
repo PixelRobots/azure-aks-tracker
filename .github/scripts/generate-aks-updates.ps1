@@ -94,47 +94,8 @@ function Get-DocDisplayName([string]$Path) {
 }
 
 # =========================
-# FILTERS
-# =========================
-function Test-IsBot($Item) {
-  $login = $Item.user.login
-  return ($login -match '(bot|actions)')
-}
-function Test-IsNoiseMessage([string]$Message) {
-  if (-not $Message) { return $false }
-  $patterns = @(
-    '^merge\b', '^sync\b', 'publish from', 'update submodule',
-    '\btypo\b', '\bgrammar\b', '\blink[- ]?fix\b', '\bformat(ting)?\b',
-    '\breadme\b', '^chore\b'
-  )
-  foreach ($p in $patterns) { if ($Message -imatch $p) { return $true } }
-  return $false
-}
-function Test-IsTinyDocsChange($Adds, $Dels, $Files) {
-  $allMd = (($Files | Where-Object { $_.filename -notmatch '\.md$' }).Count -eq 0)
-  $total = $Adds + $Dels
-  if (-not $allMd) { return $false }
-  if ($total -gt 2) { return $false }
-  $tokens = 'true|false|default|kubectl|az |MutatingWebhook|ValidatingWebhook|load balanc|port|TLS|deprecate|breaking'
-  $diffText = ($Files | ForEach-Object { $_.patch }) -join ' '
-  $prTitle = ($Files | ForEach-Object { $_.pr_title }) -join ' '
-  if ($diffText -match $tokens -or $prTitle -match $tokens) { return $false }
-  return $true
-}
-
-# =========================
 # KIND PILL HELPERS
 # =========================
-function InferShortAction([string]$summary) {
-  if ([string]::IsNullOrWhiteSpace($summary)) { return "Update" }
-  $s = $summary.ToLower()
-  if ($s -match '\b(deprecat|retir)\w*\b') { return "Deprecation" }
-  if ($s -match '\b(new|introduc|add(ed)?|create)\b') { return "New" }
-  if ($s -match '\b(overhaul|rework|rewrite|significant|major)\b') { return "Rework" }
-  if ($s -match '\b(migrat|replace|move)\w*\b') { return "Migration" }
-  if ($s -match '\b(fix|correct|clarif)\w*\b') { return "Clarification" }
-  return "Update"
-}
 function Get-SessionKind($items, [string]$summary) {
   $hasAdded   = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
@@ -166,7 +127,7 @@ function KindToPillHtml([string]$kind) {
 }
 
 # =========================
-# FETCH PRs MERGED LAST 7 DAYS
+# FETCH PRs MERGED LAST 7 DAYS (no pre-AI filtering)
 # =========================
 function Get-RecentMergedPRs {
   $all = @()
@@ -189,7 +150,7 @@ function Get-PRFiles($Number) {
 }
 
 # =========================
-# ALSO FETCH DIRECT COMMITS (NO PR)
+# ALSO FETCH DIRECT COMMITS (NO PR) — no pre-AI filtering
 # =========================
 function Get-RecentCommits {
   param([string]$SinceIso)
@@ -410,21 +371,18 @@ Plain strings only.
 }
 
 # =========================
-# MAIN FLOW — DOCS
+# MAIN FLOW — DOCS (PRs + direct commits, no pre-AI filtering)
 # =========================
 Log "Fetching PRs merged in last 7 days..."
-$prs = Get-RecentMergedPRs | Where-Object { -not (Test-IsBot $_) }
+$prs = Get-RecentMergedPRs
 Log "Found $($prs.Count) PR(s) in window."
 
 $groups = @{}
+
 foreach ($pr in $prs) {
-  if (Test-IsNoiseMessage $pr.title) { continue }
   $files = Get-PRFiles $pr.number
   foreach ($f in $files) {
     if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
-    # attach PR title for tiny-change heuristic
-    $f | Add-Member -NotePropertyName pr_title -NotePropertyValue $pr.title -Force
-    if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
 
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
@@ -440,10 +398,9 @@ foreach ($pr in $prs) {
   }
 }
 
-# ---- Direct commits (no PR) ----
+# ---- Direct commits (no PR)
 Log "Fetching individual commits in last 7 days..."
 $commitList = Get-RecentCommits -SinceIso $SINCE_ISO
-$commitList = $commitList | Where-Object { -not (Test-IsBot $_) }
 
 foreach ($c in $commitList) {
   $detail = Get-CommitFiles -Sha $c.sha
@@ -457,7 +414,6 @@ foreach ($c in $commitList) {
 
   foreach ($f in $detail.files) {
     if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
-    if (Test-IsTinyDocsChange $f.additions $f.deletions @($f)) { continue }
 
     if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
     $groups[$f.filename] += [pscustomobject]@{
@@ -529,7 +485,7 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $display   = Get-DocDisplayName $file
   $kind      = Get-SessionKind -items $arr -summary ($summary ?? "")
   $kindPill  = KindToPillHtml $kind
-  $cardTitle = "AKS – $display — $kind"
+  $cardTitle = "AKS - $display"
 
   $section = @"
 <div class="aks-doc-update">
@@ -679,8 +635,7 @@ $html = @"
 
   <div class="aks-intro">
     <p>Welcome! This tool automatically tracks and summarizes meaningful updates to the Azure Kubernetes Service (AKS) documentation and releases.</p>
-    <p>It filters out typos, minor edits, and bot changes, so you only see what really matters.<br>
-    Check back often as data is automatically refreshed every 12 hours.</p>
+    <p>It relies on AI to filter out trivial edits, and surfaces only substantive changes.</p>
   </div>
 
   <div class="aks-tabs">
