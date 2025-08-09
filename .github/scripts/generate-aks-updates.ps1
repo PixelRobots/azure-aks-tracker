@@ -509,8 +509,20 @@ if ($PreferProvider -and $bundles.Count -gt 0) {
 
 $aiList = @()
 $aiDict = @{}
-if ($aiVerdictsBundle.PSObject.Properties['ordered']) { $aiList = $aiVerdictsBundle.ordered }
-if ($aiVerdictsBundle.PSObject.Properties['byKey'])    { $aiDict = $aiVerdictsBundle.byKey }
+# Read results from hashtable correctly
+if ($aiVerdictsBundle -is [hashtable] -and $aiVerdictsBundle.ContainsKey('ordered')) {
+  $aiList = @($aiVerdictsBundle['ordered'])
+} else {
+  $aiList = @()
+}
+
+if ($aiVerdictsBundle -is [hashtable] -and $aiVerdictsBundle.ContainsKey('byKey')) {
+  $aiDict = $aiVerdictsBundle['byKey']
+} else {
+  $aiDict = @{}
+}
+
+Log "Pulled AI ordered count: $(@($aiList).Count)"
 
 # --- Diagnostics: dump raw AI response count + sample keys
 $rawCount = @($aiList).Count
