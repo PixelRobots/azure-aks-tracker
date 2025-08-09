@@ -748,22 +748,53 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 $updateCount = @($aiVerdicts.ordered).Count + $forced.Count
 
+$formShortcode = '[email-subscribers-form id="2"]'
+
+
 $html = @"
+<style>
+  /* Minimal styles for the intro grid + signup card */
+  .aks-intro-grid{
+    display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,.9fr);
+    gap:16px; align-items:start; margin-bottom:12px;
+  }
+  @media (max-width: 800px){ .aks-intro-grid{ grid-template-columns:1fr; } }
+  .aks-signup-card{
+    border:1px solid #2f3540; background:#18181b; color:#fff;
+    border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.07);
+  }
+  .aks-signup-card h3{ margin:0 0 .5rem; font-size:1.05rem; }
+  .aks-signup-card p{ margin:.25rem 0 0; font-size:.9rem; color:#a1a1aa; }
+</style>
+
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
-    <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and release notes.</p>
-    <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
-    <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
-    <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
-    <p><strong>With this tracker, you can:</strong></p>
-    <ul>
-      <li>Quickly scan meaningful AKS and Fleet documentation changes from the past 7 days</li>
-      <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
-    </ul>
-  </div>
+    <div class="aks-intro-grid">
+      <!-- Left: existing intro content -->
+      <div class="aks-intro-text">
+        <h1>About this tracker</h1>
+        <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and release notes.</p>
+        <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
+        <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
+        <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
+        <p><strong>With this tracker, you can:</strong></p>
+        <ul>
+          <li>Quickly scan meaningful AKS and Fleet documentation changes from the past 7 days</li>
+          <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
+        </ul>
+      </div>
 
+      <!-- Right: signup -->
+      <aside class="aks-intro-signup">
+        <div class="aks-signup-card">
+          <h3>Get the Weekly AKS Docs Digest</h3>
+          $formShortcode
+          <p>No spam. Unsubscribe anytime.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
 
   <div class="aks-tabs">
     <nav class="aks-tabs-nav">
