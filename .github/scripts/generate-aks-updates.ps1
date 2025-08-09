@@ -554,7 +554,7 @@ if ($bad.Count -gt 0) {
   Log "AI returned $($bad.Count) item(s) with unknown key(s) after normalization. Sample: $samples"
 }
 
-$aiList = @($normed)
+$aiList = $normed.ToArray()
 
 # --- De-dupe by key (prefer highest score)
 if ($aiList.Count -gt 0) {
