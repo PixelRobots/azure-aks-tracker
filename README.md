@@ -1,103 +1,134 @@
 # Azure AKS Documentation & Release Tracker
 
-Welcome to the Azure AKS Tracker by PixelRobots! 🚀
+Stay on top of meaningful changes to **Azure Kubernetes Service (AKS)** and **Kubernetes Fleet Manager** docs and releases.
+This project fetches updates from Microsoft repos, filters out noise with AI, then publishes a clean tracker page to WordPress. It also creates a weekly digest post for email.
 
-This web app helps you stay up to date with meaningful changes to Azure Kubernetes Service (AKS) documentation and releases. It automatically fetches, filters, and summarizes updates from official Microsoft GitHub repositories—so you only see what matters.
+**Live tracker:** [https://pixelrobots.co.uk/aks-docs-tracker/](https://pixelrobots.co.uk/aks-docs-tracker/)
 
----
 
-## What Does It Do?
+## What it does
 
-- **Tracks AKS Documentation Updates:**  
-  Fetches recent commits from the [MicrosoftDocs/azure-aks-docs](https://github.com/MicrosoftDocs/azure-aks-docs) repo, filters out noise (typos, bot merges, trivial edits), and groups related changes by documentation page.
-- **Monitors AKS Releases:**  
-  Pulls the latest release data from the [Azure/AKS](https://github.com/Azure/AKS) repo, including security (CVE) and regional rollout info.
-- **AI-Enhanced Summaries:**  
-  Uses AI to generate concise summaries and impact assessments for each documentation update and release.
-- **Category-Based Filtering:**  
-  Organizes updates by category (e.g., Reliability, Networking, Upgrade) for easy browsing.
-- **Tab-Based Navigation:**  
-  Switch between Documentation Updates and AKS Releases with a single click.
-- **Persistent Storage:**  
-  Caches processed updates and releases for fast reloads and offline access.
+* **Docs updates**
+  Pulls the last 7 days of activity from `MicrosoftDocs/azure-aks-docs`, groups by page, filters trivial edits, and writes AI summaries.
 
----
+* **AKS releases**
+  Fetches the latest releases from `Azure/AKS` and generates short summaries with highlights.
 
-## How It Works
+* **Publishes to WordPress**
+  Updates a single WordPress Page every 6 hours via REST API.
 
-- **Data Fetching:**  
-  Uses public GitHub APIs (no login required) to fetch commits and releases.
-- **Noise Filtering:**  
-  Applies heuristics to exclude trivial commits (e.g., typos, grammar, bot changes).
-- **Commit Grouping:**  
-  Groups related commits by documentation page for a cleaner update list.
-- **AI Summarization:**  
-  Calls an LLM to generate human-friendly summaries and impact notes for each update.
-- **Categorization:**  
-  Classifies updates/releases by topic using file paths and content.
-- **UI Components:**  
-  - **Update Cards:** Show summary, impact, category, and links.
-  - **Badges:** Indicate update categories.
-  - **Tabs:** Switch between Documentation and Releases.
-  - **Refresh Button:** Manually fetch the latest data.
-  - **Alerts/Toasts:** Show errors, loading, and status messages.
+* **Weekly email digest**
+  On Sundays at 09:00 UTC, generates a compact roundup post in a hidden category for Icegram Express to send.
 
----
 
-## Code Structure
+## How it works
 
-- `src/components/` — UI components (pages, cards, toggles, etc.)
-- `src/hooks/` — Custom React hooks (theme, mobile)
-- `src/lib/` — GitHub API logic, data processing, types, and utilities
-- `src/styles/` — Theme and global styles
-- `packages/spark-tools/` — Shared tools and utilities
+* **PowerShell script**
+  `.github/scripts/generate-aks-updates.ps1` pulls data, runs optional AI summaries, and emits:
 
----
+  * `html` for the tracker page
+  * `digest_html` and `digest_title` for the weekly post
+  * a `hash` to avoid unnecessary page updates
 
-## Getting Started
+* **GitHub Actions**
+  `.github/workflows/publish-aks-updates.yml` runs on a schedule:
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/PixelRobots/azure-aks-tracker.git
-   cd azure-aks-tracker
-   ```
+  * Every 6 hours: regenerate content and push to the WordPress Page
+  * Sundays 09:00 UTC: publish the weekly digest WordPress Post
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
 
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+## Repo layout
 
-4. Open your browser at `http://localhost:5173`
+```
+.github/
+  workflows/
+    publish-aks-updates.yml   # CI that runs the script and publishes to WP
+  scripts/
+    generate-aks-updates.ps1  # main script
+```
 
----
+## Requirements
 
-## Usage
+* A WordPress site with:
 
-- View your AKS clusters and their status.
-- Track release notes and updates.
-- Customize the dashboard to fit your workflow.
+  * Application Password for a user that can edit pages/posts
+  * A Page created for the tracker (note its numeric ID)
+  * Optional: Icegram Express for the weekly email
+  * Optional: a hidden Category for the digest (note its ID)
 
----
+* GitHub repository secrets:
+
+| Secret name                | What it is                                       |
+| -------------------------- | ------------------------------------------------ |
+| `GITHUB_TOKEN`             | Provided by GitHub Actions by default            |
+| `WP_URL`                   | Base URL, e.g. `https://pixelrobots.co.uk`       |
+| `WP_USER`                  | WordPress username                               |
+| `WP_APP_PASSWORD`          | WordPress Application Password                   |
+| `WP_PAGE_ID`               | Numeric ID of the tracker page                   |
+| `WP_WEEKLY_CATEGORY_ID`    | Numeric ID for hidden digest category (optional) |
+| `OPENAI_API_KEY`           | Only if using OpenAI summaries (optional)        |
+| `AZURE_OPENAI_APIURI`      | Only if using Azure OpenAI (optional)            |
+| `AZURE_OPENAI_KEY`         | Only if using Azure OpenAI (optional)            |
+| `AZURE_OPENAI_API_VERSION` | Only if using Azure OpenAI (optional)            |
+| `AZURE_OPENAI_DEPLOYMENT`  | Only if using Azure OpenAI (optional)            |
+
+> The script detects which AI provider is configured. If none, it still runs with simpler summaries.
+
+
+## Schedule
+
+* Page refresh: `0 */6 * * *` (every 6 hours)
+* Weekly digest: `0 9 * * 0` (Sundays 09:00 UTC)
+
+You can change these in `.github/workflows/publish-aks-updates.yml`.
+
+
+## WordPress rendering
+
+The Action wraps generated HTML in a `wp:html` block so the content is inserted as-is.
+For the weekly digest, the post is created with `status: "publish"` and the optional `categories: [<WP_WEEKLY_CATEGORY_ID>]`.
+
+If you are using Icegram Express:
+
+* Create a list and a campaign that sends the latest post from the digest category.
+* Add a signup form to your tracker page so people can subscribe.
+
+Inline form example on the tracker page:
+
+```
+[email-subscribers-form id="2"]
+```
+
+Place it anywhere in the page HTML where you want the form to render.
+
+
+## Local testing
+
+You can run the script locally to see the generated JSON:
+
+```powershell
+pwsh ./.github/scripts/generate-aks-updates.ps1 | Set-Content out.json
+Get-Content out.json -Raw | ConvertFrom-Json | Format-List *
+```
+
+To eyeball the HTML, write it out:
+
+```powershell
+$j = Get-Content out.json -Raw | ConvertFrom-Json
+$j.html        | Set-Content content.html -Encoding UTF8
+$j.digest_html | Set-Content digest.html  -Encoding UTF8
+```
+
+Open `content.html` in a browser to preview the structure.
 
 ## Contributing
 
-Contributions are welcome! Please fork the repo and submit a pull request. For major changes, open an issue to discuss your ideas.
+Issues and PRs welcome. If you are adding sources, filters, or layout changes, include a short note in your PR that explains the rationale and shows a before/after.
 
----
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).
 
----
 
-*Created with ❤️ by PixelRobots*
-
----
-
-Built by [pixelrobots.co.uk](https://pixelrobots.co.uk) with the help of [GitHub Spark](https://github.com/features/spark)
+Built by [pixelrobots.co.uk](https://pixelrobots.co.uk) with a little help from Open AI, GitHub Actions, and PowerShell.
