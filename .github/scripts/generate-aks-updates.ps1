@@ -558,6 +558,39 @@ foreach ($k in $groups.Keys) {
   }
 }
 
+# ---- Cull tiny text-only edits the AI kept
+$finalOrdered = New-Object System.Collections.Generic.List[object]
+foreach ($row in @($aiVerdicts.ordered)) {
+  $file = $row.file
+  $h = $heuristicsByFile[$file]
+  if (-not $h -or $h.statuses -contains 'added') { $finalOrdered.Add($row); continue }
+
+  # Recompute ADDED lines for this file
+  $addedLines = @()
+  foreach ($it in $groups[$file]) {
+    if ($it.patch) {
+      $addedLines += (($it.patch -split "`n") | Where-Object { $_ -like '+*' } | ForEach-Object { $_.Substring(1) })
+    }
+  }
+
+  # Signals that *do* justify keeping small edits
+  $addedHasAdmon   = $addedLines -match '^\s*>\s*\[\!(IMPORTANT|WARNING|CAUTION|NOTE)\]'
+  $addedHasLink    = $addedLines -match '\[[^\]]+\]\([^)]+\)'           # added link(s)
+  $addedHasVersion = ($addedLines -match '\b(v?\d+(?:\.\d+){0,2})\b')    # version numbers
+  $addedPolicyWord = ($addedLines -match '(?i)\b(deprecated|required|must|cannot|not\s+supported|preview)\b')
+
+  $isTiny = ($h.delta -lt 10) -and (-not $h.addedHasCli) -and (-not $h.addedHasFence) -and (-not $h.addedHasHead)
+
+  if ($isTiny -and -not ($addedHasAdmon -or $addedHasVersion -or $addedPolicyWord -or $addedHasLink)) {
+    # DROP: tiny, text-only, no signals
+    continue
+  }
+
+  $finalOrdered.Add($row)
+}
+
+# replace ordered list with culled version
+$aiVerdicts.ordered = $finalOrdered
 
 function Build-DeterministicSummary {
   param(
