@@ -561,60 +561,148 @@ foreach ($k in $groups.Keys) {
 
 function Build-DeterministicSummary {
   param(
-    [string]$File, 
-    [object[]]$Items  # array of per-file change objects (your $groups[$file])
+    [string]$File,
+    [object[]]$Items
   )
 
-  # If the file is newly added, use the page’s own title/lead
+  # 0) New pages: use the page's own title/lead
   $statuses = ($Items.status | Where-Object { $_ } | Select-Object -Unique)
   if ($statuses -contains 'added') {
     $s = Summarize-NewMarkdown $File
     if ($s) { return $s }
   }
 
-  # Otherwise, summarize from diff: added headings + commands + a tiny delta
-  $allPatch = ($Items.patch | Where-Object { $_ }) -join "`n"
-  $added = $allPatch -split "`n" | Where-Object { $_ -match '^\+' } | ForEach-Object { $_.Substring(1) }
-
-  # New/changed H2/H3 headings
-  $addedHeads = @()
-  foreach ($ln in $added) {
-    if ($ln -match '^\s*##+\s+(.+)$') { $addedHeads += $matches[1].Trim() }
+  # 1) Split into added/deleted lines (drop leading +/-)
+  $added   = @()
+  $deleted = @()
+  foreach ($it in $Items) {
+    if (-not $it.patch) { continue }
+    foreach ($ln in ($it.patch -split "`n")) {
+      if ($ln.StartsWith('+')) { $added   += $ln.Substring(1) }
+      elseif ($ln.StartsWith('-')) { $deleted += $ln.Substring(1) }
+    }
   }
-  $addedHeads = ($addedHeads | Select-Object -Unique | Select-Object -First 3)
 
-  # CLI/YAML cues
-  $hasCLI   = ($added -match '(?mi)^\s*(az\s+aks|kubectl|helm)\b' -or $added -match '```(?:azurecli|powershell|bash|yaml)')
-  $cmds     = @()
-  foreach ($ln in $added) {
-    if ($ln -match '(?mi)^\s*(az\s+aks[^\r\n]*)$') { $cmds += $matches[1].Trim() }
-    elseif ($ln -match '(?mi)^\s*(kubectl\s+[^\r\n]*)$') { $cmds += $matches[1].Trim() }
-    elseif ($ln -match '(?mi)^\s*(helm\s+[^\r\n]*)$') { $cmds += $matches[1].Trim() }
-  }
-  $cmds = ($cmds | Select-Object -Unique | Select-Object -First 2)
-
+  # 2) Quick facts
   $delta = (($Items | Measure-Object -Sum -Property additions).Sum +
             ($Items | Measure-Object -Sum -Property deletions).Sum)
 
-  # Compose 2–3 short sentences
-  $bits = @()
+  # 3) Signals (added-only for positive wording; deletions for “removes”)
+  # Headings
+  $addedHeads   = @(); $deletedHeads = @()
+  foreach ($ln in $added)   { if ($ln -match '^\s*##{1,}\s+(.+)$')   { $addedHeads   += $matches[1].Trim() } }
+  foreach ($ln in $deleted) { if ($ln -match '^\s*##{1,}\s+(.+)$')   { $deletedHeads += $matches[1].Trim() } }
+  $addedHeads   = $addedHeads   | Select-Object -Unique | Select-Object -First 3
+  $deletedHeads = $deletedHeads | Select-Object -Unique | Select-Object -First 3
 
-  if ($addedHeads.Count -gt 0) {
-    $bits += ("Adds/updates sections: " + ($addedHeads -join ', ') + ".")
+  # Code fences & tables
+  $fenceAdded   = ($added   -match '^\s*```(azurecli|powershell|bash|yaml|json)\s*$')
+  $fenceDeleted = ($deleted -match '^\s*```(azurecli|powershell|bash|yaml|json)\s*$')
+  $tableAdded   = ($added   -match '^\s*\|.+\|\s*$')
+  $tableDeleted = ($deleted -match '^\s*\|.+\|\s*$')
+
+  # Commands & parameters (added lines)
+  $addedCmds = @()
+  foreach ($ln in $added) {
+    if     ($ln -match '^\s*(az\s+aks[^\r\n]*)$')   { $addedCmds += $matches[1].Trim() }
+    elseif ($ln -match '^\s*(kubectl\s+[^\r\n]*)$') { $addedCmds += $matches[1].Trim() }
+    elseif ($ln -match '^\s*(helm\s+[^\r\n]*)$')    { $addedCmds += $matches[1].Trim() }
   }
-  if ($cmds.Count -gt 0) {
-    $bits += ("Updates examples (e.g. " + ($cmds[0]) + ($cmds.Count -gt 1 ? " …" : "") + ").")
-  } elseif ($hasCLI) {
-    $bits += "Adds or updates CLI/YAML examples."
+  $addedCmds = $addedCmds | Select-Object -Unique | Select-Object -First 2
+
+  # Parameters/flags and YAML keys that appear to change
+  $addedFlags   = @(); $changedYamlKeys = @()
+  foreach ($ln in $added)   { $addedFlags   += ([regex]::Matches($ln, '(?<=\s|^)--[a-z0-9-]+') | ForEach-Object { $_.Value }) }
+  $addedFlags   = $addedFlags | Select-Object -Unique | Select-Object -First 4
+
+  # Naive YAML key change detector: key: value lines added where same key appears in deletions
+  $addedKeyPairs   = @{}
+  $deletedKeyPairs = @{}
+  foreach ($ln in $added)   { if ($ln -match '^\s*([a-zA-Z0-9_.-]+)\s*:\s*(.+?)\s*$')   { $addedKeyPairs[$matches[1]] = $matches[2] } }
+  foreach ($ln in $deleted) { if ($ln -match '^\s*([a-zA-Z0-9_.-]+)\s*:\s*(.+?)\s*$')   { $deletedKeyPairs[$matches[1]] = $matches[2] } }
+  foreach ($k in $addedKeyPairs.Keys) {
+    if ($deletedKeyPairs.ContainsKey($k) -and $deletedKeyPairs[$k] -ne $addedKeyPairs[$k]) {
+      $changedYamlKeys += $k
+    }
+  }
+  $changedYamlKeys = $changedYamlKeys | Select-Object -Unique | Select-Object -First 4
+
+  # Version bumps (added vs deleted numbers)
+  function Get-Versions([string[]]$lines) {
+    $vers = @()
+    foreach ($l in $lines) {
+      foreach ($m in [regex]::Matches($l, '\b(v?\d+(?:\.\d+){0,2})\b')) { $vers += $m.Value }
+    }
+    return $vers
+  }
+  $versAdded   = Get-Versions $added
+  $versDeleted = Get-Versions $deleted
+  $versionBumps = @()
+  foreach ($va in $versAdded) {
+    foreach ($vd in $versDeleted) {
+      if ($va -ne $vd) {
+        # crude "bump" check: same major prefix or same token appears near same key
+        if ($va.Split('.')[0] -eq $vd.Split('.')[0]) { $versionBumps += ("{0} → {1}" -f $vd, $va) }
+      }
+    }
+  }
+  $versionBumps = $versionBumps | Select-Object -Unique | Select-Object -First 2
+
+  # Section keywords to highlight
+  $emphAdded = @()
+  foreach ($h in $addedHeads) {
+    if ($h -match '(?i)\b(limitations?|prerequisites?|requirements?|security|known issues?|breaking|deprecation)') { $emphAdded += $h }
+  }
+
+  # 4) Build concise summary (≈2–3 sentences)
+  $bits = New-Object System.Collections.Generic.List[string]
+
+  if ($emphAdded.Count -gt 0) {
+    $bits.Add("Adds/updates sections: " + ($emphAdded -join ', ') + ".")
+  } elseif ($addedHeads.Count -gt 0) {
+    $bits.Add("Adds/updates sections: " + ($addedHeads -join ', ') + ".")
+  }
+
+  if ($addedCmds.Count -gt 0) {
+    $snippet = $addedCmds[0]
+    $bits.Add("Updates examples (e.g. $snippet).")
+  } elseif ($fenceAdded) {
+    $bits.Add("Adds or updates CLI/YAML examples.")
+  } elseif ($tableAdded) {
+    $bits.Add("Adds or updates tables.")
+  }
+
+  if ($versionBumps.Count -gt 0) {
+    $bits.Add("Version changes: " + ($versionBumps -join ', ') + ".")
+  }
+
+  if ($addedFlags.Count -gt 0 -or $changedYamlKeys.Count -gt 0) {
+    $detail = @()
+    if ($addedFlags.Count -gt 0)     { $detail += ("flags " + (($addedFlags | ForEach-Object { "`"`$_`"" }) -join ', ')) }
+    if ($changedYamlKeys.Count -gt 0){ $detail += ("YAML keys " + (($changedYamlKeys | ForEach-Object { "`"`$_`"" }) -join ', ')) }
+    if ($detail.Count -gt 0) { $bits.Add("Parameter tweaks: " + ($detail -join '; ') + ".") }
+  }
+
+  # If nothing "added" but there were deletions, note removals
+  if ($bits.Count -eq 0 -and ($deletedHeads.Count -gt 0 -or $fenceDeleted -or $tableDeleted)) {
+    $parts = @()
+    if ($deletedHeads.Count -gt 0) { $parts += ("sections " + ($deletedHeads -join ', ')) }
+    if ($fenceDeleted)            { $parts += "examples" }
+    if ($tableDeleted)            { $parts += "tables" }
+    if ($parts.Count -gt 0) { $bits.Add("Removes " + ($parts -join ' and ') + ".") }
   }
 
   if ($bits.Count -eq 0) {
-    # fallback if nothing obvious
-    $bits += ("Meaningful content changes detected.")
+    $bits.Add("Meaningful content changes detected.")
   }
 
-  $bits += ("Net change: {0} line(s)." -f $delta)
-  return ($bits -join ' ')
+  # Always end with a tiny, unobtrusive delta
+  $bits.Add(("Net change: {0} line(s)." -f $delta))
+
+  # Join and trim to ~280 chars max
+  $summary = ($bits -join ' ')
+  if ($summary.Length -gt 280) { $summary = $summary.Substring(0,280).TrimEnd() + "…" }
+  return $summary
 }
 
 # ===== Build AI input with enough signal for filtering =====
