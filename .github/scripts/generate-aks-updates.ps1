@@ -14,8 +14,7 @@ if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 $PreferProvider = if ($env:OpenAIKey) { 'OpenAI' } elseif ($env:AZURE_OPENAI_APIURI -and $env:AZURE_OPENAI_KEY -and $env:AZURE_OPENAI_API_VERSION -and $env:AZURE_OPENAI_DEPLOYMENT) { 'AzureOpenAI' } else { '' }
 
 # Docs window: last 7 days from UTC midnight
-$now = [DateTime]::UtcNow
-$sinceMidnightUtc = (Get-Date -Date $now.ToString("yyyy-MM-dd") -AsUTC).AddDays(-7)
+$sinceMidnightUtc = ([DateTime]::UtcNow.Date).AddDays(-7)
 $SINCE_ISO = $sinceMidnightUtc.ToString("o")
 
 # Releases source (GitHub Releases)
@@ -62,7 +61,7 @@ function Parse-YamlFrontMatter([string]$md) {
   # returns @{ title=""; description="" } if front matter exists, else empty values
   $o = @{ title=""; description="" }
   if (-not $md) { return $o }
-  $m = [regex]::Match($md, '^(?:\uFEFF)?---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?$', 'Multiline')
+  $m = [regex]::Match($md, '^(?:\uFEFF)?---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]', 'Multiline')
   if (-not $m.Success) { return $o }
   $yaml = $m.Groups[1].Value
   $title = [regex]::Match($yaml, '^\s*title\s*:\s*(.+)$', 'Multiline').Groups[1].Value.Trim()
@@ -223,23 +222,28 @@ function KindToPillHtml([string]$kind) {
 # FETCH PRs MERGED LAST 7 DAYS (no pre-AI filtering)
 # =========================
 function Get-RecentMergedPRs {
-  $all = @()
-  for ($page = 1; $page -le 5; $page++) {
-    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=50&page=$page"
+  $all = @(); $page = 1
+  do {
+    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
     $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     if (-not $resp) { break }
-    foreach ($pr in $resp) {
-      if ($pr.merged_at -and ([DateTime]::Parse($pr.merged_at).ToUniversalTime() -ge $sinceMidnightUtc)) {
-        $all += $pr
-      }
-    }
-    if ($resp.Count -lt 50) { break }
-  }
+    $all += ($resp | Where-Object { $_.merged_at -and ([datetime]::Parse($_.merged_at).ToUniversalTime() -ge $sinceMidnightUtc) })
+    $lastUpdated = [datetime]::Parse(($resp | Select-Object -Last 1).updated_at).ToUniversalTime()
+    $page++
+  } while ($resp.Count -eq 100 -and $lastUpdated -ge $sinceMidnightUtc)
   return $all
 }
+
 function Get-PRFiles($Number) {
-  $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files"
-  Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+  $all = @()
+  for ($page = 1; $page -le 50; $page++) {
+    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$Number/files?per_page=100&page=$page"
+    $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    if (-not $resp) { break }
+    $all += $resp
+    if ($resp.Count -lt 100) { break }
+  }
+  return $all
 }
 
 # =========================
@@ -514,6 +518,24 @@ foreach ($c in $commitList) {
   }
 }
 
+# ---- Heuristics per file (delta/CLI/headings) for guardrails
+$heuristicsByFile = @{}
+foreach ($k in $groups.Keys) {
+  $items = $groups[$k]
+  $delta = (($items | Measure-Object -Sum -Property additions).Sum +
+            ($items | Measure-Object -Sum -Property deletions).Sum)
+  $patchAll = ($items.patch | Where-Object { $_ }) -join "`n"
+  $hasCli   = $patchAll -match '(?mi)^\+\s*(az\s+aks|kubectl|helm)\b|```azurecli|```powershell|```bash|```yaml'
+  $hasHead  = $patchAll -match '(?m)^\+\s*#{2,}\s+\S'
+  $heuristicsByFile[$k] = [pscustomobject]@{
+    delta     = [int]$delta
+    hasCli    = [bool]$hasCli
+    hasHead   = [bool]$hasHead
+    statuses  = ($items.status | Where-Object { $_ } | Select-Object -Unique)
+    subjects  = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+  }
+}
+
 # ===== Build AI input with enough signal for filtering =====
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
@@ -575,6 +597,44 @@ if ($forced.Count -gt 0) {
   $aiVerdicts.ordered += $forced
   foreach ($f in $forced) { $aiVerdicts.byFile[$f.file] = @{ summary=$f.summary; category=$f.category; score=$f.score } }
 }
+
+# ---- Strong-keep: big or obviously meaningful edits (even if AI skipped)
+$strong = New-Object System.Collections.Generic.List[object]
+foreach ($k in $groups.Keys) {
+  if ($aiKeptSet.Contains($k)) { continue }
+
+  $h = $heuristicsByFile[$k]
+  if (-not $h) { continue }
+
+  # Heuristic: keep if large delta OR CLI/Helm/kubectl/YAML added OR new headings
+  if ($h.delta -ge 30 -or $h.hasCli -or $h.hasHead) {
+    # Lightweight summary from subjects + delta
+    $subjects = ($h.subjects -join '; ') ; if (-not $subjects) { $subjects = "Meaningful content changes" }
+    $summary  = ("{0}. Net change: {1} line(s)." -f $subjects, $h.delta)
+    $strong.Add([pscustomobject]@{
+      file     = $k
+      summary  = $summary
+      category = Compute-Category $k
+      score    = 0.8
+    }) | Out-Null
+  }
+}
+
+if ($strong.Count -gt 0) {
+  Log "Strong-keeping $($strong.Count) modified page(s) the AI skipped."
+  # Append to ordered + map; preserve existing order, then add strong keeps by recency
+  $strongOrdered = @(
+    $strong | Sort-Object {
+      ($groups[$_.file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
+    } -Descending
+  )
+  $aiVerdicts.ordered += $strongOrdered
+  foreach ($s in $strongOrdered) {
+    $aiVerdicts.byFile[$s.file] = @{ summary=$s.summary; category=$s.category; score=$s.score }
+    [void]$aiKeptSet.Add($s.file)
+  }
+}
+
 
 # Render DOCS sections — ONLY what AI kept, preserving AI order
 $sections = New-Object System.Collections.Generic.List[string]
