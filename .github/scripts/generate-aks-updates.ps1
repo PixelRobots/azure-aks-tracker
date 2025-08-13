@@ -379,7 +379,7 @@ OUTPUT: Return ONLY a JSON array of KEPT items in desired display order:
     $ordered = @()
     $byFile = @{}
     foreach ($i in $arr) {
-      if (-not $i.file) { continue }
+      if (-not $i -or -not $i.PSObject.Properties['file'] -or [string]::IsNullOrWhiteSpace($i.file)) { continue }
       $ordered += $i
       $byFile[$i.file] = @{
         summary  = $i.summary
@@ -558,14 +558,48 @@ foreach ($k in $groups.Keys) {
   }
 }
 
-# ---- Cull tiny text-only edits the AI kept
+# ---- Cull tiny text-only edits the AI kept (defensive)
 $finalOrdered = New-Object System.Collections.Generic.List[object]
+
 foreach ($row in @($aiVerdicts.ordered)) {
-  $file = $row.file
+  # Skip null rows or rows without a "file" property
+  if (-not $row -or -not $row.PSObject.Properties['file'] -or [string]::IsNullOrWhiteSpace($row.file)) { continue }
+
+  $file = [string]$row.file.Trim()
+
+  # If we somehow don't have this file in groups, keep it (or "continue" if you prefer to drop)
+  if (-not $groups.ContainsKey($file)) { $finalOrdered.Add($row); continue }
+
+  # Try get precomputed heuristics; if missing, compute a minimal set on the fly
   $h = $heuristicsByFile[$file]
+  if (-not $h) {
+    $items = $groups[$file]
+    $delta = (($items | Measure-Object -Sum -Property additions).Sum +
+              ($items | Measure-Object -Sum -Property deletions).Sum)
+
+    $addedLines = @()
+    foreach ($it in $items) {
+      if ($it.patch) {
+        $addedLines += (($it.patch -split "`n") | Where-Object { $_ -like '+*' } | ForEach-Object { $_.Substring(1) })
+      }
+    }
+
+    $addedHasCli   = $addedLines -match '(?mi)^\s*(az\s+aks|kubectl|helm)\b'
+    $addedHasFence = $addedLines -match '^\s*```(azurecli|powershell|bash|yaml)\s*$'
+    $addedHasHead  = $addedLines -match '^\s*#{2,}\s+\S'
+
+    $h = [pscustomobject]@{
+      delta         = [int]$delta
+      addedHasCli   = [bool]$addedHasCli
+      addedHasFence = [bool]$addedHasFence
+      addedHasHead  = [bool]$addedHasHead
+      statuses      = ($items.status | Where-Object { $_ } | Select-Object -Unique)
+    }
+  }
+
   if (-not $h -or $h.statuses -contains 'added') { $finalOrdered.Add($row); continue }
 
-  # Recompute ADDED lines for this file
+  # Recompute ADDED lines for this file (for policy/links/version checks)
   $addedLines = @()
   foreach ($it in $groups[$file]) {
     if ($it.patch) {
@@ -573,23 +607,21 @@ foreach ($row in @($aiVerdicts.ordered)) {
     }
   }
 
-  # Signals that *do* justify keeping small edits
   $addedHasAdmon   = $addedLines -match '^\s*>\s*\[\!(IMPORTANT|WARNING|CAUTION|NOTE)\]'
-  $addedHasLink    = $addedLines -match '\[[^\]]+\]\([^)]+\)'           # added link(s)
-  $addedHasVersion = ($addedLines -match '\b(v?\d+(?:\.\d+){0,2})\b')    # version numbers
-  $addedPolicyWord = ($addedLines -match '(?i)\b(deprecated|required|must|cannot|not\s+supported|preview)\b')
+  $addedHasLink    = $addedLines -match '\[[^\]]+\]\([^)]+\)'
+  $addedHasVersion = $addedLines -match '\b(v?\d+(?:\.\d+){0,2})\b'
+  $addedPolicyWord = $addedLines -match '(?i)\b(deprecated|required|must|cannot|not\s+supported|preview)\b'
 
   $isTiny = ($h.delta -lt 10) -and (-not $h.addedHasCli) -and (-not $h.addedHasFence) -and (-not $h.addedHasHead)
 
   if ($isTiny -and -not ($addedHasAdmon -or $addedHasVersion -or $addedPolicyWord -or $addedHasLink)) {
-    # DROP: tiny, text-only, no signals
+    # drop tiny text-only edit
     continue
   }
 
   $finalOrdered.Add($row)
 }
 
-# replace ordered list with culled version
 $aiVerdicts.ordered = $finalOrdered
 
 function Build-DeterministicSummary {
