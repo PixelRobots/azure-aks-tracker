@@ -559,19 +559,29 @@ foreach ($k in $groups.Keys) {
 }
 
 # ---- Cull tiny text-only edits the AI kept (defensive)
+
+# 0) Safely read the current 'ordered' list (works for both hashtable/PSCustomObject)
+$orderedIn = @()
+if ($aiVerdicts -is [System.Collections.IDictionary]) {
+  if ($aiVerdicts.Contains('ordered') -and $aiVerdicts['ordered']) { $orderedIn = @($aiVerdicts['ordered']) }
+} elseif ($aiVerdicts -and $aiVerdicts.PSObject.Properties['ordered']) {
+  $orderedIn = @($aiVerdicts.ordered)
+}
+
 $finalOrdered = New-Object System.Collections.Generic.List[object]
 
-foreach ($row in @($aiVerdicts.ordered)) {
+foreach ($row in $orderedIn) {
   # Skip null rows or rows without a "file" property
   if (-not $row -or -not $row.PSObject.Properties['file'] -or [string]::IsNullOrWhiteSpace($row.file)) { continue }
 
   $file = [string]$row.file.Trim()
 
-  # If we somehow don't have this file in groups, keep it (or "continue" if you prefer to drop)
+  # If we don't have this file in groups, keep it (or 'continue' if you'd rather drop)
   if (-not $groups.ContainsKey($file)) { $finalOrdered.Add($row); continue }
 
-  # Try get precomputed heuristics; if missing, compute a minimal set on the fly
-  $h = $heuristicsByFile[$file]
+  # Try precomputed heuristics; if missing, compute a minimal set on the fly
+  $h = $null
+  if ($heuristicsByFile.ContainsKey($file)) { $h = $heuristicsByFile[$file] }
   if (-not $h) {
     $items = $groups[$file]
     $delta = (($items | Measure-Object -Sum -Property additions).Sum +
@@ -622,7 +632,20 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $finalOrdered.Add($row)
 }
 
-$aiVerdicts.ordered = $finalOrdered
+# 1) Safely write the new 'ordered' list back
+$orderedArr = @($finalOrdered.ToArray())
+if ($aiVerdicts -is [System.Collections.IDictionary]) {
+  $aiVerdicts['ordered'] = $orderedArr
+} elseif ($aiVerdicts) {
+  if ($aiVerdicts.PSObject.Properties['ordered']) {
+    $aiVerdicts.ordered = $orderedArr
+  } else {
+    $aiVerdicts | Add-Member -NotePropertyName ordered -NotePropertyValue $orderedArr -Force
+  }
+} else {
+  # If aiVerdicts somehow null, recreate minimal structure
+  $aiVerdicts = [pscustomobject]@{ ordered = $orderedArr; byFile = @{} }
+}
 
 function Build-DeterministicSummary {
   param(
