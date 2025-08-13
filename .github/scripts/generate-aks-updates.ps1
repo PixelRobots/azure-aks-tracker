@@ -418,7 +418,7 @@ You are summarizing AKS GitHub Releases.
 The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
 Return ONLY JSON:
 [
-  { "id": <same id>, "summary": "1–2 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."] }
+  { "id": <same id>, "summary": "2-4 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."] }
 ]
 Plain strings only.
 "@
@@ -536,6 +536,64 @@ foreach ($k in $groups.Keys) {
   }
 }
 
+function Build-DeterministicSummary {
+  param(
+    [string]$File, 
+    [object[]]$Items  # array of per-file change objects (your $groups[$file])
+  )
+
+  # If the file is newly added, use the page’s own title/lead
+  $statuses = ($Items.status | Where-Object { $_ } | Select-Object -Unique)
+  if ($statuses -contains 'added') {
+    $s = Summarize-NewMarkdown $File
+    if ($s) { return $s }
+  }
+
+  # Otherwise, summarize from diff: added headings + commands + a tiny delta
+  $allPatch = ($Items.patch | Where-Object { $_ }) -join "`n"
+  $added = $allPatch -split "`n" | Where-Object { $_ -match '^\+' } | ForEach-Object { $_.Substring(1) }
+
+  # New/changed H2/H3 headings
+  $addedHeads = @()
+  foreach ($ln in $added) {
+    if ($ln -match '^\s*##+\s+(.+)$') { $addedHeads += $matches[1].Trim() }
+  }
+  $addedHeads = ($addedHeads | Select-Object -Unique | Select-Object -First 3)
+
+  # CLI/YAML cues
+  $hasCLI   = ($added -match '(?mi)^\s*(az\s+aks|kubectl|helm)\b' -or $added -match '```(?:azurecli|powershell|bash|yaml)')
+  $cmds     = @()
+  foreach ($ln in $added) {
+    if ($ln -match '(?mi)^\s*(az\s+aks[^\r\n]*)$') { $cmds += $matches[1].Trim() }
+    elseif ($ln -match '(?mi)^\s*(kubectl\s+[^\r\n]*)$') { $cmds += $matches[1].Trim() }
+    elseif ($ln -match '(?mi)^\s*(helm\s+[^\r\n]*)$') { $cmds += $matches[1].Trim() }
+  }
+  $cmds = ($cmds | Select-Object -Unique | Select-Object -First 2)
+
+  $delta = (($Items | Measure-Object -Sum -Property additions).Sum +
+            ($Items | Measure-Object -Sum -Property deletions).Sum)
+
+  # Compose 2–3 short sentences
+  $bits = @()
+
+  if ($addedHeads.Count -gt 0) {
+    $bits += ("Adds/updates sections: " + ($addedHeads -join ', ') + ".")
+  }
+  if ($cmds.Count -gt 0) {
+    $bits += ("Updates examples (e.g. " + ($cmds[0]) + ($cmds.Count -gt 1 ? " …" : "") + ").")
+  } elseif ($hasCLI) {
+    $bits += "Adds or updates CLI/YAML examples."
+  }
+
+  if ($bits.Count -eq 0) {
+    # fallback if nothing obvious
+    $bits += ("Meaningful content changes detected.")
+  }
+
+  $bits += ("Net change: {0} line(s)." -f $delta)
+  return ($bits -join ' ')
+}
+
 # ===== Build AI input with enough signal for filtering =====
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
@@ -582,7 +640,7 @@ $forced = New-Object System.Collections.Generic.List[object]
 foreach ($k in $groups.Keys) {
   $statuses = ($groups[$k].status | Where-Object { $_ } | Select-Object -Unique)
   if ($statuses -contains 'added' -and -not $aiKeptSet.Contains($k)) {
-    $forcedSummary = Summarize-NewMarkdown $k   # <<<<<< new
+    $forcedSummary = Build-DeterministicSummary -File $k -Items $groups[$k]
     $forced.Add([pscustomobject]@{
       file     = $k
       summary  = $forcedSummary
@@ -610,10 +668,10 @@ foreach ($k in $groups.Keys) {
   if ($h.delta -ge 30 -or $h.hasCli -or $h.hasHead) {
     # Lightweight summary from subjects + delta
     $subjects = ($h.subjects -join '; ') ; if (-not $subjects) { $subjects = "Meaningful content changes" }
-    $summary  = ("{0}. Net change: {1} line(s)." -f $subjects, $h.delta)
+    $forcedSummary = Build-DeterministicSummary -File $k -Items $groups[$k]
     $strong.Add([pscustomobject]@{
       file     = $k
-      summary  = $summary
+      summary  = $forcedSummary
       category = Compute-Category $k
       score    = 0.8
     }) | Out-Null
