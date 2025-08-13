@@ -558,95 +558,6 @@ foreach ($k in $groups.Keys) {
   }
 }
 
-# ---- Cull tiny text-only edits the AI kept (defensive)
-
-# 0) Safely read the current 'ordered' list (works for both hashtable/PSCustomObject)
-$orderedIn = @()
-if ($aiVerdicts -is [System.Collections.IDictionary]) {
-  if ($aiVerdicts.Contains('ordered') -and $aiVerdicts['ordered']) { $orderedIn = @($aiVerdicts['ordered']) }
-} elseif ($aiVerdicts -and $aiVerdicts.PSObject.Properties['ordered']) {
-  $orderedIn = @($aiVerdicts.ordered)
-}
-
-$finalOrdered = New-Object System.Collections.Generic.List[object]
-
-foreach ($row in $orderedIn) {
-  # Skip null rows or rows without a "file" property
-  if (-not $row -or -not $row.PSObject.Properties['file'] -or [string]::IsNullOrWhiteSpace($row.file)) { continue }
-
-  $file = [string]$row.file.Trim()
-
-  # If we don't have this file in groups, keep it (or 'continue' if you'd rather drop)
-  if (-not $groups.ContainsKey($file)) { $finalOrdered.Add($row); continue }
-
-  # Try precomputed heuristics; if missing, compute a minimal set on the fly
-  $h = $null
-  if ($heuristicsByFile.ContainsKey($file)) { $h = $heuristicsByFile[$file] }
-  if (-not $h) {
-    $items = $groups[$file]
-    $delta = (($items | Measure-Object -Sum -Property additions).Sum +
-              ($items | Measure-Object -Sum -Property deletions).Sum)
-
-    $addedLines = @()
-    foreach ($it in $items) {
-      if ($it.patch) {
-        $addedLines += (($it.patch -split "`n") | Where-Object { $_ -like '+*' } | ForEach-Object { $_.Substring(1) })
-      }
-    }
-
-    $addedHasCli   = $addedLines -match '(?mi)^\s*(az\s+aks|kubectl|helm)\b'
-    $addedHasFence = $addedLines -match '^\s*```(azurecli|powershell|bash|yaml)\s*$'
-    $addedHasHead  = $addedLines -match '^\s*#{2,}\s+\S'
-
-    $h = [pscustomobject]@{
-      delta         = [int]$delta
-      addedHasCli   = [bool]$addedHasCli
-      addedHasFence = [bool]$addedHasFence
-      addedHasHead  = [bool]$addedHasHead
-      statuses      = ($items.status | Where-Object { $_ } | Select-Object -Unique)
-    }
-  }
-
-  if (-not $h -or $h.statuses -contains 'added') { $finalOrdered.Add($row); continue }
-
-  # Recompute ADDED lines for this file (for policy/links/version checks)
-  $addedLines = @()
-  foreach ($it in $groups[$file]) {
-    if ($it.patch) {
-      $addedLines += (($it.patch -split "`n") | Where-Object { $_ -like '+*' } | ForEach-Object { $_.Substring(1) })
-    }
-  }
-
-  $addedHasAdmon   = $addedLines -match '^\s*>\s*\[\!(IMPORTANT|WARNING|CAUTION|NOTE)\]'
-  $addedHasLink    = $addedLines -match '\[[^\]]+\]\([^)]+\)'
-  $addedHasVersion = $addedLines -match '\b(v?\d+(?:\.\d+){0,2})\b'
-  $addedPolicyWord = $addedLines -match '(?i)\b(deprecated|required|must|cannot|not\s+supported|preview)\b'
-
-  $isTiny = ($h.delta -lt 10) -and (-not $h.addedHasCli) -and (-not $h.addedHasFence) -and (-not $h.addedHasHead)
-
-  if ($isTiny -and -not ($addedHasAdmon -or $addedHasVersion -or $addedPolicyWord -or $addedHasLink)) {
-    # drop tiny text-only edit
-    continue
-  }
-
-  $finalOrdered.Add($row)
-}
-
-# 1) Safely write the new 'ordered' list back
-$orderedArr = @($finalOrdered.ToArray())
-if ($aiVerdicts -is [System.Collections.IDictionary]) {
-  $aiVerdicts['ordered'] = $orderedArr
-} elseif ($aiVerdicts) {
-  if ($aiVerdicts.PSObject.Properties['ordered']) {
-    $aiVerdicts.ordered = $orderedArr
-  } else {
-    $aiVerdicts | Add-Member -NotePropertyName ordered -NotePropertyValue $orderedArr -Force
-  }
-} else {
-  # If aiVerdicts somehow null, recreate minimal structure
-  $aiVerdicts = [pscustomobject]@{ ordered = $orderedArr; byFile = @{} }
-}
-
 function Build-DeterministicSummary {
   param(
     [string]$File,
@@ -887,6 +798,95 @@ if ($strong.Count -gt 0) {
   }
 }
 
+# ---- Cull tiny text-only edits the AI kept (defensive)
+
+# 0) Safely read the current 'ordered' list (works for both hashtable/PSCustomObject)
+$orderedIn = @()
+if ($aiVerdicts -is [System.Collections.IDictionary]) {
+  if ($aiVerdicts.Contains('ordered') -and $aiVerdicts['ordered']) { $orderedIn = @($aiVerdicts['ordered']) }
+} elseif ($aiVerdicts -and $aiVerdicts.PSObject.Properties['ordered']) {
+  $orderedIn = @($aiVerdicts.ordered)
+}
+
+$finalOrdered = New-Object System.Collections.Generic.List[object]
+
+foreach ($row in $orderedIn) {
+  # Skip null rows or rows without a "file" property
+  if (-not $row -or -not $row.PSObject.Properties['file'] -or [string]::IsNullOrWhiteSpace($row.file)) { continue }
+
+  $file = [string]$row.file.Trim()
+
+  # If we don't have this file in groups, keep it (or 'continue' if you'd rather drop)
+  if (-not $groups.ContainsKey($file)) { $finalOrdered.Add($row); continue }
+
+  # Try precomputed heuristics; if missing, compute a minimal set on the fly
+  $h = $null
+  if ($heuristicsByFile.ContainsKey($file)) { $h = $heuristicsByFile[$file] }
+  if (-not $h) {
+    $items = $groups[$file]
+    $delta = (($items | Measure-Object -Sum -Property additions).Sum +
+              ($items | Measure-Object -Sum -Property deletions).Sum)
+
+    $addedLines = @()
+    foreach ($it in $items) {
+      if ($it.patch) {
+        $addedLines += (($it.patch -split "`n") | Where-Object { $_ -like '+*' } | ForEach-Object { $_.Substring(1) })
+      }
+    }
+
+    $addedHasCli   = $addedLines -match '(?mi)^\s*(az\s+aks|kubectl|helm)\b'
+    $addedHasFence = $addedLines -match '^\s*```(azurecli|powershell|bash|yaml)\s*$'
+    $addedHasHead  = $addedLines -match '^\s*#{2,}\s+\S'
+
+    $h = [pscustomobject]@{
+      delta         = [int]$delta
+      addedHasCli   = [bool]$addedHasCli
+      addedHasFence = [bool]$addedHasFence
+      addedHasHead  = [bool]$addedHasHead
+      statuses      = ($items.status | Where-Object { $_ } | Select-Object -Unique)
+    }
+  }
+
+  if (-not $h -or $h.statuses -contains 'added') { $finalOrdered.Add($row); continue }
+
+  # Recompute ADDED lines for this file (for policy/links/version checks)
+  $addedLines = @()
+  foreach ($it in $groups[$file]) {
+    if ($it.patch) {
+      $addedLines += (($it.patch -split "`n") | Where-Object { $_ -like '+*' } | ForEach-Object { $_.Substring(1) })
+    }
+  }
+
+  $addedHasAdmon   = $addedLines -match '^\s*>\s*\[\!(IMPORTANT|WARNING|CAUTION|NOTE)\]'
+  $addedHasLink    = $addedLines -match '\[[^\]]+\]\([^)]+\)'
+  $addedHasVersion = $addedLines -match '\b(v?\d+(?:\.\d+){0,2})\b'
+  $addedPolicyWord = $addedLines -match '(?i)\b(deprecated|required|must|cannot|not\s+supported|preview)\b'
+
+  $isTiny = ($h.delta -lt 10) -and (-not $h.addedHasCli) -and (-not $h.addedHasFence) -and (-not $h.addedHasHead)
+
+  if ($isTiny -and -not ($addedHasAdmon -or $addedHasVersion -or $addedPolicyWord -or $addedHasLink)) {
+    # drop tiny text-only edit
+    continue
+  }
+
+  $finalOrdered.Add($row)
+}
+
+# 1) Safely write the new 'ordered' list back
+$orderedArr = @($finalOrdered.ToArray())
+if ($aiVerdicts -is [System.Collections.IDictionary]) {
+  $aiVerdicts['ordered'] = $orderedArr
+} elseif ($aiVerdicts) {
+  if ($aiVerdicts.PSObject.Properties['ordered']) {
+    $aiVerdicts.ordered = $orderedArr
+  } else {
+    $aiVerdicts | Add-Member -NotePropertyName ordered -NotePropertyValue $orderedArr -Force
+  }
+} else {
+  # If aiVerdicts somehow null, recreate minimal structure
+  $aiVerdicts = [pscustomobject]@{ ordered = $orderedArr; byFile = @{} }
+}
+
 # Render DOCS sections — ONLY what AI kept, preserving AI order
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($row in @($aiVerdicts.ordered)) {
@@ -1057,7 +1057,7 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels)
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = @($aiVerdicts.ordered).Count + $forced.Count
+$updateCount = @($aiVerdicts.ordered).Count
 
 $formShortcode = '[email-subscribers-form id="2"]'
 
