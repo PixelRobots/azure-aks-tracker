@@ -554,13 +554,23 @@ function Get-ReleaseSummariesViaAssistant {
       Log "Releases VS status: $($vs.status)"
     } while ($vs.status -ne 'completed')
 
-    $instructions = @"
+$instructions = @"
 You are summarizing AKS GitHub Releases.
 The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
+
 Return ONLY JSON:
 [
-  { "id": <same id>, "summary": "1–2 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."] }
+  { "id": <same id>, "summary": "2-3 sentences",
+    "breaking_changes": ["..."],
+    "key_features": ["..."],
+    "good_to_know": ["..."] }
 ]
+
+Requirements:
+- For each of breaking_changes, key_features, and good_to_know, return **2-5 concise items** when the release body provides enough evidence.
+- If the body supports fewer than 2 real items for a section, include only the justified items (0 or 1) and leave the remainder out — **do not invent** or paraphrase generic statements to fill a quota.
+- Items must be short, plain strings (no markdown).
+- Do not repeat the summary content verbatim in the lists.
 Plain strings only.
 "@
 
