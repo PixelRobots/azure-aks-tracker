@@ -566,13 +566,27 @@ Return ONLY JSON:
     "good_to_know": ["..."] }
 ]
 
-Requirements:
-- For each of breaking_changes, key_features, and good_to_know, return **2-5 concise items** when the release body provides enough evidence.
-- If the body supports fewer than 2 real items for a section, include only the justified items (0 or 1) and leave the remainder out — **do not invent** or paraphrase generic statements to fill a quota.
-- Items must be short, plain strings (no markdown).
+Extraction rules (very important):
+- Actively mine the body for *implicit* signals (not just headings). Use concrete text evidence.
+- Prefer short, standalone bullets (max ~14 words each), no markdown, no duplication across lists.
+- If an item is broad, split it into two concrete facets (e.g., “Default X -> Y” and “Action required: update flag --foo”).
+- **Target 2-5 items per list.** If the body clearly supports only 1 item for a list, return that 1 (do NOT invent).
+- Never fabricate content that isn't supported by the text.
+
+Section criteria:
+- breaking_changes: API/CLI flag removals or renames, default changes with behavioral impact,
+  deprecations requiring migration, minimum-version bumps, feature removals, config incompatibilities.
+- key_features: new features, GA announcements, preview additions, performance/scalability improvements,
+  new regions/limits, major bugfix clusters.
+- good_to_know: caveats, known issues, mitigations, upgrade/migration tips, feature gates/preview flags,
+  noteworthy docs clarifications, timeframes, rollout/region availability notes.
+
+Output format requirements:
+- Plain strings only; no markdown; no trailing punctuation unless needed.
 - Do not repeat the summary content verbatim in the lists.
-Plain strings only.
+- Ensure JSON is valid and contains all three arrays.
 "@
+
 
     $assistant = New-OAIAssistant `
       -Name "AKS-Releases-Summarizer" `
