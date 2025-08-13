@@ -522,19 +522,42 @@ foreach ($c in $commitList) {
 $heuristicsByFile = @{}
 foreach ($k in $groups.Keys) {
   $items = $groups[$k]
+
   $delta = (($items | Measure-Object -Sum -Property additions).Sum +
             ($items | Measure-Object -Sum -Property deletions).Sum)
-  $patchAll = ($items.patch | Where-Object { $_ }) -join "`n"
-  $hasCli   = $patchAll -match '(?mi)^\+\s*(az\s+aks|kubectl|helm)\b|```azurecli|```powershell|```bash|```yaml'
-  $hasHead  = $patchAll -match '(?m)^\+\s*#{2,}\s+\S'
+
+  # Collect ADDED lines (+) only from unified diffs
+  $addedLines = @()
+  foreach ($it in $items) {
+    if ($it.patch) {
+      $addedLines += (($it.patch -split "`n") |
+        Where-Object { $_ -like '+*' } |
+        ForEach-Object { $_.Substring(1) })   # drop leading '+'
+    }
+  }
+
+  # Signals derived from ADDED lines only (much stricter)
+  $addedHasCli     = $addedLines -match '(?mi)^\s*(az\s+aks|kubectl|helm)\b'
+  $addedHasFence   = $addedLines -match '^\s*```(azurecli|powershell|bash|yaml)\s*$'
+  $addedHasHead    = $addedLines -match '^\s*#{2,}\s+\S'
+
+  # True if ALL added lines are just image: tweaks inside YAML examples
+  $onlyImageTweaks = $true
+  foreach ($ln in $addedLines) {
+    if ($ln -notmatch '^\s*image\s*:') { $onlyImageTweaks = $false; break }
+  }
+
   $heuristicsByFile[$k] = [pscustomobject]@{
-    delta     = [int]$delta
-    hasCli    = [bool]$hasCli
-    hasHead   = [bool]$hasHead
-    statuses  = ($items.status | Where-Object { $_ } | Select-Object -Unique)
-    subjects  = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+    delta           = [int]$delta
+    addedHasCli     = [bool]$addedHasCli
+    addedHasFence   = [bool]$addedHasFence
+    addedHasHead    = [bool]$addedHasHead
+    onlyImageTweaks = [bool]$onlyImageTweaks
+    statuses        = ($items.status  | Where-Object { $_ } | Select-Object -Unique)
+    subjects        = ($items.pr_title| Where-Object { $_ } | Select-Object -Unique)
   }
 }
+
 
 function Build-DeterministicSummary {
   param(
@@ -656,22 +679,18 @@ if ($forced.Count -gt 0) {
   foreach ($f in $forced) { $aiVerdicts.byFile[$f.file] = @{ summary=$f.summary; category=$f.category; score=$f.score } }
 }
 
-# ---- Strong-keep: big or obviously meaningful edits (even if AI skipped)
+# ---- Strong-keep: big/meaningful edits even if AI skipped
 $strong = New-Object System.Collections.Generic.List[object]
 foreach ($k in $groups.Keys) {
   if ($aiKeptSet.Contains($k)) { continue }
+  $h = $heuristicsByFile[$k]; if (-not $h) { continue }
 
-  $h = $heuristicsByFile[$k]
-  if (-not $h) { continue }
-
-  # Heuristic: keep if large delta OR CLI/Helm/kubectl/YAML added OR new headings
-  if ($h.delta -ge 30 -or $h.hasCli -or $h.hasHead) {
-    # Lightweight summary from subjects + delta
-    $subjects = ($h.subjects -join '; ') ; if (-not $subjects) { $subjects = "Meaningful content changes" }
-    $forcedSummary = Build-DeterministicSummary -File $k -Items $groups[$k]
+  # Keep if: big delta, OR actual CLI commands added, OR a new fenced block added (but not image-only tweaks), OR new headings added
+  if ($h.delta -ge 30 -or $h.addedHasCli -or ($h.addedHasFence -and -not $h.onlyImageTweaks) -or $h.addedHasHead) {
+    $summary = Build-DeterministicSummary -File $k -Items $groups[$k]
     $strong.Add([pscustomobject]@{
       file     = $k
-      summary  = $forcedSummary
+      summary  = $summary
       category = Compute-Category $k
       score    = 0.8
     }) | Out-Null
@@ -680,7 +699,6 @@ foreach ($k in $groups.Keys) {
 
 if ($strong.Count -gt 0) {
   Log "Strong-keeping $($strong.Count) modified page(s) the AI skipped."
-  # Append to ordered + map; preserve existing order, then add strong keeps by recency
   $strongOrdered = @(
     $strong | Sort-Object {
       ($groups[$_.file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
@@ -692,7 +710,6 @@ if ($strong.Count -gt 0) {
     [void]$aiKeptSet.Add($s.file)
   }
 }
-
 
 # Render DOCS sections — ONLY what AI kept, preserving AI order
 $sections = New-Object System.Collections.Generic.List[string]
