@@ -2,7 +2,7 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # =========================
-# ENHANCED CONFIG / ENV with better filtering
+# CONFIG / ENV
 # =========================
 $Owner = "MicrosoftDocs"
 $Repo = "azure-aks-docs"
@@ -32,119 +32,19 @@ $ghHeaders = @{
 function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
 
 # =========================
-# ENHANCED FILTERING LOGIC
+# HELPERS
 # =========================
-
-# Expanded trivial patterns that should be skipped
-$TrivialPatterns = @(
-    # Author/metadata changes
-    'ms\.author:\s*\w+',
-    'author:\s*\w+',
-    'ms\.date:\s*\d{2}\/\d{2}\/\d{4}',
-    'ms\.topic:\s*\w+',
-    'ms\.service:\s*\w+',
-    'ms\.subservice:\s*\w+',
-    'ms\.reviewer:\s*\w+',
-    'ms\.custom:\s*\w+',
-    
-    # Navigation/callout additions that don't add content value
-    'nextstepaction.*Deploy and Explore',
-    'nextstepaction.*Learn more',
-    'nextstepaction.*Get started',
-    'callout.*Deploy and Explore',
-    
-    # Pure formatting/whitespace
-    '^\+\s*$',
-    '^\-\s*$',
-    '^\+\s+\[.*\]\(.*\)\s*$',  # Just link changes
-    '^\-\s+\[.*\]\(.*\)\s*$',
-    
-    # TOC/navigation only changes
-    '^\+.*\[toc\]',
-    '^\-.*\[toc\]',
-    
-    # Minor URL/link updates without content change
-    '^\+.*https?://.*$',
-    '^\-.*https?://.*$'
-)
-
-function Is-TrivialChange {
-    param([string]$PatchSample, [string[]]$Subjects, [int]$TotalLines)
-    
-    if ($TotalLines -le 3) { return $true }
-    
-    # Check if all subjects indicate trivial changes
-    $trivialSubjects = $Subjects | Where-Object {
-        $_ -match '(?i)(fix typo|update author|metadata|formatting|whitespace|minor fix|update link|update date)' -or
-        $_ -match '(?i)(deploy and explore|next step|callout|navigation)' -or
-        $_ -match '(?i)(update.*author|author.*update)' -or
-        $_ -match '(?i)(add.*nextstepaction|nextstepaction.*add)'
-    }
-    
-    if ($trivialSubjects.Count -eq $Subjects.Count -and $Subjects.Count -gt 0) {
-        return $true
-    }
-    
-    # Check patch content for trivial patterns
-    $lines = $PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' }
-    $meaningfulLines = 0
-    $trivialLines = 0
-    
-    foreach ($line in $lines) {
-        $isTrivial = $false
-        foreach ($pattern in $TrivialPatterns) {
-            if ($line -match $pattern) {
-                $isTrivial = $true
-                break
-            }
-        }
-        
-        if ($isTrivial) {
-            $trivialLines++
-        } else {
-            $meaningfulLines++
-        }
-    }
-    
-    # If more than 80% of lines are trivial, skip
-    if ($lines.Count -gt 0 -and ($trivialLines / $lines.Count) -gt 0.8) {
-        return $true
-    }
-    
-    # If only metadata/author changes detected
-    if ($PatchSample -match 'ms\.author.*\w+' -and $meaningfulLines -le 2) {
-        return $true
-    }
-    
-    return $false
-}
-
 function Should-ForceKeepModified {
-  param([int]$Adds, [int]$Dels, $Signals, [string]$PatchSample, [string[]]$Subjects)
-
-  # First check if it's trivial - if so, don't keep regardless of other signals
-  $totalLines = $Adds + $Dels
-  if (Is-TrivialChange -PatchSample $PatchSample -Subjects $Subjects -TotalLines $totalLines) {
-    return $false
-  }
+  param([int]$Adds, [int]$Dels, $Signals)
 
   $delta = $Adds + $Dels
-  
-  # Strong signals that indicate meaningful content
   if ($Signals.hasHeading -or $Signals.hasCli -or $Signals.hasAnnoKeys -or $Signals.hasSecurityCue) { return $true }
   if ($Signals.hasCodeFence -and $delta -ge 6) { return $true }
   if ($Signals.hasYamlKeys -and $delta -ge 8) { return $true }
   if ($Signals.hasYamlColon -and $delta -ge 8) { return $true }
-  
-  # Higher threshold for big edits to ensure quality
-  if ($delta -ge 30) { return $true } # Increased from 20
-  
-  # Check for substantive content changes
-  if ($PatchSample -match '(?i)(new feature|deprecat|remov|chang.*behav|updat.*command|new section)') { return $true }
-  
+  if ($delta -ge 20) { return $true } # big edits
   return $false
 }
-
 function Get-MeaningfulSignals {
   param([string]$PatchSample)
 
@@ -167,12 +67,7 @@ function Get-MeaningfulSignals {
 
   $lines = $PatchSample -split "`n"
 
-  # Only count headings that are actual content, not navigation
-  $headings = $lines | Where-Object { 
-    $_ -match '^\+\s*#{2,}\s+' -and
-    $_ -notmatch '(?i)(next steps|deploy and explore|learn more|get started)'
-  } | ForEach-Object { ($_ -replace '^\+\s*#+\s+', '').Trim() } | Select-Object -Unique
-  
+  $headings = $lines | Where-Object { $_ -match '^\+\s*#{2,}\s+' } | ForEach-Object { ($_ -replace '^\+\s*#+\s+', '').Trim() } | Select-Object -Unique
   $codeFence = $lines | Where-Object { $_ -match '^\+\s*```' }
   $cli = $lines | Where-Object { $_ -match '^\+\s*(kubectl|helm|az)\b' } | ForEach-Object { $_ -replace '^\+\s*', '' }
   $flags = ($lines | ForEach-Object { [regex]::Matches($_, '--[a-zA-Z0-9\-]+') } | ForEach-Object { $_.Value }) | Select-Object -Unique
@@ -216,7 +111,6 @@ function Get-ProductIconMeta([string]$FilePath) {
     }
   }
 }
-
 function Get-GitHubContentBase64([string]$path, [string]$ref = "main") {
   $uri = "https://api.github.com/repos/$Owner/$Repo/contents/$([uri]::EscapeDataString($path))?ref=$([uri]::EscapeDataString($ref))"
   try {
@@ -389,7 +283,7 @@ function KindToPillHtml([string]$kind) {
 }
 
 # =========================
-# FETCH PRs MERGED LAST 7 DAYS
+# FETCH PRs MERGED LAST 7 DAYS (no pre-AI filtering)
 # =========================
 function Get-RecentMergedPRs {
   $all = @()
@@ -412,7 +306,7 @@ function Get-PRFiles($Number) {
 }
 
 # =========================
-# ALSO FETCH DIRECT COMMITS (NO PR)
+# ALSO FETCH DIRECT COMMITS (NO PR) — no pre-AI filtering
 # =========================
 function Get-RecentCommits {
   param([string]$SinceIso)
@@ -463,7 +357,7 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
-# ===== Enhanced Docs AI with STRICTER FILTERING =====
+# ===== Docs AI (vector-store) — STRICT FILTER =====
 function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{ ordered = @(); byFile = @{} } }
@@ -482,46 +376,53 @@ function Get-PerFileSummariesViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You are an EXTREMELY STRICT filter for Azure AKS documentation updates. Your job is to ONLY keep changes that provide significant user value.
+You are a strict filter for Azure AKS documentation updates.
 
-INPUT JSON contains file groups with subjects, patch samples, additions/deletions counts.
+INPUT JSON contains an array of file groups. Each has:
+- file: full path (e.g., articles/aks/pci-data.md)
+- subjects: unique PR/commit titles touching this file this week
+- total_additions, total_deletions, commits_count
+- statuses[]: added/modified/removed (from diffs)
+- patch_sample: a compact unified diff subset with +/- lines only
 
-**ABSOLUTELY SKIP (DO NOT INCLUDE) if any of these apply:**
+KEEP ONLY pages with **user-facing, meaningful** changes:
+- Adds/removes sections, steps, code blocks, examples
+- Changes to parameters/flags/values in CLI or YAML
+- Version/support/limits/regions/availability changes
+- Security/networking/compatibility behavior changes
+- New page or major rewrite
 
-1. **METADATA ONLY**: Changes only to ms.author, author, ms.date, ms.reviewer, ms.custom, ms.topic, etc.
-2. **PURE NAVIGATION**: Adding "Deploy and Explore", "Next steps", "Learn more" callouts without content changes
-3. **AUTHOR REASSIGNMENT**: PRs/commits with titles like "Update author from X to Y" or "Author metadata update"
-4. **FORMATTING ONLY**: Whitespace, link formatting, minor markdown fixes
-5. **TRIVIAL ADDITIONS**: Less than 10 meaningful lines of actual content change
-6. **REPETITIVE CALLOUTS**: Multiple files getting the same navigation elements
+ALWAYS KEEP if any status is ""added"" (brand new page), even if patch_sample is empty.
 
-**ONLY KEEP if it has:**
-- New sections with actual technical content
-- Changes to commands, parameters, or configuration examples  
-- New features, deprecations, or behavioral changes
-- Security guidance updates
-- Process or step changes that affect user workflows
-- Version/support/compatibility updates
+SKIP (omit from output) if trivial:
+- Typos/grammar/formatting/whitespace/headings case
+- Front matter/ms.* metadata only
+- Link retargets, bare URL tweaks, image path changes, TOC shuffles
+- Tiny net change (<5 lines) with no headings/commands/code changed
 
-**ALWAYS KEEP:** New files (status "added") regardless of content.
+RULES:
+- When in doubt, SKIP (except ""added"" which must be kept).
+- Never invent beyond the diff/subjects.
+- Output at most one result per file.
+- Category must be one of:
+  Networking, Security, Compute, Storage, Operations, Compliance, General.
+- Summary: 2-4 factual sentences (plain text) naming sections/params if visible.
 
-Be RUTHLESS - when in doubt, SKIP IT. Users want only the most meaningful updates.
-
-OUTPUT: JSON array of kept items only:
+OUTPUT: Return ONLY a JSON array of KEPT items in desired display order:
 [
-  { "file": "<path>", "summary": "2-3 factual sentences", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0 }
+  { "file": "<same file>", "summary": "…", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0 }
 ]
 "@
 
     $assistant = New-OAIAssistant `
-      -Name "AKS-Docs-StrictFilter" `
+      -Name "AKS-Docs-Filter" `
       -Instructions $instructions `
       -Tools @{ type = 'file_search' } `
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Apply STRICT filtering. Keep only truly meaningful updates. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.05
+    $userMsg = "Filter and summarize per the instructions. Return ONLY the JSON array."
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.1
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -546,7 +447,7 @@ OUTPUT: JSON array of kept items only:
         score    = [double]($i.PSObject.Properties['score'] ? $i.score : 1.0)
       }
     }
-    Log "AI: Kept $($ordered.Count) files after STRICT filtering."
+    Log "AI: Kept $($ordered.Count) files after filtering."
     return @{ ordered = $ordered; byFile = $byFile }
   }
   catch {
@@ -564,31 +465,20 @@ function Summarize-ModifiedPatch {
     [string]$Model = "gpt-4o-mini"
   )
 
-  # Enhanced check for trivial changes
-  if (Is-TrivialChange -PatchSample $PatchSample -Subjects $Subjects -TotalLines ($PatchSample -split "`n").Count) {
-    return "Trivial update detected - likely metadata or navigation changes only."
-  }
-
   # If AI available, do a tiny targeted run
   if ($PSAIReady -and $PatchSample) {
     try {
       $instructions = @"
-Summarize documentation changes for a CHANGELOG card. Focus ONLY on user-impacting changes.
-
-IGNORE and don't mention:
-- Author/metadata changes (ms.author, ms.date, etc.)
-- "Deploy and Explore" or navigation callouts
-- Pure formatting/whitespace
-- Link updates without content changes
+Summarize documentation changes for a CHANGELOG card.
+Input provides PR/commit subjects and a unified diff excerpt (added/removed lines only).
 
 Rules:
-- 2-3 sentences, plain text, no bullets
-- Mention specific sections, commands, parameters, or features changed
-- Be specific about what users can now do differently
-- If only trivial changes detected, say "Minor documentation maintenance updates"
+- 2–3 sentences, plain text, no bullets.
+- Mention any new sections by name, config key/annotation changes, flags, commands, or security guidance.
+- Be specific but concise. No speculation beyond the diff.
 "@
 
-      $assistant = New-OAIAssistant -Name "AKS-Doc-StrictSummarizer" -Instructions $instructions -Model $Model
+      $assistant = New-OAIAssistant -Name "AKS-Doc-Spot-Summarizer" -Instructions $instructions -Model $Model
       $content = @"
 File: $FilePath
 
@@ -606,7 +496,7 @@ $PatchSample
     catch { }
   }
 
-  # Enhanced heuristic summary with trivial filtering
+  # No AI? Build a crisp heuristic summary
   $bits = @()
 
   if ($Signals.headings.Count -gt 0) {
@@ -621,7 +511,7 @@ $PatchSample
       $bits += "Replaces service annotations with Fleet-scoped keys (e.g., networking.fleet.azure.com)."
     }
     else {
-      $bits += "Updates service annotations/keys ($annoLine)."
+      $bits += "Touches service annotations/keys ($annoLine)."
     }
   }
 
@@ -637,19 +527,164 @@ $PatchSample
     $bits += "Includes security/operational guidance (Key Vault/managed identity/NSG)."
   }
 
-  # If no meaningful signals found, check if we should even keep this
   if ($bits.Count -eq 0) {
-    if ($PatchSample -match '(?i)(nextstepaction|deploy and explore|ms\.author|author:)') {
-      return "Minor documentation maintenance updates."
-    }
-    $bits += "Updates content with clarifications and improvements."
+    $bits += "Updates steps and examples with minor clarifications."
   }
 
   $s = ($bits -join ' ')
   return (Truncate $s 300)
 }
 
-# ===== Build AI input with enhanced pre-filtered data =====
+
+# ===== Releases AI (vector-store) =====
+function Get-ReleaseSummariesViaAssistant {
+  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
+  if (-not $PSAIReady) { return @{} }
+  try {
+    Log "Uploading Releases JSON to AI provider..."
+    $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
+
+    $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
+    Log "Waiting on releases vector store..."
+    do {
+      Start-Sleep -Seconds 2
+      $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
+      if ($current) { $vs = $current }
+      Log "Releases VS status: $($vs.status)"
+    } while ($vs.status -ne 'completed')
+
+$instructions = @"
+You are summarizing AKS GitHub Releases.
+The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
+
+Return ONLY JSON:
+[
+  { "id": <same id>, "summary": "2-3 sentences",
+    "breaking_changes": ["..."],
+    "key_features": ["..."],
+    "good_to_know": ["..."] }
+]
+
+Extraction rules (very important):
+- Actively mine the body for *implicit* signals (not just headings). Use concrete text evidence.
+- Prefer short, standalone bullets (max ~14 words each), no markdown, no duplication across lists.
+- If an item is broad, split it into two concrete facets (e.g., “Default X -> Y” and “Action required: update flag --foo”).
+- **Target 2-5 items per list.** If the body clearly supports only 1 item for a list, return that 1 (do NOT invent).
+- Never fabricate content that isn't supported by the text.
+
+Section criteria:
+- breaking_changes: API/CLI flag removals or renames, default changes with behavioral impact,
+  deprecations requiring migration, minimum-version bumps, feature removals, config incompatibilities.
+- key_features: new features, GA announcements, preview additions, performance/scalability improvements,
+  new regions/limits, major bugfix clusters.
+- good_to_know: caveats, known issues, mitigations, upgrade/migration tips, feature gates/preview flags,
+  noteworthy docs clarifications, timeframes, rollout/region availability notes.
+
+Output format requirements:
+- Plain strings only; no markdown; no trailing punctuation unless needed.
+- Do not repeat the summary content verbatim in the lists.
+- Ensure JSON is valid and contains all three arrays.
+"@
+
+
+    $assistant = New-OAIAssistant `
+      -Name "AKS-Releases-Summarizer" `
+      -Instructions $instructions `
+      -Tools @{ type = 'file_search' } `
+      -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
+      -Model $Model
+
+    $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
+    $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
+
+    $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
+    Where-Object { $_.type -eq 'text' } |
+    ForEach-Object { $_.text.value } |
+    Out-String
+
+    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
+    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
+    if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
+
+    $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
+    $map = @{}
+    foreach ($i in $arr) {
+      $map[$i.id] = @{
+        summary          = $i.summary
+        breaking_changes = $i.PSObject.Properties['breaking_changes'] ? $i.breaking_changes : @()
+        key_features     = $i.PSObject.Properties['key_features']     ? $i.key_features     : @()
+        good_to_know     = $i.PSObject.Properties['good_to_know']     ? $i.good_to_know     : @()
+      }
+    }
+    Log "AI: Release summaries ready for $($map.Keys.Count) releases."
+    return $map
+  }
+  catch {
+    Write-Warning "AI summaries (releases) failed: $_"
+    return @{}
+  }
+}
+
+# =========================
+# MAIN FLOW — DOCS (PRs + direct commits, no pre-AI filtering)
+# =========================
+Log "Fetching PRs merged in last 7 days..."
+$prs = Get-RecentMergedPRs
+Log "Found $($prs.Count) PR(s) in window."
+
+$groups = @{}
+
+foreach ($pr in $prs) {
+  $files = Get-PRFiles $pr.number
+  foreach ($f in $files) {
+    if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
+    if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
+    $groups[$f.filename] += [pscustomobject]@{
+      pr_title  = $pr.title
+      pr_url    = $pr.html_url
+      merged_at = [DateTime]::Parse($pr.merged_at).ToUniversalTime()
+      filename  = $f.filename
+      additions = $f.additions
+      deletions = $f.deletions
+      status    = $f.status
+      patch     = $f.patch
+    }
+  }
+}
+
+# ---- Direct commits (no PR)
+Log "Fetching individual commits in last 7 days..."
+$commitList = Get-RecentCommits -SinceIso $SINCE_ISO
+
+foreach ($c in $commitList) {
+  $detail = Get-CommitFiles -Sha $c.sha
+  if (-not $detail) { continue }
+
+  $when = if ($detail.commit.committer.date) { [DateTime]::Parse($detail.commit.committer.date).ToUniversalTime() }
+  elseif ($detail.commit.author.date) { [DateTime]::Parse($detail.commit.author.date).ToUniversalTime() }
+  else { [DateTime]::UtcNow }
+
+  $msg = $detail.commit.message.Split("`n")[0]
+
+  foreach ($f in $detail.files) {
+    if ($f.filename -notmatch '^articles/(azure/)?(aks|kubernetes-fleet)/.*\.md$') { continue }
+    if (-not $groups.ContainsKey($f.filename)) { $groups[$f.filename] = @() }
+    $groups[$f.filename] += [pscustomobject]@{
+      pr_title  = $msg
+      pr_url    = $detail.html_url
+      merged_at = $when
+      filename  = $f.filename
+      additions = $f.additions
+      deletions = $f.deletions
+      status    = $f.status
+      patch     = $f.patch
+    }
+  }
+}
+
+# ===== Build AI input with enough signal for filtering =====
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 
@@ -680,77 +715,22 @@ $aiInput = [pscustomobject]@{
   )
 }
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
-Log "AI input prepared: $aiJsonPath"
+Log "AI Summaries"
+Log "  [AKS] Prepared AI input: $aiJsonPath"
 
-# Apply pre-filtering before sending to AI
-Log "Applying enhanced pre-filtering to remove obvious trivial changes..."
-$filteredGroups = @{}
-$skippedCount = 0
-
-foreach ($k in $groups.Keys) {
-  $items = $groups[$k]
-  $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
-  
-  # Always keep newly added files
-  if ($statuses -contains 'added') {
-    $filteredGroups[$k] = $items
-    continue
-  }
-  
-  # For modified files, apply strict pre-filtering
-  if ($statuses -contains 'modified') {
-    $adds = ($items | Measure-Object -Sum -Property additions).Sum
-    $dels = ($items | Measure-Object -Sum -Property deletions).Sum
-    $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
-    
-    # Build combined patch sample
-    $lines = @()
-    foreach ($it in $items) { 
-      if ($it.patch) { 
-        $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) 
-      } 
-    }
-    $patchSample = ($lines | Select-Object -First 1200) -join "`n"
-    
-    # Apply enhanced trivial change detection
-    if (Is-TrivialChange -PatchSample $patchSample -Subjects $subjects -TotalLines ($adds + $dels)) {
-      $skippedCount++
-      Log "Skipped trivial change: $k (subjects: $($subjects -join ', '))"
-      continue
-    }
-    
-    # Apply existing meaningful signals check
-    $signals = Get-MeaningfulSignals -PatchSample $patchSample
-    if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects $subjects)) {
-      $skippedCount++
-      Log "Skipped low-signal change: $k"
-      continue
-    }
-    
-    $filteredGroups[$k] = $items
-  }
-}
-
-Log "Pre-filtering complete: kept $($filteredGroups.Keys.Count) files, skipped $skippedCount trivial changes"
-
-# Get AI summaries using enhanced filtering
 $aiVerdicts = @{ ordered = @(); byFile = @{} }
-if ($PreferProvider) { 
-  $aiVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath 
-}
-else { 
-  Log "AI disabled (no provider env configured)." 
-}
+if ($PreferProvider) { $aiVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath }
+else { Log "AI disabled (no provider env configured)." }
 
 # ---- Fallback: force-keep any "added" files that AI missed
 $aiKeptSet = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 foreach ($o in @($aiVerdicts.ordered)) { [void]$aiKeptSet.Add([string]$o.file) }
 
 $forced = New-Object System.Collections.Generic.List[object]
-foreach ($k in $filteredGroups.Keys) {
-  $statuses = ($filteredGroups[$k].status | Where-Object { $_ } | Select-Object -Unique)
+foreach ($k in $groups.Keys) {
+  $statuses = ($groups[$k].status | Where-Object { $_ } | Select-Object -Unique)
   if ($statuses -contains 'added' -and -not $aiKeptSet.Contains($k)) {
-    $forcedSummary = Summarize-NewMarkdown $k
+    $forcedSummary = Summarize-NewMarkdown $k   # <<<<<< new
     $forced.Add([pscustomobject]@{
         file     = $k
         summary  = $forcedSummary
@@ -761,31 +741,33 @@ foreach ($k in $filteredGroups.Keys) {
 }
 if ($forced.Count -gt 0) {
   Log "Force-keeping $($forced.Count) newly added page(s) the AI skipped."
+  # Append forced items to ordered list and map
   $aiVerdicts.ordered += $forced
   foreach ($f in $forced) { 
     $aiVerdicts.byFile[$f.file] = @{ summary=$f.summary; category=$f.category; score=$f.score }
-    [void]$aiKeptSet.Add([string]$f.file)
+    [void]$aiKeptSet.Add([string]$f.file)  # << prevent modified fallback from touching these
   }
 }
 
 # ---- Post-AI safety: also keep meaningful MODIFIED files the AI skipped
 $forcedModified = New-Object System.Collections.Generic.List[object]
 
-foreach ($k in $filteredGroups.Keys) {
-  if ($aiKeptSet.Contains($k)) { continue }
-  $items = $filteredGroups[$k]
+foreach ($k in $groups.Keys) {
+  if ($aiKeptSet.Contains($k)) { continue }             # already kept by AI or 'added' safety
+  $items = $groups[$k]
   $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
-  if ($statuses -notcontains 'modified') { continue }
+  if ($statuses -notcontains 'modified') { continue }   # only look at modified
 
   $adds = ($items | Measure-Object -Sum -Property additions).Sum
   $dels = ($items | Measure-Object -Sum -Property deletions).Sum
 
+  # Build a combined patch sample like you did before
   $lines = @()
   foreach ($it in $items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
   $patchSample = ($lines | Select-Object -First 1200) -join "`n"
 
   $signals = Get-MeaningfulSignals -PatchSample $patchSample
-  if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects ($items.pr_title | Select-Object -Unique))) { continue }
+  if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals)) { continue }
 
   $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
   $summary = Summarize-ModifiedPatch -FilePath $k -Subjects $subjects -PatchSample $patchSample -Signals $signals
@@ -808,9 +790,9 @@ if ($forcedModified.Count -gt 0) {
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($row in @($aiVerdicts.ordered)) {
   $file = $row.file
-  if (-not $filteredGroups.ContainsKey($file)) { continue }
+  if (-not $groups.ContainsKey($file)) { continue }  # safety
 
-  $arr = $filteredGroups[$file] | Sort-Object merged_at -Descending
+  $arr = $groups[$file] | Sort-Object merged_at -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
   $summary = $aiVerdicts.byFile[$file].summary
   $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
@@ -858,7 +840,7 @@ foreach ($row in @($aiVerdicts.ordered)) {
 }
 
 # =========================
-# RELEASES HANDLING (unchanged from original)
+# MAIN FLOW — RELEASES
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
@@ -868,105 +850,10 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
     return @()
   }
 }
-
-function Get-ReleaseSummariesViaAssistant {
-  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
-  if (-not $PSAIReady) { return @{} }
-  try {
-    Log "Uploading Releases JSON to AI provider..."
-    $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
-
-    $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
-    $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
-    Log "Waiting on releases vector store..."
-    do {
-      Start-Sleep -Seconds 2
-      $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
-      if ($current) { $vs = $current }
-      Log "Releases VS status: $($vs.status)"
-    } while ($vs.status -ne 'completed')
-
-$instructions = @"
-You are summarizing AKS GitHub Releases.
-The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
-
-Return ONLY JSON:
-[
-  { "id": <same id>, "summary": "2-3 sentences",
-    "breaking_changes": ["..."],
-    "key_features": ["..."],
-    "good_to_know": ["..."] }
-]
-
-Extraction rules (very important):
-- Actively mine the body for *implicit* signals (not just headings). Use concrete text evidence.
-- Prefer short, standalone bullets (max ~14 words each), no markdown, no duplication across lists.
-- If an item is broad, split it into two concrete facets (e.g., "Default X -> Y" and "Action required: update flag --foo").
-- **Target 2-5 items per list.** If the body clearly supports only 1 item for a list, return that 1 (do NOT invent).
-- Never fabricate content that isn't supported by the text.
-
-Section criteria:
-- breaking_changes: API/CLI flag removals or renames, default changes with behavioral impact,
-  deprecations requiring migration, minimum-version bumps, feature removals, config incompatibilities.
-- key_features: new features, GA announcements, preview additions, performance/scalability improvements,
-  new regions/limits, major bugfix clusters.
-- good_to_know: caveats, known issues, mitigations, upgrade/migration tips, feature gates/preview flags,
-  noteworthy docs clarifications, timeframes, rollout/region availability notes.
-
-Output format requirements:
-- Plain strings only; no markdown; no trailing punctuation unless needed.
-- Do not repeat the summary content verbatim in the lists.
-- Ensure JSON is valid and contains all three arrays.
-"@
-
-    $assistant = New-OAIAssistant `
-      -Name "AKS-Releases-Summarizer" `
-      -Instructions $instructions `
-      -Tools @{ type = 'file_search' } `
-      -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
-      -Model $Model
-
-    $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
-    $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
-
-    $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-    Where-Object { $_.type -eq 'text' } |
-    ForEach-Object { $_.text.value } |
-    Out-String
-
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
-    $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
-
-    $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
-    $map = @{}
-    foreach ($i in $arr) {
-      $map[$i.id] = @{
-        summary          = $i.summary
-        breaking_changes = $i.PSObject.Properties['breaking_changes'] ? $i.breaking_changes : @()
-        key_features     = $i.PSObject.Properties['key_features']     ? $i.key_features     : @()
-        good_to_know     = $i.PSObject.Properties['good_to_know']     ? $i.good_to_know     : @()
-      }
-    }
-    Log "AI: Release summaries ready for $($map.Keys.Count) releases."
-    return $map
-  }
-  catch {
-    Write-Warning "AI summaries (releases) failed: $_"
-    return @{}
-  }
-}
-
-function ToListHtml($arr) {
-  if (-not $arr -or $arr.Count -eq 0) { return "" }
-  $lis = ($arr | ForEach-Object { '<li>' + (Escape-Html $_) + '</li>' }) -join ''
-  return "<ul class=""aks-rel-list"">$lis</ul>"
-}
-
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
 # Build releases JSON for AI
+$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
 $relInput = @(
   foreach ($r in $releases) {
@@ -989,6 +876,12 @@ if ($PreferProvider -and $releases.Count -gt 0) {
 }
 else {
   Log "AI disabled or no releases."
+}
+
+function ToListHtml($arr) {
+  if (-not $arr -or $arr.Count -eq 0) { return "" }
+  $lis = ($arr | ForEach-Object { '<li>' + (Escape-Html $_) + '</li>' }) -join ''
+  return "<ul class=""aks-rel-list"">$lis</ul>"
 }
 
 $releaseCards = New-Object System.Collections.Generic.List[string]
@@ -1132,19 +1025,21 @@ $html = @"
 "@.Trim()
 
 # ===== Weekly digest (compact HTML without tabs/filters) =====
+# Sort newest-first by latest merged_at for each file
 $sortedDocs = @($aiVerdicts.ordered) | Sort-Object {
   $file = $_.file
-  if ($filteredGroups.ContainsKey($file)) {
-    ($filteredGroups[$file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
+  if ($groups.ContainsKey($file)) {
+    ($groups[$file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
   }
   else { Get-Date 0 }
 } -Descending
 
+# Build simple list items
 $digestItems = New-Object System.Collections.Generic.List[string]
 foreach ($row in $sortedDocs) {
   $file = $row.file
-  if (-not $filteredGroups.ContainsKey($file)) { continue }
-  $arr = $filteredGroups[$file] | Sort-Object merged_at -Descending
+  if (-not $groups.ContainsKey($file)) { continue }
+  $arr = $groups[$file] | Sort-Object merged_at -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
   $summary = $aiVerdicts.byFile[$file].summary
   $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
@@ -1191,6 +1086,7 @@ $digestHtml = @"
 </div>
 "@.Trim()
 
+
 # =========================
 # OUTPUT (JSON with html + hash)
 # =========================
@@ -1206,6 +1102,3 @@ $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -jo
   digest_title = $digestTitle
 } | ConvertTo-Json -Depth 6
 
-Log "Enhanced AKS Docs Tracker completed successfully!"
-Log "Pre-filtering removed $skippedCount trivial changes"
-Log "Final output includes $($aiVerdicts.ordered.Count) meaningful updates"
