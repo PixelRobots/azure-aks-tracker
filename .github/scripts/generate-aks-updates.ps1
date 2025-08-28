@@ -619,6 +619,122 @@ $PatchSample
   return (Truncate $s 300)
 }
 
+# =========================
+# MAIN EXECUTION - COLLECT DATA
+# =========================
+
+# Initialize AI if provider is configured
+if ($PreferProvider) {
+  $PSAIReady = Initialize-AIProvider -Provider $PreferProvider
+  if ($PSAIReady) { Log "AI provider ($PreferProvider) initialized." }
+} else {
+  Log "No AI provider configured - running without AI summaries."
+}
+
+# Collect PR and commit data
+Log "Collecting GitHub data since $SINCE_ISO..."
+
+# Get recent pull requests
+$prs = @()
+$page = 1
+do {
+  $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
+  $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+  $relevantPRs = $response | Where-Object { 
+    $_.updated_at -gt $SINCE_ISO -and $_.merged_at 
+  }
+  $prs += $relevantPRs
+  $page++
+} while ($response.Count -eq 100 -and $relevantPRs.Count -gt 0)
+
+Log "Found $($prs.Count) recently updated PRs"
+
+# Get recent commits directly from main branch
+$commits = @()
+$page = 1
+do {
+  $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=main&since=$SINCE_ISO&per_page=100&page=$page"
+  $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+  $commits += $response
+  $page++
+} while ($response.Count -eq 100)
+
+Log "Found $($commits.Count) recent commits"
+
+# Process PRs and commits to get file changes
+$allFiles = @()
+
+# Process PRs
+foreach ($pr in $prs) {
+  try {
+    $files = Get-PullRequestFiles -prNumber $pr.number
+    foreach ($file in $files) {
+      $allFiles += [PSCustomObject]@{
+        filename = $file.filename
+        status = $file.status
+        additions = $file.additions
+        deletions = $file.deletions
+        patch = $file.patch
+        pr_number = $pr.number
+        pr_title = $pr.title
+        pr_url = $pr.html_url
+        sha = $pr.merge_commit_sha
+        date = $pr.merged_at
+        source = "PR"
+      }
+    }
+  }
+  catch {
+    Write-Warning "Failed to get files for PR #$($pr.number): $_"
+  }
+}
+
+# Process commits that aren't from PRs
+foreach ($commit in $commits) {
+  # Skip commits that are already covered by PRs
+  $existingCommit = $allFiles | Where-Object { $_.sha -eq $commit.sha }
+  if ($existingCommit) { continue }
+  
+  try {
+    $commitDetail = Get-CommitFiles -sha $commit.sha
+    foreach ($file in $commitDetail.files) {
+      $allFiles += [PSCustomObject]@{
+        filename = $file.filename
+        status = $file.status
+        additions = $file.additions
+        deletions = $file.deletions
+        patch = $file.patch
+        pr_number = $null
+        pr_title = $commit.commit.message.Split("`n")[0]
+        pr_url = $commit.html_url
+        sha = $commit.sha
+        date = $commit.commit.committer.date
+        source = "Commit"
+      }
+    }
+  }
+  catch {
+    Write-Warning "Failed to get files for commit $($commit.sha): $_"
+  }
+}
+
+Log "Collected $($allFiles.Count) file changes"
+
+# Group files by filename for processing
+$groups = @{}
+foreach ($file in $allFiles) {
+  if (-not $groups[$file.filename]) {
+    $groups[$file.filename] = @()
+  }
+  $groups[$file.filename] += $file
+}
+
+Log "Grouped into $($groups.Keys.Count) unique files"
+
+# =========================
+# AI INPUT PREPARATION
+# =========================
+
 # ===== Build AI input with enhanced pre-filtered data =====
 $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
 $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
