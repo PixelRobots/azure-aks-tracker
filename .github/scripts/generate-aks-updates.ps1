@@ -71,88 +71,40 @@ $TrivialPatterns = @(
 function Is-TrivialChange {
     param([string]$PatchSample, [string[]]$Subjects, [int]$TotalLines)
     
-    # Reduced threshold - allow more through
-    if ($TotalLines -le 1) { return $true }
+    # Only filter the most obvious trivial cases - let AI handle everything else
     
-    # Check if ALL subjects indicate trivial changes - be more conservative
-    $trivialSubjects = $Subjects | Where-Object {
-        # Only match very specific trivial patterns
-        $_ -match '(?i)^(fix typo|update author|author assignment|metadata only)$' -or
-        $_ -match '(?i)^(formatting only|whitespace only|minor formatting fix)$' -or
-        $_ -match '(?i)^(update.*author.*only|author.*update.*only)$'
+    # Filter single line changes
+    if ($TotalLines -eq 1) { 
+        return $true 
     }
     
-    # Only filter if ALL subjects are trivial AND we have very few lines
-    if ($trivialSubjects.Count -eq $Subjects.Count -and $Subjects.Count -gt 0 -and $TotalLines -le 5) {
+    # Filter pure metadata-only changes (ms.author lines with no other content)
+    if ($TotalLines -le 3 -and $PatchSample -match 'ms\.author.*\w+' -and 
+        ($PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch 'ms\.author' }).Count -eq 0) {
         return $true
     }
     
-    # Check patch content for trivial patterns - be more conservative
-    $lines = $PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' }
-    $meaningfulLines = 0
-    $trivialLines = 0
-    
-    foreach ($line in $lines) {
-        $isTrivial = $false
-        # Only apply most obvious trivial patterns
-        if ($line -match '(?i)ms\.author.*\w+' -or 
-            $line -match '(?i)author:.*\w+' -or
-            $line -match '^\s*[\+\-]\s*$') {
-            $isTrivial = $true
-        }
-        
-        if ($isTrivial) {
-            $trivialLines++
-        } else {
-            $meaningfulLines++
-        }
-    }
-    
-    # Only filter if 90% or more of lines are trivial (was 80%)
-    if ($lines.Count -gt 0 -and ($trivialLines / $lines.Count) -gt 0.9) {
-        return $true
-    }
-    
-    # Only filter pure metadata/author changes with very few meaningful lines
-    if ($PatchSample -match 'ms\.author.*\w+' -and $meaningfulLines -eq 0 -and $TotalLines -le 3) {
-        return $true
-    }
-    
+    # Everything else goes to AI for intelligent filtering
     return $false
 }
 
 function Should-ForceKeepModified {
   param([int]$Adds, [int]$Dels, $Signals, [string]$PatchSample, [string[]]$Subjects)
 
-  # First check if it's trivial - if so, don't keep regardless of other signals
+  # First check if it's one of the very basic trivial cases
   $totalLines = $Adds + $Dels
   if (Is-TrivialChange -PatchSample $PatchSample -Subjects $Subjects -TotalLines $totalLines) {
     return $false
   }
 
-  $delta = $Adds + $Dels
-  
-  # Strong signals that indicate meaningful content
-  if ($Signals.hasHeading -or $Signals.hasCli -or $Signals.hasAnnoKeys -or $Signals.hasSecurityCue) { return $true }
-  if ($Signals.hasCodeFence -and $delta -ge 3) { return $true } # Reduced from 6
-  if ($Signals.hasYamlKeys -and $delta -ge 5) { return $true } # Reduced from 8
-  if ($Signals.hasYamlColon -and $delta -ge 5) { return $true } # Reduced from 8
-  
-  # Lower threshold for big edits to be more inclusive
-  if ($delta -ge 15) { return $true } # Reduced from 30
-  
-  # Check for substantive content changes
-  if ($PatchSample -match '(?i)(new feature|deprecat|remov|chang.*behav|updat.*command|new section)') { return $true }
-  
-  # Be more inclusive for bot commits - check for documentation patterns
-  if ($Subjects | Where-Object { $_ -match '(?i)(learn editor|docs editor|documentation|article)' }) {
-    if ($delta -ge 5) { return $true } # Keep Learn Editor updates with modest changes
+  # Otherwise, let AI decide - be very permissive here
+  # Only filter out completely empty changes
+  if ($totalLines -eq 0) {
+    return $false
   }
   
-  # Keep any change with reasonable size that isn't obviously trivial
-  if ($delta -ge 8) { return $true } # More inclusive threshold
-  
-  return $false
+  # Everything else goes to AI for intelligent evaluation
+  return $true
 }
 
 function Get-MeaningfulSignals {
@@ -695,8 +647,8 @@ $aiInput = [pscustomobject]@{
 $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
 Log "AI input prepared: $aiJsonPath"
 
-# Apply pre-filtering before sending to AI
-Log "Applying enhanced pre-filtering to remove obvious trivial changes..."
+# Apply minimal pre-filtering before sending to AI - let AI do the heavy lifting
+Log "Applying minimal pre-filtering (only obvious trivial cases)..."
 $filteredGroups = @{}
 $skippedCount = 0
 
@@ -710,7 +662,7 @@ foreach ($k in $groups.Keys) {
     continue
   }
   
-  # For modified files, apply strict pre-filtering
+  # For modified files, apply minimal pre-filtering (let AI handle the rest)
   if ($statuses -contains 'modified') {
     $adds = ($items | Measure-Object -Sum -Property additions).Sum
     $dels = ($items | Measure-Object -Sum -Property deletions).Sum
@@ -725,26 +677,23 @@ foreach ($k in $groups.Keys) {
     }
     $patchSample = ($lines | Select-Object -First 1200) -join "`n"
     
-    # Apply enhanced trivial change detection
+    # Apply minimal trivial change detection (single lines and pure metadata only)
     if (Is-TrivialChange -PatchSample $patchSample -Subjects $subjects -TotalLines ($adds + $dels)) {
       $skippedCount++
-      Log "Skipped trivial change: $k (subjects: $($subjects -join ', '))"
+      Log "Skipped obvious trivial change: $k (subjects: $($subjects -join ', '))"
       continue
     }
-    
-    # Apply existing meaningful signals check
-    $signals = Get-MeaningfulSignals -PatchSample $patchSample
+
+    # Apply very permissive filtering - let AI handle nuanced decisions
     if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects $subjects)) {
       $skippedCount++
-      Log "Skipped low-signal change: $k"
+      Log "Skipped empty change: $k"
       continue
-    }
-    
-    $filteredGroups[$k] = $items
+    }    $filteredGroups[$k] = $items
   }
 }
 
-Log "Pre-filtering complete: kept $($filteredGroups.Keys.Count) files, skipped $skippedCount trivial changes"
+Log "Minimal pre-filtering complete: kept $($filteredGroups.Keys.Count) files, skipped $skippedCount obvious trivial changes"
 
 # Get AI summaries using enhanced filtering
 $aiVerdicts = @{ ordered = @(); byFile = @{} }
@@ -1220,5 +1169,5 @@ $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -jo
 } | ConvertTo-Json -Depth 6
 
 Log "Enhanced AKS Docs Tracker completed successfully!"
-Log "Pre-filtering removed $skippedCount trivial changes"
+Log "Minimal pre-filtering removed $skippedCount obvious trivial changes"
 Log "Final output includes $($aiVerdicts.ordered.Count) meaningful updates"
