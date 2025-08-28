@@ -24,6 +24,15 @@ $Repositories = @(
     IconUrl = "https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg"
     IconAlt = "Azure Container Registry"
     DocsBaseUrl = "https://learn.microsoft.com/azure/container-registry/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
+    Repo = "azure-docs"
+    PathFilter = "^articles/application-gateway/for-containers/"  # Only App Gateway for Containers docs
+    DisplayName = "AGC"
+    IconUrl = "https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png"
+    IconAlt = "Application Gateway for Containers"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/application-gateway/for-containers/"
   }
 )
 
@@ -211,7 +220,18 @@ function Get-MeaningfulSignals {
 }
 
 function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
-  # Determine product based on file path and repository
+  # Find the repository configuration that matches this repo
+  $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
+  
+  if ($repoConfig) {
+    return @{
+      url   = $repoConfig.IconUrl
+      alt   = $repoConfig.IconAlt
+      label = $repoConfig.DisplayName
+    }
+  }
+  
+  # Fallback logic for legacy file path detection
   if ($FilePath -match '/kubernetes-fleet/' -or $FilePath -match 'fleet') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg'
@@ -219,11 +239,18 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
       label = 'Fleet'
     }
   }
-  elseif ($FilePath -match 'container-registry' -or $RepoName -eq 'azure-management-docs') {
+  elseif ($FilePath -match 'container-registry') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg'
       alt   = 'Azure Container Registry'
       label = 'ACR'
+    }
+  }
+  elseif ($FilePath -match 'application-gateway/for-containers') {
+    return @{
+      url   = 'https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png'
+      alt   = 'Application Gateway for Containers'
+      label = 'AGC'
     }
   }
   else {
@@ -1429,7 +1456,7 @@ $html = @"
 
     <p><strong>With this tracker, you can:</strong></p>
     <ul>
-      <li>Quickly scan meaningful AKS, ACR, and Fleet documentation changes from the past 7 days</li>
+      <li>Quickly scan meaningful AKS, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
     </ul>
 
@@ -1462,7 +1489,7 @@ $html = @"
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to AKS, ACR, and Fleet docs from the last 7 days.</div>
+      <div class="aks-docs-desc">Meaningful updates to AKS, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
