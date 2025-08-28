@@ -71,32 +71,34 @@ $TrivialPatterns = @(
 function Is-TrivialChange {
     param([string]$PatchSample, [string[]]$Subjects, [int]$TotalLines)
     
-    if ($TotalLines -le 3) { return $true }
+    # Reduced threshold - allow more through
+    if ($TotalLines -le 1) { return $true }
     
-    # Check if all subjects indicate trivial changes
+    # Check if ALL subjects indicate trivial changes - be more conservative
     $trivialSubjects = $Subjects | Where-Object {
-        $_ -match '(?i)(fix typo|update author|metadata|formatting|whitespace|minor fix|update link|update date)' -or
-        $_ -match '(?i)(deploy and explore|next step|callout|navigation)' -or
-        $_ -match '(?i)(update.*author|author.*update)' -or
-        $_ -match '(?i)(add.*nextstepaction|nextstepaction.*add)'
+        # Only match very specific trivial patterns
+        $_ -match '(?i)^(fix typo|update author|author assignment|metadata only)$' -or
+        $_ -match '(?i)^(formatting only|whitespace only|minor formatting fix)$' -or
+        $_ -match '(?i)^(update.*author.*only|author.*update.*only)$'
     }
     
-    if ($trivialSubjects.Count -eq $Subjects.Count -and $Subjects.Count -gt 0) {
+    # Only filter if ALL subjects are trivial AND we have very few lines
+    if ($trivialSubjects.Count -eq $Subjects.Count -and $Subjects.Count -gt 0 -and $TotalLines -le 5) {
         return $true
     }
     
-    # Check patch content for trivial patterns
+    # Check patch content for trivial patterns - be more conservative
     $lines = $PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' }
     $meaningfulLines = 0
     $trivialLines = 0
     
     foreach ($line in $lines) {
         $isTrivial = $false
-        foreach ($pattern in $TrivialPatterns) {
-            if ($line -match $pattern) {
-                $isTrivial = $true
-                break
-            }
+        # Only apply most obvious trivial patterns
+        if ($line -match '(?i)ms\.author.*\w+' -or 
+            $line -match '(?i)author:.*\w+' -or
+            $line -match '^\s*[\+\-]\s*$') {
+            $isTrivial = $true
         }
         
         if ($isTrivial) {
@@ -106,13 +108,13 @@ function Is-TrivialChange {
         }
     }
     
-    # If more than 80% of lines are trivial, skip
-    if ($lines.Count -gt 0 -and ($trivialLines / $lines.Count) -gt 0.8) {
+    # Only filter if 90% or more of lines are trivial (was 80%)
+    if ($lines.Count -gt 0 -and ($trivialLines / $lines.Count) -gt 0.9) {
         return $true
     }
     
-    # If only metadata/author changes detected
-    if ($PatchSample -match 'ms\.author.*\w+' -and $meaningfulLines -le 2) {
+    # Only filter pure metadata/author changes with very few meaningful lines
+    if ($PatchSample -match 'ms\.author.*\w+' -and $meaningfulLines -eq 0 -and $TotalLines -le 3) {
         return $true
     }
     
@@ -132,15 +134,23 @@ function Should-ForceKeepModified {
   
   # Strong signals that indicate meaningful content
   if ($Signals.hasHeading -or $Signals.hasCli -or $Signals.hasAnnoKeys -or $Signals.hasSecurityCue) { return $true }
-  if ($Signals.hasCodeFence -and $delta -ge 6) { return $true }
-  if ($Signals.hasYamlKeys -and $delta -ge 8) { return $true }
-  if ($Signals.hasYamlColon -and $delta -ge 8) { return $true }
+  if ($Signals.hasCodeFence -and $delta -ge 3) { return $true } # Reduced from 6
+  if ($Signals.hasYamlKeys -and $delta -ge 5) { return $true } # Reduced from 8
+  if ($Signals.hasYamlColon -and $delta -ge 5) { return $true } # Reduced from 8
   
-  # Higher threshold for big edits to ensure quality
-  if ($delta -ge 30) { return $true } # Increased from 20
+  # Lower threshold for big edits to be more inclusive
+  if ($delta -ge 15) { return $true } # Reduced from 30
   
   # Check for substantive content changes
   if ($PatchSample -match '(?i)(new feature|deprecat|remov|chang.*behav|updat.*command|new section)') { return $true }
+  
+  # Be more inclusive for bot commits - check for documentation patterns
+  if ($Subjects | Where-Object { $_ -match '(?i)(learn editor|docs editor|documentation|article)' }) {
+    if ($delta -ge 5) { return $true } # Keep Learn Editor updates with modest changes
+  }
+  
+  # Keep any change with reasonable size that isn't obviously trivial
+  if ($delta -ge 8) { return $true } # More inclusive threshold
   
   return $false
 }
@@ -482,30 +492,33 @@ function Get-PerFileSummariesViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You are an EXTREMELY STRICT filter for Azure AKS documentation updates. Your job is to ONLY keep changes that provide significant user value.
+You are a selective filter for Azure AKS documentation updates. Your goal is to keep meaningful changes while filtering obvious noise.
 
 INPUT JSON contains file groups with subjects, patch samples, additions/deletions counts.
 
-**ABSOLUTELY SKIP (DO NOT INCLUDE) if any of these apply:**
+**DEFINITELY SKIP (DO NOT INCLUDE):**
 
-1. **METADATA ONLY**: Changes only to ms.author, author, ms.date, ms.reviewer, ms.custom, ms.topic, etc.
-2. **PURE NAVIGATION**: Adding "Deploy and Explore", "Next steps", "Learn more" callouts without content changes
-3. **AUTHOR REASSIGNMENT**: PRs/commits with titles like "Update author from X to Y" or "Author metadata update"
-4. **FORMATTING ONLY**: Whitespace, link formatting, minor markdown fixes
-5. **TRIVIAL ADDITIONS**: Less than 10 meaningful lines of actual content change
-6. **REPETITIVE CALLOUTS**: Multiple files getting the same navigation elements
+1. **PURE METADATA**: Changes ONLY to ms.author, author, ms.date when no content changes
+2. **AUTHOR REASSIGNMENT ONLY**: PRs with titles like "Update author from X to Y" with no other changes
+3. **PURE FORMATTING**: Only whitespace, link formatting, markdown syntax fixes
+4. **SINGLE TYPO FIXES**: One or two word corrections with no other changes
 
-**ONLY KEEP if it has:**
-- New sections with actual technical content
-- Changes to commands, parameters, or configuration examples  
-- New features, deprecations, or behavioral changes
-- Security guidance updates
-- Process or step changes that affect user workflows
-- Version/support/compatibility updates
+**KEEP (INCLUDE) these types of changes:**
+
+- **New features, capabilities, or services**
+- **Breaking changes, deprecations, security updates**
+- **New CLI commands, parameters, or configuration examples**
+- **Tutorial content, troubleshooting steps, or procedures**
+- **Learn Editor updates with actual content improvements**
+- **Bot commits that contain meaningful documentation**
+- **Corrections to technical accuracy or clarity**
+- **New sections or reorganized content**
+- **Version updates, support changes, compatibility info**
+- **Process changes that affect user workflows**
 
 **ALWAYS KEEP:** New files (status "added") regardless of content.
 
-Be RUTHLESS - when in doubt, SKIP IT. Users want only the most meaningful updates.
+**When evaluating:** Be inclusive rather than exclusive. If there's technical substance or user value, keep it. The goal is high signal-to-noise ratio, not minimal volume.
 
 OUTPUT: JSON array of kept items only:
 [
@@ -514,7 +527,7 @@ OUTPUT: JSON array of kept items only:
 "@
 
     $assistant = New-OAIAssistant `
-      -Name "AKS-Docs-StrictFilter" `
+      -Name "AKS-Docs-SelectiveFilter" `
       -Instructions $instructions `
       -Tools @{ type = 'file_search' } `
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
@@ -582,7 +595,7 @@ IGNORE and don't mention:
 - Link updates without content changes
 
 Rules:
-- 2-3 sentences, plain text, no bullets
+- 2–3 sentences, plain text, no bullets
 - Mention specific sections, commands, parameters, or features changed
 - Be specific about what users can now do differently
 - If only trivial changes detected, say "Minor documentation maintenance updates"
@@ -1063,7 +1076,7 @@ foreach ($r in $releases) {
 $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else { '<p class="aks-rel-empty">No releases found (yet).</p>' }
 
 # =========================
-# PAGE HTML (Tabs + Panels)
+# PAGE HTML (Tabs + Panels) - Same as original
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
 $updateCount = @($aiVerdicts.ordered).Count
