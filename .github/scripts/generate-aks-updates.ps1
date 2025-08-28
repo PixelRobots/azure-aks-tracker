@@ -2,10 +2,30 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # =========================
-# ENHANCED CONFIG / ENV with better filtering
+# ENHANCED CONFIG / ENV with multi-repository support
 # =========================
-$Owner = "MicrosoftDocs"
-$Repo = "azure-aks-docs"
+
+# Repository configuration - easily extensible for more MS Docs sites
+$Repositories = @(
+  @{
+    Owner = "MicrosoftDocs"
+    Repo = "azure-aks-docs"
+    PathFilter = "^articles/"  # Only files in articles/ folder
+    DisplayName = "AKS"
+    IconUrl = "https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg"
+    IconAlt = "Azure Kubernetes Service"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/aks/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
+    Repo = "azure-management-docs"
+    PathFilter = "^articles/container-registry/"  # Only ACR docs
+    DisplayName = "ACR"
+    IconUrl = "https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg"
+    IconAlt = "Azure Container Registry"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/container-registry/"
+  }
+)
 
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
@@ -30,27 +50,27 @@ $ghHeaders = @{
 }
 
 function Get-PullRequestFiles {
-  param([int]$prNumber)
+  param([int]$prNumber, [string]$Owner, [string]$Repo)
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$prNumber/files"
   try { 
     $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     return $response
   }
   catch { 
-    Write-Warning "Failed to get files for PR #$prNumber`: $_"
+    Write-Warning "Failed to get files for PR #$prNumber in $Owner/$Repo`: $_"
     return @()
   }
 }
 
 function Get-CommitFiles {
-  param([string]$sha)
+  param([string]$sha, [string]$Owner, [string]$Repo)
   $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$sha"
   try { 
     $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
     return $response
   }
   catch { 
-    Write-Warning "Failed to get commit details for $sha`: $_"
+    Write-Warning "Failed to get commit details for $sha in $Owner/$Repo`: $_"
     return @{ files = @() }
   }
 }
@@ -190,12 +210,20 @@ function Get-MeaningfulSignals {
   }
 }
 
-function Get-ProductIconMeta([string]$FilePath) {
-  if ($FilePath -match '/kubernetes-fleet/') {
+function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
+  # Determine product based on file path and repository
+  if ($FilePath -match '/kubernetes-fleet/' -or $FilePath -match 'fleet') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg'
       alt   = 'Kubernetes Fleet Manager'
       label = 'Fleet'
+    }
+  }
+  elseif ($FilePath -match 'container-registry' -or $RepoName -eq 'azure-management-docs') {
+    return @{
+      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg'
+      alt   = 'Azure Container Registry'
+      label = 'ACR'
     }
   }
   else {
@@ -207,7 +235,7 @@ function Get-ProductIconMeta([string]$FilePath) {
   }
 }
 
-function Get-GitHubContentBase64([string]$path, [string]$ref = "main") {
+function Get-GitHubContentBase64([string]$path, [string]$Owner, [string]$Repo, [string]$ref = "main") {
   $uri = "https://api.github.com/repos/$Owner/$Repo/contents/$([uri]::EscapeDataString($path))?ref=$([uri]::EscapeDataString($ref))"
   try {
     $resp = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
@@ -265,8 +293,8 @@ function Get-MarkdownLead([string]$md) {
   return ""
 }
 
-function Summarize-NewMarkdown([string]$path) {
-  $raw = Get-GitHubContentBase64 -path $path
+function Summarize-NewMarkdown([string]$path, [string]$Owner, [string]$Repo) {
+  $raw = Get-GitHubContentBase64 -path $path -Owner $Owner -Repo $Repo
   if (-not $raw) { return "New page added." }
   $fm = Parse-YamlFrontMatter $raw
   if ($fm.description) { return Truncate $fm.description 280 }
@@ -280,11 +308,25 @@ function Escape-Html([string]$s) {
   $s.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;').Replace('"', '&quot;')
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
-function Get-LiveDocsUrl([string]$FilePath) {
+function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [string]$Repo) {
   if ($FilePath -match '^articles/(.+?)\.md$') {
     $p = $Matches[1] -replace '\\', '/'
-    if ($p -notmatch '^azure/') { $p = "azure/$p" }
-    return "https://learn.microsoft.com/$p"
+    
+    # Different URL patterns for different repositories
+    if ($RepoName -eq 'azure-management-docs' -and $p -match '^container-registry/(.+)') {
+      return "https://learn.microsoft.com/azure/container-registry/$($Matches[1])"
+    }
+    elseif ($p -match '^aks/(.+)') {
+      return "https://learn.microsoft.com/azure/aks/$($Matches[1])"
+    }
+    elseif ($p -match '^kubernetes-fleet/(.+)') {
+      return "https://learn.microsoft.com/azure/kubernetes-fleet/$($Matches[1])"
+    }
+    else {
+      # Generic fallback
+      if ($p -notmatch '^azure/') { $p = "azure/$p" }
+      return "https://learn.microsoft.com/$p"
+    }
   }
   return "https://github.com/$Owner/$Repo/blob/main/$FilePath"
 }
@@ -646,7 +688,7 @@ $PatchSample
 }
 
 # =========================
-# MAIN EXECUTION - COLLECT DATA
+# MAIN EXECUTION - COLLECT DATA FROM ALL REPOSITORIES
 # =========================
 
 # Initialize AI if provider is configured
@@ -657,91 +699,114 @@ if ($PreferProvider) {
   Log "No AI provider configured - running without AI summaries."
 }
 
-# Collect PR and commit data
-Log "Collecting GitHub data since $SINCE_ISO..."
+# Collect PR and commit data from all repositories
+Log "Collecting GitHub data since $SINCE_ISO from $($Repositories.Count) repositories..."
 
-# Get recent pull requests
-$prs = @()
-$page = 1
-do {
-  $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
-  $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
-  $relevantPRs = $response | Where-Object { 
-    $_.updated_at -gt $SINCE_ISO -and $_.merged_at 
-  }
-  $prs += $relevantPRs
-  $page++
-} while ($response.Count -eq 100 -and $relevantPRs.Count -gt 0)
-
-Log "Found $($prs.Count) recently updated PRs"
-
-# Get recent commits directly from main branch
-$commits = @()
-$page = 1
-do {
-  $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=main&since=$SINCE_ISO&per_page=100&page=$page"
-  $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
-  $commits += $response
-  $page++
-} while ($response.Count -eq 100)
-
-Log "Found $($commits.Count) recent commits"
-
-# Process PRs and commits to get file changes
 $allFiles = @()
 
-# Process PRs
-foreach ($pr in $prs) {
-  try {
-    $files = Get-PullRequestFiles -prNumber $pr.number
-    foreach ($file in $files) {
-      $allFiles += [PSCustomObject]@{
-        filename = $file.filename
-        status = $file.status
-        additions = $file.additions
-        deletions = $file.deletions
-        patch = $file.patch
-        pr_number = $pr.number
-        pr_title = $pr.title
-        pr_url = $pr.html_url
-        sha = $pr.merge_commit_sha
-        date = $pr.merged_at
-        source = "PR"
-      }
-    }
-  }
-  catch {
-    Write-Warning "Failed to get files for PR #$($pr.number): $_"
-  }
-}
-
-# Process commits that aren't from PRs
-foreach ($commit in $commits) {
-  # Skip commits that are already covered by PRs
-  $existingCommit = $allFiles | Where-Object { $_.sha -eq $commit.sha }
-  if ($existingCommit) { continue }
+foreach ($repoConfig in $Repositories) {
+  $Owner = $repoConfig.Owner
+  $Repo = $repoConfig.Repo
+  $PathFilter = $repoConfig.PathFilter
+  $DisplayName = $repoConfig.DisplayName
   
-  try {
-    $commitDetail = Get-CommitFiles -sha $commit.sha
-    foreach ($file in $commitDetail.files) {
-      $allFiles += [PSCustomObject]@{
-        filename = $file.filename
-        status = $file.status
-        additions = $file.additions
-        deletions = $file.deletions
-        patch = $file.patch
-        pr_number = $null
-        pr_title = $commit.commit.message.Split("`n")[0]
-        pr_url = $commit.html_url
-        sha = $commit.sha
-        date = $commit.commit.committer.date
-        source = "Commit"
+  Log "Processing $DisplayName repository: $Owner/$Repo"
+  Log "  Path filter: $PathFilter"
+
+  # Get recent pull requests for this repository
+  $prs = @()
+  $page = 1
+  do {
+    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
+    $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    $relevantPRs = $response | Where-Object { 
+      $_.updated_at -gt $SINCE_ISO -and $_.merged_at 
+    }
+    $prs += $relevantPRs
+    $page++
+  } while ($response.Count -eq 100 -and $relevantPRs.Count -gt 0)
+
+  Log "  Found $($prs.Count) recently updated PRs"
+
+  # Get recent commits directly from main branch for this repository
+  $commits = @()
+  $page = 1
+  do {
+    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=main&since=$SINCE_ISO&per_page=100&page=$page"
+    $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    $commits += $response
+    $page++
+  } while ($response.Count -eq 100)
+
+  Log "  Found $($commits.Count) recent commits"
+
+  # Process PRs for this repository
+  foreach ($pr in $prs) {
+    try {
+      $files = Get-PullRequestFiles -prNumber $pr.number -Owner $Owner -Repo $Repo
+      foreach ($file in $files) {
+        # Apply path filter - only include files matching the filter
+        if ($file.filename -notmatch $PathFilter) { continue }
+        
+        $allFiles += [PSCustomObject]@{
+          filename = $file.filename
+          status = $file.status
+          additions = $file.additions
+          deletions = $file.deletions
+          patch = $file.patch
+          pr_number = $pr.number
+          pr_title = $pr.title
+          pr_url = $pr.html_url
+          sha = $pr.merge_commit_sha
+          date = $pr.merged_at
+          source = "PR"
+          repo_owner = $Owner
+          repo_name = $Repo
+          repo_display = $DisplayName
+        }
       }
     }
+    catch {
+      Write-Warning "Failed to get files for PR #$($pr.number) in $Owner/$Repo`: $_"
+    }
   }
-  catch {
-    Write-Warning "Failed to get files for commit $($commit.sha): $_"
+
+  # Process commits that aren't from PRs for this repository
+  foreach ($commit in $commits) {
+    # Skip commits that are already covered by PRs
+    $existingCommit = $allFiles | Where-Object { $_.sha -eq $commit.sha }
+    if ($existingCommit) { continue }
+    
+    try {
+      $commitDetail = Get-CommitFiles -sha $commit.sha -Owner $Owner -Repo $Repo
+      foreach ($file in $commitDetail.files) {
+        # Apply path filter - only include files matching the filter
+        if ($file.filename -notmatch $PathFilter) { continue }
+        
+        $allFiles += [PSCustomObject]@{
+          filename = $file.filename
+          status = $file.status
+          additions = $file.additions
+          deletions = $file.deletions
+          patch = $file.patch
+          pr_number = $null
+          pr_title = $commit.commit.message.Split("`n")[0]
+          pr_url = $commit.html_url
+          sha = $commit.sha
+          date = $commit.commit.committer.date
+          source = "Commit"
+          repo_owner = $Owner
+          repo_name = $Repo
+          repo_display = $DisplayName
+        }
+      }
+    }
+    catch {
+      Write-Warning "Failed to get files for commit $($commit.sha) in $Owner/$Repo`: $_"
+    }
   }
+  
+  Log "  Collected files from $DisplayName repository"
 }
 
 Log "Collected $($allFiles.Count) file changes"
@@ -871,7 +936,12 @@ $forced = New-Object System.Collections.Generic.List[object]
 foreach ($k in $filteredGroups.Keys) {
   $statuses = ($filteredGroups[$k].status | Where-Object { $_ } | Select-Object -Unique)
   if ($statuses -contains 'added' -and -not $aiKeptSet.Contains($k)) {
-    $forcedSummary = Summarize-NewMarkdown $k
+    # Get repository info from the first file entry
+    $firstItem = $filteredGroups[$k][0]
+    $repoOwner = $firstItem.repo_owner
+    $repoName = $firstItem.repo_name
+    
+    $forcedSummary = Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName
     $forced.Add([pscustomobject]@{
         file     = $k
         summary  = $forcedSummary
@@ -1078,7 +1148,13 @@ foreach ($row in @($finalResults.ordered)) {
   if (-not $filteredGroups.ContainsKey($file)) { continue }
 
   $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
-  $fileUrl = Get-LiveDocsUrl -FilePath $file
+  
+  # Get repository info from the first item
+  $repoOwner = $arr[0].repo_owner
+  $repoName = $arr[0].repo_name
+  $repoDisplay = $arr[0].repo_display
+  
+  $fileUrl = Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
   $summary = $finalResults.byFile[$file].summary
   $category = if ($finalResults.byFile[$file].category) { $finalResults.byFile[$file].category } else { Compute-Category $file }
   
@@ -1090,9 +1166,10 @@ foreach ($row in @($finalResults.ordered)) {
   $display = Get-DocDisplayName $file
   $kind = Get-SessionKind -items $arr -summary ($summary ?? "")
   $kindPill = KindToPillHtml $kind
-  $product = Get-ProductIconMeta $file
+  $product = Get-ProductIconMeta -FilePath $file -RepoName $repoName
   $iconUrl = $product.url
   $iconAlt = $product.alt
+  $cardTitle = "$($product.label) - $display"
   $cardTitle = "$($product.label) - $display"
 
   $summary = if ($summary) { $summary } else { "Unable to summarize but a meaningful update was detected (details in linked PR/doc)." }
@@ -1345,14 +1422,14 @@ $html = @"
 
   <div class="aks-intro">
     <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS) and Kubernetes Fleet Manager documentation and release notes.</p>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), Azure Container Registry (ACR), and Kubernetes Fleet Manager documentation and release notes.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
 
     <p><strong>With this tracker, you can:</strong></p>
     <ul>
-      <li>Quickly scan meaningful AKS and Fleet documentation changes from the past 7 days</li>
+      <li>Quickly scan meaningful AKS, ACR, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
     </ul>
 
@@ -1385,7 +1462,7 @@ $html = @"
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to AKS and Fleet docs from the last 7 days.</div>
+      <div class="aks-docs-desc">Meaningful updates to AKS, ACR, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
