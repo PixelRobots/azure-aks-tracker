@@ -919,6 +919,138 @@ foreach ($k in $filteredGroups.Keys) {
     }) | Out-Null
 }
 
+function Apply-FinalTrivialFiltering {
+  param([object]$aiVerdicts, [hashtable]$filteredGroups)
+  
+  Log "Applying final filtering to remove trivial changes and duplicates..."
+  
+  $finalKept = New-Object System.Collections.Generic.List[object]
+  $finalByFile = @{}
+  
+  foreach ($item in $aiVerdicts.ordered) {
+    $file = $item.file
+    if (-not $filteredGroups.ContainsKey($file)) { continue }
+    
+    $items = $filteredGroups[$file]
+    $summary = $item.summary
+    $category = $item.category
+    
+    # Build patch sample for analysis
+    $lines = @()
+    foreach ($it in $items) { 
+      if ($it.patch) { 
+        $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) 
+      } 
+    }
+    $patchSample = ($lines | Select-Object -First 1200) -join "`n"
+    
+    $adds = ($items | Measure-Object -Sum -Property additions).Sum
+    $dels = ($items | Measure-Object -Sum -Property deletions).Sum
+    $totalLines = $adds + $dels
+    
+    # Final trivial check - be more aggressive than pre-filtering
+    $isTrivial = $false
+    
+    # Pure metadata changes
+    if ($totalLines -le 5 -and $patchSample -match '(ms\.author|ms\.date|author:|date:)' -and 
+        ($patchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch '(ms\.author|ms\.date|author:|date:)|^\s*[\+\-]\s*$' }).Count -eq 0) {
+      $isTrivial = $true
+      Log "  Final filter: Removed pure metadata change: $file"
+    }
+    
+    # "Deploy and Explore" noise
+    elseif ($patchSample -match 'deploy.*explore|nextstepaction.*Deploy.*Explore' -and $summary -match '(?i)deploy.*explore|call-to-action|navigation') {
+      $deployExploreLines = ($patchSample -split "`n" | Where-Object { $_ -match '\+.*(deploy.*explore|nextstepaction|Deploy.*Explore)' }).Count
+      $realContentLines = ($patchSample -split "`n" | Where-Object { 
+        $_ -match '^[\+\-]' -and 
+        $_ -notmatch '(deploy.*explore|nextstepaction|Deploy.*Explore|^\s*[\+\-]\s*$|<div|</div>)' -and
+        $_ -match '[a-zA-Z]{3,}'
+      }).Count
+      
+      if ($deployExploreLines -gt 0 -and $realContentLines -le 3) {
+        $isTrivial = $true
+        Log "  Final filter: Removed Deploy and Explore callout noise: $file"
+      }
+    }
+    
+    # Author changes with minimal content
+    elseif ($patchSample -match 'author' -and $summary -match '(?i)author.*change|author.*update' -and $totalLines -le 10) {
+      $isTrivial = $true
+      Log "  Final filter: Removed author change with minimal content: $file"
+    }
+    
+    # Small formatting/navigation changes
+    elseif ($totalLines -le 8 -and $summary -match '(?i)(navigation|format|enhance.*navigation|improve.*navigation|direct.*link)') {
+      $contentLines = ($patchSample -split "`n" | Where-Object { 
+        $_ -match '^[\+\-]' -and 
+        $_ -notmatch '(^\s*[\+\-]\s*$|<div|</div>|href|link)' -and
+        $_ -match '[a-zA-Z]{5,}'
+      }).Count
+      
+      if ($contentLines -le 2) {
+        $isTrivial = $true
+        Log "  Final filter: Removed small formatting/navigation change: $file"
+      }
+    }
+    
+    if ($isTrivial) { continue }
+    
+    # Check for duplicates based on file path similarity and content
+    $isDuplicate = $false
+    $bestExisting = $null
+    
+    foreach ($existing in $finalKept) {
+      # Check if files are very similar (e.g., different versions of same doc)
+      $fileBase = $file -replace '\d+$', '' -replace '-v\d+$', ''
+      $existingBase = $existing.file -replace '\d+$', '' -replace '-v\d+$', ''
+      
+      if ($fileBase -eq $existingBase -or 
+          [System.IO.Path]::GetFileNameWithoutExtension($file) -eq [System.IO.Path]::GetFileNameWithoutExtension($existing.file)) {
+        
+        # Similar files found - keep the one with better summary or newer date
+        $existingItems = $filteredGroups[$existing.file]
+        $existingDate = if ($existingItems[0].merged_at) { $existingItems[0].merged_at } else { $existingItems[0].date }
+        $currentDate = if ($items[0].merged_at) { $items[0].merged_at } else { $items[0].date }
+        
+        if ($existing.summary.Length -gt $summary.Length -or [DateTime]::Parse($existingDate) -gt [DateTime]::Parse($currentDate)) {
+          $isDuplicate = $true
+          Log "  Final filter: Removed duplicate (keeping better version): $file vs $($existing.file)"
+          break
+        } else {
+          $bestExisting = $existing
+          Log "  Final filter: Replacing inferior duplicate: $($existing.file) with $file"
+          break
+        }
+      }
+    }
+    
+    if ($isDuplicate) { continue }
+    
+    # Remove the inferior version if we found one
+    if ($bestExisting) {
+      $finalKept.Remove($bestExisting) | Out-Null
+      $finalByFile.Remove($bestExisting.file)
+    }
+    
+    # Add this item
+    $finalKept.Add($item) | Out-Null
+    $finalByFile[$file] = @{ 
+      summary = $summary
+      category = $category
+      score = $item.score
+    }
+    
+    Log "  Final filter: Kept meaningful update: $file"
+  }
+  
+  Log "Final filtering complete: kept $($finalKept.Count) of $($aiVerdicts.ordered.Count) items"
+  
+  return @{
+    ordered = $finalKept.ToArray()
+    byFile = $finalByFile
+  }
+}
+
 if ($forcedModified.Count -gt 0) {
   Log "Force-keeping $($forcedModified.Count) modified page(s) the AI skipped."
   foreach ($f in $forcedModified) {
@@ -936,16 +1068,19 @@ if ($forcedModified.Count -gt 0) {
   foreach ($f in $forcedModified) { $aiVerdicts.byFile[$f.file] = @{ summary = $f.summary; category = $f.category; score = $f.score } }
 }
 
-# Render DOCS sections — ONLY what AI kept, preserving AI order
+# Apply final filtering to remove trivial changes and duplicates
+$finalResults = Apply-FinalTrivialFiltering -aiVerdicts $aiVerdicts -filteredGroups $filteredGroups
+
+# Render DOCS sections — ONLY what passed final filtering, preserving order
 $sections = New-Object System.Collections.Generic.List[string]
-foreach ($row in @($aiVerdicts.ordered)) {
+foreach ($row in @($finalResults.ordered)) {
   $file = $row.file
   if (-not $filteredGroups.ContainsKey($file)) { continue }
 
   $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
-  $summary = $aiVerdicts.byFile[$file].summary
-  $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
+  $summary = $finalResults.byFile[$file].summary
+  $category = if ($finalResults.byFile[$file].category) { $finalResults.byFile[$file].category } else { Compute-Category $file }
   
   # Handle both PR merged_at and commit date
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
@@ -1201,7 +1336,7 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # PAGE HTML (Tabs + Panels) - Same as original
 # =========================
 $lastUpdated = (Get-Date -Format 'dd/MM/yyyy, HH:mm:ss')
-$updateCount = @($aiVerdicts.ordered).Count
+$updateCount = @($finalResults.ordered).Count
 
 $formShortcode = '[email-subscribers-form id="2"]'
 
