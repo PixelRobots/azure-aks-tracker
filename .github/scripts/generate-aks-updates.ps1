@@ -276,8 +276,8 @@ function Convert-MarkdownToPlain([string]$md) {
   $t = $t -replace '(\*\*|__)(.*?)\1', '$2'
   $t = $t -replace '(\*|_)(.*?)\1', '$2'
   $t = $t -replace '`([^`]+)`', '$1'
-  $t = $t -replace '^\s*([-*+]|\d+\.)\s+', '', 'Multiline'
-  $t = $t -replace '^\s*>\s?', '', 'Multiline'
+  $t = [regex]::Replace($t, '(?m)^\s*([-*+]|\d+\.)\s+', '')
+  $t = [regex]::Replace($t, '(?m)^\s*>\s?', '')
   $t = [regex]::Replace($t, '\r', '')
   $t = [regex]::Replace($t, '\n{3,}', "`n`n")
   $t.Trim()
@@ -425,7 +425,7 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
-# ===== Enhanced Docs AI with STRICTER FILTERING =====
+# ===== Enhanced Docs AI with SELECTIVE FILTERING =====
 function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{ ordered = @(); byFile = @{} } }
@@ -485,7 +485,7 @@ OUTPUT: JSON array of kept items only:
       -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
       -Model $Model
 
-    $userMsg = "Apply STRICT filtering. Keep only truly meaningful updates. Return ONLY the JSON array."
+    $userMsg = "Apply selective filtering using the guidelines provided. Be inclusive rather than exclusive - keep changes that have technical value or substance. Return ONLY the JSON array."
     $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.05
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
@@ -511,7 +511,7 @@ OUTPUT: JSON array of kept items only:
         score    = [double]($i.PSObject.Properties['score'] ? $i.score : 1.0)
       }
     }
-    Log "AI: Kept $($ordered.Count) files after STRICT filtering."
+    Log "AI: Kept $($ordered.Count) files after selective filtering."
     return @{ ordered = $ordered; byFile = $byFile }
   }
   catch {
@@ -553,7 +553,7 @@ Rules:
 - If only trivial changes detected, say "Minor documentation maintenance updates"
 "@
 
-      $assistant = New-OAIAssistant -Name "AKS-Doc-StrictSummarizer" -Instructions $instructions -Model $Model
+      $assistant = New-OAIAssistant -Name "AKS-Doc-SelectiveSummarizer" -Instructions $instructions -Model $Model
       $content = @"
 File: $FilePath
 
