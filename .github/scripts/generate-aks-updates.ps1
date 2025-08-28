@@ -29,6 +29,32 @@ $ghHeaders = @{
   "User-Agent"    = "pixelrobots-aks-updates-pwsh"
 }
 
+function Get-PullRequestFiles {
+  param([int]$prNumber)
+  $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$prNumber/files"
+  try { 
+    $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    return $response
+  }
+  catch { 
+    Write-Warning "Failed to get files for PR #$prNumber`: $_"
+    return @()
+  }
+}
+
+function Get-CommitFiles {
+  param([string]$sha)
+  $uri = "https://api.github.com/repos/$Owner/$Repo/commits/$sha"
+  try { 
+    $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
+    return $response
+  }
+  catch { 
+    Write-Warning "Failed to get commit details for $sha`: $_"
+    return @{ files = @() }
+  }
+}
+
 function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
 
 # =========================
@@ -905,11 +931,14 @@ foreach ($row in @($aiVerdicts.ordered)) {
   $file = $row.file
   if (-not $filteredGroups.ContainsKey($file)) { continue }
 
-  $arr = $filteredGroups[$file] | Sort-Object merged_at -Descending
+  $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
   $summary = $aiVerdicts.byFile[$file].summary
   $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
-  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  
+  # Handle both PR merged_at and commit date
+  $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
+  $lastUpdated = [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm')
   $prLink = $arr[0].pr_url
 
   $display = Get-DocDisplayName $file
@@ -927,7 +956,7 @@ foreach ($row in @($aiVerdicts.ordered)) {
      data-category="$category"
      data-kind="$kind"
      data-product="$($product.label)"
-     data-updated="$($arr[0].merged_at.ToString('o'))"
+     data-updated="$([DateTime]::Parse($lastUpdatedDate).ToString('o'))"
      data-title="$(Escape-Html $display)">
   <h2 class="aks-doc-title">
     <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" width="20" height="20" loading="lazy" />
@@ -1239,11 +1268,14 @@ $digestItems = New-Object System.Collections.Generic.List[string]
 foreach ($row in $sortedDocs) {
   $file = $row.file
   if (-not $filteredGroups.ContainsKey($file)) { continue }
-  $arr = $filteredGroups[$file] | Sort-Object merged_at -Descending
+  $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
   $summary = $aiVerdicts.byFile[$file].summary
   $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
-  $lastUpdated = $arr[0].merged_at.ToString('yyyy-MM-dd HH:mm')
+  
+  # Handle both PR merged_at and commit date
+  $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
+  $lastUpdated = [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm')
   $product = (Get-ProductIconMeta $file).label
   $title = "$(Escape-Html ($product + ' - ' + (Get-DocDisplayName $file)))"
   $prLink = $arr[0].pr_url
