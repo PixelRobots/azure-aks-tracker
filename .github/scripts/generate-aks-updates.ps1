@@ -958,39 +958,39 @@ function Apply-FinalTrivialFiltering {
       Log "  Final filter: Removed pure metadata change: $file"
     }
     
-    # "Deploy and Explore" noise
-    elseif ($patchSample -match 'deploy.*explore|nextstepaction.*Deploy.*Explore' -and $summary -match '(?i)deploy.*explore|call-to-action|navigation') {
-      $deployExploreLines = ($patchSample -split "`n" | Where-Object { $_ -match '\+.*(deploy.*explore|nextstepaction|Deploy.*Explore)' }).Count
-      $realContentLines = ($patchSample -split "`n" | Where-Object { 
-        $_ -match '^[\+\-]' -and 
-        $_ -notmatch '(deploy.*explore|nextstepaction|Deploy.*Explore|^\s*[\+\-]\s*$|<div|</div>)' -and
-        $_ -match '[a-zA-Z]{3,}'
-      }).Count
-      
-      if ($deployExploreLines -gt 0 -and $realContentLines -le 3) {
-        $isTrivial = $true
-        Log "  Final filter: Removed Deploy and Explore callout noise: $file"
-      }
-    }
-    
-    # Author changes with minimal content
-    elseif ($patchSample -match 'author' -and $summary -match '(?i)author.*change|author.*update' -and $totalLines -le 10) {
+    # "Deploy and Explore" noise - check both patch and summary
+    elseif (($patchSample -match 'deploy.*explore|nextstepaction.*Deploy.*Explore' -or 
+            $summary -match '(?i)deploy.*explore|call-to-action') -and 
+            $summary -notmatch '(?i)(new feature|security|performance|configuration|technical|command|procedure)') {
       $isTrivial = $true
-      Log "  Final filter: Removed author change with minimal content: $file"
+      Log "  Final filter: Removed Deploy and Explore callout noise: $file"
     }
     
-    # Small formatting/navigation changes
-    elseif ($totalLines -le 8 -and $summary -match '(?i)(navigation|format|enhance.*navigation|improve.*navigation|direct.*link)') {
-      $contentLines = ($patchSample -split "`n" | Where-Object { 
-        $_ -match '^[\+\-]' -and 
-        $_ -notmatch '(^\s*[\+\-]\s*$|<div|</div>|href|link)' -and
-        $_ -match '[a-zA-Z]{5,}'
-      }).Count
-      
-      if ($contentLines -le 2) {
-        $isTrivial = $true
-        Log "  Final filter: Removed small formatting/navigation change: $file"
-      }
+    # "Minor documentation maintenance updates" - this is clearly noise
+    elseif ($summary -match '(?i)minor.*documentation.*maintenance|maintenance.*update') {
+      $isTrivial = $true
+      Log "  Final filter: Removed minor maintenance update: $file"
+    }
+    
+    # Author changes 
+    elseif ($summary -match '(?i)author.*metadata.*updated|author.*assignment|updating.*author') {
+      $isTrivial = $true
+      Log "  Final filter: Removed author assignment change: $file"
+    }
+    
+    # Navigation/formatting only changes
+    elseif ($summary -match '(?i)enhance.*navigation|improve.*navigation|direct.*link|guide.*user.*navigation' -and
+           $summary -notmatch '(?i)(new|feature|security|technical|command|procedure|configuration)') {
+      $isTrivial = $true
+      Log "  Final filter: Removed navigation-only change: $file"
+    }
+    
+    # Generic "enhancement" without substance
+    elseif ($totalLines -le 15 -and 
+           $summary -match '(?i)enhancement.*aim.*improve|addition.*enhance|improve.*user.*experience' -and
+           $summary -notmatch '(?i)(new feature|security|performance|technical|command|procedure|configuration)') {
+      $isTrivial = $true
+      Log "  Final filter: Removed generic enhancement: $file"
     }
     
     if ($isTrivial) { continue }
