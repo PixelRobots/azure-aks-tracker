@@ -1578,11 +1578,11 @@ $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -jo
 [pscustomobject]@{
   html         = $html
   hash         = $hash
-  ai_summaries = $aiVerdicts
+  ai_summaries = $finalResults
   digest_html  = $digestHtml
   digest_title = $digestTitle
 } | ConvertTo-Json -Depth 6
 
 Log "Enhanced AKS Docs Tracker completed successfully!"
 Log "Minimal pre-filtering removed $skippedCount obvious trivial changes"
-Log "Final output includes $($aiVerdicts.ordered.Count) meaningful updates"
+Log "Final output includes $($finalResults.ordered.Count) meaningful updates"
