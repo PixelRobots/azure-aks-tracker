@@ -71,20 +71,22 @@ $TrivialPatterns = @(
 function Is-TrivialChange {
     param([string]$PatchSample, [string[]]$Subjects, [int]$TotalLines)
     
-    # Only filter the most obvious trivial cases - let AI handle everything else
+    # Only filter the most absolutely obvious trivial cases
+    # Be extremely conservative - when in doubt, don't filter
     
-    # Filter single line changes
-    if ($TotalLines -eq 1) { 
+    # Only filter if exactly 1 line AND it's just whitespace or comment
+    if ($TotalLines -eq 1 -and $PatchSample -match '^\s*[\+\-]\s*$') { 
         return $true 
     }
     
-    # Filter pure metadata-only changes (ms.author lines with no other content)
-    if ($TotalLines -le 3 -and $PatchSample -match 'ms\.author.*\w+' -and 
-        ($PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch 'ms\.author' }).Count -eq 0) {
+    # Only filter pure ms.author changes with no other content
+    if ($TotalLines -le 2 -and 
+        $PatchSample -match 'ms\.author' -and 
+        ($PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch 'ms\.author|^\s*[\+\-]\s*$' }).Count -eq 0) {
         return $true
     }
     
-    # Everything else goes to AI for intelligent filtering
+    # Everything else goes to AI - be very permissive
     return $false
 }
 
@@ -444,35 +446,38 @@ function Get-PerFileSummariesViaAssistant {
     } while ($vs.status -ne 'completed')
 
     $instructions = @"
-You are a selective filter for Azure AKS documentation updates. Your goal is to keep meaningful changes while filtering obvious noise.
+You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE and keep most changes.
 
-INPUT JSON contains file groups with subjects, patch samples, additions/deletions counts.
+**CRITICAL: Be very permissive. When in doubt, KEEP IT.**
 
-**DEFINITELY SKIP (DO NOT INCLUDE):**
+**ONLY EXCLUDE these very specific cases:**
+1. Pure ms.author metadata changes with zero content changes
+2. Single-word typo fixes with no other changes  
+3. Pure whitespace/formatting changes with no content impact
 
-1. **PURE METADATA**: Changes ONLY to ms.author, author, ms.date when no content changes
-2. **AUTHOR REASSIGNMENT ONLY**: PRs with titles like "Update author from X to Y" with no other changes
-3. **PURE FORMATTING**: Only whitespace, link formatting, markdown syntax fixes
-4. **SINGLE TYPO FIXES**: One or two word corrections with no other changes
+**ALWAYS KEEP (even if small):**
+- Learn Editor updates with ANY content changes
+- Bot commits with ANY documentation improvements  
+- New features, commands, or procedures (any size)
+- Security, policy, or compliance updates
+- Version updates or compatibility changes
+- Tutorial improvements or new examples
+- Corrections to technical information
+- New sections or content reorganization
+- Any change with technical substance
 
-**KEEP (INCLUDE) these types of changes:**
-
-- **New features, capabilities, or services**
-- **Breaking changes, deprecations, security updates**
-- **New CLI commands, parameters, or configuration examples**
-- **Tutorial content, troubleshooting steps, or procedures**
-- **Learn Editor updates with actual content improvements**
-- **Bot commits that contain meaningful documentation**
-- **Corrections to technical accuracy or clarity**
-- **New sections or reorganized content**
-- **Version updates, support changes, compatibility info**
-- **Process changes that affect user workflows**
+**EVALUATION APPROACH:**
+- Default to KEEPING unless obviously trivial
+- Look for ANY technical value or user benefit
+- Bot/automated commits often contain valuable updates
+- Small changes can still be meaningful
+- Size doesn't determine value
 
 **ALWAYS KEEP:** New files (status "added") regardless of content.
 
-**When evaluating:** Be inclusive rather than exclusive. If there's technical substance or user value, keep it. The goal is high signal-to-noise ratio, not minimal volume.
+**Your goal:** High signal-to-noise ratio while being inclusive of valuable updates.
 
-OUTPUT: JSON array of kept items only:
+OUTPUT: JSON array of kept items:
 [
   { "file": "<path>", "summary": "2-3 factual sentences", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0 }
 ]
@@ -649,6 +654,7 @@ Log "AI input prepared: $aiJsonPath"
 
 # Apply minimal pre-filtering before sending to AI - let AI do the heavy lifting
 Log "Applying minimal pre-filtering (only obvious trivial cases)..."
+Log "Total file groups to process: $($groups.Keys.Count)"
 $filteredGroups = @{}
 $skippedCount = 0
 
@@ -656,9 +662,12 @@ foreach ($k in $groups.Keys) {
   $items = $groups[$k]
   $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
   
+  Log "Processing file: $k, statuses: $($statuses -join ', ')"
+  
   # Always keep newly added files
   if ($statuses -contains 'added') {
     $filteredGroups[$k] = $items
+    Log "Kept new file: $k"
     continue
   }
   
@@ -667,6 +676,8 @@ foreach ($k in $groups.Keys) {
     $adds = ($items | Measure-Object -Sum -Property additions).Sum
     $dels = ($items | Measure-Object -Sum -Property deletions).Sum
     $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+    
+    Log "Modified file $k - +$adds -$dels lines, subjects: $($subjects -join ', ')"
     
     # Build combined patch sample
     $lines = @()
@@ -685,11 +696,17 @@ foreach ($k in $groups.Keys) {
     }
 
     # Apply very permissive filtering - let AI handle nuanced decisions
-    if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects $subjects)) {
+    if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $null -PatchSample $patchSample -Subjects $subjects)) {
       $skippedCount++
       Log "Skipped empty change: $k"
       continue
-    }    $filteredGroups[$k] = $items
+    }
+    
+    $filteredGroups[$k] = $items
+    Log "Kept modified file: $k"
+  } else {
+    Log "Unknown status for file $k - $($statuses -join ', ') - keeping"
+    $filteredGroups[$k] = $items
   }
 }
 
