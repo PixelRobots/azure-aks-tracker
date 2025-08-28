@@ -921,6 +921,17 @@ foreach ($k in $filteredGroups.Keys) {
 
 if ($forcedModified.Count -gt 0) {
   Log "Force-keeping $($forcedModified.Count) modified page(s) the AI skipped."
+  foreach ($f in $forcedModified) {
+    $items = $filteredGroups[$f.file]
+    $adds = ($items | Measure-Object -Sum -Property additions).Sum
+    $dels = ($items | Measure-Object -Sum -Property deletions).Sum
+    $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+    
+    Log "  Force-kept: $($f.file)"
+    Log "    Reason: +$adds -$dels lines, subjects: $($subjects -join ', ')"
+    Log "    Category: $($f.category), Summary: $($f.summary)"
+  }
+  
   $aiVerdicts.ordered += $forcedModified
   foreach ($f in $forcedModified) { $aiVerdicts.byFile[$f.file] = @{ summary = $f.summary; category = $f.category; score = $f.score } }
 }
