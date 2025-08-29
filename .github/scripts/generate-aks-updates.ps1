@@ -1215,7 +1215,7 @@ foreach ($row in @($finalResults.ordered)) {
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
     $kindPill
-    <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
+    <span class="aks-doc-updated-pill">Updated: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
@@ -1480,7 +1480,7 @@ $html = @"
       <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
-              <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
+              <span class="aks-pill aks-pill-updated">Updated: $lastUpdated</span>
           </div>
       </div>
         $releasesHtml
@@ -1491,7 +1491,7 @@ $html = @"
       <h2>Documentation Updates</h2>
       <div class="aks-docs-desc">Meaningful updates to AKS, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
-        <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
+        <span class="aks-pill aks-pill-updated">Updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
       </div>
       <div class="aks-docs-list">
