@@ -1208,14 +1208,14 @@ foreach ($row in @($finalResults.ordered)) {
      data-product="$($product.label)"
      data-updated="$([DateTime]::Parse($lastUpdatedDate).ToString('o'))"
      data-title="$(Escape-Html $display)">
-  <h2 class="aks-doc-title">
-    <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" width="20" height="20" loading="lazy" />
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
     <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
   </h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
     $kindPill
-    <span class="aks-doc-updated-pill">Updated: $lastUpdated</span>
+    <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
@@ -1480,7 +1480,7 @@ $html = @"
       <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
-              <span class="aks-pill aks-pill-updated">Updated: $lastUpdated</span>
+              <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
           </div>
       </div>
         $releasesHtml
@@ -1491,7 +1491,7 @@ $html = @"
       <h2>Documentation Updates</h2>
       <div class="aks-docs-desc">Meaningful updates to AKS, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
-        <span class="aks-pill aks-pill-updated">Updated: $lastUpdated</span>
+        <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
       </div>
       <div class="aks-docs-list">
