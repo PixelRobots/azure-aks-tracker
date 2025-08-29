@@ -1215,7 +1215,7 @@ foreach ($row in @($finalResults.ordered)) {
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
     $kindPill
-    <span class="aks-doc-updated-pill">Last updated: $lastUpdated</span>
+    <span class="aks-doc-updated-pill">Updated: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
@@ -1449,7 +1449,7 @@ $html = @"
 
   <div class="aks-intro">
     <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), Azure Container Registry (ACR), and Kubernetes Fleet Manager documentation and release notes.</p>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). It also shows the last 5 release notes from AKS.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
