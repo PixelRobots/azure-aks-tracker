@@ -220,18 +220,7 @@ function Get-MeaningfulSignals {
 }
 
 function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
-  # Find the repository configuration that matches this repo
-  $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
-  
-  if ($repoConfig) {
-    return @{
-      url   = $repoConfig.IconUrl
-      alt   = $repoConfig.IconAlt
-      label = $repoConfig.DisplayName
-    }
-  }
-  
-  # Fallback logic for legacy file path detection
+  # Check file path first to distinguish between products in the same repo
   if ($FilePath -match '/kubernetes-fleet/' -or $FilePath -match 'fleet') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg'
@@ -253,12 +242,23 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
       label = 'AGC'
     }
   }
-  else {
+  
+  # Then check repository configuration for default product
+  $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
+  
+  if ($repoConfig) {
     return @{
-      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
-      alt   = 'Azure Kubernetes Service'
-      label = 'AKS'
+      url   = $repoConfig.IconUrl
+      alt   = $repoConfig.IconAlt
+      label = $repoConfig.DisplayName
     }
+  }
+  
+  # Final fallback
+  return @{
+    url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
+    alt   = 'Azure Kubernetes Service'
+    label = 'AKS'
   }
 }
 
