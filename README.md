@@ -1,15 +1,20 @@
-# Azure AKS Documentation & Release Tracker
+# Azure Container Services Documentation & Release Tracker
 
-Stay on top of meaningful changes to **Azure Kubernetes Service (AKS)** and **Kubernetes Fleet Manager** docs and releases.
-This project fetches updates from Microsoft repos, filters out noise with AI, then publishes a clean tracker page to WordPress. It also creates a weekly digest post for email.
+Stay on top of meaningful changes to **Azure Kubernetes Service (AKS)**, **Azure Container Registry (ACR)**, **Application Gateway for Containers (AGC)**, and **Kubernetes Fleet Manager** docs and releases.
+This project fetches updates from multiple Microsoft repos, filters out noise with AI, then publishes a clean tracker page to WordPress. It also creates a weekly digest post for email.
 
 **Live tracker:** [https://pixelrobots.co.uk/aks-docs-tracker/](https://pixelrobots.co.uk/aks-docs-tracker/)
 
 
 ## What it does
 
-* **Docs updates**
-  Pulls the last 7 days of activity from `MicrosoftDocs/azure-aks-docs`, groups by page, filters trivial edits, and writes AI summaries.
+* **Multi-repository docs updates**
+  Pulls the last 7 days of activity from multiple Microsoft documentation repositories:
+  - `MicrosoftDocs/azure-aks-docs` (AKS and Fleet Manager)
+  - `MicrosoftDocs/azure-management-docs` (Azure Container Registry)
+  - `MicrosoftDocs/azure-docs` (Application Gateway for Containers)
+  
+  Groups changes by page, filters trivial edits, and writes AI summaries with intelligent product categorization.
 
 * **AKS releases**
   Fetches the latest releases from `Azure/AKS` and generates short summaries with highlights.
