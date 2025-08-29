@@ -1480,7 +1480,7 @@ $html = @"
       <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
-              <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
+              <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
           </div>
       </div>
         $releasesHtml
@@ -1491,7 +1491,7 @@ $html = @"
       <h2>Documentation Updates</h2>
       <div class="aks-docs-desc">Meaningful updates to AKS, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
-        <span class="aks-pill aks-pill-updated">Last updated: $lastUpdated</span>
+        <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
       </div>
       <div class="aks-docs-list">
@@ -1536,10 +1536,10 @@ foreach ($row in $sortedDocs) {
     <a href="$fileUrl" style="text-decoration:none; color:#2563eb;">$title</a>
   </div>
   <div style="font-size:12px; color:#6b7280; margin:4px 0 6px;">
-    <span>$category</span> · <span>$product</span> · <span>Last updated: $lastUpdated</span>
+    <span>$category</span> · <span>$product</span> · <span>updated: $lastUpdated</span>
   </div>
   <div style="font-size:14px; color:#111827;">$(Escape-Html $summary)</div>
-  <div style="margin-top:6px;">
+  <div style="margin-top:6px; white-space:nowrap;">
     <a href="$fileUrl" style="font-size:13px; color:#2563eb; text-decoration:none;">View doc</a>
     <span style="color:#9ca3af;"> · </span>
     <a href="$prLink" style="font-size:13px; color:#2563eb; text-decoration:none;">View PR</a>
@@ -1551,19 +1551,19 @@ foreach ($row in $sortedDocs) {
 
 $weekStart = (Get-Date -Date ((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')) -AsUTC).AddDays(-7)
 $weekEnd = (Get-Date).ToUniversalTime()
-$digestTitle = "AKS & Fleet Docs – Weekly Update (" + $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd') + ")"
+$digestTitle = "Azure Container Services Docs - Weekly Update (" + $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd') + ")"
 
 $digestHtml = @"
 <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; max-width:800px; margin:0 auto;">
   <h2 style="margin:0 0 8px; font-size:20px;">$digestTitle</h2>
   <p style="margin:0 0 14px; font-size:14px; color:#374151;">
-    The most meaningful AKS and Kubernetes Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
+    The most meaningful Azure Kubernetes Service, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
   </p>
   <ul style="padding-left:18px; margin:0; list-style:disc;">
     $($digestItems -join "`n")
   </ul>
   <p style="margin-top:16px; font-size:12px; color:#6b7280;">
-    Full tracker (with filters): <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb; text-decoration:none;">AKS Docs Tracker</a>
+    Full tracker (with filters): <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb; text-decoration:none;">Azure Container Services Docs Tracker</a>
   </p>
 </div>
 "@.Trim()
