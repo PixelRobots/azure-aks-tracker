@@ -774,6 +774,8 @@ foreach ($repoConfig in $Repositories) {
       foreach ($file in $files) {
         # Apply path filter - only include files matching the filter
         if ($file.filename -notmatch $PathFilter) { continue }
+        # Only include markdown files for documentation updates
+        if ($file.filename -notmatch '\.md$') { continue }
         
         $allFiles += [PSCustomObject]@{
           filename = $file.filename
@@ -809,6 +811,8 @@ foreach ($repoConfig in $Repositories) {
       foreach ($file in $commitDetail.files) {
         # Apply path filter - only include files matching the filter
         if ($file.filename -notmatch $PathFilter) { continue }
+        # Only include markdown files for documentation updates
+        if ($file.filename -notmatch '\.md$') { continue }
         
         $allFiles += [PSCustomObject]@{
           filename = $file.filename
