@@ -1518,6 +1518,25 @@ $sortedDocs = @($aiVerdicts.ordered) | Sort-Object {
   else { Get-Date 0 }
 } -Descending
 
+# Calculate counts per repository/product for digest
+$digestRepoCounts = @{}
+foreach ($row in $sortedDocs) {
+  $file = $row.file
+  if (-not $filteredGroups.ContainsKey($file)) { continue }
+  
+  $product = (Get-ProductIconMeta $file).label
+  
+  if (-not $digestRepoCounts.ContainsKey($product)) {
+    $digestRepoCounts[$product] = 0
+  }
+  $digestRepoCounts[$product]++
+}
+
+# Create count breakdown for digest
+$digestCountBreakdown = ($digestRepoCounts.GetEnumerator() | Sort-Object Name | ForEach-Object { 
+  "$($_.Name) ($($_.Value))" 
+}) -join ", "
+
 $digestItems = New-Object System.Collections.Generic.List[string]
 foreach ($row in $sortedDocs) {
   $file = $row.file
@@ -1543,10 +1562,13 @@ foreach ($row in $sortedDocs) {
     <span>$category</span> · <span>$product</span> · <span>updated: $lastUpdated</span>
   </div>
   <div style="font-size:14px; color:#111827;">$(Escape-Html $summary)</div>
-  <div style="margin-top:6px; white-space:nowrap;">
-    <a href="$fileUrl" style="font-size:13px; color:#2563eb; text-decoration:none;">View doc</a>
-    <span style="color:#9ca3af;"> · </span>
-    <a href="$prLink" style="font-size:13px; color:#2563eb; text-decoration:none;">View PR</a>
+  <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+    <a href="$fileUrl" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:13px; font-weight:600; text-decoration:none; border-radius:6px; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border:1px solid transparent; transition:all 0.2s ease-in-out;">
+      <span style="font-size:14px;">📖</span> View Documentation
+    </a>
+    <a href="$prLink" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:13px; font-weight:600; text-decoration:none; border-radius:6px; background:#f8fafc; color:#475569; border:1px solid #e2e8f0; transition:all 0.2s ease-in-out;">
+      <span style="font-size:14px;">🔗</span> View PR
+    </a>
   </div>
 </li>
 "@
@@ -1562,6 +1584,9 @@ $digestHtml = @"
   <h2 style="margin:0 0 8px; font-size:20px;">$digestTitle</h2>
   <p style="margin:0 0 14px; font-size:14px; color:#374151;">
     The most meaningful Azure Kubernetes Service, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
+  </p>
+  <p style="margin:0 0 14px; font-size:13px; color:#059669; font-weight:600;">
+    📊 Updates this week: $digestCountBreakdown
   </p>
   <ul style="padding-left:18px; margin:0; list-style:disc;">
     $($digestItems -join "`n")
