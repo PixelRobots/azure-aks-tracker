@@ -1202,6 +1202,10 @@ foreach ($row in @($finalResults.ordered)) {
   $iconAlt = $product.alt
   $cardTitle = "$($product.label) - $display"
   $cardTitle = "$($product.label) - $display"
+  
+  # Calculate number of updates (PRs/commits) for this file
+  $updateCount = $arr.Count
+  $updateCountText = if ($updateCount -eq 1) { "1 update" } else { "$updateCount updates" }
 
   $summary = if ($summary) { $summary } else { "Unable to summarize but a meaningful update was detected (details in linked PR/doc)." }
 
@@ -1220,6 +1224,7 @@ foreach ($row in @($finalResults.ordered)) {
     <span class="aks-doc-category">$category</span>
     $kindPill
     <span class="aks-doc-updated-pill">Updated: $lastUpdated</span>
+    <span class="aks-doc-updated-pill" style="background-color: #059669; color: white;">$updateCountText</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
@@ -1510,7 +1515,7 @@ $html = @"
 "@.Trim()
 
 # ===== Weekly digest (compact HTML without tabs/filters) =====
-$sortedDocs = @($aiVerdicts.ordered) | Sort-Object {
+$sortedDocs = @($finalResults.ordered) | Sort-Object {
   $file = $_.file
   if ($filteredGroups.ContainsKey($file)) {
     ($filteredGroups[$file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
@@ -1543,8 +1548,8 @@ foreach ($row in $sortedDocs) {
   if (-not $filteredGroups.ContainsKey($file)) { continue }
   $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
   $fileUrl = Get-LiveDocsUrl -FilePath $file
-  $summary = $aiVerdicts.byFile[$file].summary
-  $category = if ($aiVerdicts.byFile[$file].category) { $aiVerdicts.byFile[$file].category } else { Compute-Category $file }
+  $summary = $finalResults.byFile[$file].summary
+  $category = if ($finalResults.byFile[$file].category) { $finalResults.byFile[$file].category } else { Compute-Category $file }
   
   # Handle both PR merged_at and commit date
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
