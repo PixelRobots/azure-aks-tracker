@@ -1608,15 +1608,19 @@ $digestHtml = @"
 
 # Create archive directory structure
 $archiveDate = (Get-Date).ToString('yyyy-MM-dd')
-$archiveDir = Join-Path $PSScriptRoot "../../archive"
+# Use $PWD or try to find git root for proper path resolution
+$repoRoot = if (Test-Path ".git") { $PWD } elseif ($PSScriptRoot) { (Get-Item $PSScriptRoot).Parent.Parent.FullName } else { $PWD }
+$archiveDir = Join-Path $repoRoot "archive"
 
 # Ensure archive directory exists
 New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+Log "Archive directory: $archiveDir"
 
 # Save weekly digest HTML with date in filename
 $digestHtmlPath = Join-Path $archiveDir "weekly-digest-$archiveDate.html"
-$digestHtml | Out-File -FilePath $digestHtmlPath -Encoding UTF8
+$digestHtml | Out-File -FilePath $digestHtmlPath -Encoding UTF8 -NoNewline
 Log "Saved weekly digest HTML to: $digestHtmlPath"
+Log "File size: $((Get-Item $digestHtmlPath).Length) bytes"
 
 # =========================
 # OUTPUT (JSON with html + hash)

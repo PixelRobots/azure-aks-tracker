@@ -58,6 +58,19 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @"$RUNNER_TEMP/wp-payload.json"
 
+      - name: Commit and push archive file
+        if: ${{ steps.gen.outputs.hash != steps.get.outputs.current }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add archive/*.html
+          if git diff --staged --quiet; then
+            echo "No archive changes to commit"
+          else
+            git commit -m "Archive weekly digest for $(date +%Y-%m-%d)"
+            git push
+          fi
+
       - name: Create weekly WP post (runs only at Sunday 09:00 UTC)
         if: github.event.schedule == '0 9 * * 0'
         run: |
