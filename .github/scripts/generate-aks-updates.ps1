@@ -1219,7 +1219,7 @@ foreach ($row in @($finalResults.ordered)) {
   <div class="aks-doc-header">
     <span class="aks-doc-category">$category</span>
     $kindPill
-    <span class="aks-doc-updated-pill">Updated: $lastUpdated</span>
+    <span class="aks-doc-updated-pill">Modified: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
@@ -1550,27 +1550,53 @@ foreach ($row in $sortedDocs) {
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
   $lastUpdated = [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm')
   $product = (Get-ProductIconMeta $file).label
-  $title = "$(Escape-Html ($product + ' - ' + (Get-DocDisplayName $file)))"
+  $productMeta = Get-ProductIconMeta -FilePath $file
+  $iconUrl = $productMeta.url
+  $iconAlt = $productMeta.alt
+  $display = Get-DocDisplayName $file
+  $title = "$(Escape-Html ($product + ' - ' + $display))"
   $prLink = $arr[0].pr_url
 
   $li = @"
-<li style="margin:12px 0 18px;">
-  <div style="font-weight:700; font-size:16px; line-height:1.3;">
-    <a href="$fileUrl" style="text-decoration:none; color:#2563eb;">$title</a>
-  </div>
-  <div style="font-size:12px; color:#6b7280; margin:4px 0 6px;">
-    <span>$category</span> · <span>$product</span> · <span>updated: $lastUpdated</span>
-  </div>
-  <div style="font-size:14px; color:#111827;">$(Escape-Html $summary)</div>
-  <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-    <a href="$fileUrl" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:13px; font-weight:600; text-decoration:none; border-radius:6px; background:linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border:1px solid transparent; transition:all 0.2s ease-in-out;">
-      <span style="font-size:14px;">📖</span> View Documentation
-    </a>
-    <a href="$prLink" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:13px; font-weight:600; text-decoration:none; border-radius:6px; background:#f8fafc; color:#475569; border:1px solid #e2e8f0; transition:all 0.2s ease-in-out;">
-      <span style="font-size:14px;">🔗</span> View PR
-    </a>
-  </div>
-</li>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="$iconUrl" alt="$iconAlt" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="$fileUrl" style="text-decoration: none; color: #1e40af;">$title</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">$category</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">$product</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: $lastUpdated</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">$(Escape-Html $summary)</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="$fileUrl" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="$prLink" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
 "@
   $digestItems.Add($li.Trim())
 }
@@ -1580,20 +1606,24 @@ $weekEnd = (Get-Date).ToUniversalTime()
 $digestTitle = "Azure Container Services Docs - Weekly Update (" + $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd') + ")"
 
 $digestHtml = @"
-<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; max-width:800px; margin:0 auto;">
-  <h2 style="margin:0 0 8px; font-size:20px;">$digestTitle</h2>
-  <p style="margin:0 0 14px; font-size:14px; color:#374151;">
-    The most meaningful Azure Kubernetes Service, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
-  </p>
-  <p style="margin:0 0 14px; font-size:13px; color:#059669; font-weight:600;">
-    📊 Updates this week: $digestCountBreakdown
-  </p>
-  <ul style="padding-left:18px; margin:0; list-style:disc;">
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+  <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 700; color: #111827;">$digestTitle</h2>
+    <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #4b5563;">
+      The most meaningful Azure Kubernetes Service, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
+    </p>
+    <p style="margin: 0; font-size: 13px; color: #059669; font-weight: 600;">
+      📊 Updates this week: $digestCountBreakdown
+    </p>
+  </div>
+  <div>
     $($digestItems -join "`n")
-  </ul>
-  <p style="margin-top:16px; font-size:12px; color:#6b7280;">
-    Full tracker (with filters): <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb; text-decoration:none;">Azure Container Services Docs Tracker</a>
-  </p>
+  </div>
+  <div style="margin-top: 20px; padding: 16px; background-color: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb; text-align: center;">
+    <p style="margin: 0; font-size: 13px; color: #6b7280;">
+      Full tracker with filters: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Azure Container Services Docs Tracker</a>
+    </p>
+  </div>
 </div>
 "@.Trim()
 
