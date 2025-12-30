@@ -6,6 +6,12 @@ on:
     - cron: '0 */6 * * *'   # Every 6 hours for page updates
     - cron: '0 9 * * 0'     # Sunday 09:00 UTC for weekly digest
   workflow_dispatch:
+    inputs:
+      post_weekly_digest:
+        description: 'Post Weekly Digest to WordPress'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # Allow pushing archive files back to repository
@@ -75,7 +81,7 @@ jobs:
           fi
 
       - name: Create weekly WP post (runs only at Sunday 09:00 UTC)
-        if: github.event.schedule == '0 9 * * 0'
+        if: github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true'
         run: |
           if [ ! -s digest.html ]; then
             echo "No digest content — skipping weekly post."
