@@ -1202,10 +1202,6 @@ foreach ($row in @($finalResults.ordered)) {
   $iconAlt = $product.alt
   $cardTitle = "$($product.label) - $display"
   $cardTitle = "$($product.label) - $display"
-  
-  # Calculate number of updates (PRs/commits) for this file
-  $updateCount = $arr.Count
-  $updateCountText = if ($updateCount -eq 1) { "1 update" } else { "$updateCount updates" }
 
   $summary = if ($summary) { $summary } else { "Unable to summarize but a meaningful update was detected (details in linked PR/doc)." }
 
@@ -1224,7 +1220,6 @@ foreach ($row in @($finalResults.ordered)) {
     <span class="aks-doc-category">$category</span>
     $kindPill
     <span class="aks-doc-updated-pill">Updated: $lastUpdated</span>
-    <span class="aks-doc-updated-pill" style="background-color: #059669; color: white;">$updateCountText</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
