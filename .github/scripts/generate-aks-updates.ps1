@@ -1598,6 +1598,22 @@ $digestHtml = @"
 "@.Trim()
 
 # =========================
+# ARCHIVE WEEKLY DIGEST
+# =========================
+
+# Create archive directory structure
+$archiveDate = (Get-Date).ToString('yyyy-MM-dd')
+$archiveDir = Join-Path $PSScriptRoot "../../archive"
+
+# Ensure archive directory exists
+New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+# Save weekly digest HTML with date in filename
+$digestHtmlPath = Join-Path $archiveDir "weekly-digest-$archiveDate.html"
+$digestHtml | Out-File -FilePath $digestHtmlPath -Encoding UTF8
+Log "Saved weekly digest HTML to: $digestHtmlPath"
+
+# =========================
 # OUTPUT (JSON with html + hash)
 # =========================
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
@@ -1610,6 +1626,7 @@ $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -jo
   ai_summaries = $finalResults
   digest_html  = $digestHtml
   digest_title = $digestTitle
+  digest_saved_to = $digestHtmlPath
 } | ConvertTo-Json -Depth 6
 
 Log "Enhanced AKS Docs Tracker completed successfully!"
