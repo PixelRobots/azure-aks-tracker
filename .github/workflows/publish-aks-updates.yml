@@ -72,7 +72,7 @@ jobs:
             done
           }
 
-          retry_curl curl -sS -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+          retry_curl curl -sSf -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             "${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}" -o page.json
           echo "current=$(jq -r .content.rendered page.json | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
