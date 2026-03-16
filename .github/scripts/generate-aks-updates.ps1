@@ -533,12 +533,16 @@ function Get-PerFileSummariesViaAssistant {
     $vsName = "aks-docs-prs-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on vector store processing..."
+    $vsMaxWait = 60
+    $vsWaitCount = 0
     do {
       Start-Sleep -Seconds 2
+      $vsWaitCount++
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
       Log "Vector store status: $($vs.status)"
-    } while ($vs.status -ne 'completed')
+    } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxWait)
+    if ($vs.status -ne 'completed') { throw "Vector store did not complete (status: $($vs.status)) after $vsWaitCount polls." }
 
     $instructions = @"
 You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE and keep most changes.
@@ -586,7 +590,7 @@ OUTPUT: JSON array of kept items:
       -Model $Model
 
     $userMsg = "Apply selective filtering using the guidelines provided. Be inclusive rather than exclusive - keep changes that have technical value or substance. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.05
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 4096 -Temperature 0.05
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -594,9 +598,14 @@ OUTPUT: JSON array of kept items:
     ForEach-Object { $_.text.value } |
     Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
+    # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
+    $clean = $last -replace '(?m)^\s*```(?:json)?\s*$', '' -replace '(?m)^\s*```\s*$', '' -replace '【[^】]*】', ''
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{ ordered = @(); byFile = @{} } }
+    if (-not $match.Success) {
+      $preview = if ($clean) { $clean.Substring(0, [Math]::Min(500, $clean.Length)) } else { '(empty response)' }
+      Log "AI: No JSON array found in response. Raw response (first 500 chars): $preview"
+      return @{ ordered = @(); byFile = @{} }
+    }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
 
@@ -617,6 +626,12 @@ OUTPUT: JSON array of kept items:
   catch {
     Write-Warning "AI summaries (docs) failed: $_"
     return @{ ordered = @(); byFile = @{} }
+  }
+  finally {
+    # Clean up AI resources to avoid accumulating orphaned objects
+    if ($assistant) { try { Remove-OAIAssistant -AssistantId $assistant.id | Out-Null } catch {} }
+    if ($vs) { try { Remove-OAIVectorStore -VectorStoreId $vs.id | Out-Null } catch {} }
+    if ($file) { try { Remove-OAIFile -FileId $file.id | Out-Null } catch {} }
   }
 }
 
@@ -1257,12 +1272,16 @@ function Get-ReleaseSummariesViaAssistant {
     $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on releases vector store..."
+    $vsMaxWait = 60
+    $vsWaitCount = 0
     do {
       Start-Sleep -Seconds 2
+      $vsWaitCount++
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
       Log "Releases VS status: $($vs.status)"
-    } while ($vs.status -ne 'completed')
+    } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxWait)
+    if ($vs.status -ne 'completed') { throw "Releases vector store did not complete (status: $($vs.status)) after $vsWaitCount polls." }
 
 $instructions = @"
 You are summarizing AKS GitHub Releases.
@@ -1305,7 +1324,7 @@ Output format requirements:
       -Model $Model
 
     $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 3000 -Temperature 0.2
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -1313,9 +1332,13 @@ Output format requirements:
     ForEach-Object { $_.text.value } |
     Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
+    # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
+    $clean = $last -replace '(?m)^\s*```(?:json)?\s*$', '' -replace '```', '' -replace '【[^】]*】', ''
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
+    if (-not $match.Success) {
+      Log "AI (releases): No JSON array found. Raw response (first 500 chars): $($clean.Substring(0, [Math]::Min(500, $clean.Length)))"
+      return @{}
+    }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
     $map = @{}
@@ -1333,6 +1356,12 @@ Output format requirements:
   catch {
     Write-Warning "AI summaries (releases) failed: $_"
     return @{}
+  }
+  finally {
+    # Clean up AI resources to avoid accumulating orphaned objects
+    if ($assistant) { try { Remove-OAIAssistant -AssistantId $assistant.id | Out-Null } catch {} }
+    if ($vs) { try { Remove-OAIVectorStore -VectorStoreId $vs.id | Out-Null } catch {} }
+    if ($file) { try { Remove-OAIFile -FileId $file.id | Out-Null } catch {} }
   }
 }
 
