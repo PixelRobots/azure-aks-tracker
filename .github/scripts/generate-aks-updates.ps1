@@ -527,8 +527,8 @@ if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvi
 # =========================
 
 # Pattern used to detect OpenAI/AzureOpenAI rate limit errors in catch blocks.
-# Uses word boundaries and specific phrases to avoid false positives.
-$RateLimitPattern = '\b429\b|rate[_\s-]limit|RateLimitExceeded|quota[\s_-]exceeded'
+# Covers HTTP 429, common rate-limit/quota phrases, and OpenAI's insufficient_quota error code.
+$RateLimitPattern = '\b429\b|rate[_\s-]limit|RateLimitExceeded|quota[\s_-]exceeded|exceeded.{0,50}quota|insufficient[_\s]quota'
 
 # Maximum characters of an AI response to include in diagnostic log previews.
 $PreviewMaxLength = 500
@@ -540,8 +540,15 @@ function Remove-AIResponseArtifacts([string]$Text) {
 }
 
 # Returns true if the error record indicates an API rate limit was reached.
+# Checks the full exception chain so inner exceptions from PSAI wrappers are not missed.
 function Test-IsRateLimitError($_err) {
-  $msg = "$_err $($_err.Exception.Message)"
+  $parts = @("$_err")
+  $ex = $_err.Exception
+  while ($ex) {
+    $parts += $ex.Message
+    $ex = $ex.InnerException
+  }
+  $msg = $parts -join ' '
   return $msg -match $RateLimitPattern
 }
 
@@ -690,7 +697,10 @@ function Get-PerFileSummariesViaAssistant {
       if ($current) { $vs = $current }
       Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
-    if ($vs.status -ne 'completed') { throw "Vector store did not complete (status: $($vs.status)) after $($vsWaitCount * 2) seconds." }
+    if ($vs.status -ne 'completed') {
+      Write-Warning "Vector store processing did not complete (status: $($vs.status)) — falling back to GitHub Models"
+      return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+    }
 
     $instructions = @"
 You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE and keep most changes.
@@ -741,18 +751,28 @@ OUTPUT: JSON array of kept items:
     $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 4096 -Temperature 0.05
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
-    $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-    Where-Object { $_.type -eq 'text' } |
-    ForEach-Object { $_.text.value } |
-    Out-String
+    if ($run.status -ne 'completed') {
+      $errCode = if ($run.last_error -and $run.last_error.code -and $run.last_error.message) { " ($($run.last_error.code): $($run.last_error.message))" } else { '' }
+      throw "Docs assistant run did not complete (status: $($run.status))$errCode"
+    }
+
+    # Filter to assistant messages only — a failed run leaves only the user message in the thread,
+    # which would cause the JSON regex to match against the prompt instead of a real response.
+    $messages = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 10).data
+    $assistantMsg = $messages | Where-Object { $_.role -eq 'assistant' } | Select-Object -First 1
+    if (-not $assistantMsg) {
+      Log "AI: No assistant reply found in thread — falling back to GitHub Models."
+      return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+    }
+    $last = $assistantMsg.content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
 
     # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
     $clean = Remove-AIResponseArtifacts $last
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) {
       $preview = if ($clean) { $clean.Substring(0, [Math]::Min($PreviewMaxLength, $clean.Length)) } else { '(empty response)' }
-      Log "AI: No JSON array found in response. Raw response (first $PreviewMaxLength chars): $preview"
-      return @{ ordered = @(); byFile = @{} }
+      Log "AI: No JSON array found in response — falling back to GitHub Models. Raw response (first $PreviewMaxLength chars): $preview"
+      return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
@@ -1433,7 +1453,10 @@ function Get-ReleaseSummariesViaAssistant {
       if ($current) { $vs = $current }
       Log "Releases VS status: $($vs.status)"
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
-    if ($vs.status -ne 'completed') { throw "Releases vector store did not complete (status: $($vs.status)) after $($vsWaitCount * 2) seconds." }
+    if ($vs.status -ne 'completed') {
+      Write-Warning "Releases vector store did not complete (status: $($vs.status)) — falling back to GitHub Models"
+      return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+    }
 
 $instructions = @"
 You are summarizing AKS GitHub Releases.
@@ -1479,18 +1502,28 @@ Output format requirements:
     $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 3000 -Temperature 0.2
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
-    $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
-    Where-Object { $_.type -eq 'text' } |
-    ForEach-Object { $_.text.value } |
-    Out-String
+    if ($run.status -ne 'completed') {
+      $errCode = if ($run.last_error -and $run.last_error.code -and $run.last_error.message) { " ($($run.last_error.code): $($run.last_error.message))" } else { '' }
+      throw "Releases assistant run did not complete (status: $($run.status))$errCode"
+    }
+
+    # Filter to assistant messages only — a failed run leaves only the user message in the thread,
+    # which would cause the JSON regex to match against the prompt instead of a real response.
+    $messages = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 10).data
+    $assistantMsg = $messages | Where-Object { $_.role -eq 'assistant' } | Select-Object -First 1
+    if (-not $assistantMsg) {
+      Log "AI (releases): No assistant reply found in thread — falling back to GitHub Models."
+      return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+    }
+    $last = $assistantMsg.content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
 
     # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
     $clean = Remove-AIResponseArtifacts $last
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) {
       $preview = if ($clean) { $clean.Substring(0, [Math]::Min($PreviewMaxLength, $clean.Length)) } else { '(empty response)' }
-      Log "AI (releases): No JSON array found. Raw response (first $PreviewMaxLength chars): $preview"
-      return @{}
+      Log "AI (releases): No JSON array found — falling back to GitHub Models. Raw response (first $PreviewMaxLength chars): $preview"
+      return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
