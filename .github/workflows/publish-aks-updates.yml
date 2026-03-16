@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write  # Allow pushing archive files back to repository
+  models: read     # Allow calling GitHub Models inference API
 
 jobs:
   publish:
