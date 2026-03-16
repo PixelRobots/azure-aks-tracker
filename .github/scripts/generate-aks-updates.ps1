@@ -522,6 +522,154 @@ function Initialize-AIProvider {
 }
 if ($PreferProvider) { $PSAIReady = Initialize-AIProvider -Provider $PreferProvider }
 
+# =========================
+# SHARED AI HELPERS
+# =========================
+
+# Pattern used to detect OpenAI/AzureOpenAI rate limit errors in catch blocks.
+# Uses word boundaries and specific phrases to avoid false positives.
+$RateLimitPattern = '\b429\b|rate[_\s-]limit|RateLimitExceeded|quota[\s_-]exceeded'
+
+# Maximum characters of an AI response to include in diagnostic log previews.
+$PreviewMaxLength = 500
+
+# Strips markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
+# from an AI response string before JSON parsing.
+function Remove-AIResponseArtifacts([string]$Text) {
+  return $Text -replace '(?m)^\s*```(?:json)?\s*$', '' -replace '(?m)^\s*```\s*$', '' -replace '【[^】]*】', ''
+}
+
+# Returns true if the error record indicates an API rate limit was reached.
+function Test-IsRateLimitError($_err) {
+  $msg = "$_err $($_err.Exception.Message)"
+  return $msg -match $RateLimitPattern
+}
+
+# =========================
+# GITHUB MODELS FALLBACK (used when OpenAI/AzureOpenAI rate limits are hit)
+# Uses the GitHub Models inference API authenticated with GITHUB_TOKEN.
+# Unlike the Assistants API, this uses Chat Completions with response_format:
+# json_object, so no file upload, vector store, or complex regex parsing needed.
+# =========================
+
+function Invoke-GitHubModelsChatJson {
+  param(
+    [string]$SystemMessage,
+    [string]$UserMessage,
+    [string]$Model = "gpt-4o-mini",
+    [int]$MaxTokens = 4096,
+    [double]$Temperature = 0.05
+  )
+  $headers = @{
+    "Authorization" = "Bearer $env:GITHUB_TOKEN"
+    "Content-Type"  = "application/json"
+  }
+  $body = @{
+    model    = $Model
+    messages = @(
+      @{ role = "system"; content = $SystemMessage }
+      @{ role = "user";   content = $UserMessage }
+    )
+    max_tokens      = $MaxTokens
+    temperature     = $Temperature
+    response_format = @{ type = "json_object" }
+  } | ConvertTo-Json -Depth 5 -Compress
+  $response = Invoke-RestMethod -Uri "https://models.inference.ai.azure.com/chat/completions" `
+    -Method POST -Headers $headers -Body $body -TimeoutSec 120 -ErrorAction Stop
+  return $response.choices[0].message.content
+}
+
+function Get-PerFileSummariesViaGitHubModels {
+  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
+  try {
+    Log "GitHub Models fallback: filtering docs..."
+    $data = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json -ErrorAction Stop
+
+    # Build condensed input — metadata only, no large patch_sample — to stay within context limits
+    $condensedGroups = @(
+      foreach ($g in $data.groups) {
+        @{
+          file            = $g.file
+          subjects        = $g.subjects
+          total_additions = $g.total_additions
+          total_deletions = $g.total_deletions
+          commits_count   = $g.commits_count
+          statuses        = $g.statuses
+        }
+      }
+    )
+    $condensedJson = (@{ since = $data.since; groups = $condensedGroups } | ConvertTo-Json -Depth 5 -Compress)
+
+    $systemMsg = @"
+You are filtering Azure AKS documentation updates. Be INCLUSIVE - when in doubt, KEEP IT.
+ONLY EXCLUDE: pure ms.author/metadata-only changes, single-word typo fixes, pure whitespace changes.
+ALWAYS KEEP: new features, commands, security, policy, version updates, tutorial improvements, technical corrections, new content, new files.
+Return a JSON object with a single key "results" containing an array of kept items:
+{"results": [{"file": "<path>", "summary": "2-3 factual sentences", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0}]}
+"@
+    $userMsg = "Filter these documentation changes and return the JSON object:`n$condensedJson"
+
+    $raw = Invoke-GitHubModelsChatJson -SystemMessage $systemMsg -UserMessage $userMsg `
+      -Model $Model -MaxTokens 4096 -Temperature 0.05
+    $content = $raw | ConvertFrom-Json -ErrorAction Stop
+
+    $arr = $content.results
+    $ordered = @()
+    $byFile = @{}
+    foreach ($i in $arr) {
+      if (-not $i.file) { continue }
+      $ordered += $i
+      $byFile[$i.file] = @{
+        summary  = $i.summary
+        category = ($i.PSObject.Properties['category'] ? $i.category : 'General')
+        score    = [double]($i.PSObject.Properties['score'] ? $i.score : 1.0)
+      }
+    }
+    Log "GitHub Models fallback: kept $($ordered.Count) files after filtering."
+    return @{ ordered = $ordered; byFile = $byFile }
+  }
+  catch {
+    Write-Warning "GitHub Models fallback (docs) failed: $_"
+    return @{ ordered = @(); byFile = @{} }
+  }
+}
+
+function Get-ReleaseSummariesViaGitHubModels {
+  param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
+  try {
+    Log "GitHub Models fallback: summarizing releases..."
+    $relJson = Get-Content -Path $JsonPath -Raw
+
+    $systemMsg = @"
+You are summarizing AKS GitHub Releases. The JSON array contains: id, title, tag_name, published_at, body (markdown).
+Return a JSON object with a single key "results" containing an array:
+{"results": [{"id": <same numeric id>, "summary": "2-3 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."]}]}
+Rules: plain strings only, 2-5 items per list, never fabricate content not in the text.
+"@
+    $userMsg = "Summarize each release and return the JSON object:`n$relJson"
+
+    $raw = Invoke-GitHubModelsChatJson -SystemMessage $systemMsg -UserMessage $userMsg `
+      -Model $Model -MaxTokens 3000 -Temperature 0.2
+    $content = $raw | ConvertFrom-Json -ErrorAction Stop
+
+    $map = @{}
+    foreach ($i in $content.results) {
+      $map[$i.id] = @{
+        summary          = $i.summary
+        breaking_changes = $i.PSObject.Properties['breaking_changes'] ? $i.breaking_changes : @()
+        key_features     = $i.PSObject.Properties['key_features']     ? $i.key_features     : @()
+        good_to_know     = $i.PSObject.Properties['good_to_know']     ? $i.good_to_know     : @()
+      }
+    }
+    Log "GitHub Models fallback: release summaries ready for $($map.Keys.Count) releases."
+    return $map
+  }
+  catch {
+    Write-Warning "GitHub Models fallback (releases) failed: $_"
+    return @{}
+  }
+}
+
 # ===== Enhanced Docs AI with SELECTIVE FILTERING =====
 function Get-PerFileSummariesViaAssistant {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
@@ -533,12 +681,16 @@ function Get-PerFileSummariesViaAssistant {
     $vsName = "aks-docs-prs-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on vector store processing..."
+    $vsMaxIterations = 60  # 60 iterations × 2 s = up to 120 s
+    $vsWaitCount = 0
     do {
       Start-Sleep -Seconds 2
+      $vsWaitCount++
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
       Log "Vector store status: $($vs.status)"
-    } while ($vs.status -ne 'completed')
+    } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
+    if ($vs.status -ne 'completed') { throw "Vector store did not complete (status: $($vs.status)) after $($vsWaitCount * 2) seconds." }
 
     $instructions = @"
 You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE and keep most changes.
@@ -586,7 +738,7 @@ OUTPUT: JSON array of kept items:
       -Model $Model
 
     $userMsg = "Apply selective filtering using the guidelines provided. Be inclusive rather than exclusive - keep changes that have technical value or substance. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1400 -Temperature 0.05
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 4096 -Temperature 0.05
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -594,9 +746,14 @@ OUTPUT: JSON array of kept items:
     ForEach-Object { $_.text.value } |
     Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
+    # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
+    $clean = Remove-AIResponseArtifacts $last
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI: No JSON array found in response."; return @{ ordered = @(); byFile = @{} } }
+    if (-not $match.Success) {
+      $preview = if ($clean) { $clean.Substring(0, [Math]::Min($PreviewMaxLength, $clean.Length)) } else { '(empty response)' }
+      Log "AI: No JSON array found in response. Raw response (first $PreviewMaxLength chars): $preview"
+      return @{ ordered = @(); byFile = @{} }
+    }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
 
@@ -615,8 +772,18 @@ OUTPUT: JSON array of kept items:
     return @{ ordered = $ordered; byFile = $byFile }
   }
   catch {
+    if (Test-IsRateLimitError $_) {
+      Write-Warning "OpenAI rate limit reached for docs — falling back to GitHub Models. Error: $($_.Exception.Message)"
+      return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+    }
     Write-Warning "AI summaries (docs) failed: $_"
     return @{ ordered = @(); byFile = @{} }
+  }
+  finally {
+    # Clean up AI resources to avoid accumulating orphaned objects
+    if ($assistant) { try { Remove-OAIAssistant -AssistantId $assistant.id | Out-Null } catch {} }
+    if ($vs) { try { Remove-OAIVectorStore -VectorStoreId $vs.id | Out-Null } catch {} }
+    if ($file) { try { Remove-OAIFile -FileId $file.id | Out-Null } catch {} }
   }
 }
 
@@ -1257,12 +1424,16 @@ function Get-ReleaseSummariesViaAssistant {
     $vsName = "aks-releases-$(Get-Date -Format 'yyyyMMddHHmmss')"
     $vs = New-OAIVectorStore -Name $vsName -FileIds $file.id
     Log "Waiting on releases vector store..."
+    $vsMaxIterations = 60  # 60 iterations × 2 s = up to 120 s
+    $vsWaitCount = 0
     do {
       Start-Sleep -Seconds 2
+      $vsWaitCount++
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
       Log "Releases VS status: $($vs.status)"
-    } while ($vs.status -ne 'completed')
+    } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
+    if ($vs.status -ne 'completed') { throw "Releases vector store did not complete (status: $($vs.status)) after $($vsWaitCount * 2) seconds." }
 
 $instructions = @"
 You are summarizing AKS GitHub Releases.
@@ -1305,7 +1476,7 @@ Output format requirements:
       -Model $Model
 
     $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 1500 -Temperature 0.2
+    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 3000 -Temperature 0.2
     $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
 
     $last = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content |
@@ -1313,9 +1484,14 @@ Output format requirements:
     ForEach-Object { $_.text.value } |
     Out-String
 
-    $clean = $last -replace '^\s*```(?:json)?\s*', '' -replace '\s*```\s*$', ''
+    # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
+    $clean = Remove-AIResponseArtifacts $last
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
-    if (-not $match.Success) { Log "AI (releases): No JSON array found."; return @{} }
+    if (-not $match.Success) {
+      $preview = if ($clean) { $clean.Substring(0, [Math]::Min($PreviewMaxLength, $clean.Length)) } else { '(empty response)' }
+      Log "AI (releases): No JSON array found. Raw response (first $PreviewMaxLength chars): $preview"
+      return @{}
+    }
 
     $arr = $match.Value | ConvertFrom-Json -ErrorAction Stop
     $map = @{}
@@ -1331,8 +1507,18 @@ Output format requirements:
     return $map
   }
   catch {
+    if (Test-IsRateLimitError $_) {
+      Write-Warning "OpenAI rate limit reached for releases — falling back to GitHub Models. Error: $($_.Exception.Message)"
+      return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+    }
     Write-Warning "AI summaries (releases) failed: $_"
     return @{}
+  }
+  finally {
+    # Clean up AI resources to avoid accumulating orphaned objects
+    if ($assistant) { try { Remove-OAIAssistant -AssistantId $assistant.id | Out-Null } catch {} }
+    if ($vs) { try { Remove-OAIVectorStore -VectorStoreId $vs.id | Out-Null } catch {} }
+    if ($file) { try { Remove-OAIFile -FileId $file.id | Out-Null } catch {} }
   }
 }
 
