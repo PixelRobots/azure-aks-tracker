@@ -58,6 +58,18 @@ $ghHeaders = @{
   "User-Agent"    = "pixelrobots-aks-updates-pwsh"
 }
 
+# Run-mode flags (read early so they gate all downstream work)
+# CVE_ONLY=true         - skip GitHub/docs/AI entirely, regenerate only the CVE section.
+# CVE_REFRESH_VHD=true  - also fetch VHD node-image CVE data (26 OS image types).
+$script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
+$script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
+
+# Run-mode flags (read early so they gate all downstream work)
+# CVE_ONLY=true  — skip GitHub/docs/AI entirely, regenerate only the CVE section.
+# CVE_REFRESH_VHD=true — also fetch VHD node-image CVE data (26 OS image types).
+$script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
+$script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
+
 function Get-PullRequestFiles {
   param([int]$prNumber, [string]$Owner, [string]$Repo)
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$prNumber/files"
@@ -1576,14 +1588,6 @@ function ToListHtml($arr) {
 # =========================
 # CVE VULNERABILITY DATA (AKS CVE API - Public Preview)
 # =========================
-# CVE_REFRESH_VHD env var: when 'true', also fetches VHD node-image CVE data (26 OS images).
-# This is NOT set on regular 6h schedule runs to keep them fast.
-# Set via the "Refresh CVE data" checkbox in the workflow_dispatch manual trigger.
-# CVE_ONLY=true: skip GitHub/docs/AI entirely — just regenerate the CVE section.
-# The workflow splices the new CVE HTML into the existing WordPress page content.
-$script:CveOnly      = ($env:CVE_ONLY -eq 'true')
-$script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
-
 function Get-AksCveTabHtml {
   $cveApiBase     = "https://cve-api.prod-aks.azure.com"
   $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
