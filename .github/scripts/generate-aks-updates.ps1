@@ -1034,54 +1034,76 @@ function Get-AksCveTabHtml {
     if ($script:RefreshVhdCve) {
     try {
       Log "Fetching VHD node-image index..."
-      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/_index" -Method GET -TimeoutSec 30
+      $nodeIndex = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/_index" -Method GET -TimeoutSec 30
       Log "  VHD index response keys: $($nodeIndex.PSObject.Properties.Name -join ', ')"
-      $vhdImageNames  = @(
-        if ($nodeIndex.vhd_release_names)    { $nodeIndex.vhd_release_names }
-        elseif ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
-        elseif ($nodeIndex.images)           { $nodeIndex.images }
-        elseif ($nodeIndex -is [array])      { $nodeIndex }
-        else                                 { @() }
-      )
-      Log "  VHD image names from index ($($vhdImageNames.Count)): $($vhdImageNames -join ', ')"
 
-      # Resolve each name to a full {type}/{version} path for the scan-reports endpoint.
-      # The _index may return either combined "AKSAzureLinuxV3-gen2tl/202602.13.0" strings
-      # or bare image-type names. For bare names, fetch the per-image version index.
-      $vhdImages = [System.Collections.Generic.List[string]]::new()
-      foreach ($name in $vhdImageNames) {
-        if ($name -match '/') {
-          # Already includes version (e.g. "AKSAzureLinuxV3-gen2tl/202602.13.0") — use as-is
-          $vhdImages.Add($name)
-        } else {
-          # Bare image-type name — look up available versions from its own index
-          Log "  Looking up versions for image type: $name ..."
-          try {
-            $imgIdx = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$name/_index" -Method GET -TimeoutSec 30
-            Log "    Image type index response keys: $($imgIdx.PSObject.Properties.Name -join ', ')"
-            $versions = @(
-              if ($imgIdx.vhd_release_versions) { $imgIdx.vhd_release_versions }
-              elseif ($imgIdx.versions)          { $imgIdx.versions }
-              elseif ($imgIdx.release_versions)  { $imgIdx.release_versions }
-              elseif ($imgIdx -is [array])       { $imgIdx }
-              else                               { @() }
-            )
-            if ($versions.Count -gt 0) {
-              $latestVer = ($versions | Sort-Object {
-                $v = $_
-                try { [System.Version]::new($v) }
-                catch { Write-Warning "  Could not parse version '$v' as System.Version, using 0.0.0"; [System.Version]::new("0.0.0") }
-              } -Descending)[0]
-              Log "    Latest version for ${name}: $latestVer"
-              $vhdImages.Add("$name/$latestVer")
-            } else {
-              Write-Warning "  No versions found in index for image type: $name"
-            }
-          } catch {
-            Write-Warning "  Failed to fetch version index for ${name}: $_"
+      # Extract all release entries from the index; try multiple known property names.
+      # The API typically returns full "{imageType}/{version}" paths for all available releases.
+      $rawEntries = @(
+        if     ($nodeIndex.PSObject.Properties['vhd_releases'])      { $nodeIndex.vhd_releases }
+        elseif ($nodeIndex.PSObject.Properties['vhd_release_names']) { $nodeIndex.vhd_release_names }
+        elseif ($nodeIndex.PSObject.Properties['node_image_names'])  { $nodeIndex.node_image_names }
+        elseif ($nodeIndex.PSObject.Properties['images'])            { $nodeIndex.images }
+        elseif ($nodeIndex -is [array])                              { $nodeIndex }
+        else                                                         { @() }
+      )
+      Log "  VHD raw entries from index: $($rawEntries.Count) total"
+
+      # Partition entries into full-path (type/version) and bare image-type names.
+      # When the _index returns full "{type}/{version}" paths it includes ALL historical
+      # versions — group by image type and keep only the latest version per type so we
+      # make exactly one scan-report request per image type.
+      $typeLatestMap = [ordered]@{}
+      $bareNames     = [System.Collections.Generic.List[string]]::new()
+      foreach ($entry in $rawEntries) {
+        if ($entry -match '^([^/]+)/(.+)$') {
+          $imgType = $Matches[1]
+          $imgVer  = $Matches[2]
+          if (-not $typeLatestMap.Contains($imgType)) {
+            $typeLatestMap[$imgType] = $imgVer
+          } elseif ([string]::CompareOrdinal($imgVer, $typeLatestMap[$imgType]) -gt 0) {
+            $typeLatestMap[$imgType] = $imgVer
           }
+        } else {
+          $bareNames.Add($entry)
         }
       }
+
+      $vhdImages = [System.Collections.Generic.List[string]]::new()
+      foreach ($imgType in $typeLatestMap.Keys) {
+        Log "  Using latest for ${imgType}: $($typeLatestMap[$imgType])"
+        $vhdImages.Add("$imgType/$($typeLatestMap[$imgType])")
+      }
+
+      # For bare image-type names, look up the latest available version from the per-image index.
+      foreach ($name in $bareNames) {
+        Log "  Looking up versions for image type: $name ..."
+        try {
+          $imgIdx = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$name/_index" -Method GET -TimeoutSec 30
+          Log "    Image type index response keys: $($imgIdx.PSObject.Properties.Name -join ', ')"
+          $imgVersions = @(
+            if     ($imgIdx.PSObject.Properties['vhd_release_versions']) { $imgIdx.vhd_release_versions }
+            elseif ($imgIdx.PSObject.Properties['versions'])             { $imgIdx.versions }
+            elseif ($imgIdx.PSObject.Properties['release_versions'])     { $imgIdx.release_versions }
+            elseif ($imgIdx -is [array])                                 { $imgIdx }
+            else                                                         { @() }
+          )
+          if ($imgVersions.Count -gt 0) {
+            $latestVer = ($imgVersions | Sort-Object {
+              $v = $_
+              try { [System.Version]::new($v) }
+              catch { Write-Warning "  Could not parse version '$v' for ${name}, using 0.0.0"; [System.Version]::new("0.0.0") }
+            } -Descending)[0]
+            Log "    Latest version for ${name}: $latestVer"
+            $vhdImages.Add("$name/$latestVer")
+          } else {
+            Write-Warning "  No versions found in index for image type: $name"
+          }
+        } catch {
+          Write-Warning "  Failed to fetch version index for ${name}: $_"
+        }
+      }
+      Log "  VHD images to fetch ($($vhdImages.Count)): $($vhdImages -join ', ')"
 
       if ($vhdImages.Count -gt 0) {
         Log "Pre-fetching VHD CVE scan reports for $($vhdImages.Count) node images..."
@@ -1214,21 +1236,25 @@ function Get-AksCveTabHtml {
         $vhdInitDate     = if ($vhdReports[$vhdInitImage].report_time) { [DateTime]::Parse($vhdReports[$vhdInitImage].report_time).ToString("yyyy-MM-dd") } else { "N/A" }
 
         $vhdInitTopRowsHtml = ($topVhdImages | ForEach-Object {
-          $imgDisplay = Escape-Html $_.img
-          $mitCell    = if ($_.mitigated -gt 0) {
+          $imgParts    = $_.img -split '/', 2
+          $imgTypeName = Escape-Html $imgParts[0]
+          $imgVerLabel = if ($imgParts.Count -gt 1) { "<span style=""display:block;font-size:11px;color:#6b7280;font-weight:400;"">$($imgParts[1])</span>" } else { "" }
+          $mitCell     = if ($_.mitigated -gt 0) {
             "<td style=""color:#34d399;font-weight:600;text-align:center;"">&#9989; $($_.mitigated)</td>"
           } else { "<td style=""color:#6b7280;text-align:center;"">&mdash;</td>" }
           $osTag = if ($_.img -match 'ubuntu|Ubuntu') { "<span style=""padding:1px 5px;background:rgba(251,146,60,0.15);color:#fb923c;border-radius:3px;font-size:10px;margin-left:4px;"">Ubuntu</span>" }
                    elseif ($_.img -match 'azurelinux|AzureLinux|mariner|Mariner') { "<span style=""padding:1px 5px;background:rgba(52,211,153,0.15);color:#34d399;border-radius:3px;font-size:10px;margin-left:4px;"">Azure Linux</span>" }
                    elseif ($_.img -match 'windows|Windows') { "<span style=""padding:1px 5px;background:rgba(96,165,250,0.15);color:#60a5fa;border-radius:3px;font-size:10px;margin-left:4px;"">Windows</span>" }
                    else { "" }
-          "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$imgDisplay$osTag</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$($_.active)</td>$mitCell</tr>"
+          "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$imgTypeName$osTag$imgVerLabel</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$($_.active)</td>$mitCell</tr>"
         }) -join "`n"
 
         # Image selector dropdown for VHD tab
         $vhdImageOptions = ($sortedVhdImages | ForEach-Object {
-          $sel = if ($_ -eq $vhdInitImage) { ' selected' } else { '' }
-          "<option value=""$_""$sel>$_</option>"
+          $sel    = if ($_ -eq $vhdInitImage) { ' selected' } else { '' }
+          $parts  = $_ -split '/', 2
+          $label  = if ($parts.Count -gt 1) { "$($parts[0]) ($($parts[1]))" } else { $_ }
+          "<option value=""$_""$sel>$label</option>"
         }) -join "`n        "
       }
     }
@@ -1591,14 +1617,16 @@ $initTopRowsHtml
         if (vhdActiveImgs.length > 0) {
           out += '<div style="margin-top:8px;">';
           vhdActiveImgs.forEach(function(img) {
-            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(220,38,38,0.15);color:#fca5a5;border-radius:4px;font-size:12px;">' + esc(img) + '</span>';
+            var label = img.indexOf('/') !== -1 ? img.split('/')[0] : img;
+            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(220,38,38,0.15);color:#fca5a5;border-radius:4px;font-size:12px;" title="' + esc(img) + '">' + esc(label) + '</span>';
           });
           out += '</div>';
         }
         if (vhdMitigImgs.length > 0) {
           out += '<div style="margin-top:6px;font-size:12px;color:#94a3b8;">Mitigated in: ';
           vhdMitigImgs.forEach(function(img) {
-            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(16,185,129,0.12);color:#34d399;border-radius:4px;font-size:12px;">' + esc(img) + '</span>';
+            var label = img.indexOf('/') !== -1 ? img.split('/')[0] : img;
+            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(16,185,129,0.12);color:#34d399;border-radius:4px;font-size:12px;" title="' + esc(img) + '">' + esc(label) + '</span>';
           });
           out += '</div>';
         }
