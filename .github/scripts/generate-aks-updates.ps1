@@ -1035,20 +1035,77 @@ function Get-AksCveTabHtml {
     try {
       Log "Fetching VHD node-image index..."
       $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/_index" -Method GET -TimeoutSec 30
-      $vhdImages  = @(
+      Log "  VHD index response keys: $($nodeIndex.PSObject.Properties.Name -join ', ')"
+      $vhdImageNames  = @(
         if ($nodeIndex.vhd_release_names)    { $nodeIndex.vhd_release_names }
         elseif ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
         elseif ($nodeIndex.images)           { $nodeIndex.images }
         elseif ($nodeIndex -is [array])      { $nodeIndex }
         else                                 { @() }
       )
+      Log "  VHD image names from index ($($vhdImageNames.Count)): $($vhdImageNames -join ', ')"
+
+      # Resolve each name to a full {type}/{version} path for the scan-reports endpoint.
+      # The _index may return either combined "AKSAzureLinuxV3-gen2tl/202602.13.0" strings
+      # or bare image-type names. For bare names, fetch the per-image version index.
+      $vhdImages = [System.Collections.Generic.List[string]]::new()
+      foreach ($name in $vhdImageNames) {
+        if ($name -match '/') {
+          # Already includes version (e.g. "AKSAzureLinuxV3-gen2tl/202602.13.0") — use as-is
+          $vhdImages.Add($name)
+        } else {
+          # Bare image-type name — look up available versions from its own index
+          Log "  Looking up versions for image type: $name ..."
+          try {
+            $imgIdx = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$name/_index" -Method GET -TimeoutSec 30
+            Log "    Image type index response keys: $($imgIdx.PSObject.Properties.Name -join ', ')"
+            $versions = @(
+              if ($imgIdx.vhd_release_versions) { $imgIdx.vhd_release_versions }
+              elseif ($imgIdx.versions)          { $imgIdx.versions }
+              elseif ($imgIdx.release_versions)  { $imgIdx.release_versions }
+              elseif ($imgIdx -is [array])       { $imgIdx }
+              else                               { @() }
+            )
+            if ($versions.Count -gt 0) {
+              $latestVer = ($versions | Sort-Object {
+                $v = $_
+                try { [System.Version]::new($v) }
+                catch { Write-Warning "  Could not parse version '$v' as System.Version, using 0.0.0"; [System.Version]::new("0.0.0") }
+              } -Descending)[0]
+              Log "    Latest version for $name: $latestVer"
+              $vhdImages.Add("$name/$latestVer")
+            } else {
+              Write-Warning "  No versions found in index for image type: $name"
+            }
+          } catch {
+            Write-Warning "  Failed to fetch version index for ${name}: $_"
+          }
+        }
+      }
 
       if ($vhdImages.Count -gt 0) {
         Log "Pre-fetching VHD CVE scan reports for $($vhdImages.Count) node images..."
         $vhdReports = @{}
         foreach ($img in $vhdImages) {
           Log "  Fetching VHD CVE data for $img..."
-          $vhdReports[$img] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$img/scan-reports" -Method GET -TimeoutSec 30
+          $vhdRpt = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$img/scan-reports" -Method GET -TimeoutSec 30
+          Log "    Scan-report response keys: $($vhdRpt.PSObject.Properties.Name -join ', ')"
+          $pkgCount = if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets.Count }
+                      elseif ($vhdRpt.packages)        { $vhdRpt.packages.Count }
+                      else                             { 0 }
+          Log "    Package targets returned: $pkgCount"
+          $vhdReports[$img] = $vhdRpt
+        }
+        # Validate that actual CVE data was retrieved before marking as available
+        $totalVhdActiveCves = 0
+        foreach ($img in $vhdImages) {
+          $rpt  = $vhdReports[$img]
+          $pkgs = @(if ($rpt.os_package_targets) { $rpt.os_package_targets } elseif ($rpt.packages) { $rpt.packages } else { @() })
+          $totalVhdActiveCves += ($pkgs | ForEach-Object { if ($_.active_cves) { $_.active_cves.Count } else { 0 } } | Measure-Object -Sum).Sum
+        }
+        Log "VHD data summary: $($vhdImages.Count) images fetched, $totalVhdActiveCves total active CVE references across all packages"
+        if ($totalVhdActiveCves -eq 0) {
+          Write-Warning "VHD scan reports returned 0 active CVEs for $($vhdImages.Count) images ($($vhdImages -join ', ')) — this may indicate empty data or a wrong API endpoint. Verify the URL structure."
         }
 
         $vhdAvailable   = $true
@@ -2458,19 +2515,55 @@ function Get-AksCveDigestHtml {
     $vhdDigestBlock = ''
     try {
       $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/_index" -Method GET -TimeoutSec 30
-      $vhdImages  = @(
+      Log "  Digest VHD index response keys: $($nodeIndex.PSObject.Properties.Name -join ', ')"
+      $vhdImageNames  = @(
         if ($nodeIndex.vhd_release_names)    { $nodeIndex.vhd_release_names }
         elseif ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
         elseif ($nodeIndex.images)           { $nodeIndex.images }
         elseif ($nodeIndex -is [array])      { $nodeIndex }
         else                                 { @() }
       )
+      Log "  Digest VHD image names from index ($($vhdImageNames.Count)): $($vhdImageNames -join ', ')"
+      # Resolve each name to a full {type}/{version} path for the scan-reports endpoint
+      $vhdImages = [System.Collections.Generic.List[string]]::new()
+      foreach ($name in $vhdImageNames) {
+        if ($name -match '/') {
+          $vhdImages.Add($name)
+        } else {
+          Log "  Looking up versions for image type: $name ..."
+          try {
+            $imgIdx = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$name/_index" -Method GET -TimeoutSec 30
+            Log "    Image type index response keys: $($imgIdx.PSObject.Properties.Name -join ', ')"
+            $versions = @(
+              if ($imgIdx.vhd_release_versions) { $imgIdx.vhd_release_versions }
+              elseif ($imgIdx.versions)          { $imgIdx.versions }
+              elseif ($imgIdx.release_versions)  { $imgIdx.release_versions }
+              elseif ($imgIdx -is [array])       { $imgIdx }
+              else                               { @() }
+            )
+            if ($versions.Count -gt 0) {
+              $latestVer = ($versions | Sort-Object {
+                $v = $_
+                try { [System.Version]::new($v) }
+                catch { Write-Warning "  Could not parse version '$v' as System.Version, using 0.0.0"; [System.Version]::new("0.0.0") }
+              } -Descending)[0]
+              Log "    Latest version for $name: $latestVer"
+              $vhdImages.Add("$name/$latestVer")
+            } else {
+              Write-Warning "  No versions found in index for image type: $name"
+            }
+          } catch {
+            Write-Warning "  Failed to fetch version index for ${name}: $_"
+          }
+        }
+      }
       if ($vhdImages.Count -gt 0) {
         $vhdActiveAll = [System.Collections.Generic.HashSet[string]]::new()
         $vhdMitAll    = [System.Collections.Generic.HashSet[string]]::new()
         $vhdTop5 = [System.Collections.Generic.List[pscustomobject]]::new()
         foreach ($img in $vhdImages) {
           $vhdRpt   = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$img/scan-reports" -Method GET -TimeoutSec 30
+          Log "  Digest VHD $img — response keys: $($vhdRpt.PSObject.Properties.Name -join ', ')"
           $pkgT     = @(if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets } elseif ($vhdRpt.packages) { $vhdRpt.packages } else { @() })
           $imgAct   = 0; $imgMit = 0
           foreach ($pkg in $pkgT) {
