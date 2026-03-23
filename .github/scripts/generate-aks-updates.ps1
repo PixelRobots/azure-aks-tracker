@@ -918,6 +918,18 @@ Log "Collecting GitHub data since $SINCE_ISO from $($Repositories.Count) reposit
 
 $allFiles = @()
 
+if ($script:CveOnly) {
+  Log "CVE_ONLY mode — skipping GitHub/docs/AI fetch."
+  Log "Fetching AKS CVE vulnerability data (CVE-only run)..."
+  $cveTabHtml = Get-AksCveTabHtml
+  [pscustomobject]@{
+    cve_only    = $true
+    cve_html    = $cveTabHtml
+  } | ConvertTo-Json -Depth 3
+  Log "CVE-only run complete."
+  return
+}
+
 foreach ($repoConfig in $Repositories) {
   $Owner = $repoConfig.Owner
   $Repo = $repoConfig.Repo
@@ -1567,6 +1579,9 @@ function ToListHtml($arr) {
 # CVE_REFRESH_VHD env var: when 'true', also fetches VHD node-image CVE data (26 OS images).
 # This is NOT set on regular 6h schedule runs to keep them fast.
 # Set via the "Refresh CVE data" checkbox in the workflow_dispatch manual trigger.
+# CVE_ONLY=true: skip GitHub/docs/AI entirely — just regenerate the CVE section.
+# The workflow splices the new CVE HTML into the existing WordPress page content.
+$script:CveOnly      = ($env:CVE_ONLY -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 
 function Get-AksCveTabHtml {
@@ -2158,11 +2173,13 @@ $html = @"
       <a class="aks-tab-link" href="#aks-tab-cve">🛡️ CVE Security</a>
     </nav>
 
+    <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
       <h2>AKS CVE Security</h2>
       <p>Live vulnerability data for the latest AKS release, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Shows unique active CVEs and improvements from the previous release across all AKS platform containers.</p>
       $cveTabHtml
     </div>
+    <!-- CVE_SECTION_END -->
 
     <div class="aks-tab-panel" id="aks-tab-releases">
       <div class="aks-releases">
