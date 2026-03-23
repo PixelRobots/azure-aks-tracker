@@ -1802,10 +1802,114 @@ foreach ($r in $releases) {
 $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else { '<p class="aks-rel-empty">No releases found (yet).</p>' }
 
 # =========================
-# CVE TAB HTML
+# CVE DATA (fetched once, rendered for both page tab and email digest)
 # =========================
 Log "Fetching AKS CVE vulnerability data..."
 $cveTabHtml = Get-AksCveTabHtml
+
+# Email-safe (table-based, inline styles only) CVE snapshot for the weekly digest
+function Get-AksCveDigestHtml {
+  $cveApiBase     = "https://cve-api.prod-aks.azure.com"
+  $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
+  $trackerUrl     = "https://pixelrobots.co.uk/aks-docs-tracker/"
+
+  try {
+    $index   = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/_index" -Method GET -TimeoutSec 30
+    $versions = @($index.aks_release_versions)
+    if (-not $versions -or $versions.Count -eq 0) { return '' }
+
+    $latestVersion = $versions[-1]
+    $report    = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/$latestVersion/scan-reports" -Method GET -TimeoutSec 30
+    $reportDate = if ($report.report_time) { [DateTime]::Parse($report.report_time).ToString('yyyy-MM-dd') } else { 'N/A' }
+    $containers = @($report.container_targets)
+
+    $uniqueActive    = @($containers | ForEach-Object { $_.active_cves } | Where-Object { $_ } | Select-Object -ExpandProperty id | Sort-Object -Unique)
+    $uniqueMitigated = @($containers | ForEach-Object {
+        if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release }
+      } | Where-Object { $_ } | Select-Object -ExpandProperty id | Sort-Object -Unique)
+
+    $activeCount     = $uniqueActive.Count
+    $mitigatedCount  = $uniqueMitigated.Count
+    $totalContainers = $containers.Count
+    $containersWithCves = ($containers | Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 }).Count
+
+    $topContainers = $containers |
+      Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 } |
+      Sort-Object { $_.active_cves.Count } -Descending |
+      Select-Object -First 5
+
+    $topRows = ($topContainers | ForEach-Object {
+        $cnt = $_.active_cves.Count
+        $mit = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 }
+        $mitCell = if ($mit -gt 0) { "<td style='padding:6px 10px;font-size:12px;color:#059669;font-weight:600;'>$mit mitigated</td>" } else { "<td style='padding:6px 10px;font-size:12px;color:#9ca3af;'>—</td>" }
+        "<tr style='border-bottom:1px solid #f3f4f6;'><td style='padding:6px 10px;font-size:12px;color:#6b7280;'>$(Escape-Html $_.pod_namespace)</td><td style='padding:6px 10px;font-size:12px;font-weight:500;color:#111827;'>$(Escape-Html $_.container_name)</td><td style='padding:6px 10px;font-size:12px;font-weight:700;color:#dc2626;'>$cnt active</td>$mitCell</tr>"
+      }) -join "`n"
+
+    return @"
+<div style="margin:20px 0;padding:20px;background-color:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td style="padding-bottom:12px;">
+        <h2 style="margin:0;font-size:17px;font-weight:700;color:#1e3a8a;">🛡️ AKS CVE Security Snapshot</h2>
+        <p style="margin:6px 0 0;font-size:12px;color:#1e40af;">Latest AKS release: <strong>$latestVersion</strong> &nbsp;·&nbsp; Data as of $reportDate &nbsp;·&nbsp; Source: <a href="$cveExplorerUrl" style="color:#2563eb;">AKS Vulnerability Data API</a> (Public Preview)</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-bottom:16px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td width="25%" style="padding:12px;background:#fff5f5;border:1px solid #fecaca;border-radius:6px;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:#dc2626;line-height:1;">$activeCount</div>
+              <div style="font-size:12px;font-weight:600;color:#374151;margin-top:4px;">Active CVEs</div>
+              <div style="font-size:11px;color:#9ca3af;">unique, latest release</div>
+            </td>
+            <td width="4%"></td>
+            <td width="25%" style="padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:#059669;line-height:1;">$mitigatedCount</div>
+              <div style="font-size:12px;font-weight:600;color:#374151;margin-top:4px;">Mitigated</div>
+              <div style="font-size:11px;color:#9ca3af;">vs previous release</div>
+            </td>
+            <td width="4%"></td>
+            <td width="42%" style="padding:12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;text-align:center;">
+              <div style="font-size:24px;font-weight:800;color:#f59e0b;line-height:1;">$containersWithCves / $totalContainers</div>
+              <div style="font-size:12px;font-weight:600;color:#374151;margin-top:4px;">Containers with active CVEs</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-bottom:12px;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#111827;">Top containers by active CVEs:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Namespace</th>
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Container</th>
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Active CVEs</th>
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Mitigated</th>
+            </tr>
+          </thead>
+          <tbody>
+            $topRows
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top:4px;">
+        <a href="$trackerUrl" style="display:inline-block;padding:10px 18px;font-size:13px;font-weight:600;text-decoration:none;border-radius:6px;background-color:#2563eb;color:#ffffff;">🔍 View Full CVE Security Tab</a>
+      </td>
+    </tr>
+  </table>
+</div>
+"@.Trim()
+  }
+  catch {
+    Write-Warning "CVE digest block failed: $_"
+    return ''
+  }
+}
 
 # =========================
 # PAGE HTML (Tabs + Panels) - Same as original
@@ -1980,6 +2084,9 @@ $weekStart = (Get-Date -Date ((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd'
 $weekEnd = (Get-Date).ToUniversalTime()
 $digestTitle = "Azure Container Services Docs - Weekly Update (" + $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd') + ")"
 
+Log "Building CVE digest block..."
+$cveDigestBlock = Get-AksCveDigestHtml
+
 $digestHtml = @"
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
   <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
@@ -1994,6 +2101,7 @@ $digestHtml = @"
   <div>
     $($digestItems -join "`n")
   </div>
+  $cveDigestBlock
   <div style="margin-top: 20px; padding: 16px; background-color: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb; text-align: center;">
     <p style="margin: 0; font-size: 13px; color: #6b7280;">
       Full tracker with filters: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Azure Container Services Docs Tracker</a>
