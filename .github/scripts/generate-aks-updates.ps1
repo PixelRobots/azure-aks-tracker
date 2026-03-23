@@ -919,8 +919,11 @@ $PatchSample
 function Get-AksCveTabHtml {
   $cveApiBase     = "https://cve-api.prod-aks.azure.com"
   $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
+  $k8sCveUrl      = "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/"
+  $k8sSecUrl      = "https://github.com/kubernetes/kubernetes/issues?q=is%3Aissue+label%3Aarea%2Fsecurity"
 
   try {
+    # ── CONTAINER IMAGE DATA ────────────────────────────────────────────────────
     Log "Fetching AKS CVE release index..."
     $index    = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/_index" -Method GET -TimeoutSec 30
     $versions = @($index.aks_release_versions)
@@ -935,11 +938,11 @@ function Get-AksCveTabHtml {
     Log "Pre-fetching CVE scan reports for all $($versions.Count) AKS releases..."
     $allReports = @{}
     foreach ($ver in $versions) {
-      Log "  Fetching CVE data for $ver..."
+      Log "  Fetching container CVE data for $ver..."
       $allReports[$ver] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/$ver/scan-reports" -Method GET -TimeoutSec 30
     }
 
-    # Build compact JS data: { versions: [...], byVersion: { "v20260208": { date, active, mitigated, affected, total, top:[[ns,cn,a,m],...], cves:{ "CVE-ID":{a:[...],m:[...]} } } } }
+    # Build compact JS data for container images
     $jsVersionsArr  = "[" + (($versions | ForEach-Object { "`"$_`"" }) -join ",") + "]"
     $byVersionParts = [System.Collections.Generic.List[string]]::new()
     $initActive = 0; $initMitigated = 0; $initAffected = 0; $initTotal = 0
@@ -1010,7 +1013,11 @@ function Get-AksCveTabHtml {
           $mitCell   = if ($mitInCont -gt 0) {
             "<td style=""color:#34d399;font-weight:600;text-align:center;"">&#9989; $mitInCont</td>"
           } else { "<td style=""color:#6b7280;text-align:center;"">&mdash;</td>" }
-          "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;color:#94a3b8;"">$(Escape-Html $_.pod_namespace)</td><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$(Escape-Html $_.container_name)</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$cnt</td>$mitCell</tr>"
+          $nsDisplay = Escape-Html $_.pod_namespace
+          $cnDisplay = Escape-Html $_.container_name
+          # Highlight K8s core components (kube-system)
+          $k8sTag = if ($_.pod_namespace -eq 'kube-system') { "<span style=""display:inline-block;padding:1px 5px;background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:3px;font-size:10px;margin-left:4px;"">k8s</span>" } else { "" }
+          "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;color:#94a3b8;"">$nsDisplay</td><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$cnDisplay$k8sTag</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$cnt</td>$mitCell</tr>"
         }) -join "`n"
       }
     }
@@ -1024,57 +1031,416 @@ function Get-AksCveTabHtml {
       "<option value=""$_""$sel>$_</option>"
     }) -join "`n        "
 
+    # ── VHD NODE IMAGE DATA ─────────────────────────────────────────────────────
+    $vhdAvailable    = $false
+    $jsVhdImagesArr  = "[]"
+    $vhdByImageJson  = "{}"
+    $vhdInitActive   = 0; $vhdInitMitigated = 0; $vhdInitAffected = 0; $vhdInitTotal = 0
+    $vhdInitDate     = "N/A"; $vhdInitImage = "N/A"; $vhdInitTopRowsHtml = ""
+    $vhdImageOptions = ""
+
+    try {
+      Log "Fetching VHD node-image index..."
+      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/_index" -Method GET -TimeoutSec 30
+      $vhdImages  = @(
+        if ($nodeIndex.node_image_names)    { $nodeIndex.node_image_names }
+        elseif ($nodeIndex.images)          { $nodeIndex.images }
+        elseif ($nodeIndex -is [array])     { $nodeIndex }
+        else                                { @() }
+      )
+
+      if ($vhdImages.Count -gt 0) {
+        Log "Pre-fetching VHD CVE scan reports for $($vhdImages.Count) node images..."
+        $vhdReports = @{}
+        foreach ($img in $vhdImages) {
+          Log "  Fetching VHD CVE data for $img..."
+          $vhdReports[$img] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/$img/scan-reports" -Method GET -TimeoutSec 30
+        }
+
+        $vhdAvailable   = $true
+        $jsVhdImagesArr = "[" + (($vhdImages | ForEach-Object { "`"$_`"" }) -join ",") + "]"
+        $vhdByImageParts = [System.Collections.Generic.List[string]]::new()
+
+        # Sort images so Linux images come first, then Windows
+        $sortedVhdImages = @($vhdImages | Sort-Object {
+          $img = $_
+          if ($img -match 'windows|Windows') { 1 } else { 0 }
+        })
+
+        foreach ($img in $sortedVhdImages) {
+          $vhdRpt   = $vhdReports[$img]
+          $vhdDate  = if ($vhdRpt.report_time) { [DateTime]::Parse($vhdRpt.report_time).ToString("yyyy-MM-dd") } else { "N/A" }
+
+          # Support both 'os_package_targets' and 'packages' field names
+          $pkgTargets = @(
+            if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets }
+            elseif ($vhdRpt.packages)        { $vhdRpt.packages }
+            else                             { @() }
+          )
+
+          $vActive = @{}; $vMit = @{}; $pkgWithCves = 0
+          $vCveMap = [ordered]@{}
+
+          foreach ($pkg in $pkgTargets) {
+            $pkgName = if ($pkg.package_name) { $pkg.package_name } elseif ($pkg.name) { $pkg.name } else { "unknown" }
+            $had = $false
+            foreach ($cv in @($pkg.active_cves)) {
+              if ($cv.id) {
+                $vActive[$cv.id] = 1; $had = $true
+                if (-not $vCveMap.Contains($cv.id)) { $vCveMap[$cv.id] = @{ a = [System.Collections.Generic.List[string]]::new(); m = [System.Collections.Generic.List[string]]::new() } }
+                $vCveMap[$cv.id].a.Add($pkgName)
+              }
+            }
+            foreach ($cv in @($pkg.mitigated_cves_from_previous_release)) {
+              if ($cv.id) {
+                $vMit[$cv.id] = 1
+                if (-not $vCveMap.Contains($cv.id)) { $vCveMap[$cv.id] = @{ a = [System.Collections.Generic.List[string]]::new(); m = [System.Collections.Generic.List[string]]::new() } }
+                $vCveMap[$cv.id].m.Add($pkgName)
+              }
+            }
+            if ($had) { $pkgWithCves++ }
+          }
+
+          $vActive10 = @($pkgTargets |
+            Where-Object {
+              $pName = if ($_.package_name) { $_.package_name } elseif ($_.name) { $_.name } else { "" }
+              $_.active_cves -and $_.active_cves.Count -gt 0
+            } |
+            Sort-Object { $_.active_cves.Count } -Descending |
+            Select-Object -First 10)
+
+          $vTopArrJson = "[" + (($vActive10 | ForEach-Object {
+            $pn  = if ($_.package_name) { $_.package_name } elseif ($_.name) { $_.name } else { "unknown" }
+            $pv  = if ($_.package_version) { $_.package_version } elseif ($_.version) { $_.version } else { "" }
+            $mit = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 }
+            $pnJ = $pn -replace '\\','\\' -replace '"','\"'
+            $pvJ = $pv -replace '\\','\\' -replace '"','\"'
+            "[`"$pnJ`",`"$pvJ`",$($_.active_cves.Count),$mit]"
+          }) -join ",") + "]"
+
+          $vCveJsonParts = [System.Collections.Generic.List[string]]::new()
+          foreach ($cveId in $vCveMap.Keys) {
+            $eid = $cveId -replace '\\','\\' -replace '"','\"'
+            $aJ  = ($vCveMap[$cveId].a | ForEach-Object { "`"$($_ -replace '\\','\\' -replace '"','\"')`"" }) -join ","
+            $mJ  = ($vCveMap[$cveId].m | ForEach-Object { "`"$($_ -replace '\\','\\' -replace '"','\"')`"" }) -join ","
+            $vCveJsonParts.Add("`"$eid`":{`"a`":[$aJ],`"m`":[$mJ]}")
+          }
+          $vCveIdxJson = "{" + ($vCveJsonParts -join ",") + "}"
+
+          $imgJ = $img -replace '\\','\\' -replace '"','\"'
+          $vhdByImageParts.Add("`"$imgJ`":{`"date`":`"$vhdDate`",`"active`":$($vActive.Count),`"mitigated`":$($vMit.Count),`"affected`":$pkgWithCves,`"total`":$($pkgTargets.Count),`"top`":$vTopArrJson,`"cves`":$vCveIdxJson}")
+        }
+
+        $vhdByImageJson = "{" + ($vhdByImageParts -join ",") + "}"
+
+        # Aggregate totals across all VHD images for summary
+        $allVhdActive    = [System.Collections.Generic.HashSet[string]]::new()
+        $allVhdMitigated = [System.Collections.Generic.HashSet[string]]::new()
+        foreach ($img in $sortedVhdImages) {
+          $vhdRpt = $vhdReports[$img]
+          $pkgT   = @(if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets } elseif ($vhdRpt.packages) { $vhdRpt.packages } else { @() })
+          foreach ($pkg in $pkgT) {
+            foreach ($cv in @($pkg.active_cves))                             { if ($cv.id) { $null = $allVhdActive.Add($cv.id)    } }
+            foreach ($cv in @($pkg.mitigated_cves_from_previous_release))    { if ($cv.id) { $null = $allVhdMitigated.Add($cv.id)  } }
+          }
+        }
+        $vhdInitActive    = $allVhdActive.Count
+        $vhdInitMitigated = $allVhdMitigated.Count
+        $vhdInitTotal     = $sortedVhdImages.Count
+
+        # Top images by active CVE count
+        $topVhdImages = @($sortedVhdImages | ForEach-Object {
+          $img = $_
+          $vhdRpt = $vhdReports[$img]
+          $pkgT   = @(if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets } elseif ($vhdRpt.packages) { $vhdRpt.packages } else { @() })
+          $actCnt = ($pkgT | ForEach-Object { if ($_.active_cves) { $_.active_cves.Count } else { 0 } } | Measure-Object -Sum).Sum
+          $mitCnt = ($pkgT | ForEach-Object { if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 } } | Measure-Object -Sum).Sum
+          [pscustomobject]@{ img=$img; active=$actCnt; mitigated=$mitCnt }
+        } | Sort-Object { -$_.active } | Select-Object -First 10)
+
+        $vhdInitAffected = ($topVhdImages | Where-Object { $_.active -gt 0 }).Count
+        $vhdInitImage    = $sortedVhdImages[0]
+        $vhdInitDate     = if ($vhdReports[$vhdInitImage].report_time) { [DateTime]::Parse($vhdReports[$vhdInitImage].report_time).ToString("yyyy-MM-dd") } else { "N/A" }
+
+        $vhdInitTopRowsHtml = ($topVhdImages | ForEach-Object {
+          $imgDisplay = Escape-Html $_.img
+          $mitCell    = if ($_.mitigated -gt 0) {
+            "<td style=""color:#34d399;font-weight:600;text-align:center;"">&#9989; $($_.mitigated)</td>"
+          } else { "<td style=""color:#6b7280;text-align:center;"">&mdash;</td>" }
+          $osTag = if ($_.img -match 'ubuntu|Ubuntu') { "<span style=""padding:1px 5px;background:rgba(251,146,60,0.15);color:#fb923c;border-radius:3px;font-size:10px;margin-left:4px;"">Ubuntu</span>" }
+                   elseif ($_.img -match 'azurelinux|AzureLinux|mariner|Mariner') { "<span style=""padding:1px 5px;background:rgba(52,211,153,0.15);color:#34d399;border-radius:3px;font-size:10px;margin-left:4px;"">Azure Linux</span>" }
+                   elseif ($_.img -match 'windows|Windows') { "<span style=""padding:1px 5px;background:rgba(96,165,250,0.15);color:#60a5fa;border-radius:3px;font-size:10px;margin-left:4px;"">Windows</span>" }
+                   else { "" }
+          "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$imgDisplay$osTag</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$($_.active)</td>$mitCell</tr>"
+        }) -join "`n"
+
+        # Image selector dropdown for VHD tab
+        $vhdImageOptions = ($sortedVhdImages | ForEach-Object {
+          $sel = if ($_ -eq $vhdInitImage) { ' selected' } else { '' }
+          "<option value=""$_""$sel>$_</option>"
+        }) -join "`n        "
+      }
+    }
+    catch {
+      Write-Warning "VHD node-image CVE fetch failed (non-fatal): $_"
+    }
+
+    # ── BUILD HTML ──────────────────────────────────────────────────────────────
+
+    $vhdTabStyle       = "display:block"
+    $containerTabStyle = "display:none"
+    $vhdBtnActive      = "border-bottom:2px solid #f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);"
+    $contBtnActive     = ""
+
+    # VHD unavailable notice (shown inside VHD panel when no data)
+    $vhdUnavailHtml = if (-not $vhdAvailable) { @"
+    <div style="padding:20px;text-align:center;color:#94a3b8;">
+      <div style="font-size:32px;margin-bottom:8px;">&#128679;</div>
+      <div style="font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:6px;">VHD Node Image data refreshes daily</div>
+      <div style="font-size:13px;">VHD CVE data is fetched once per day (06:00 UTC) to keep API call counts manageable. Check back later or use the <a href="$cveExplorerUrl" target="_blank" rel="noopener" style="color:#60a5fa;">CVE Explorer</a> for live data.</div>
+    </div>
+"@ } else { "" }
+
     return @"
 <div id="aks-cve-root" style="padding:4px 0;">
 
   <!-- Banner -->
-  <div style="display:flex;align-items:flex-start;gap:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(147,197,253,0.25);border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+  <div style="display:flex;align-items:flex-start;gap:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(147,197,253,0.25);border-radius:8px;padding:16px 20px;margin-bottom:16px;">
     <span style="font-size:28px;flex-shrink:0;">&#128737;&#65039;</span>
     <div>
-      <strong style="font-size:16px;color:#93c5fd;">AKS Vulnerability Data API</strong>
+      <strong style="font-size:16px;color:#93c5fd;">AKS CVE Security Dashboard</strong>
       <span style="display:inline-block;padding:2px 8px;background:rgba(251,191,36,0.15);color:#fbbf24;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px;">Public Preview</span>
       <p style="margin:6px 0 0;font-size:13px;color:#bfdbfe;line-height:1.5;">
-        Live CVE data for AKS platform components, sourced from the
+        Multi-layer CVE tracking for AKS: VHD node images (OS packages) and Kubernetes platform containers, sourced from the
         <a href="$cveExplorerUrl" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:600;">AKS CVE API</a>.
-        Select a release to compare, or search any CVE ID below — all data is pre-loaded for instant results.
+        All data is pre-loaded for instant results — no browser API calls needed.
       </p>
     </div>
   </div>
 
-  <!-- 4 stat/selector tiles -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">
-    <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
-      <div id="aks-cve-active-count" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$initActive</div>
-      <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, this release</div>
-    </div>
-    <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
-      <div id="aks-cve-mitigated-count" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$initMitigated</div>
-      <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous release</div>
-    </div>
-    <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
-      <div id="aks-cve-containers-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$initAffected</div>
-      <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Affected Containers</div>
-      <div id="aks-cve-containers-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;">of $initTotal tracked</div>
-    </div>
-    <div style="background:rgba(59,130,246,0.15);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
-      <div style="position:relative;width:100%;">
-        <select id="aks-cve-version-select"
-          style="width:100%;padding:6px 28px 6px 8px;border-radius:6px;border:1px solid rgba(147,197,253,0.45);background:rgba(30,58,138,0.5);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;">
-          $versionOptions
-        </select>
-        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#93c5fd;font-size:11px;">&#9660;</span>
-      </div>
-      <div style="font-size:11px;font-weight:600;color:#93c5fd;letter-spacing:0.03em;">AKS RELEASE</div>
-      <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $initDate</div>
-    </div>
+  <!-- Sub-tab Navigation -->
+  <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:20px;">
+    <button id="aks-cve-btn-vhd" onclick="aksCveShowTab('vhd')"
+      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#e2e8f0;transition:all 0.15s;$vhdBtnActive">
+      &#128187; VHD Node Images
+    </button>
+    <button id="aks-cve-btn-containers" onclick="aksCveShowTab('containers')"
+      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$contBtnActive">
+      &#128230; Container Images
+    </button>
+    <button id="aks-cve-btn-k8s" onclick="aksCveShowTab('k8s')"
+      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;">
+      &#9096; K8s Advisories
+    </button>
   </div>
 
-  <!-- CVE Search -->
+  <!-- ═══════════════════════════ VHD TAB ════════════════════════════ -->
+  <div id="aks-cve-panel-vhd" style="$vhdTabStyle">
+
+    <!-- VHD summary tiles -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">
+      <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
+        <div id="aks-vhd-active" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$vhdInitActive</div>
+        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, across all images</div>
+      </div>
+      <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
+        <div id="aks-vhd-mitigated" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$vhdInitMitigated</div>
+        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous build</div>
+      </div>
+      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
+        <div id="aks-vhd-images-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$vhdInitTotal</div>
+        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Node Image Types</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Linux &amp; Windows</div>
+      </div>
+      <div style="background:rgba(99,102,241,0.12);border:1px solid rgba(165,180,252,0.3);border-radius:8px;padding:14px 12px;text-align:center;">
+        <div style="font-size:11px;font-weight:600;color:#a5b4fc;letter-spacing:0.03em;margin-bottom:4px;">LAST VHD SCAN</div>
+        <div id="aks-vhd-date" style="font-size:18px;font-weight:700;color:#e2e8f0;line-height:1.2;">$vhdInitDate</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px;">refreshed daily</div>
+      </div>
+    </div>
+
+    $vhdUnavailHtml
+
+    <!-- VHD node images table -->
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128187; Node Images by Active CVE Count</h3>
+        <span style="font-size:11px;color:#94a3b8;">OS-level package vulnerabilities</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.05);">
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Node Image</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Active CVEs</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated (vs prev)</th>
+            </tr>
+          </thead>
+          <tbody id="aks-vhd-tbody">
+$vhdInitTopRowsHtml
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VHD image selector + per-image package breakdown -->
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
+        <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128230; Top Affected Packages by Image</h3>
+      </div>
+      <div style="padding:14px 16px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+          <label style="font-size:13px;color:#94a3b8;">Select image:</label>
+          <div style="position:relative;flex:1;min-width:200px;max-width:360px;">
+            <select id="aks-vhd-image-select"
+              style="width:100%;padding:6px 28px 6px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.45);background:rgba(120,53,15,0.3);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;">
+              $vhdImageOptions
+            </select>
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#f59e0b;font-size:11px;">&#9660;</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:rgba(255,255,255,0.05);">
+                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Package</th>
+                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>
+                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Active CVEs</th>
+                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Mitigated</th>
+              </tr>
+            </thead>
+            <tbody id="aks-vhd-pkg-tbody">
+              <tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">Select an image above to see package details.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /vhd panel -->
+
+  <!-- ═══════════════════════ CONTAINER TAB ══════════════════════════ -->
+  <div id="aks-cve-panel-containers" style="$containerTabStyle">
+
+    <!-- Container stat tiles + version selector -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">
+      <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
+        <div id="aks-cve-active-count" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$initActive</div>
+        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, this release</div>
+      </div>
+      <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
+        <div id="aks-cve-mitigated-count" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$initMitigated</div>
+        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous release</div>
+      </div>
+      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
+        <div id="aks-cve-containers-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$initAffected</div>
+        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Affected Containers</div>
+        <div id="aks-cve-containers-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;">of $initTotal tracked</div>
+      </div>
+      <div style="background:rgba(59,130,246,0.15);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+        <div style="position:relative;width:100%;">
+          <select id="aks-cve-version-select"
+            style="width:100%;padding:6px 28px 6px 8px;border-radius:6px;border:1px solid rgba(147,197,253,0.45);background:rgba(30,58,138,0.5);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;">
+            $versionOptions
+          </select>
+          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#93c5fd;font-size:11px;">&#9660;</span>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#93c5fd;letter-spacing:0.03em;">AKS RELEASE</div>
+        <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $initDate</div>
+      </div>
+    </div>
+
+    <!-- Top containers table -->
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">Top Containers by Active CVEs</h3>
+        <span style="font-size:11px;color:#94a3b8;"><span style="display:inline-block;padding:1px 5px;background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:3px;font-size:10px;">k8s</span> = Kubernetes core component</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.05);">
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Namespace</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Container</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Active CVEs</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated (vs prev)</th>
+            </tr>
+          </thead>
+          <tbody id="aks-cve-top-tbody">
+$initTopRowsHtml
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /containers panel -->
+
+  <!-- ═══════════════════════ K8s ADVISORIES TAB ══════════════════════ -->
+  <div id="aks-cve-panel-k8s" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px;">
+
+      <!-- Official CVE Feed -->
+      <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(165,180,252,0.25);border-radius:8px;padding:20px;">
+        <div style="font-size:22px;margin-bottom:10px;">&#127760;</div>
+        <h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#a5b4fc;">Official Kubernetes CVE Feed</h3>
+        <p style="margin:0 0 14px;font-size:13px;color:#c7d2fe;line-height:1.6;">
+          The Kubernetes Security Committee maintains an official JSON feed of all Kubernetes CVEs,
+          including severity, affected versions, and remediation guidance.
+        </p>
+        <a href="$k8sCveUrl" target="_blank" rel="noopener"
+           style="display:inline-block;padding:8px 16px;font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;background:#4f46e5;color:#fff;">
+          &#128279; View CVE Feed
+        </a>
+      </div>
+
+      <!-- Security Issues on GitHub -->
+      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:8px;padding:20px;">
+        <div style="font-size:22px;margin-bottom:10px;">&#128202;</div>
+        <h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#6ee7b7;">Kubernetes Security Issues</h3>
+        <p style="margin:0 0 14px;font-size:13px;color:#a7f3d0;line-height:1.6;">
+          Browse open and closed security-labelled issues in the Kubernetes GitHub repository,
+          including reports of vulnerabilities and their patch status.
+        </p>
+        <a href="$k8sSecUrl" target="_blank" rel="noopener"
+           style="display:inline-block;padding:8px 16px;font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;background:#059669;color:#fff;">
+          &#128279; View GitHub Issues
+        </a>
+      </div>
+
+      <!-- AKS CVE Explorer -->
+      <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(147,197,253,0.25);border-radius:8px;padding:20px;">
+        <div style="font-size:22px;margin-bottom:10px;">&#128270;</div>
+        <h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#93c5fd;">AKS CVE Explorer</h3>
+        <p style="margin:0 0 14px;font-size:13px;color:#bfdbfe;line-height:1.6;">
+          Microsoft's interactive CVE Explorer for AKS, showing vulnerabilities across all
+          Kubernetes releases, node images, and AKS platform components.
+        </p>
+        <a href="$cveExplorerUrl" target="_blank" rel="noopener"
+           style="display:inline-block;padding:8px 16px;font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;background:#2563eb;color:#fff;">
+          &#128279; Open CVE Explorer
+        </a>
+      </div>
+
+    </div>
+
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;">
+      <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.7;">
+        <strong style="color:#e2e8f0;">&#128161; Note:</strong>
+        Kubernetes core component CVEs (kube-apiserver, etcd, kube-proxy, CoreDNS, etc.) are also tracked
+        in the <strong style="color:#e2e8f0;">Container Images</strong> tab above, where you can see exactly
+        which AKS platform containers are affected per release version and search any CVE ID across all known releases.
+      </p>
+    </div>
+  </div><!-- /k8s panel -->
+
+  <!-- ═══════════════════════ UNIFIED CVE SEARCH ═══════════════════════ -->
   <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
     <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE Across All Versions</h3>
+      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE — VHD &amp; Container Data</h3>
     </div>
     <div style="padding:14px 16px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
@@ -1082,34 +1448,12 @@ function Get-AksCveTabHtml {
           style="flex:1;min-width:220px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;outline:none;" />
         <button id="aks-cve-search-btn" onclick="aksCveSearch()"
           style="padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
-          Search all $versionCount versions
+          Search all $versionCount releases
         </button>
       </div>
       <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;">
-        Enter a CVE ID to instantly check its status across all $versionCount known AKS releases.
+        Enter a CVE ID to check its status across all $versionCount AKS container releases and all VHD node images.
       </div>
-    </div>
-  </div>
-
-  <!-- Top containers table -->
-  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
-    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">Top Containers by Active CVEs</h3>
-    </div>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;">
-        <thead>
-          <tr style="background:rgba(255,255,255,0.05);">
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Namespace</th>
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Container</th>
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Active CVEs</th>
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated (vs prev)</th>
-          </tr>
-        </thead>
-        <tbody id="aks-cve-top-tbody">
-$initTopRowsHtml
-        </tbody>
-      </table>
     </div>
   </div>
 
@@ -1124,16 +1468,61 @@ $initTopRowsHtml
   <script>
   (function() {
     // All CVE data is pre-embedded — no API calls needed from the browser (avoids CORS).
-    var DATA = {versions:$jsVersionsArr,byVersion:$byVersionJson};
+    var CDATA = {versions:$jsVersionsArr,byVersion:$byVersionJson};
+    var VDATA = {images:$jsVhdImagesArr,byImage:$vhdByImageJson};
 
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    var vsel = document.getElementById('aks-cve-version-select');
+    // ── Tab switching ──────────────────────────────────────────────────
+    var TAB_IDS = ['vhd','containers','k8s'];
+    var TAB_COLORS = {
+      vhd:        {active:'border-bottom:2px solid #f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
+      containers: {active:'border-bottom:2px solid #93c5fd;color:#93c5fd;background:rgba(59,130,246,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
+      k8s:        {active:'border-bottom:2px solid #a5b4fc;color:#a5b4fc;background:rgba(99,102,241,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'}
+    };
+    window.aksCveShowTab = function(tab) {
+      TAB_IDS.forEach(function(t) {
+        var btn   = document.getElementById('aks-cve-btn-'      + t);
+        var panel = document.getElementById('aks-cve-panel-'    + t);
+        if (!btn || !panel) return;
+        var isActive = (t === tab);
+        panel.style.display = isActive ? 'block' : 'none';
+        var style = isActive ? TAB_COLORS[t].active : TAB_COLORS[t].inactive;
+        btn.setAttribute('style',
+          'padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;' + style);
+      });
+    };
 
+    // ── VHD image selector ─────────────────────────────────────────────
+    var vhdSel = document.getElementById('aks-vhd-image-select');
+    function renderVhdImage(imgName) {
+      var d = VDATA.byImage[imgName];
+      if (!d) return;
+      var html = '';
+      (d.top || []).forEach(function(row) {
+        var mitCell = row[3] > 0
+          ? '<td style="color:#34d399;font-weight:600;text-align:center;">&#9989; ' + row[3] + '</td>'
+          : '<td style="color:#6b7280;text-align:center;">&mdash;</td>';
+        html += '<tr style="border-top:1px solid rgba(255,255,255,0.06);">'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:500;">' + esc(row[0]) + '</td>'
+          + '<td style="padding:6px 10px;font-size:12px;color:#94a3b8;">'   + esc(row[1]) + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;">' + row[2] + '</td>'
+          + mitCell + '</tr>';
+      });
+      document.getElementById('aks-vhd-pkg-tbody').innerHTML = html ||
+        '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No package CVE data for this image.</td></tr>';
+    }
+    if (vhdSel) {
+      vhdSel.addEventListener('change', function() { renderVhdImage(vhdSel.value); });
+      if (vhdSel.value) renderVhdImage(vhdSel.value);
+    }
+
+    // ── Container version selector ─────────────────────────────────────
+    var vsel = document.getElementById('aks-cve-version-select');
     function renderVersion(ver) {
-      var d = DATA.byVersion[ver];
+      var d = CDATA.byVersion[ver];
       if (!d) return;
       document.getElementById('aks-cve-active-count').textContent     = d.active;
       document.getElementById('aks-cve-mitigated-count').textContent  = d.mitigated;
@@ -1145,19 +1534,21 @@ $initTopRowsHtml
         var mitCell = row[3] > 0
           ? '<td style="color:#34d399;font-weight:600;text-align:center;">&#9989; ' + row[3] + '</td>'
           : '<td style="color:#6b7280;text-align:center;">&mdash;</td>';
+        var k8sTag = row[0] === 'kube-system'
+          ? '<span style="display:inline-block;padding:1px 5px;background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:3px;font-size:10px;margin-left:4px;">k8s</span>'
+          : '';
         html += '<tr style="border-top:1px solid rgba(255,255,255,0.06);">'
           + '<td style="padding:6px 10px;font-size:13px;color:#94a3b8;">'  + esc(row[0]) + '</td>'
-          + '<td style="padding:6px 10px;font-size:13px;font-weight:500;">' + esc(row[1]) + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:500;">' + esc(row[1]) + k8sTag + '</td>'
           + '<td style="padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;">' + row[2] + '</td>'
           + mitCell + '</tr>';
       });
       document.getElementById('aks-cve-top-tbody').innerHTML = html ||
         '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No containers with active CVEs.</td></tr>';
     }
+    if (vsel) vsel.addEventListener('change', function() { renderVersion(vsel.value); });
 
-    vsel.addEventListener('change', function() { renderVersion(vsel.value); });
-
-    // --- CVE Search: fully client-side, instant ---
+    // ── Unified CVE Search: searches container + VHD data ─────────────
     window.aksCveSearch = function() {
       var rawId = (document.getElementById('aks-cve-search-input').value || '').trim().toUpperCase();
       var outEl = document.getElementById('aks-cve-search-results');
@@ -1167,79 +1558,128 @@ $initTopRowsHtml
         return;
       }
 
-      var allVersions = DATA.versions;
+      // Search container releases
+      var allVersions = CDATA.versions;
       var hits = {};
       allVersions.forEach(function(ver) {
-        var entry = DATA.byVersion[ver] && DATA.byVersion[ver].cves && DATA.byVersion[ver].cves[rawId];
+        var entry = CDATA.byVersion[ver] && CDATA.byVersion[ver].cves && CDATA.byVersion[ver].cves[rawId];
         if (entry && (entry.a.length > 0 || entry.m.length > 0)) hits[ver] = entry;
       });
 
-      if (Object.keys(hits).length === 0) {
+      // Search VHD images
+      var vhdHits = {};
+      (VDATA.images || []).forEach(function(img) {
+        var entry = VDATA.byImage[img] && VDATA.byImage[img].cves && VDATA.byImage[img].cves[rawId];
+        if (entry && (entry.a.length > 0 || entry.m.length > 0)) vhdHits[img] = entry;
+      });
+
+      var noContainerHits = Object.keys(hits).length === 0;
+      var noVhdHits       = Object.keys(vhdHits).length === 0;
+
+      if (noContainerHits && noVhdHits) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
           + '&#9989; <strong>' + esc(rawId) + '</strong> was not found in any of the '
-          + allVersions.length + ' AKS releases scanned. It may not affect AKS platform containers.</div>';
+          + allVersions.length + ' AKS container releases or any VHD node images. It may not affect AKS.</div>';
         return;
       }
 
-      var latestVer    = allVersions[allVersions.length - 1];
-      var activeLatest = hits[latestVer] && hits[latestVer].a.length > 0;
-      var firstFixed = null, lastActive = null, activeRels = 0;
-      for (var i = 0; i < allVersions.length; i++) {
-        var h = hits[allVersions[i]];
-        if (h) {
-          if (h.m.length > 0 && !firstFixed) firstFixed = allVersions[i];
-          if (h.a.length > 0) { lastActive = allVersions[i]; activeRels++; }
+      var out = '';
+
+      // VHD summary section
+      if (!noVhdHits) {
+        var vhdImgNames = Object.keys(vhdHits);
+        var vhdActiveImgs   = vhdImgNames.filter(function(i) { return vhdHits[i].a.length > 0; });
+        var vhdMitigImgs    = vhdImgNames.filter(function(i) { return vhdHits[i].m.length > 0 && vhdHits[i].a.length === 0; });
+        var vhdStatusBg  = vhdActiveImgs.length > 0 ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
+        var vhdStatusBd  = vhdActiveImgs.length > 0 ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
+        var vhdStatusIco = vhdActiveImgs.length > 0 ? '&#x1F534;' : '&#x2705;';
+        var vhdStatusTxt = vhdActiveImgs.length > 0
+          ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">active</strong> in ' + vhdActiveImgs.length + ' VHD node image(s).'
+          : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not currently active</strong> in any VHD node image.';
+        out += '<div style="margin-bottom:12px;padding:12px 16px;background:' + vhdStatusBg + ';border:1px solid ' + vhdStatusBd + ';border-radius:8px;">'
+          + '<div style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:6px;">&#128187; VHD Node Images</div>'
+          + '<div style="font-size:13px;">' + vhdStatusIco + ' ' + vhdStatusTxt + '</div>';
+        if (vhdActiveImgs.length > 0) {
+          out += '<div style="margin-top:8px;">';
+          vhdActiveImgs.forEach(function(img) {
+            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(220,38,38,0.15);color:#fca5a5;border-radius:4px;font-size:12px;">' + esc(img) + '</span>';
+          });
+          out += '</div>';
         }
+        if (vhdMitigImgs.length > 0) {
+          out += '<div style="margin-top:6px;font-size:12px;color:#94a3b8;">Mitigated in: ';
+          vhdMitigImgs.forEach(function(img) {
+            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(16,185,129,0.12);color:#34d399;border-radius:4px;font-size:12px;">' + esc(img) + '</span>';
+          });
+          out += '</div>';
+        }
+        out += '</div>';
       }
 
-      var sbg  = activeLatest ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
-      var sbd  = activeLatest ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
-      var sico = activeLatest ? '&#x1F534;' : '&#x2705;';
-      var stxt = activeLatest
-        ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).'
-        : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).';
+      // Container release history
+      if (!noContainerHits) {
+        var latestVer    = allVersions[allVersions.length - 1];
+        var activeLatest = hits[latestVer] && hits[latestVer].a.length > 0;
+        var firstFixed = null, lastActive = null, activeRels = 0;
+        for (var i = 0; i < allVersions.length; i++) {
+          var h = hits[allVersions[i]];
+          if (h) {
+            if (h.m.length > 0 && !firstFixed) firstFixed = allVersions[i];
+            if (h.a.length > 0) { lastActive = allVersions[i]; activeRels++; }
+          }
+        }
 
-      var pills = '';
-      if (firstFixed) pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-size:12px;font-weight:600;">&#x1F527; First fixed: ' + esc(firstFixed) + '</span>';
-      if (lastActive)  pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActive) + '</span>';
-      pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeRels + ' release' + (activeRels === 1 ? '' : 's') + '</span>';
+        var sbg  = activeLatest ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
+        var sbd  = activeLatest ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
+        var sico = activeLatest ? '&#x1F534;' : '&#x2705;';
+        var stxt = activeLatest
+          ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).'
+          : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).';
 
-      var out = '<div style="margin-bottom:14px;padding:12px 16px;background:' + sbg + ';border:1px solid ' + sbd + ';border-radius:8px;">'
-        + '<div style="font-size:14px;margin-bottom:8px;">' + sico + ' ' + stxt + '</div>'
-        + '<div>' + pills + '</div></div>';
+        var pills = '';
+        if (firstFixed) pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-size:12px;font-weight:600;">&#x1F527; First fixed: ' + esc(firstFixed) + '</span>';
+        if (lastActive)  pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActive) + '</span>';
+        pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeRels + ' release' + (activeRels === 1 ? '' : 's') + '</span>';
 
-      out += '<div style="overflow-x:auto;">'
-        + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; newest first, only affected releases shown:</div>'
-        + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
-        + '<thead><tr style="background:rgba(255,255,255,0.05);">'
-        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>'
-        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Status</th>'
-        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Affected containers</th>'
-        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Fixed in this version</th>'
-        + '</tr></thead><tbody>';
+        out += '<div style="margin-bottom:12px;padding:12px 16px;background:' + sbg + ';border:1px solid ' + sbd + ';border-radius:8px;">'
+          + '<div style="font-size:13px;font-weight:600;color:#93c5fd;margin-bottom:6px;">&#128230; Container Releases</div>'
+          + '<div style="font-size:14px;margin-bottom:8px;">' + sico + ' ' + stxt + '</div>'
+          + '<div>' + pills + '</div></div>';
 
-      allVersions.slice().reverse().forEach(function(ver) {
-        var h = hits[ver];
-        if (!h) return;
-        var isAct  = h.a.length > 0;
-        var badge  = isAct
-          ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>'
-          : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;font-size:12px;">&#x2705; Fixed</span>';
-        var aNames = h.a.map(function(c) {
-          return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c) + '</code>';
-        }).join('');
-        var mNames = h.m.map(function(c) {
-          return '<code style="background:rgba(16,185,129,0.12);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;color:#34d399;">' + esc(c) + '</code>';
-        }).join('');
-        out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + (isAct ? 'background:rgba(220,38,38,0.05);' : '') + '">'
-          + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(ver) + '</td>'
-          + '<td style="padding:7px 10px;text-align:center;">' + badge + '</td>'
-          + '<td style="padding:7px 10px;">' + (aNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
-          + '<td style="padding:7px 10px;">' + (mNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
-          + '</tr>';
-      });
+        out += '<div style="overflow-x:auto;">'
+          + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Container release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; newest first, only affected releases shown:</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+          + '<thead><tr style="background:rgba(255,255,255,0.05);">'
+          + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>'
+          + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Status</th>'
+          + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Affected containers</th>'
+          + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Fixed in this version</th>'
+          + '</tr></thead><tbody>';
 
-      out += '</tbody></table></div>';
+        allVersions.slice().reverse().forEach(function(ver) {
+          var h = hits[ver];
+          if (!h) return;
+          var isAct  = h.a.length > 0;
+          var badge  = isAct
+            ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>'
+            : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;font-size:12px;">&#x2705; Fixed</span>';
+          var aNames = h.a.map(function(c) {
+            return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c) + '</code>';
+          }).join('');
+          var mNames = h.m.map(function(c) {
+            return '<code style="background:rgba(16,185,129,0.12);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;color:#34d399;">' + esc(c) + '</code>';
+          }).join('');
+          out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + (isAct ? 'background:rgba(220,38,38,0.05);' : '') + '">'
+            + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(ver) + '</td>'
+            + '<td style="padding:7px 10px;text-align:center;">' + badge + '</td>'
+            + '<td style="padding:7px 10px;">' + (aNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
+            + '<td style="padding:7px 10px;">' + (mNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
+            + '</tr>';
+        });
+
+        out += '</tbody></table></div>';
+      }
+
       outEl.innerHTML = out;
     };
 
@@ -2071,6 +2511,87 @@ function Get-AksCveDigestHtml {
         "<tr style='border-bottom:1px solid #f3f4f6;'><td style='padding:6px 10px;font-size:12px;color:#6b7280;'>$(Escape-Html $_.pod_namespace)</td><td style='padding:6px 10px;font-size:12px;font-weight:500;color:#111827;'>$(Escape-Html $_.container_name)</td><td style='padding:6px 10px;font-size:12px;font-weight:700;color:#dc2626;'>$cnt active</td>$mitCell</tr>"
       }) -join "`n"
 
+    # ── VHD node-image summary for digest ──────────────────────────────────────
+    $vhdDigestBlock = ''
+    try {
+      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/_index" -Method GET -TimeoutSec 30
+      $vhdImages  = @(
+        if ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
+        elseif ($nodeIndex.images)       { $nodeIndex.images }
+        elseif ($nodeIndex -is [array])  { $nodeIndex }
+        else                             { @() }
+      )
+      if ($vhdImages.Count -gt 0) {
+        $vhdActiveAll = [System.Collections.Generic.HashSet[string]]::new()
+        $vhdMitAll    = [System.Collections.Generic.HashSet[string]]::new()
+        $vhdTop5 = [System.Collections.Generic.List[pscustomobject]]::new()
+        foreach ($img in $vhdImages) {
+          $vhdRpt   = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/$img/scan-reports" -Method GET -TimeoutSec 30
+          $pkgT     = @(if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets } elseif ($vhdRpt.packages) { $vhdRpt.packages } else { @() })
+          $imgAct   = 0; $imgMit = 0
+          foreach ($pkg in $pkgT) {
+            foreach ($cv in @($pkg.active_cves))                             { if ($cv.id) { $null = $vhdActiveAll.Add($cv.id); $imgAct++ } }
+            foreach ($cv in @($pkg.mitigated_cves_from_previous_release))    { if ($cv.id) { $null = $vhdMitAll.Add($cv.id);  $imgMit++ } }
+          }
+          $vhdTop5.Add([pscustomobject]@{ img=$img; active=$imgAct; mitigated=$imgMit })
+        }
+        $vhdTop5Sorted = @($vhdTop5 | Sort-Object { -$_.active } | Select-Object -First 5)
+        $vhdTotalActive = $vhdActiveAll.Count
+        $vhdTotalMit    = $vhdMitAll.Count
+        $vhdImgCount    = $vhdImages.Count
+
+        $vhdTopRows = ($vhdTop5Sorted | ForEach-Object {
+          $mitCell = if ($_.mitigated -gt 0) { "<td style='padding:6px 10px;font-size:12px;color:#059669;font-weight:600;'>$($_.mitigated) mitigated</td>" } else { "<td style='padding:6px 10px;font-size:12px;color:#9ca3af;'>—</td>" }
+          "<tr style='border-bottom:1px solid #f3f4f6;'><td style='padding:6px 10px;font-size:12px;font-weight:500;color:#111827;'>$(Escape-Html $_.img)</td><td style='padding:6px 10px;font-size:12px;font-weight:700;color:#dc2626;'>$($_.active) active</td>$mitCell</tr>"
+        }) -join "`n"
+
+        $vhdDigestBlock = @"
+    <tr>
+      <td style="padding-bottom:16px;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">&#128187; VHD Node Image CVEs (OS-level)</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td width="30%" style="padding:10px;background:#fff5f5;border:1px solid #fecaca;border-radius:6px;text-align:center;">
+              <div style="font-size:24px;font-weight:800;color:#dc2626;line-height:1;">$vhdTotalActive</div>
+              <div style="font-size:11px;font-weight:600;color:#374151;margin-top:3px;">Active CVEs</div>
+              <div style="font-size:10px;color:#9ca3af;">across all node images</div>
+            </td>
+            <td width="4%"></td>
+            <td width="30%" style="padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;text-align:center;">
+              <div style="font-size:24px;font-weight:800;color:#059669;line-height:1;">$vhdTotalMit</div>
+              <div style="font-size:11px;font-weight:600;color:#374151;margin-top:3px;">Mitigated</div>
+              <div style="font-size:10px;color:#9ca3af;">vs previous build</div>
+            </td>
+            <td width="4%"></td>
+            <td width="32%" style="padding:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;text-align:center;">
+              <div style="font-size:24px;font-weight:800;color:#d97706;line-height:1;">$vhdImgCount</div>
+              <div style="font-size:11px;font-weight:600;color:#374151;margin-top:3px;">Node Image Types</div>
+              <div style="font-size:10px;color:#9ca3af;">Linux &amp; Windows</div>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:10px 0 6px;font-size:12px;font-weight:600;color:#374151;">Top images by active CVEs:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Node Image</th>
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Active CVEs</th>
+              <th style="padding:6px 10px;font-size:11px;font-weight:600;color:#6b7280;text-align:left;">Mitigated</th>
+            </tr>
+          </thead>
+          <tbody>
+            $vhdTopRows
+          </tbody>
+        </table>
+      </td>
+    </tr>
+"@
+      }
+    }
+    catch {
+      Write-Warning "VHD digest CVE fetch failed (non-fatal): $_"
+    }
+
     return @"
 <div style="margin:20px 0;padding:20px;background-color:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -2080,8 +2601,10 @@ function Get-AksCveDigestHtml {
         <p style="margin:6px 0 0;font-size:12px;color:#1e40af;">Latest AKS release: <strong>$latestVersion</strong> &nbsp;·&nbsp; Data as of $reportDate &nbsp;·&nbsp; Source: <a href="$cveExplorerUrl" style="color:#2563eb;">AKS Vulnerability Data API</a> (Public Preview)</p>
       </td>
     </tr>
+    $vhdDigestBlock
     <tr>
       <td style="padding-bottom:16px;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#111827;">&#128230; Container Image CVEs (K8s &amp; AKS platform)</p>
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td width="25%" style="padding:12px;background:#fff5f5;border:1px solid #fecaca;border-radius:6px;text-align:center;">
