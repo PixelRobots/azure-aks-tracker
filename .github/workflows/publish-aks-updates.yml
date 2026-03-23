@@ -42,6 +42,9 @@ jobs:
           AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
           AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
           AZURE_OPENAI_DEPLOYMENT:   ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          # CVE_ONLY=true skips GitHub/docs/AI fetch and regenerates only the CVE section.
+          # Enabled when the refresh_cve_data checkbox is ticked manually.
+          CVE_ONLY: ${{ github.event.inputs.refresh_cve_data == 'true' && 'true' || '' }}
           # CVE_REFRESH_VHD=true fetches VHD node-image CVE data (26 OS types) in addition to
           # the standard container-image CVE data. When unset, only container-image CVEs are fetched.
           # Enabled automatically on the daily 06:00 UTC schedule or when the checkbox is ticked.
@@ -50,10 +53,16 @@ jobs:
           ./.github/scripts/generate-aks-updates.ps1 1> out.json
           Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
           $json = Get-Content out.json -Raw | ConvertFrom-Json
-          Set-Content -LiteralPath content.html -Value $json.html -Encoding UTF8
-          Set-Content -LiteralPath digest.html -Value $json.digest_html -Encoding UTF8
-          Set-Content -LiteralPath digest.title -Value $json.digest_title -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
+          if ($json.cve_only) {
+            Set-Content -LiteralPath cve-section.html -Value $json.cve_section_html -Encoding UTF8
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=true"
+          } else {
+            Set-Content -LiteralPath content.html   -Value $json.html        -Encoding UTF8
+            Set-Content -LiteralPath digest.html    -Value $json.digest_html -Encoding UTF8
+            Set-Content -LiteralPath digest.title   -Value $json.digest_title -Encoding UTF8
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=false"
+          }
 
       - name: Get current WP page
         id: get
@@ -89,11 +98,11 @@ jobs:
           echo "current=$(jq -r .content.rendered page.json | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
       - name: Skip if no changes
-        if: steps.gen.conclusion == 'success' && steps.gen.outputs.hash == steps.get.outputs.current
+        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.hash == steps.get.outputs.current
         run: echo "No content changes — skipping WordPress update."
 
       - name: Update WordPress page
-        if: steps.gen.conclusion == 'success' && steps.gen.outputs.hash != steps.get.outputs.current
+        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.hash != steps.get.outputs.current
         run: |
           # Function to retry curl commands with exponential backoff
           retry_curl() {
@@ -129,6 +138,44 @@ jobs:
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
             --data-binary @"$RUNNER_TEMP/wp-payload.json"
+
+      - name: Update WordPress CVE section only
+        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only == 'true'
+        shell: pwsh
+        run: |
+          $WpApi   = "${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
+          $authB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}"))
+          $headers = @{ Authorization = "Basic $authB64" }
+
+          # Fetch current page raw content (requires edit context)
+          $pageData   = Invoke-RestMethod -Uri "${WpApi}?context=edit" -Headers $headers -Method GET -TimeoutSec 30
+          $rawContent = $pageData.content.raw
+
+          if (-not $rawContent) {
+            Write-Error "Could not retrieve raw page content from WordPress. Aborting CVE section update."
+            exit 1
+          }
+
+          # Read the pre-built CVE section HTML produced by the script
+          $newSection = Get-Content cve-section.html -Raw
+
+          # Replace the CVE section between the start/end markers.
+          # The \s* around marker names allows for minor spacing variations in the page.
+          $updated = [regex]::Replace(
+            $rawContent,
+            '(?s)<!--\s*CVE_SECTION_START\s*-->.*?<!--\s*CVE_SECTION_END\s*-->',
+            [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newSection }
+          )
+
+          if ($updated -eq $rawContent) {
+            Write-Warning "CVE section markers (<!-- CVE_SECTION_START/END -->) not found in WordPress page — no update performed. Verify markers exist in the page if CVE updates are expected."
+            exit 0
+          }
+
+          $body = @{ content = $updated; status = 'publish' } | ConvertTo-Json -Depth 3 -Compress
+          $postHeaders = $headers + @{ 'Content-Type' = 'application/json' }
+          Invoke-RestMethod -Uri $WpApi -Headers $postHeaders -Method POST -Body $body -TimeoutSec 30
+          Write-Host "CVE section updated successfully in WordPress."
 
       - name: Archive weekly digest
         if: github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true'
