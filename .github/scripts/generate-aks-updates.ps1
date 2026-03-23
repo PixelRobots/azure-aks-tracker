@@ -1565,15 +1565,15 @@ function ToListHtml($arr) {
 # CVE VULNERABILITY DATA (AKS CVE API - Public Preview)
 # =========================
 function Get-AksCveTabHtml {
-  $cveApiBase    = "https://cve-api.prod-aks.azure.com"
+  $cveApiBase     = "https://cve-api.prod-aks.azure.com"
   $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
 
   try {
     Log "Fetching AKS CVE release index..."
-    $index = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/_index" -Method GET -TimeoutSec 30
+    $index    = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/_index" -Method GET -TimeoutSec 30
     $versions = @($index.aks_release_versions)
     if (-not $versions -or $versions.Count -eq 0) {
-      return '<p style="color:#6b7280;">CVE data temporarily unavailable.</p>'
+      return '<p style="color:#94a3b8;">CVE data temporarily unavailable.</p>'
     }
 
     $latestVersion = $versions[-1]
@@ -1581,14 +1581,12 @@ function Get-AksCveTabHtml {
     Log "Fetching CVE scan report for $latestVersion..."
     $report = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/$latestVersion/scan-reports" -Method GET -TimeoutSec 30
 
-    $reportDate    = if ($report.report_time) { [DateTime]::Parse($report.report_time).ToString("yyyy-MM-dd") } else { "N/A" }
-    $containers    = @($report.container_targets)
+    $reportDate      = if ($report.report_time) { [DateTime]::Parse($report.report_time).ToString("yyyy-MM-dd") } else { "N/A" }
+    $containers      = @($report.container_targets)
     $totalContainers = $containers.Count
 
-    # Unique CVE IDs
     $uniqueActive = @($containers | ForEach-Object { $_.active_cves } |
       Where-Object { $_ } | Select-Object -ExpandProperty id | Sort-Object -Unique)
-
     $uniqueMitigated = @($containers | ForEach-Object {
         if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) {
           $_.mitigated_cves_from_previous_release
@@ -1599,107 +1597,294 @@ function Get-AksCveTabHtml {
     $mitigatedCount     = $uniqueMitigated.Count
     $containersWithCves = ($containers | Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 }).Count
 
-    # Top containers by active CVE count
     $topContainers = $containers |
       Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 } |
       Sort-Object { $_.active_cves.Count } -Descending |
       Select-Object -First 10
 
-    $topRows = ($topContainers | ForEach-Object {
+    $topRowsHtml = ($topContainers | ForEach-Object {
         $cnt       = $_.active_cves.Count
         $mitInCont = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) {
           $_.mitigated_cves_from_previous_release.Count } else { 0 }
         $mitCell = if ($mitInCont -gt 0) {
-          "<td style=""color:#059669;font-weight:600;text-align:center;"">✅ $mitInCont</td>"
-        } else { "<td style=""color:#9ca3af;text-align:center;"">—</td>" }
-        "<tr><td style=""padding:6px 10px;font-size:13px;color:#6b7280;"">$(Escape-Html $_.pod_namespace)</td><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$(Escape-Html $_.container_name)</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#dc2626;text-align:center;"">$cnt</td>$mitCell</tr>"
+          "<td style=""color:#34d399;font-weight:600;text-align:center;"">&#9989; $mitInCont</td>"
+        } else { "<td style=""color:#6b7280;text-align:center;"">&mdash;</td>" }
+        "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;color:#94a3b8;"">$(Escape-Html $_.pod_namespace)</td><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$(Escape-Html $_.container_name)</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$cnt</td>$mitCell</tr>"
       }) -join "`n"
 
-    # Recent release links (last 5)
-    $recentReleases = $versions | Select-Object -Last 5
-    $relLinks = ($recentReleases | ForEach-Object {
-        $v = $_
-        "<a href=""$cveApiBase/api/v1/aks-releases/$v/scan-reports"" target=""_blank"" rel=""noopener"" style=""display:inline-block;padding:3px 8px;background:#f3f4f6;border-radius:4px;font-size:12px;color:#374151;text-decoration:none;margin:2px;"">$v</a>"
-      }) -join " "
+    # Build version dropdown options (newest first for usability)
+    $versionOptions = ($versions | Sort-Object -Descending | ForEach-Object {
+        $optSel = if ($_ -eq $latestVersion) { ' selected' } else { '' }
+        "<option value=""$_""$optSel>$_</option>"
+      }) -join "`n        "
+
+    # Serialize versions as a JS array
+    $versionsJson = "[" + (($versions | ForEach-Object { """$_""" }) -join ",") + "]"
 
     return @"
-<div style="padding:4px 0;">
+<div id="aks-cve-root" style="padding:4px 0;">
+
   <!-- Banner -->
-  <div style="display:flex;align-items:flex-start;gap:12px;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
-    <span style="font-size:28px;flex-shrink:0;">🛡️</span>
+  <div style="display:flex;align-items:flex-start;gap:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(147,197,253,0.25);border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+    <span style="font-size:28px;flex-shrink:0;">&#128737;&#65039;</span>
     <div>
-      <strong style="font-size:16px;color:#1e3a8a;">AKS Vulnerability Data API</strong>
-      <span style="display:inline-block;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px;">Public Preview</span>
-      <p style="margin:6px 0 0;font-size:13px;color:#1e40af;line-height:1.5;">
+      <strong style="font-size:16px;color:#93c5fd;">AKS Vulnerability Data API</strong>
+      <span style="display:inline-block;padding:2px 8px;background:rgba(251,191,36,0.15);color:#fbbf24;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px;">Public Preview</span>
+      <p style="margin:6px 0 0;font-size:13px;color:#bfdbfe;line-height:1.5;">
         Live CVE data for AKS platform components sourced directly from the
-        <a href="$cveExplorerUrl" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600;">AKS CVE API</a>.
-        Query active and mitigated CVEs across AKS RP releases, Kubernetes versions, and node images (VHDs).
+        <a href="$cveExplorerUrl" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:600;">AKS CVE API</a>.
+        Select a release version below to explore active and mitigated CVEs across all AKS platform containers.
       </p>
     </div>
   </div>
 
-  <!-- Stat tiles -->
+  <!-- 4-tile grid: 3 stat tiles + version-selector tile -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">
-    <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:16px;text-align:center;">
-      <div style="font-size:32px;font-weight:800;color:#dc2626;line-height:1;">$activeCount</div>
-      <div style="font-size:13px;font-weight:600;color:#374151;margin-top:4px;">Active CVEs</div>
-      <div style="font-size:11px;color:#9ca3af;margin-top:2px;">unique, latest release</div>
+    <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
+      <div id="aks-cve-active-count" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$activeCount</div>
+      <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, this release</div>
     </div>
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;text-align:center;">
-      <div style="font-size:32px;font-weight:800;color:#059669;line-height:1;">$mitigatedCount</div>
-      <div style="font-size:13px;font-weight:600;color:#374151;margin-top:4px;">Mitigated</div>
-      <div style="font-size:11px;color:#9ca3af;margin-top:2px;">vs previous release</div>
+    <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
+      <div id="aks-cve-mitigated-count" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$mitigatedCount</div>
+      <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous release</div>
     </div>
-    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;text-align:center;">
-      <div style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$containersWithCves</div>
-      <div style="font-size:13px;font-weight:600;color:#374151;margin-top:4px;">Affected Containers</div>
-      <div style="font-size:11px;color:#9ca3af;margin-top:2px;">of $totalContainers tracked</div>
+    <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
+      <div id="aks-cve-containers-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$containersWithCves</div>
+      <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Affected Containers</div>
+      <div id="aks-cve-containers-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;">of $totalContainers tracked</div>
     </div>
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px;text-align:center;">
-      <div style="font-size:22px;font-weight:800;color:#1d4ed8;line-height:1.2;">$latestVersion</div>
-      <div style="font-size:13px;font-weight:600;color:#374151;margin-top:4px;">AKS Release</div>
-      <div style="font-size:11px;color:#9ca3af;margin-top:2px;">data as of $reportDate</div>
+    <!-- Version-selector tile -->
+    <div style="background:rgba(59,130,246,0.15);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+      <select id="aks-cve-version-select"
+        style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(147,197,253,0.45);background:rgba(30,58,138,0.5);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;">
+        $versionOptions
+      </select>
+      <div style="font-size:11px;font-weight:600;color:#93c5fd;letter-spacing:0.03em;">AKS RELEASE</div>
+      <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $reportDate</div>
+      <span id="aks-cve-loading" style="display:none;font-size:11px;color:#60a5fa;">&#9203; Loading&#8230;</span>
     </div>
   </div>
 
   <!-- Top containers table -->
-  <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px;">
-    <div style="padding:12px 16px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">
-      <h3 style="margin:0;font-size:14px;font-weight:600;color:#111827;">Top Containers by Active CVEs</h3>
+  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
+      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">Top Containers by Active CVEs</h3>
     </div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;">
         <thead>
-          <tr style="background:#f3f4f6;">
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#6b7280;text-align:left;">Namespace</th>
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#6b7280;text-align:left;">Container</th>
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#6b7280;text-align:center;">Active CVEs</th>
-            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#6b7280;text-align:center;">Mitigated (vs prev)</th>
+          <tr style="background:rgba(255,255,255,0.05);">
+            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Namespace</th>
+            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Container</th>
+            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Active CVEs</th>
+            <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated (vs prev)</th>
           </tr>
         </thead>
-        <tbody>
-          $topRows
+        <tbody id="aks-cve-top-tbody">
+$topRowsHtml
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Available releases + explorer link -->
-  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;padding:12px 0;">
-    <div>
-      <span style="font-size:12px;color:#6b7280;font-weight:600;">Available releases: </span>$relLinks
+  <!-- CVE Search section -->
+  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
+      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE Across Versions</h3>
     </div>
+    <div style="padding:14px 16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <input id="aks-cve-search-input" type="text" placeholder="e.g. CVE-2024-12345" spellcheck="false"
+          style="flex:1;min-width:180px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;outline:none;" />
+        <select id="aks-cve-search-scope"
+          style="padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;">
+          <option value="10">Last 10 versions</option>
+          <option value="20">Last 20 versions</option>
+          <option value="all">All versions</option>
+        </select>
+        <button id="aks-cve-search-btn" onclick="aksCveSearch()"
+          style="padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+          Search
+        </button>
+      </div>
+      <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;">
+        Enter a CVE ID and press Search (or Enter) to check which AKS releases are affected.
+      </div>
+    </div>
+  </div>
+
+  <!-- Explorer link -->
+  <div style="display:flex;justify-content:flex-end;padding:4px 0;">
     <a href="$cveExplorerUrl" target="_blank" rel="noopener"
        style="display:inline-block;padding:10px 18px;font-size:13px;font-weight:600;text-decoration:none;border-radius:6px;background:#2563eb;color:#fff;">
-      🔍 Open Interactive CVE Explorer
+      &#128269; Open Interactive CVE Explorer
     </a>
   </div>
+
+  <script>
+  (function() {
+    var CVE_API = 'https://cve-api.prod-aks.azure.com';
+    var VERSIONS = $versionsJson;
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    var vsel = document.getElementById('aks-cve-version-select');
+    var loadEl = document.getElementById('aks-cve-loading');
+
+    function renderStats(data) {
+      var containers = data.container_targets || [];
+      var uActive = {}, uMit = {}, withCves = 0;
+      containers.forEach(function(c) {
+        var had = false;
+        (c.active_cves || []).forEach(function(x) { if (x.id) { uActive[x.id] = 1; had = true; } });
+        (c.mitigated_cves_from_previous_release || []).forEach(function(x) { if (x.id) uMit[x.id] = 1; });
+        if (had) withCves++;
+      });
+      var date = data.report_time ? data.report_time.slice(0, 10) : 'N/A';
+      document.getElementById('aks-cve-active-count').textContent     = Object.keys(uActive).length;
+      document.getElementById('aks-cve-mitigated-count').textContent  = Object.keys(uMit).length;
+      document.getElementById('aks-cve-containers-count').textContent = withCves;
+      document.getElementById('aks-cve-containers-sub').textContent   = 'of ' + containers.length + ' tracked';
+      document.getElementById('aks-cve-report-date').textContent      = 'data as of ' + date;
+    }
+
+    function renderTable(data) {
+      var rows = (data.container_targets || [])
+        .filter(function(c) { return c.active_cves && c.active_cves.length > 0; })
+        .sort(function(a, b) { return b.active_cves.length - a.active_cves.length; })
+        .slice(0, 10);
+      var html = '';
+      rows.forEach(function(c) {
+        var cnt = c.active_cves.length;
+        var mit = (c.mitigated_cves_from_previous_release || []).length;
+        var mitCell = mit > 0
+          ? '<td style="color:#34d399;font-weight:600;text-align:center;">&#9989; ' + mit + '</td>'
+          : '<td style="color:#6b7280;text-align:center;">&mdash;</td>';
+        html += '<tr style="border-top:1px solid rgba(255,255,255,0.06);">'
+          + '<td style="padding:6px 10px;font-size:13px;color:#94a3b8;">' + esc(c.pod_namespace) + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:500;">' + esc(c.container_name) + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;">' + cnt + '</td>'
+          + mitCell + '</tr>';
+      });
+      document.getElementById('aks-cve-top-tbody').innerHTML = html ||
+        '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No containers with active CVEs in this release.</td></tr>';
+    }
+
+    vsel.addEventListener('change', async function() {
+      loadEl.style.display = 'inline';
+      vsel.disabled = true;
+      try {
+        var resp = await fetch(CVE_API + '/api/v1/aks-releases/' + vsel.value + '/scan-reports');
+        var data = await resp.json();
+        renderStats(data);
+        renderTable(data);
+      } catch (e) { console.error('CVE fetch error:', e); }
+      finally { loadEl.style.display = 'none'; vsel.disabled = false; }
+    });
+
+    // --- CVE Search ---
+    window.aksCveSearch = async function() {
+      var rawId  = (document.getElementById('aks-cve-search-input').value || '').trim().toUpperCase();
+      var scope  = document.getElementById('aks-cve-search-scope').value;
+      var btn    = document.getElementById('aks-cve-search-btn');
+      var outEl  = document.getElementById('aks-cve-search-results');
+
+      if (!rawId) {
+        outEl.innerHTML = '<span style="color:#f59e0b;">&#9888;&#65039; Please enter a CVE ID.</span>';
+        return;
+      }
+
+      var toSearch = scope === 'all' ? VERSIONS.slice() : VERSIONS.slice(-parseInt(scope, 10));
+      btn.disabled = true;
+      btn.textContent = 'Searching\u2026';
+      outEl.innerHTML = '<div style="color:#94a3b8;padding:6px 0;">Searching <strong style="color:#e2e8f0;">'
+        + toSearch.length + '</strong> versions for <strong style="color:#60a5fa;">' + esc(rawId)
+        + '</strong>\u2026 <span id="aks-cve-prog">0/' + toSearch.length + '</span></div>';
+
+      var done = 0, rows = {};
+      await Promise.all(toSearch.map(async function(ver) {
+        try {
+          var r = await fetch(CVE_API + '/api/v1/aks-releases/' + ver + '/scan-reports');
+          var d = await r.json();
+          rows[ver] = {
+            active:    (d.container_targets || []).filter(function(c) {
+              return (c.active_cves || []).some(function(x) { return x.id && x.id.toUpperCase() === rawId; });
+            }),
+            mitigated: (d.container_targets || []).filter(function(c) {
+              return (c.mitigated_cves_from_previous_release || []).some(function(x) { return x.id && x.id.toUpperCase() === rawId; });
+            })
+          };
+        } catch (e) { rows[ver] = { error: true }; }
+        done++;
+        var prog = document.getElementById('aks-cve-prog');
+        if (prog) prog.textContent = done + '/' + toSearch.length;
+      }));
+
+      var sorted = toSearch.slice().reverse();
+      var anyHit = sorted.some(function(v) {
+        return rows[v] && !rows[v].error && (rows[v].active.length > 0 || rows[v].mitigated.length > 0);
+      });
+
+      if (!anyHit) {
+        outEl.innerHTML = '<div style="margin-top:8px;padding:10px 14px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:6px;color:#34d399;">'
+          + '&#9989; <strong>' + esc(rawId) + '</strong> was not found as active or mitigated across the '
+          + toSearch.length + ' versions searched.</div>';
+        btn.disabled = false; btn.textContent = 'Search'; return;
+      }
+
+      var tbl = '<div style="overflow-x:auto;">'
+        + '<div style="margin-bottom:8px;font-size:12px;color:#94a3b8;">Results for <strong style="color:#60a5fa;">'
+        + esc(rawId) + '</strong> &mdash; only affected releases shown, newest first:</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+        + '<thead><tr style="background:rgba(255,255,255,0.05);">'
+        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>'
+        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Status</th>'
+        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Active In</th>'
+        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Mitigated In</th>'
+        + '</tr></thead><tbody>';
+
+      sorted.forEach(function(v) {
+        var r = rows[v];
+        if (!r || r.error || (r.active.length === 0 && r.mitigated.length === 0)) return;
+        var badge = r.active.length > 0
+          ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;">&#x1F534; Active</span>'
+          : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;">&#x2705; Mitigated</span>';
+        var aNames = r.active.map(function(c) {
+          return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c.container_name) + '</code>';
+        }).join('');
+        var mNames = r.mitigated.map(function(c) {
+          return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c.container_name) + '</code>';
+        }).join('');
+        tbl += '<tr style="border-top:1px solid rgba(255,255,255,0.06);">'
+          + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(v) + '</td>'
+          + '<td style="padding:7px 10px;text-align:center;">' + badge + '</td>'
+          + '<td style="padding:7px 10px;">' + (aNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
+          + '<td style="padding:7px 10px;">' + (mNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
+          + '</tr>';
+      });
+
+      tbl += '</tbody></table></div>';
+      outEl.innerHTML = tbl;
+      btn.disabled = false; btn.textContent = 'Search';
+    };
+
+    // Enter key support in search box
+    document.getElementById('aks-cve-search-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') window.aksCveSearch();
+    });
+  })();
+  </script>
+
 </div>
 "@.Trim()
   }
   catch {
     Write-Warning "CVE API fetch failed: $_"
-    return '<p style="color:#6b7280;">CVE data temporarily unavailable. Visit <a href="https://cve-api.prod-aks.azure.com/viewer/index.html" target="_blank" rel="noopener">cve-api.prod-aks.azure.com</a> for the full interactive explorer.</p>'
+    return '<p style="color:#94a3b8;">CVE data temporarily unavailable. Visit <a href="https://cve-api.prod-aks.azure.com/viewer/index.html" target="_blank" rel="noopener">cve-api.prod-aks.azure.com</a> for the full interactive explorer.</p>'
   }
 }
 
