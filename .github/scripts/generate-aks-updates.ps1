@@ -1657,13 +1657,36 @@ function Get-AksCveTabHtml {
     </div>
     <!-- Version-selector tile -->
     <div style="background:rgba(59,130,246,0.15);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
-      <select id="aks-cve-version-select"
-        style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(147,197,253,0.45);background:rgba(30,58,138,0.5);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;">
-        $versionOptions
-      </select>
+      <div style="position:relative;width:100%;">
+        <select id="aks-cve-version-select"
+          style="width:100%;padding:6px 28px 6px 8px;border-radius:6px;border:1px solid rgba(147,197,253,0.45);background:rgba(30,58,138,0.5);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;">
+          $versionOptions
+        </select>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#93c5fd;font-size:11px;">&#9660;</span>
+      </div>
       <div style="font-size:11px;font-weight:600;color:#93c5fd;letter-spacing:0.03em;">AKS RELEASE</div>
       <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $reportDate</div>
       <span id="aks-cve-loading" style="display:none;font-size:11px;color:#60a5fa;">&#9203; Loading&#8230;</span>
+    </div>
+  </div>
+
+  <!-- CVE Search section -->
+  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
+      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE Across Versions</h3>
+    </div>
+    <div style="padding:14px 16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <input id="aks-cve-search-input" type="text" placeholder="e.g. CVE-2025-23266" spellcheck="false"
+          style="flex:1;min-width:220px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;outline:none;" />
+        <button id="aks-cve-search-btn" onclick="aksCveSearch()"
+          style="padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+          Search all versions
+        </button>
+      </div>
+      <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;">
+        Enter a CVE ID to check its status across every known AKS release.
+      </div>
     </div>
   </div>
 
@@ -1686,32 +1709,6 @@ function Get-AksCveTabHtml {
 $topRowsHtml
         </tbody>
       </table>
-    </div>
-  </div>
-
-  <!-- CVE Search section -->
-  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
-    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE Across Versions</h3>
-    </div>
-    <div style="padding:14px 16px;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
-        <input id="aks-cve-search-input" type="text" placeholder="e.g. CVE-2024-12345" spellcheck="false"
-          style="flex:1;min-width:180px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;outline:none;" />
-        <select id="aks-cve-search-scope"
-          style="padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;">
-          <option value="10">Last 10 versions</option>
-          <option value="20">Last 20 versions</option>
-          <option value="all">All versions</option>
-        </select>
-        <button id="aks-cve-search-btn" onclick="aksCveSearch()"
-          style="padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
-          Search
-        </button>
-      </div>
-      <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;">
-        Enter a CVE ID and press Search (or Enter) to check which AKS releases are affected.
-      </div>
     </div>
   </div>
 
@@ -1788,17 +1785,16 @@ $topRowsHtml
 
     // --- CVE Search ---
     window.aksCveSearch = async function() {
-      var rawId  = (document.getElementById('aks-cve-search-input').value || '').trim().toUpperCase();
-      var scope  = document.getElementById('aks-cve-search-scope').value;
-      var btn    = document.getElementById('aks-cve-search-btn');
-      var outEl  = document.getElementById('aks-cve-search-results');
+      var rawId = (document.getElementById('aks-cve-search-input').value || '').trim().toUpperCase();
+      var btn   = document.getElementById('aks-cve-search-btn');
+      var outEl = document.getElementById('aks-cve-search-results');
 
       if (!rawId) {
         outEl.innerHTML = '<span style="color:#f59e0b;">&#9888;&#65039; Please enter a CVE ID.</span>';
         return;
       }
 
-      var toSearch = scope === 'all' ? VERSIONS.slice() : VERSIONS.slice(-parseInt(scope, 10));
+      var toSearch = VERSIONS.slice(); // always all versions
       btn.disabled = true;
       btn.textContent = 'Searching\u2026';
       outEl.innerHTML = '<div style="color:#94a3b8;padding:6px 0;">Searching <strong style="color:#e2e8f0;">'
@@ -1824,42 +1820,90 @@ $topRowsHtml
         if (prog) prog.textContent = done + '/' + toSearch.length;
       }));
 
-      var sorted = toSearch.slice().reverse();
-      var anyHit = sorted.some(function(v) {
+      // Versions sorted oldest→newest (same as VERSIONS array order)
+      var sortedAsc  = toSearch.slice();
+      var sortedDesc = toSearch.slice().reverse();
+
+      var anyHit = sortedAsc.some(function(v) {
         return rows[v] && !rows[v].error && (rows[v].active.length > 0 || rows[v].mitigated.length > 0);
       });
 
       if (!anyHit) {
-        outEl.innerHTML = '<div style="margin-top:8px;padding:10px 14px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:6px;color:#34d399;">'
-          + '&#9989; <strong>' + esc(rawId) + '</strong> was not found as active or mitigated across the '
-          + toSearch.length + ' versions searched.</div>';
-        btn.disabled = false; btn.textContent = 'Search'; return;
+        outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
+          + '&#9989; <strong>' + esc(rawId) + '</strong> was not found as active or mitigated in any of the '
+          + toSearch.length + ' AKS releases searched. It may have never affected AKS platform containers.</div>';
+        btn.disabled = false; btn.textContent = 'Search all versions'; return;
       }
 
-      var tbl = '<div style="overflow-x:auto;">'
-        + '<div style="margin-bottom:8px;font-size:12px;color:#94a3b8;">Results for <strong style="color:#60a5fa;">'
-        + esc(rawId) + '</strong> &mdash; only affected releases shown, newest first:</div>'
+      // Determine summary data
+      var latestVer     = sortedAsc[sortedAsc.length - 1];
+      var activeInLatest = rows[latestVer] && !rows[latestVer].error && rows[latestVer].active.length > 0;
+
+      // First version where it was mitigated (oldest = first fix)
+      var firstFixedVer = null;
+      for (var i = 0; i < sortedAsc.length; i++) {
+        var v = sortedAsc[i];
+        if (rows[v] && !rows[v].error && rows[v].mitigated.length > 0) { firstFixedVer = v; break; }
+      }
+      // Last version where it was active
+      var lastActiveVer = null;
+      for (var j = sortedAsc.length - 1; j >= 0; j--) {
+        var va = sortedAsc[j];
+        if (rows[va] && !rows[va].error && rows[va].active.length > 0) { lastActiveVer = va; break; }
+      }
+      var activeCount = sortedAsc.filter(function(v) {
+        return rows[v] && !rows[v].error && rows[v].active.length > 0;
+      }).length;
+
+      // Summary banner
+      var summaryBg, summaryBorder, summaryIcon, summaryText;
+      if (activeInLatest) {
+        summaryBg = 'rgba(220,38,38,0.12)'; summaryBorder = 'rgba(248,113,113,0.3)';
+        summaryIcon = '&#x1F534;';
+        summaryText = '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).';
+      } else {
+        summaryBg = 'rgba(16,185,129,0.1)'; summaryBorder = 'rgba(52,211,153,0.25)';
+        summaryIcon = '&#x2705;';
+        summaryText = '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).';
+      }
+
+      var metaPills = '';
+      if (firstFixedVer) metaPills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-size:12px;font-weight:600;">&#x1F527; First fixed: ' + esc(firstFixedVer) + '</span>';
+      if (lastActiveVer) metaPills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActiveVer) + '</span>';
+      metaPills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeCount + ' release' + (activeCount === 1 ? '' : 's') + '</span>';
+
+      var out = '<div style="margin-bottom:14px;padding:12px 16px;background:' + summaryBg + ';border:1px solid ' + summaryBorder + ';border-radius:8px;">'
+        + '<div style="font-size:14px;margin-bottom:8px;">' + summaryIcon + ' ' + summaryText + '</div>'
+        + '<div>' + metaPills + '</div></div>';
+
+      // Table — only show releases where CVE appears (active or mitigated)
+      out += '<div style="overflow-x:auto;">'
+        + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; newest first, only affected releases shown:</div>'
         + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
         + '<thead><tr style="background:rgba(255,255,255,0.05);">'
         + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>'
         + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Status</th>'
-        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Active In</th>'
-        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Mitigated In</th>'
+        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Affected containers</th>'
+        + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Fixed in this version</th>'
         + '</tr></thead><tbody>';
 
-      sorted.forEach(function(v) {
+      sortedDesc.forEach(function(v) {
         var r = rows[v];
         if (!r || r.error || (r.active.length === 0 && r.mitigated.length === 0)) return;
-        var badge = r.active.length > 0
-          ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;">&#x1F534; Active</span>'
-          : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;">&#x2705; Mitigated</span>';
+        var isActive = r.active.length > 0;
+        var rowBg = isActive ? 'background:rgba(220,38,38,0.05);' : '';
+        var badge = isActive
+          ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>'
+          : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;font-size:12px;">&#x2705; Fixed</span>';
+        // containers still affected (active)
         var aNames = r.active.map(function(c) {
           return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c.container_name) + '</code>';
         }).join('');
+        // containers fixed in this version
         var mNames = r.mitigated.map(function(c) {
-          return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c.container_name) + '</code>';
+          return '<code style="background:rgba(16,185,129,0.12);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;color:#34d399;">' + esc(c.container_name) + '</code>';
         }).join('');
-        tbl += '<tr style="border-top:1px solid rgba(255,255,255,0.06);">'
+        out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + '">'
           + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(v) + '</td>'
           + '<td style="padding:7px 10px;text-align:center;">' + badge + '</td>'
           + '<td style="padding:7px 10px;">' + (aNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
@@ -1867,9 +1911,9 @@ $topRowsHtml
           + '</tr>';
       });
 
-      tbl += '</tbody></table></div>';
-      outEl.innerHTML = tbl;
-      btn.disabled = false; btn.textContent = 'Search';
+      out += '</tbody></table></div>';
+      outEl.innerHTML = out;
+      btn.disabled = false; btn.textContent = 'Search all versions';
     };
 
     // Enter key support in search box
