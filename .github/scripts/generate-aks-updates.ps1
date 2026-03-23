@@ -1034,12 +1034,13 @@ function Get-AksCveTabHtml {
     if ($script:RefreshVhdCve) {
     try {
       Log "Fetching VHD node-image index..."
-      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/_index" -Method GET -TimeoutSec 30
+      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/_index" -Method GET -TimeoutSec 30
       $vhdImages  = @(
-        if ($nodeIndex.node_image_names)    { $nodeIndex.node_image_names }
-        elseif ($nodeIndex.images)          { $nodeIndex.images }
-        elseif ($nodeIndex -is [array])     { $nodeIndex }
-        else                                { @() }
+        if ($nodeIndex.vhd_release_names)    { $nodeIndex.vhd_release_names }
+        elseif ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
+        elseif ($nodeIndex.images)           { $nodeIndex.images }
+        elseif ($nodeIndex -is [array])      { $nodeIndex }
+        else                                 { @() }
       )
 
       if ($vhdImages.Count -gt 0) {
@@ -1047,7 +1048,7 @@ function Get-AksCveTabHtml {
         $vhdReports = @{}
         foreach ($img in $vhdImages) {
           Log "  Fetching VHD CVE data for $img..."
-          $vhdReports[$img] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/$img/scan-reports" -Method GET -TimeoutSec 30
+          $vhdReports[$img] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$img/scan-reports" -Method GET -TimeoutSec 30
         }
 
         $vhdAvailable   = $true
@@ -2456,19 +2457,20 @@ function Get-AksCveDigestHtml {
     # ── VHD node-image summary for digest ──────────────────────────────────────
     $vhdDigestBlock = ''
     try {
-      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/_index" -Method GET -TimeoutSec 30
+      $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/_index" -Method GET -TimeoutSec 30
       $vhdImages  = @(
-        if ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
-        elseif ($nodeIndex.images)       { $nodeIndex.images }
-        elseif ($nodeIndex -is [array])  { $nodeIndex }
-        else                             { @() }
+        if ($nodeIndex.vhd_release_names)    { $nodeIndex.vhd_release_names }
+        elseif ($nodeIndex.node_image_names) { $nodeIndex.node_image_names }
+        elseif ($nodeIndex.images)           { $nodeIndex.images }
+        elseif ($nodeIndex -is [array])      { $nodeIndex }
+        else                                 { @() }
       )
       if ($vhdImages.Count -gt 0) {
         $vhdActiveAll = [System.Collections.Generic.HashSet[string]]::new()
         $vhdMitAll    = [System.Collections.Generic.HashSet[string]]::new()
         $vhdTop5 = [System.Collections.Generic.List[pscustomobject]]::new()
         foreach ($img in $vhdImages) {
-          $vhdRpt   = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/$img/scan-reports" -Method GET -TimeoutSec 30
+          $vhdRpt   = Invoke-RestMethod -Uri "$cveApiBase/api/v1/vhd-releases/$img/scan-reports" -Method GET -TimeoutSec 30
           $pkgT     = @(if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets } elseif ($vhdRpt.packages) { $vhdRpt.packages } else { @() })
           $imgAct   = 0; $imgMit = 0
           foreach ($pkg in $pkgT) {
