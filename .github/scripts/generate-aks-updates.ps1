@@ -913,8 +913,6 @@ $PatchSample
 function Get-AksCveTabHtml {
   $cveApiBase     = "https://cve-api.prod-aks.azure.com"
   $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
-  $k8sCveUrl      = "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/"
-  $k8sSecUrl      = "https://github.com/kubernetes/kubernetes/issues?q=is%3Aissue+label%3Aarea%2Fsecurity"
 
   try {
     # ── CONTAINER IMAGE DATA ────────────────────────────────────────────────────
@@ -1033,6 +1031,7 @@ function Get-AksCveTabHtml {
     $vhdInitDate     = "N/A"; $vhdInitImage = "N/A"; $vhdInitTopRowsHtml = ""
     $vhdImageOptions = ""
 
+    if ($script:RefreshVhdCve) {
     try {
       Log "Fetching VHD node-image index..."
       $nodeIndex  = Invoke-RestMethod -Uri "$cveApiBase/api/v1/node-images/_index" -Method GET -TimeoutSec 30
@@ -1178,6 +1177,7 @@ function Get-AksCveTabHtml {
     catch {
       Write-Warning "VHD node-image CVE fetch failed (non-fatal): $_"
     }
+    } # end if ($script:RefreshVhdCve)
 
     # ── BUILD HTML ──────────────────────────────────────────────────────────────
 
@@ -1221,10 +1221,6 @@ function Get-AksCveTabHtml {
     <button id="aks-cve-btn-containers" onclick="aksCveShowTab('containers')"
       style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$contBtnActive">
       &#128230; Container Images
-    </button>
-    <button id="aks-cve-btn-k8s" onclick="aksCveShowTab('k8s')"
-      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;">
-      &#9096; K8s Advisories
     </button>
   </div>
 
@@ -1373,64 +1369,6 @@ $initTopRowsHtml
 
   </div><!-- /containers panel -->
 
-  <!-- ═══════════════════════ K8s ADVISORIES TAB ══════════════════════ -->
-  <div id="aks-cve-panel-k8s" style="display:none">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px;">
-
-      <!-- Official CVE Feed -->
-      <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(165,180,252,0.25);border-radius:8px;padding:20px;">
-        <div style="font-size:22px;margin-bottom:10px;">&#127760;</div>
-        <h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#a5b4fc;">Official Kubernetes CVE Feed</h3>
-        <p style="margin:0 0 14px;font-size:13px;color:#c7d2fe;line-height:1.6;">
-          The Kubernetes Security Committee maintains an official JSON feed of all Kubernetes CVEs,
-          including severity, affected versions, and remediation guidance.
-        </p>
-        <a href="$k8sCveUrl" target="_blank" rel="noopener"
-           style="display:inline-block;padding:8px 16px;font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;background:#4f46e5;color:#fff;">
-          &#128279; View CVE Feed
-        </a>
-      </div>
-
-      <!-- Security Issues on GitHub -->
-      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.25);border-radius:8px;padding:20px;">
-        <div style="font-size:22px;margin-bottom:10px;">&#128202;</div>
-        <h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#6ee7b7;">Kubernetes Security Issues</h3>
-        <p style="margin:0 0 14px;font-size:13px;color:#a7f3d0;line-height:1.6;">
-          Browse open and closed security-labelled issues in the Kubernetes GitHub repository,
-          including reports of vulnerabilities and their patch status.
-        </p>
-        <a href="$k8sSecUrl" target="_blank" rel="noopener"
-           style="display:inline-block;padding:8px 16px;font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;background:#059669;color:#fff;">
-          &#128279; View GitHub Issues
-        </a>
-      </div>
-
-      <!-- AKS CVE Explorer -->
-      <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(147,197,253,0.25);border-radius:8px;padding:20px;">
-        <div style="font-size:22px;margin-bottom:10px;">&#128270;</div>
-        <h3 style="margin:0 0 8px;font-size:15px;font-weight:700;color:#93c5fd;">AKS CVE Explorer</h3>
-        <p style="margin:0 0 14px;font-size:13px;color:#bfdbfe;line-height:1.6;">
-          Microsoft's interactive CVE Explorer for AKS, showing vulnerabilities across all
-          Kubernetes releases, node images, and AKS platform components.
-        </p>
-        <a href="$cveExplorerUrl" target="_blank" rel="noopener"
-           style="display:inline-block;padding:8px 16px;font-size:12px;font-weight:600;text-decoration:none;border-radius:6px;background:#2563eb;color:#fff;">
-          &#128279; Open CVE Explorer
-        </a>
-      </div>
-
-    </div>
-
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;">
-      <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.7;">
-        <strong style="color:#e2e8f0;">&#128161; Note:</strong>
-        Kubernetes core component CVEs (kube-apiserver, etcd, kube-proxy, CoreDNS, etc.) are also tracked
-        in the <strong style="color:#e2e8f0;">Container Images</strong> tab above, where you can see exactly
-        which AKS platform containers are affected per release version and search any CVE ID across all known releases.
-      </p>
-    </div>
-  </div><!-- /k8s panel -->
-
   <!-- ═══════════════════════ UNIFIED CVE SEARCH ═══════════════════════ -->
   <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
     <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
@@ -1470,11 +1408,10 @@ $initTopRowsHtml
     }
 
     // ── Tab switching ──────────────────────────────────────────────────
-    var TAB_IDS = ['vhd','containers','k8s'];
+    var TAB_IDS = ['vhd','containers'];
     var TAB_COLORS = {
       vhd:        {active:'border-bottom:2px solid #f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
-      containers: {active:'border-bottom:2px solid #93c5fd;color:#93c5fd;background:rgba(59,130,246,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
-      k8s:        {active:'border-bottom:2px solid #a5b4fc;color:#a5b4fc;background:rgba(99,102,241,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'}
+      containers: {active:'border-bottom:2px solid #93c5fd;color:#93c5fd;background:rgba(59,130,246,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'}
     };
     window.aksCveShowTab = function(tab) {
       TAB_IDS.forEach(function(t) {
@@ -1712,9 +1649,20 @@ if ($script:CveOnly) {
   Log "CVE_ONLY mode — skipping GitHub/docs/AI fetch."
   Log "Fetching AKS CVE vulnerability data (CVE-only run)..."
   $cveTabHtml = Get-AksCveTabHtml
+  # NOTE: The section wrapper below must stay in sync with the full-page CVE section
+  # generated further below (search for CVE_SECTION_START in the main here-string).
+  $cveSectionHtml = @"
+    <!-- CVE_SECTION_START -->
+    <div class="aks-tab-panel" id="aks-tab-cve">
+      <h2>AKS CVE Security</h2>
+      <p>Live vulnerability data for the latest AKS release, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Shows unique active CVEs and improvements from the previous release across all AKS platform containers.</p>
+      $cveTabHtml
+    </div>
+    <!-- CVE_SECTION_END -->
+"@
   [pscustomobject]@{
-    cve_only    = $true
-    cve_html    = $cveTabHtml
+    cve_only         = $true
+    cve_section_html = $cveSectionHtml
   } | ConvertTo-Json -Depth 3
   Log "CVE-only run complete."
   return
