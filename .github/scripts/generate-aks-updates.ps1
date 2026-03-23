@@ -1564,6 +1564,11 @@ function ToListHtml($arr) {
 # =========================
 # CVE VULNERABILITY DATA (AKS CVE API - Public Preview)
 # =========================
+# CVE_REFRESH_VHD env var: when 'true', also fetches VHD node-image CVE data (26 OS images).
+# This is NOT set on regular 6h schedule runs to keep them fast.
+# Set via the "Refresh CVE data" checkbox in the workflow_dispatch manual trigger.
+$script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
+
 function Get-AksCveTabHtml {
   $cveApiBase     = "https://cve-api.prod-aks.azure.com"
   $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
