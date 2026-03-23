@@ -1072,7 +1072,7 @@ function Get-AksCveTabHtml {
                 try { [System.Version]::new($v) }
                 catch { Write-Warning "  Could not parse version '$v' as System.Version, using 0.0.0"; [System.Version]::new("0.0.0") }
               } -Descending)[0]
-              Log "    Latest version for $name: $latestVer"
+              Log "    Latest version for ${$name}: $latestVer"
               $vhdImages.Add("$name/$latestVer")
             } else {
               Write-Warning "  No versions found in index for image type: $name"
