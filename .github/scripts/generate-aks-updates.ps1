@@ -1578,48 +1578,99 @@ function Get-AksCveTabHtml {
 
     $latestVersion = $versions[-1]
 
-    Log "Fetching CVE scan report for $latestVersion..."
-    $report = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/$latestVersion/scan-reports" -Method GET -TimeoutSec 30
+    # Pre-fetch ALL versions and embed data in the HTML. This avoids browser CORS issues
+    # since the CVE API does not return Access-Control-Allow-Origin headers for cross-origin requests.
+    Log "Pre-fetching CVE scan reports for all $($versions.Count) AKS releases..."
+    $allReports = @{}
+    foreach ($ver in $versions) {
+      Log "  Fetching CVE data for $ver..."
+      $allReports[$ver] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/$ver/scan-reports" -Method GET -TimeoutSec 30
+    }
 
-    $reportDate      = if ($report.report_time) { [DateTime]::Parse($report.report_time).ToString("yyyy-MM-dd") } else { "N/A" }
-    $containers      = @($report.container_targets)
-    $totalContainers = $containers.Count
+    # Build compact JS data: { versions: [...], byVersion: { "v20260208": { date, active, mitigated, affected, total, top:[[ns,cn,a,m],...], cves:{ "CVE-ID":{a:[...],m:[...]} } } } }
+    $jsVersionsArr  = "[" + (($versions | ForEach-Object { "`"$_`"" }) -join ",") + "]"
+    $byVersionParts = [System.Collections.Generic.List[string]]::new()
+    $initActive = 0; $initMitigated = 0; $initAffected = 0; $initTotal = 0
+    $initDate = "N/A"; $initTopRowsHtml = ""
 
-    $uniqueActive = @($containers | ForEach-Object { $_.active_cves } |
-      Where-Object { $_ } | Select-Object -ExpandProperty id | Sort-Object -Unique)
-    $uniqueMitigated = @($containers | ForEach-Object {
-        if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) {
-          $_.mitigated_cves_from_previous_release
+    foreach ($ver in $versions) {
+      $report     = $allReports[$ver]
+      $containers = @($report.container_targets)
+      $rDate      = if ($report.report_time) { [DateTime]::Parse($report.report_time).ToString("yyyy-MM-dd") } else { "N/A" }
+
+      $uActive = @{}; $uMit = @{}; $withCves = 0
+      $cveMap  = [ordered]@{}
+
+      foreach ($c in $containers) {
+        $had = $false
+        foreach ($cv in @($c.active_cves)) {
+          if ($cv.id) {
+            $uActive[$cv.id] = 1; $had = $true
+            if (-not $cveMap.Contains($cv.id)) { $cveMap[$cv.id] = @{ a = [System.Collections.Generic.List[string]]::new(); m = [System.Collections.Generic.List[string]]::new() } }
+            $cveMap[$cv.id].a.Add($c.container_name)
+          }
         }
-      } | Where-Object { $_ } | Select-Object -ExpandProperty id | Sort-Object -Unique)
+        foreach ($cv in @($c.mitigated_cves_from_previous_release)) {
+          if ($cv.id) {
+            $uMit[$cv.id] = 1
+            if (-not $cveMap.Contains($cv.id)) { $cveMap[$cv.id] = @{ a = [System.Collections.Generic.List[string]]::new(); m = [System.Collections.Generic.List[string]]::new() } }
+            $cveMap[$cv.id].m.Add($c.container_name)
+          }
+        }
+        if ($had) { $withCves++ }
+      }
 
-    $activeCount        = $uniqueActive.Count
-    $mitigatedCount     = $uniqueMitigated.Count
-    $containersWithCves = ($containers | Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 }).Count
+      $activeCount    = $uActive.Count
+      $mitigatedCount = $uMit.Count
 
-    $topContainers = $containers |
-      Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 } |
-      Sort-Object { $_.active_cves.Count } -Descending |
-      Select-Object -First 10
+      $top10 = @($containers |
+        Where-Object { $_.active_cves -and $_.active_cves.Count -gt 0 } |
+        Sort-Object { $_.active_cves.Count } -Descending |
+        Select-Object -First 10)
 
-    $topRowsHtml = ($topContainers | ForEach-Object {
-        $cnt       = $_.active_cves.Count
-        $mitInCont = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) {
-          $_.mitigated_cves_from_previous_release.Count } else { 0 }
-        $mitCell = if ($mitInCont -gt 0) {
-          "<td style=""color:#34d399;font-weight:600;text-align:center;"">&#9989; $mitInCont</td>"
-        } else { "<td style=""color:#6b7280;text-align:center;"">&mdash;</td>" }
-        "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;color:#94a3b8;"">$(Escape-Html $_.pod_namespace)</td><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$(Escape-Html $_.container_name)</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$cnt</td>$mitCell</tr>"
-      }) -join "`n"
+      $topArrJson = "[" + (($top10 | ForEach-Object {
+        $mitCnt = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 }
+        $ns = $_.pod_namespace  -replace '\\', '\\' -replace '"', '\"'
+        $cn = $_.container_name -replace '\\', '\\' -replace '"', '\"'
+        "[`"$ns`",`"$cn`",$($_.active_cves.Count),$mitCnt]"
+      }) -join ",") + "]"
 
-    # Build version dropdown options (newest first for usability)
+      $cveJsonParts = [System.Collections.Generic.List[string]]::new()
+      foreach ($cveId in $cveMap.Keys) {
+        $eid = $cveId -replace '\\', '\\' -replace '"', '\"'
+        $aJ  = ($cveMap[$cveId].a | ForEach-Object { "`"$($_ -replace '\\','\\' -replace '"','\"')`"" }) -join ","
+        $mJ  = ($cveMap[$cveId].m | ForEach-Object { "`"$($_ -replace '\\','\\' -replace '"','\"')`"" }) -join ","
+        $cveJsonParts.Add("`"$eid`":{`"a`":[$aJ],`"m`":[$mJ]}")
+      }
+      $cveIdxJson = "{" + ($cveJsonParts -join ",") + "}"
+
+      $byVersionParts.Add("`"$ver`":{`"date`":`"$rDate`",`"active`":$activeCount,`"mitigated`":$mitigatedCount,`"affected`":$withCves,`"total`":$($containers.Count),`"top`":$topArrJson,`"cves`":$cveIdxJson}")
+
+      if ($ver -eq $latestVersion) {
+        $initActive    = $activeCount
+        $initMitigated = $mitigatedCount
+        $initAffected  = $withCves
+        $initTotal     = $containers.Count
+        $initDate      = $rDate
+        $initTopRowsHtml = ($top10 | ForEach-Object {
+          $cnt       = $_.active_cves.Count
+          $mitInCont = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 }
+          $mitCell   = if ($mitInCont -gt 0) {
+            "<td style=""color:#34d399;font-weight:600;text-align:center;"">&#9989; $mitInCont</td>"
+          } else { "<td style=""color:#6b7280;text-align:center;"">&mdash;</td>" }
+          "<tr style=""border-top:1px solid rgba(255,255,255,0.06);""><td style=""padding:6px 10px;font-size:13px;color:#94a3b8;"">$(Escape-Html $_.pod_namespace)</td><td style=""padding:6px 10px;font-size:13px;font-weight:500;"">$(Escape-Html $_.container_name)</td><td style=""padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;"">$cnt</td>$mitCell</tr>"
+        }) -join "`n"
+      }
+    }
+
+    $byVersionJson  = "{" + ($byVersionParts -join ",") + "}"
+    $versionCount   = $versions.Count
+
+    # Version dropdown options (newest first)
     $versionOptions = ($versions | Sort-Object -Descending | ForEach-Object {
-        $optSel = if ($_ -eq $latestVersion) { ' selected' } else { '' }
-        "<option value=""$_""$optSel>$_</option>"
-      }) -join "`n        "
-
-    # Serialize versions as a JS array
-    $versionsJson = "[" + (($versions | ForEach-Object { """$_""" }) -join ",") + "]"
+      $sel = if ($_ -eq $latestVersion) { ' selected' } else { '' }
+      "<option value=""$_""$sel>$_</option>"
+    }) -join "`n        "
 
     return @"
 <div id="aks-cve-root" style="padding:4px 0;">
@@ -1631,31 +1682,30 @@ function Get-AksCveTabHtml {
       <strong style="font-size:16px;color:#93c5fd;">AKS Vulnerability Data API</strong>
       <span style="display:inline-block;padding:2px 8px;background:rgba(251,191,36,0.15);color:#fbbf24;border-radius:12px;font-size:11px;font-weight:600;margin-left:8px;">Public Preview</span>
       <p style="margin:6px 0 0;font-size:13px;color:#bfdbfe;line-height:1.5;">
-        Live CVE data for AKS platform components sourced directly from the
+        Live CVE data for AKS platform components, sourced from the
         <a href="$cveExplorerUrl" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:600;">AKS CVE API</a>.
-        Select a release version below to explore active and mitigated CVEs across all AKS platform containers.
+        Select a release to compare, or search any CVE ID below — all data is pre-loaded for instant results.
       </p>
     </div>
   </div>
 
-  <!-- 4-tile grid: 3 stat tiles + version-selector tile -->
+  <!-- 4 stat/selector tiles -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">
     <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
-      <div id="aks-cve-active-count" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$activeCount</div>
+      <div id="aks-cve-active-count" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$initActive</div>
       <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
       <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, this release</div>
     </div>
     <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
-      <div id="aks-cve-mitigated-count" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$mitigatedCount</div>
+      <div id="aks-cve-mitigated-count" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$initMitigated</div>
       <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
       <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous release</div>
     </div>
     <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
-      <div id="aks-cve-containers-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$containersWithCves</div>
+      <div id="aks-cve-containers-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$initAffected</div>
       <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Affected Containers</div>
-      <div id="aks-cve-containers-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;">of $totalContainers tracked</div>
+      <div id="aks-cve-containers-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;">of $initTotal tracked</div>
     </div>
-    <!-- Version-selector tile -->
     <div style="background:rgba(59,130,246,0.15);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
       <div style="position:relative;width:100%;">
         <select id="aks-cve-version-select"
@@ -1665,15 +1715,14 @@ function Get-AksCveTabHtml {
         <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#93c5fd;font-size:11px;">&#9660;</span>
       </div>
       <div style="font-size:11px;font-weight:600;color:#93c5fd;letter-spacing:0.03em;">AKS RELEASE</div>
-      <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $reportDate</div>
-      <span id="aks-cve-loading" style="display:none;font-size:11px;color:#60a5fa;">&#9203; Loading&#8230;</span>
+      <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $initDate</div>
     </div>
   </div>
 
-  <!-- CVE Search section -->
+  <!-- CVE Search -->
   <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
     <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE Across Versions</h3>
+      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE Across All Versions</h3>
     </div>
     <div style="padding:14px 16px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
@@ -1681,11 +1730,11 @@ function Get-AksCveTabHtml {
           style="flex:1;min-width:220px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;outline:none;" />
         <button id="aks-cve-search-btn" onclick="aksCveSearch()"
           style="padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
-          Search all versions
+          Search all $versionCount versions
         </button>
       </div>
       <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;">
-        Enter a CVE ID to check its status across every known AKS release.
+        Enter a CVE ID to instantly check its status across all $versionCount known AKS releases.
       </div>
     </div>
   </div>
@@ -1706,7 +1755,7 @@ function Get-AksCveTabHtml {
           </tr>
         </thead>
         <tbody id="aks-cve-top-tbody">
-$topRowsHtml
+$initTopRowsHtml
         </tbody>
       </table>
     </div>
@@ -1722,71 +1771,43 @@ $topRowsHtml
 
   <script>
   (function() {
-    var CVE_API = 'https://cve-api.prod-aks.azure.com';
-    var VERSIONS = $versionsJson;
+    // All CVE data is pre-embedded — no API calls needed from the browser (avoids CORS).
+    var DATA = {versions:$jsVersionsArr,byVersion:$byVersionJson};
 
     function esc(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     var vsel = document.getElementById('aks-cve-version-select');
-    var loadEl = document.getElementById('aks-cve-loading');
 
-    function renderStats(data) {
-      var containers = data.container_targets || [];
-      var uActive = {}, uMit = {}, withCves = 0;
-      containers.forEach(function(c) {
-        var had = false;
-        (c.active_cves || []).forEach(function(x) { if (x.id) { uActive[x.id] = 1; had = true; } });
-        (c.mitigated_cves_from_previous_release || []).forEach(function(x) { if (x.id) uMit[x.id] = 1; });
-        if (had) withCves++;
-      });
-      var date = data.report_time ? data.report_time.slice(0, 10) : 'N/A';
-      document.getElementById('aks-cve-active-count').textContent     = Object.keys(uActive).length;
-      document.getElementById('aks-cve-mitigated-count').textContent  = Object.keys(uMit).length;
-      document.getElementById('aks-cve-containers-count').textContent = withCves;
-      document.getElementById('aks-cve-containers-sub').textContent   = 'of ' + containers.length + ' tracked';
-      document.getElementById('aks-cve-report-date').textContent      = 'data as of ' + date;
-    }
-
-    function renderTable(data) {
-      var rows = (data.container_targets || [])
-        .filter(function(c) { return c.active_cves && c.active_cves.length > 0; })
-        .sort(function(a, b) { return b.active_cves.length - a.active_cves.length; })
-        .slice(0, 10);
+    function renderVersion(ver) {
+      var d = DATA.byVersion[ver];
+      if (!d) return;
+      document.getElementById('aks-cve-active-count').textContent     = d.active;
+      document.getElementById('aks-cve-mitigated-count').textContent  = d.mitigated;
+      document.getElementById('aks-cve-containers-count').textContent = d.affected;
+      document.getElementById('aks-cve-containers-sub').textContent   = 'of ' + d.total + ' tracked';
+      document.getElementById('aks-cve-report-date').textContent      = 'data as of ' + d.date;
       var html = '';
-      rows.forEach(function(c) {
-        var cnt = c.active_cves.length;
-        var mit = (c.mitigated_cves_from_previous_release || []).length;
-        var mitCell = mit > 0
-          ? '<td style="color:#34d399;font-weight:600;text-align:center;">&#9989; ' + mit + '</td>'
+      (d.top || []).forEach(function(row) {
+        var mitCell = row[3] > 0
+          ? '<td style="color:#34d399;font-weight:600;text-align:center;">&#9989; ' + row[3] + '</td>'
           : '<td style="color:#6b7280;text-align:center;">&mdash;</td>';
         html += '<tr style="border-top:1px solid rgba(255,255,255,0.06);">'
-          + '<td style="padding:6px 10px;font-size:13px;color:#94a3b8;">' + esc(c.pod_namespace) + '</td>'
-          + '<td style="padding:6px 10px;font-size:13px;font-weight:500;">' + esc(c.container_name) + '</td>'
-          + '<td style="padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;">' + cnt + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;color:#94a3b8;">'  + esc(row[0]) + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:500;">' + esc(row[1]) + '</td>'
+          + '<td style="padding:6px 10px;font-size:13px;font-weight:700;color:#f87171;text-align:center;">' + row[2] + '</td>'
           + mitCell + '</tr>';
       });
       document.getElementById('aks-cve-top-tbody').innerHTML = html ||
-        '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No containers with active CVEs in this release.</td></tr>';
+        '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No containers with active CVEs.</td></tr>';
     }
 
-    vsel.addEventListener('change', async function() {
-      loadEl.style.display = 'inline';
-      vsel.disabled = true;
-      try {
-        var resp = await fetch(CVE_API + '/api/v1/aks-releases/' + vsel.value + '/scan-reports');
-        var data = await resp.json();
-        renderStats(data);
-        renderTable(data);
-      } catch (e) { console.error('CVE fetch error:', e); }
-      finally { loadEl.style.display = 'none'; vsel.disabled = false; }
-    });
+    vsel.addEventListener('change', function() { renderVersion(vsel.value); });
 
-    // --- CVE Search ---
-    window.aksCveSearch = async function() {
+    // --- CVE Search: fully client-side, instant ---
+    window.aksCveSearch = function() {
       var rawId = (document.getElementById('aks-cve-search-input').value || '').trim().toUpperCase();
-      var btn   = document.getElementById('aks-cve-search-btn');
       var outEl = document.getElementById('aks-cve-search-results');
 
       if (!rawId) {
@@ -1794,89 +1815,47 @@ $topRowsHtml
         return;
       }
 
-      var toSearch = VERSIONS.slice(); // always all versions
-      btn.disabled = true;
-      btn.textContent = 'Searching\u2026';
-      outEl.innerHTML = '<div style="color:#94a3b8;padding:6px 0;">Searching <strong style="color:#e2e8f0;">'
-        + toSearch.length + '</strong> versions for <strong style="color:#60a5fa;">' + esc(rawId)
-        + '</strong>\u2026 <span id="aks-cve-prog">0/' + toSearch.length + '</span></div>';
-
-      var done = 0, rows = {};
-      await Promise.all(toSearch.map(async function(ver) {
-        try {
-          var r = await fetch(CVE_API + '/api/v1/aks-releases/' + ver + '/scan-reports');
-          var d = await r.json();
-          rows[ver] = {
-            active:    (d.container_targets || []).filter(function(c) {
-              return (c.active_cves || []).some(function(x) { return x.id && x.id.toUpperCase() === rawId; });
-            }),
-            mitigated: (d.container_targets || []).filter(function(c) {
-              return (c.mitigated_cves_from_previous_release || []).some(function(x) { return x.id && x.id.toUpperCase() === rawId; });
-            })
-          };
-        } catch (e) { rows[ver] = { error: true }; }
-        done++;
-        var prog = document.getElementById('aks-cve-prog');
-        if (prog) prog.textContent = done + '/' + toSearch.length;
-      }));
-
-      // Versions sorted oldest→newest (same as VERSIONS array order)
-      var sortedAsc  = toSearch.slice();
-      var sortedDesc = toSearch.slice().reverse();
-
-      var anyHit = sortedAsc.some(function(v) {
-        return rows[v] && !rows[v].error && (rows[v].active.length > 0 || rows[v].mitigated.length > 0);
+      var allVersions = DATA.versions;
+      var hits = {};
+      allVersions.forEach(function(ver) {
+        var entry = DATA.byVersion[ver] && DATA.byVersion[ver].cves && DATA.byVersion[ver].cves[rawId];
+        if (entry && (entry.a.length > 0 || entry.m.length > 0)) hits[ver] = entry;
       });
 
-      if (!anyHit) {
+      if (Object.keys(hits).length === 0) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
-          + '&#9989; <strong>' + esc(rawId) + '</strong> was not found as active or mitigated in any of the '
-          + toSearch.length + ' AKS releases searched. It may have never affected AKS platform containers.</div>';
-        btn.disabled = false; btn.textContent = 'Search all versions'; return;
+          + '&#9989; <strong>' + esc(rawId) + '</strong> was not found in any of the '
+          + allVersions.length + ' AKS releases scanned. It may not affect AKS platform containers.</div>';
+        return;
       }
 
-      // Determine summary data
-      var latestVer     = sortedAsc[sortedAsc.length - 1];
-      var activeInLatest = rows[latestVer] && !rows[latestVer].error && rows[latestVer].active.length > 0;
-
-      // First version where it was mitigated (oldest = first fix)
-      var firstFixedVer = null;
-      for (var i = 0; i < sortedAsc.length; i++) {
-        var v = sortedAsc[i];
-        if (rows[v] && !rows[v].error && rows[v].mitigated.length > 0) { firstFixedVer = v; break; }
-      }
-      // Last version where it was active
-      var lastActiveVer = null;
-      for (var j = sortedAsc.length - 1; j >= 0; j--) {
-        var va = sortedAsc[j];
-        if (rows[va] && !rows[va].error && rows[va].active.length > 0) { lastActiveVer = va; break; }
-      }
-      var activeCount = sortedAsc.filter(function(v) {
-        return rows[v] && !rows[v].error && rows[v].active.length > 0;
-      }).length;
-
-      // Summary banner
-      var summaryBg, summaryBorder, summaryIcon, summaryText;
-      if (activeInLatest) {
-        summaryBg = 'rgba(220,38,38,0.12)'; summaryBorder = 'rgba(248,113,113,0.3)';
-        summaryIcon = '&#x1F534;';
-        summaryText = '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).';
-      } else {
-        summaryBg = 'rgba(16,185,129,0.1)'; summaryBorder = 'rgba(52,211,153,0.25)';
-        summaryIcon = '&#x2705;';
-        summaryText = '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).';
+      var latestVer    = allVersions[allVersions.length - 1];
+      var activeLatest = hits[latestVer] && hits[latestVer].a.length > 0;
+      var firstFixed = null, lastActive = null, activeRels = 0;
+      for (var i = 0; i < allVersions.length; i++) {
+        var h = hits[allVersions[i]];
+        if (h) {
+          if (h.m.length > 0 && !firstFixed) firstFixed = allVersions[i];
+          if (h.a.length > 0) { lastActive = allVersions[i]; activeRels++; }
+        }
       }
 
-      var metaPills = '';
-      if (firstFixedVer) metaPills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-size:12px;font-weight:600;">&#x1F527; First fixed: ' + esc(firstFixedVer) + '</span>';
-      if (lastActiveVer) metaPills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActiveVer) + '</span>';
-      metaPills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeCount + ' release' + (activeCount === 1 ? '' : 's') + '</span>';
+      var sbg  = activeLatest ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
+      var sbd  = activeLatest ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
+      var sico = activeLatest ? '&#x1F534;' : '&#x2705;';
+      var stxt = activeLatest
+        ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).'
+        : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest release (<strong>' + esc(latestVer) + '</strong>).';
 
-      var out = '<div style="margin-bottom:14px;padding:12px 16px;background:' + summaryBg + ';border:1px solid ' + summaryBorder + ';border-radius:8px;">'
-        + '<div style="font-size:14px;margin-bottom:8px;">' + summaryIcon + ' ' + summaryText + '</div>'
-        + '<div>' + metaPills + '</div></div>';
+      var pills = '';
+      if (firstFixed) pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-size:12px;font-weight:600;">&#x1F527; First fixed: ' + esc(firstFixed) + '</span>';
+      if (lastActive)  pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActive) + '</span>';
+      pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeRels + ' release' + (activeRels === 1 ? '' : 's') + '</span>';
 
-      // Table — only show releases where CVE appears (active or mitigated)
+      var out = '<div style="margin-bottom:14px;padding:12px 16px;background:' + sbg + ';border:1px solid ' + sbd + ';border-radius:8px;">'
+        + '<div style="font-size:14px;margin-bottom:8px;">' + sico + ' ' + stxt + '</div>'
+        + '<div>' + pills + '</div></div>';
+
       out += '<div style="overflow-x:auto;">'
         + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; newest first, only affected releases shown:</div>'
         + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
@@ -1887,24 +1866,21 @@ $topRowsHtml
         + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Fixed in this version</th>'
         + '</tr></thead><tbody>';
 
-      sortedDesc.forEach(function(v) {
-        var r = rows[v];
-        if (!r || r.error || (r.active.length === 0 && r.mitigated.length === 0)) return;
-        var isActive = r.active.length > 0;
-        var rowBg = isActive ? 'background:rgba(220,38,38,0.05);' : '';
-        var badge = isActive
+      allVersions.slice().reverse().forEach(function(ver) {
+        var h = hits[ver];
+        if (!h) return;
+        var isAct  = h.a.length > 0;
+        var badge  = isAct
           ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>'
           : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;font-size:12px;">&#x2705; Fixed</span>';
-        // containers still affected (active)
-        var aNames = r.active.map(function(c) {
-          return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c.container_name) + '</code>';
+        var aNames = h.a.map(function(c) {
+          return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c) + '</code>';
         }).join('');
-        // containers fixed in this version
-        var mNames = r.mitigated.map(function(c) {
-          return '<code style="background:rgba(16,185,129,0.12);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;color:#34d399;">' + esc(c.container_name) + '</code>';
+        var mNames = h.m.map(function(c) {
+          return '<code style="background:rgba(16,185,129,0.12);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;color:#34d399;">' + esc(c) + '</code>';
         }).join('');
-        out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + '">'
-          + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(v) + '</td>'
+        out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + (isAct ? 'background:rgba(220,38,38,0.05);' : '') + '">'
+          + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(ver) + '</td>'
           + '<td style="padding:7px 10px;text-align:center;">' + badge + '</td>'
           + '<td style="padding:7px 10px;">' + (aNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
           + '<td style="padding:7px 10px;">' + (mNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
@@ -1913,10 +1889,8 @@ $topRowsHtml
 
       out += '</tbody></table></div>';
       outEl.innerHTML = out;
-      btn.disabled = false; btn.textContent = 'Search all versions';
     };
 
-    // Enter key support in search box
     document.getElementById('aks-cve-search-input').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') window.aksCveSearch();
     });
@@ -1931,7 +1905,6 @@ $topRowsHtml
     return '<p style="color:#94a3b8;">CVE data temporarily unavailable. Visit <a href="https://cve-api.prod-aks.azure.com/viewer/index.html" target="_blank" rel="noopener">cve-api.prod-aks.azure.com</a> for the full interactive explorer.</p>'
   }
 }
-
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 
 # Build releases JSON for AI
