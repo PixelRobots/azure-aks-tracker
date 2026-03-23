@@ -34,8 +34,6 @@ jobs:
 
       - name: Generate HTML JSON (content + hash)
         id: gen
-        # Skip on manual CVE-only dispatch — that path has its own step below
-        if: github.event.inputs.refresh_cve_data != 'true' || github.event_name != 'workflow_dispatch'
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,8 +42,9 @@ jobs:
           AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
           AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
           AZURE_OPENAI_DEPLOYMENT:   ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-          # CVE_REFRESH_VHD=true tells the script to fetch VHD node-image CVE data.
-          # Runs daily at 06:00 UTC automatically, or on-demand via the checkbox.
+          # CVE_REFRESH_VHD=true fetches VHD node-image CVE data (26 OS types) in addition to
+          # the standard container-image CVE data. When unset, only container-image CVEs are fetched.
+          # Enabled automatically on the daily 06:00 UTC schedule or when the checkbox is ticked.
           CVE_REFRESH_VHD: ${{ (github.event.schedule == '0 6 * * *' || github.event.inputs.refresh_cve_data == 'true') && 'true' || '' }}
         run: |
           ./.github/scripts/generate-aks-updates.ps1 1> out.json
@@ -55,85 +54,6 @@ jobs:
           Set-Content -LiteralPath digest.html -Value $json.digest_html -Encoding UTF8
           Set-Content -LiteralPath digest.title -Value $json.digest_title -Encoding UTF8
           Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
-
-      # ---- CVE-only refresh (manual checkbox only) ----------------------------
-      # Fetches fresh CVE data, splices it into the live WordPress page between
-      # <!-- CVE_SECTION_START --> / <!-- CVE_SECTION_END --> markers, and pushes.
-      - name: CVE-only refresh
-        id: cve_only
-        if: github.event.inputs.refresh_cve_data == 'true' && github.event_name == 'workflow_dispatch'
-        shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CVE_ONLY: 'true'
-          CVE_REFRESH_VHD: 'true'
-        run: |
-          # Generate only the CVE section HTML
-          ./.github/scripts/generate-aks-updates.ps1 1> cve_out.json
-          $cveJson = Get-Content cve_out.json -Raw | ConvertFrom-Json
-          $newCveHtml = $cveJson.cve_html
-          Set-Content -LiteralPath new_cve.html -Value $newCveHtml -Encoding UTF8
-          Write-Host "CVE HTML generated ($($newCveHtml.Length) chars)"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_ready=true"
-
-      - name: Splice CVE section into WordPress page
-        if: steps.cve_only.outputs.cve_ready == 'true'
-        env:
-          WP_USER: ${{ secrets.WP_USER }}
-          WP_PASS: ${{ secrets.WP_APP_PASSWORD }}
-          WP_URL:  ${{ secrets.WP_URL }}
-          WP_ID:   ${{ secrets.WP_PAGE_ID }}
-        run: |
-          # Fetch current page content
-          curl -sSf -u "$WP_USER:$WP_PASS" "$WP_URL/wp-json/wp/v2/pages/$WP_ID" -o current_page.json
-
-          # Extract rendered HTML and decode HTML entities for the markers
-          CURRENT_HTML=$(jq -r '.content.rendered' current_page.json)
-
-          # Replace content between the CVE section markers
-          NEW_CVE=$(cat new_cve.html)
-          BLOCK="    <!-- CVE_SECTION_START -->\n    <div class=\"aks-tab-panel\" id=\"aks-tab-cve\">\n      <h2>AKS CVE Security<\/h2>\n      <p>Live vulnerability data for the latest AKS release, sourced from the <strong>AKS Vulnerability Data API<\/strong> (Public Preview). Shows unique active CVEs and improvements from the previous release across all AKS platform containers.<\/p>\n      $NEW_CVE\n    <\/div>\n    <!-- CVE_SECTION_END -->"
-
-          # Use Python for reliable multi-line regex replace
-          python3 - <<'PYEOF'
-          import re, json, sys
-          with open('current_page.json') as f:
-            page = json.load(f)
-          html = page['content']['raw'] if 'raw' in page.get('content', {}) else page['content']['rendered']
-          with open('new_cve.html') as f:
-            new_cve = f.read()
-          replacement = (
-            '    <!-- CVE_SECTION_START -->\n'
-            '    <div class="aks-tab-panel" id="aks-tab-cve">\n'
-            '      <h2>AKS CVE Security</h2>\n'
-            '      <p>Live vulnerability data for the latest AKS release, sourced from the '
-            '<strong>AKS Vulnerability Data API</strong> (Public Preview). Shows unique active CVEs '
-            'and improvements from the previous release across all AKS platform containers.</p>\n'
-            '      ' + new_cve + '\n'
-            '    </div>\n'
-            '    <!-- CVE_SECTION_END -->'
-          )
-          updated = re.sub(
-            r'<!--\s*CVE_SECTION_START\s*-->.*?<!--\s*CVE_SECTION_END\s*-->',
-            replacement, html, flags=re.DOTALL
-          )
-          with open('spliced.html', 'w') as f:
-            f.write(updated)
-          print(f"Splice done. HTML length: {len(updated)}")
-          PYEOF
-
-          # Push spliced content back to WordPress
-          jq -n --rawfile content spliced.html \
-            '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}' \
-            > "$RUNNER_TEMP/wp-cve-payload.json"
-
-          curl -sSf -X POST "$WP_URL/wp-json/wp/v2/pages/$WP_ID" \
-            -u "$WP_USER:$WP_PASS" \
-            -H "Content-Type: application/json" \
-            --data-binary @"$RUNNER_TEMP/wp-cve-payload.json"
-
-          echo "CVE section updated on WordPress page."
-      # -------------------------------------------------------------------------
 
       - name: Get current WP page
         id: get

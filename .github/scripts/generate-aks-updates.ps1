@@ -64,12 +64,6 @@ $ghHeaders = @{
 $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 
-# Run-mode flags (read early so they gate all downstream work)
-# CVE_ONLY=true  — skip GitHub/docs/AI entirely, regenerate only the CVE section.
-# CVE_REFRESH_VHD=true — also fetch VHD node-image CVE data (26 OS image types).
-$script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
-$script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
-
 function Get-PullRequestFiles {
   param([int]$prNumber, [string]$Owner, [string]$Repo)
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$prNumber/files"
