@@ -1363,9 +1363,8 @@ function Get-AksCveTabHtml {
   <div id="aks-cve-panel-search" style="$searchTabStyle">
     <div style="max-width:680px;margin:0 auto 32px;">
       <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:40px;margin-bottom:8px;">&#128269;</div>
-        <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">CVE Lookup</h2>
-        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS container releases and the last 3 VHD builds per node OS type.</p>
+        <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">&#128269; CVE Lookup</h2>
+        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS releases and the last 3 VHD builds per node OS type.</p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;">
         <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
