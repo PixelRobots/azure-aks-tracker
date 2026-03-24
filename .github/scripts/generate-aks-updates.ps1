@@ -1640,9 +1640,12 @@ $initTopRowsHtml
       var vhdImagesLoaded = (VDATA.images || []).length > 0;
 
       // Only short-circuit if there's genuinely nothing to show at all
+      var nvdUrl  = 'https://nvd.nist.gov/vuln/detail/' + encodeURIComponent(rawId);
+      var cveLink = '<a href="' + nvdUrl + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-decoration-color:rgba(255,255,255,0.35);">' + esc(rawId) + '</a>';
+
       if (noContainerHits && noVhdHits && !vhdImagesLoaded) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
-          + '&#9989; <strong>' + esc(rawId) + '</strong> was not detected in any of the '
+          + '&#9989; <strong>' + cveLink + '</strong> was not detected in any of the '
           + allVersions.length + ' AKS container releases or any VHD node image scans. All nodes and containers appear clean.</div>';
         return;
       }
@@ -1661,10 +1664,10 @@ $initTopRowsHtml
         var sumIco = hasActive ? '&#x1F534;' : '&#x2705;';
         var cleanCount = totalImgs - vhdImgNames.length;
         var sumTxt = noVhdHits
-          ? '<strong style="color:#34d399;">' + esc(rawId) + '</strong> was <strong style="color:#34d399;">not detected</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image scans &mdash; all nodes appear clean. <span style="color:#6b7280;font-size:12px;">(Not detected means the CVE did not appear as an OS-level package vulnerability on those nodes. It may use a different package name, may not apply to that distro, or may have been patched before tracked history began.)' + '</span>'
+          ? '<strong style="color:#34d399;">' + cveLink + '</strong> was <strong style="color:#34d399;">not detected</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image scans &mdash; all nodes appear clean. <span style="color:#6b7280;font-size:12px;">(Not detected means the CVE did not appear as an OS-level package vulnerability on those nodes. It may use a different package name, may not apply to that distro, or may have been patched before tracked history began.)</span>'
           : hasActive
-            ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' image' + (cleanCount===1?'':'s') + ' had no trace of this CVE in their scan data.)</span>' : '')
-            : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">patched</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was previously detected.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' further image' + (cleanCount===1?'':'s') + ' had no trace of this CVE at all.)</span>' : '');
+            ? '<strong style="color:#f87171;">' + cveLink + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' image' + (cleanCount===1?'':'s') + ' had no trace of this CVE in their scan data.)</span>' : '')
+            : '<strong style="color:#34d399;">' + cveLink + '</strong> is <strong style="color:#34d399;">patched</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was previously detected.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' further image' + (cleanCount===1?'':'s') + ' had no trace of this CVE at all.)</span>' : '');
 
         var bannerRadius = '8px 8px 0 0'; // table always shown below banner
         out += '<div style="margin-bottom:16px;">'
@@ -1672,23 +1675,52 @@ $initTopRowsHtml
           + '<span style="font-size:13px;font-weight:700;color:#f59e0b;margin-right:10px;">&#128187; VHD Node Images</span>'
           + sumIco + ' ' + sumTxt
           + '</div>';
-        // Always show full table of all VHD images with a filter toggle
-        var vhdTblId  = 'vhd-srch-tbl-' + Date.now();
-        var vhdFiltId = 'vhd-srch-filt-' + Date.now();
+        // Always show full table. Build OS list for filter dropdown.
+        var vhdTblId    = 'vhd-srch-tbl-' + Date.now();
+        var vhdFiltId   = 'vhd-srch-filt-' + Date.now();
+        var vhdOsFiltId = 'vhd-srch-os-' + Date.now();
         var affectedCount = vhdImgNames.length;
-        var cleanCount2   = totalImgs - affectedCount;
+        // When nothing is affected, default to show-all so the table isn't empty
+        var defaultFilter = affectedCount > 0 ? 'affected' : 'all';
+        var affChecked = defaultFilter === 'affected' ? ' checked' : '';
+        var allChecked  = defaultFilter === 'all'      ? ' checked' : '';
+
+        // Collect unique OS types for the filter dropdown
+        var vhdOsSet = {};
+        (VDATA.images || []).forEach(function(img) {
+          var sl = img.indexOf('/'); if (sl >= 0) vhdOsSet[img.substring(0, sl)] = 1;
+        });
+        var vhdOsList = Object.keys(vhdOsSet).sort();
+        var osOptHtml = '<option value="">All OS types (' + totalImgs + ')</option>'
+          + vhdOsList.map(function(os) { return '<option value="' + esc(os) + '">' + esc(os) + '</option>'; }).join('');
+
+        // Shared filter apply logic — referenced by both radio change and OS select change
+        var applyFnBody = 'var t=document.getElementById(\\'' + vhdTblId + '\\');'
+          + 'var showAll=(t.getAttribute(\\'data-filter\\')==\\'all\\');'
+          + 'var osEl=document.getElementById(\\'' + vhdOsFiltId + '\\');'
+          + 'var osVal=osEl?osEl.value:\\'\\';'
+          + 't.querySelectorAll(\\'tr[data-os]\\').forEach(function(r){'
+          + 'var osMatch=!osVal||r.getAttribute(\\'data-os\\')==osVal;'
+          + 'var typeMatch=showAll||r.hasAttribute(\\'data-affected\\');'
+          + 'r.style.display=(osMatch&&typeMatch)?\\'\\'\\':\\'none\\';});';
 
         out += '<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.1);border-top:none;border-radius:0 0 8px 8px;">'
-          + '<div style="padding:6px 12px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;">'
-          + '<span style="font-size:12px;color:#6b7280;">Show:</span>'
+          + '<div style="padding:8px 12px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">'
+          + '<span style="font-size:12px;color:#6b7280;white-space:nowrap;">Show:</span>'
           + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8;cursor:pointer;">'
-          + '<input type="radio" name="' + vhdFiltId + '" value="affected" checked onchange="(function(){var t=document.getElementById(\'' + vhdTblId + '\');t.querySelectorAll(\'tr[data-clean]\').forEach(function(r){r.style.display=\'none\'});t.querySelectorAll(\'tr[data-affected]\').forEach(function(r){r.style.display=\'\'})})()"> Affected only (' + affectedCount + ')'
+          + '<input type="radio" name="' + vhdFiltId + '" value="affected"' + affChecked + ' onchange="(function(){var t=document.getElementById(\'' + vhdTblId + '\');t.setAttribute(\'data-filter\',\'affected\');' + applyFnBody + '})()">'
+          + ' Affected only (' + affectedCount + ')'
           + '</label>'
           + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8;cursor:pointer;">'
-          + '<input type="radio" name="' + vhdFiltId + '" value="all" onchange="(function(){var t=document.getElementById(\'' + vhdTblId + '\');t.querySelectorAll(\'tr[data-clean],tr[data-affected]\').forEach(function(r){r.style.display=\'\'})})()"> All images (' + totalImgs + ')'
+          + '<input type="radio" name="' + vhdFiltId + '" value="all"' + allChecked + ' onchange="(function(){var t=document.getElementById(\'' + vhdTblId + '\');t.setAttribute(\'data-filter\',\'all\');' + applyFnBody + '})()">'
+          + ' All images (' + totalImgs + ')'
           + '</label>'
+          + '<span style="margin-left:auto;display:flex;align-items:center;gap:6px;">'
+          + '<label style="font-size:12px;color:#6b7280;">Filter OS:</label>'
+          + '<select id="' + vhdOsFiltId + '" onchange="(function(){' + applyFnBody + '})()" style="padding:3px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:#1e293b;color:#e2e8f0;font-size:12px;cursor:pointer;">'
+          + osOptHtml + '</select></span>'
           + '</div>'
-          + '<table id="' + vhdTblId + '" style="width:100%;border-collapse:collapse;font-size:13px;">'
+          + '<table id="' + vhdTblId + '" data-filter="' + defaultFilter + '" style="width:100%;border-collapse:collapse;font-size:13px;">'
           + '<thead><tr style="background:rgba(255,255,255,0.05);">'
           + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">Node OS</th>'
           + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">VHD Version</th>'
@@ -1728,7 +1760,7 @@ $initTopRowsHtml
             badge = '<span style="display:inline-block;padding:2px 10px;background:rgba(255,255,255,0.05);color:#6b7280;border-radius:4px;font-weight:600;font-size:12px;white-space:nowrap;" title="CVE not detected in this image scan — node is clean.">&#x2796; Not detected</span>';
             pkgs  = '';
           }
-          out += '<tr ' + rowAttr + ' style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + rowStyle + '">'
+          out += '<tr ' + rowAttr + ' data-os="' + esc(osName) + '" style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + rowStyle + '">'
             + '<td style="padding:8px 12px;font-weight:700;color:#e2e8f0;white-space:nowrap;">' + esc(osName) + '</td>'
             + '<td style="padding:8px 12px;font-family:monospace;font-size:12px;color:#93c5fd;white-space:nowrap;">' + esc(ver) + '</td>'
             + '<td style="padding:8px 12px;text-align:center;">' + badge + '</td>'
@@ -1757,11 +1789,10 @@ $initTopRowsHtml
         var sbd  = activeLatest ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
         var sico = activeLatest ? '&#x1F534;' : '&#x2705;';
         var stxt = activeLatest
-          ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).'
-          : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).';
+          ? '<strong style="color:#f87171;">' + cveLink + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).'
+          : '<strong style="color:#34d399;">' + cveLink + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).';
 
         var pills = '';
-        if (firstFixed) pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-size:12px;font-weight:600;">&#x1F527; First fixed: ' + esc(firstFixed) + '</span>';
         if (lastActive)  pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActive) + '</span>';
         pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeRels + ' release' + (activeRels === 1 ? '' : 's') + '</span>';
 
