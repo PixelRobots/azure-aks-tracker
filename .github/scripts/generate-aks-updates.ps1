@@ -1355,7 +1355,7 @@ function Get-AksCveTabHtml {
     </button>
     <button id="aks-cve-btn-containers" onclick="aksCveShowTab('containers')"
       style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$contBtnActive">
-      &#128230; AKS Containers
+      &#128230; AKS Releases
     </button>
   </div>
 
@@ -1645,7 +1645,7 @@ $initTopRowsHtml
       if (noContainerHits && noVhdHits && !vhdImagesLoaded) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
           + '&#9989; <strong>' + cveLink + '</strong> left no trace in any of the '
-          + allVersions.length + ' AKS container releases or any VHD node image scans. All nodes and containers appear clean.</div>';
+          + allVersions.length + ' AKS releases or any VHD node image scans. All nodes and containers appear clean.</div>';
         return;
       }
 
@@ -1934,7 +1934,7 @@ if ($script:CveOnly) {
     <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
       <h2>AKS CVE Security</h2>
-      <p>CVE security data for AKS container images and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by container release or node image.</p>
+      <p>CVE security data for AKS releases and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by container release or node image.</p>
       $cveTabHtml
     </div>
     <!-- CVE_SECTION_END -->
@@ -2940,7 +2940,7 @@ $html = @"
     <ul>
       <li>Quickly scan meaningful AKS, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
-      <li>Search and browse CVE security data across AKS container images and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
+      <li>Search and browse CVE security data across AKS releases and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
     </ul>
 
     </br>
@@ -2961,7 +2961,7 @@ $html = @"
     <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
       <h2>AKS CVE Security</h2>
-      <p>CVE security data for AKS container images and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by container release or node image.</p>
+      <p>CVE security data for AKS releases and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by release or node image.</p>
       $cveTabHtml
     </div>
     <!-- CVE_SECTION_END -->
