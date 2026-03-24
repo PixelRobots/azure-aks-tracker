@@ -1642,8 +1642,8 @@ $initTopRowsHtml
       // Only short-circuit if there's genuinely nothing to show at all
       if (noContainerHits && noVhdHits && !vhdImagesLoaded) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
-          + '&#9989; <strong>' + esc(rawId) + '</strong> was not found in any of the '
-          + allVersions.length + ' AKS container releases or any VHD node images. It may not affect AKS.</div>';
+          + '&#9989; <strong>' + esc(rawId) + '</strong> was not detected in any of the '
+          + allVersions.length + ' AKS container releases or any VHD node image scans. All nodes and containers appear clean.</div>';
         return;
       }
 
@@ -1659,11 +1659,12 @@ $initTopRowsHtml
         var sumBg  = hasActive ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
         var sumBd  = hasActive ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
         var sumIco = hasActive ? '&#x1F534;' : '&#x2705;';
+        var cleanCount = totalImgs - vhdImgNames.length;
         var sumTxt = noVhdHits
-          ? '<strong style="color:#34d399;">' + esc(rawId) + '</strong> was <strong style="color:#34d399;">not found</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image builds scanned.'
+          ? '<strong style="color:#34d399;">' + esc(rawId) + '</strong> was <strong style="color:#34d399;">not detected</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image scans &mdash; all nodes appear clean. <span style="color:#6b7280;font-size:12px;">(Not detected means the CVE did not appear as an OS-level package vulnerability on those nodes. It may use a different package name, may not apply to that distro, or may have been patched before tracked history began.)' + '</span>'
           : hasActive
-            ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.'
-            : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">mitigated</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was found.';
+            ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' image' + (cleanCount===1?'':'s') + ' had no trace of this CVE in their scan data.)</span>' : '')
+            : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">patched</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was previously detected.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' further image' + (cleanCount===1?'':'s') + ' had no trace of this CVE at all.)</span>' : '');
 
         var bannerRadius = noVhdHits ? '8px' : '8px 8px 0 0';
         out += '<div style="margin-bottom:16px;">'
@@ -1765,7 +1766,7 @@ $initTopRowsHtml
           var badge;
           var rowBg  = '';
           if (!h) {
-            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,0.06);color:#6b7280;border-radius:4px;font-weight:600;font-size:12px;">&#x2796; Not affected</span>';
+            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,0.06);color:#6b7280;border-radius:4px;font-weight:600;font-size:12px;" title="This CVE was not detected in this release — the container or OS package may not be affected, or it was patched before this tracking period.">&#x2796; Not detected</span>';
           } else if (isAct) {
             badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>';
             rowBg  = 'background:rgba(220,38,38,0.05);';
