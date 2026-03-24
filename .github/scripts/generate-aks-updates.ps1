@@ -1380,85 +1380,52 @@ function Get-AksCveTabHtml {
   <!-- ═══════════════════════════ VHD TAB ════════════════════════════ -->
   <div id="aks-cve-panel-vhd" style="$vhdTabStyle">
 
-    <!-- VHD summary tiles -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;">
-      <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
-        <div id="aks-vhd-active" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$vhdInitActive</div>
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, across all images</div>
-      </div>
-      <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
-        <div id="aks-vhd-mitigated" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$vhdInitMitigated</div>
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous build</div>
-      </div>
-      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
-        <div id="aks-vhd-images-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$vhdInitTotal</div>
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Node Image Types</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Linux &amp; Windows</div>
-      </div>
-      <div style="background:rgba(99,102,241,0.12);border:1px solid rgba(165,180,252,0.3);border-radius:8px;padding:14px 12px;text-align:center;">
-        <div style="font-size:11px;font-weight:600;color:#a5b4fc;letter-spacing:0.03em;margin-bottom:4px;">LAST VHD SCAN</div>
-        <div id="aks-vhd-date" style="font-size:18px;font-weight:700;color:#e2e8f0;line-height:1.2;">$vhdInitDate</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:4px;">refreshed daily</div>
-      </div>
-    </div>
-
     $vhdUnavailHtml
 
-    <!-- VHD node images table -->
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
-      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128187; Node Images by Active CVE Count</h3>
-        <span style="font-size:11px;color:#94a3b8;">OS-level package vulnerabilities</span>
-      </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr style="background:rgba(255,255,255,0.05);">
-              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Node Image</th>
-              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Active CVEs</th>
-              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated (vs prev)</th>
-            </tr>
-          </thead>
-          <tbody id="aks-vhd-tbody">
-$vhdInitTopRowsHtml
-          </tbody>
-        </table>
-      </div>
-    </div>
 
-    <!-- VHD image selector + per-image package breakdown -->
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
-      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
-        <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128230; Top Affected Packages by Image</h3>
-      </div>
-      <div style="padding:14px 16px;">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
-          <label style="font-size:13px;color:#94a3b8;">Select image:</label>
-          <div style="position:relative;flex:1;min-width:200px;max-width:360px;">
-            <select id="aks-vhd-image-select"
-              style="width:100%;padding:6px 28px 6px 8px;border-radius:6px;border:1px solid rgba(245,158,11,0.45);background:rgba(120,53,15,0.3);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;">
-              $vhdImageOptions
+      <!-- Filter bar -->
+      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">Node OS</label>
+          <div style="position:relative;">
+            <select id="aks-vhd-os-select"
+              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:210px;">
             </select>
-            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#f59e0b;font-size:11px;">&#9660;</span>
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
           </div>
         </div>
-        <div style="overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead>
-              <tr style="background:rgba(255,255,255,0.05);">
-                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Package</th>
-                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>
-                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Active CVEs</th>
-                <th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:center;">Mitigated</th>
-              </tr>
-            </thead>
-            <tbody id="aks-vhd-pkg-tbody">
-              <tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">Select an image above to see package details.</td></tr>
-            </tbody>
-          </table>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">Version</label>
+          <div style="position:relative;">
+            <select id="aks-vhd-ver-select"
+              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:160px;">
+            </select>
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
+          </div>
         </div>
+        <div style="display:flex;gap:16px;margin-left:auto;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:#94a3b8;">Active CVEs:&nbsp;<strong id="aks-vhd-stat-active" style="color:#f87171;">&#8212;</strong></span>
+          <span style="font-size:12px;color:#94a3b8;">Mitigated:&nbsp;<strong id="aks-vhd-stat-mitigated" style="color:#34d399;">&#8212;</strong></span>
+          <span style="font-size:12px;color:#94a3b8;">Scan:&nbsp;<strong id="aks-vhd-stat-date" style="color:#e2e8f0;">&#8212;</strong></span>
+        </div>
+      </div>
+
+      <!-- Package table -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.05);">
+              <th style="padding:8px 10px;color:#9ca3af;font-weight:600;text-align:left;">Package</th>
+              <th style="padding:8px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>
+              <th style="padding:8px 10px;color:#9ca3af;font-weight:600;text-align:center;">Active CVEs</th>
+              <th style="padding:8px 10px;color:#9ca3af;font-weight:600;text-align:center;">Mitigated</th>
+            </tr>
+          </thead>
+          <tbody id="aks-vhd-pkg-tbody">
+            <tr><td colspan="4" style="padding:20px;text-align:center;color:#6b7280;">Select a node OS above to view package CVE data.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1562,11 +1529,16 @@ $initTopRowsHtml
       });
     };
 
-    // ── VHD image selector ─────────────────────────────────────────────
-    var vhdSel = document.getElementById('aks-vhd-image-select');
+    // ── VHD OS type / version cascade ─────────────────────────────────
     function renderVhdImage(imgName) {
       var d = VDATA.byImage[imgName];
       if (!d) return;
+      var sa = document.getElementById('aks-vhd-stat-active');
+      var sm = document.getElementById('aks-vhd-stat-mitigated');
+      var sd = document.getElementById('aks-vhd-stat-date');
+      if (sa) sa.textContent = d.active;
+      if (sm) sm.textContent = d.mitigated;
+      if (sd) sd.textContent = d.date;
       var html = '';
       (d.top || []).forEach(function(row) {
         var mitCell = row[3] > 0
@@ -1581,10 +1553,41 @@ $initTopRowsHtml
       document.getElementById('aks-vhd-pkg-tbody').innerHTML = html ||
         '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No package CVE data for this image.</td></tr>';
     }
-    if (vhdSel) {
-      vhdSel.addEventListener('change', function() { renderVhdImage(vhdSel.value); });
-      if (vhdSel.value) renderVhdImage(vhdSel.value);
-    }
+    (function() {
+      var osSel = document.getElementById('aks-vhd-os-select');
+      var verSel = document.getElementById('aks-vhd-ver-select');
+      if (!osSel || !verSel) return;
+      // Build { osType -> [versions sorted newest-first] } from VDATA
+      var osVerMap = {};
+      (VDATA.images || []).forEach(function(img) {
+        var sl = img.indexOf('/');
+        if (sl < 0) return;
+        var os = img.substring(0, sl), ver = img.substring(sl + 1);
+        if (!osVerMap[os]) osVerMap[os] = [];
+        osVerMap[os].push(ver);
+      });
+      Object.keys(osVerMap).forEach(function(os) {
+        osVerMap[os].sort(function(a, b) { return a > b ? -1 : 1; });
+      });
+      var osTypes = Object.keys(osVerMap).sort();
+      osTypes.forEach(function(os) {
+        var opt = document.createElement('option');
+        opt.value = os; opt.textContent = os;
+        osSel.appendChild(opt);
+      });
+      function populateVersions(os) {
+        verSel.innerHTML = '';
+        (osVerMap[os] || []).forEach(function(ver) {
+          var opt = document.createElement('option');
+          opt.value = os + '/' + ver; opt.textContent = ver;
+          verSel.appendChild(opt);
+        });
+        if (verSel.options.length) renderVhdImage(verSel.value);
+      }
+      osSel.addEventListener('change', function() { populateVersions(osSel.value); });
+      verSel.addEventListener('change', function() { renderVhdImage(verSel.value); });
+      if (osTypes.length) populateVersions(osTypes[0]);
+    })();
 
     // ── Container version selector ─────────────────────────────────────
     var vsel = document.getElementById('aks-cve-version-select');
