@@ -1123,7 +1123,7 @@ function Get-AksCveTabHtml {
         foreach ($img in $vhdImages) {
           $rpt  = $vhdReports[$img]
           $pkgs = @(if ($rpt.os_package_targets) { $rpt.os_package_targets } elseif ($rpt.packages) { $rpt.packages } else { @() })
-          $totalVhdActiveCves += ($pkgs | ForEach-Object { if ($_.active_cves) { $_.active_cves.Count } else { 0 } } | Measure-Object -Sum).Sum
+          $totalVhdActiveCves += ($pkgs | ForEach-Object { @($_.active_cves).Count } | Measure-Object -Sum).Sum
         }
         Log "VHD data summary: $($vhdImages.Count) images fetched, $totalVhdActiveCves total active CVE references across all packages"
         if ($totalVhdActiveCves -eq 0) {
@@ -1176,19 +1176,18 @@ function Get-AksCveTabHtml {
 
           $vActive10 = @($pkgTargets |
             Where-Object {
-              $pName = if ($_.package_name) { $_.package_name } elseif ($_.name) { $_.name } else { "" }
-              $_.active_cves -and $_.active_cves.Count -gt 0
+              $_.active_cves -and @($_.active_cves).Count -gt 0
             } |
-            Sort-Object { $_.active_cves.Count } -Descending |
+            Sort-Object { @($_.active_cves).Count } -Descending |
             Select-Object -First 10)
 
           $vTopArrJson = "[" + (($vActive10 | ForEach-Object {
             $pn  = if ($_.package_name) { $_.package_name } elseif ($_.name) { $_.name } else { "unknown" }
             $pv  = if ($_.package_version) { $_.package_version } elseif ($_.version) { $_.version } else { "" }
-            $mit = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 }
+            $mit = if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { @($_.mitigated_cves_from_previous_release).Count } else { 0 }
             $pnJ = $pn -replace '\\','\\' -replace '"','\"'
             $pvJ = $pv -replace '\\','\\' -replace '"','\"'
-            "[`"$pnJ`",`"$pvJ`",$($_.active_cves.Count),$mit]"
+            "[`"$pnJ`",`"$pvJ`",$(@($_.active_cves).Count),$mit]"
           }) -join ",") + "]"
 
           $vCveJsonParts = [System.Collections.Generic.List[string]]::new()
@@ -1226,8 +1225,8 @@ function Get-AksCveTabHtml {
           $img = $_
           $vhdRpt = $vhdReports[$img]
           $pkgT   = @(if ($vhdRpt.os_package_targets) { $vhdRpt.os_package_targets } elseif ($vhdRpt.packages) { $vhdRpt.packages } else { @() })
-          $actCnt = ($pkgT | ForEach-Object { if ($_.active_cves) { $_.active_cves.Count } else { 0 } } | Measure-Object -Sum).Sum
-          $mitCnt = ($pkgT | ForEach-Object { if ($_.PSObject.Properties['mitigated_cves_from_previous_release']) { $_.mitigated_cves_from_previous_release.Count } else { 0 } } | Measure-Object -Sum).Sum
+          $actCnt = ($pkgT | ForEach-Object { @($_.active_cves).Count } | Measure-Object -Sum).Sum
+          $mitCnt = ($pkgT | ForEach-Object { @($_.mitigated_cves_from_previous_release).Count } | Measure-Object -Sum).Sum
           [pscustomobject]@{ img=$img; active=$actCnt; mitigated=$mitCnt }
         } | Sort-Object { -$_.active } | Select-Object -First 10)
 
@@ -1265,9 +1264,11 @@ function Get-AksCveTabHtml {
 
     # ── BUILD HTML ──────────────────────────────────────────────────────────────
 
-    $vhdTabStyle       = "display:block"
+    $searchTabStyle    = "display:block"
+    $vhdTabStyle       = "display:none"
     $containerTabStyle = "display:none"
-    $vhdBtnActive      = "border-bottom:2px solid #f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);"
+    $searchBtnActive   = "border-bottom:2px solid #818cf8;color:#818cf8;background:rgba(99,102,241,0.08);"
+    $vhdBtnActive      = ""
     $contBtnActive     = ""
 
     # VHD unavailable notice (shown inside VHD panel when no data)
@@ -1298,15 +1299,39 @@ function Get-AksCveTabHtml {
 
   <!-- Sub-tab Navigation -->
   <div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:20px;">
-    <button id="aks-cve-btn-vhd" onclick="aksCveShowTab('vhd')"
-      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#e2e8f0;transition:all 0.15s;$vhdBtnActive">
-      &#128187; VHD Node Images
+    <button id="aks-cve-btn-search" onclick="aksCveShowTab('search')"
+      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#e2e8f0;transition:all 0.15s;$searchBtnActive">
+      &#128269; CVE Search
     </button>
     <button id="aks-cve-btn-containers" onclick="aksCveShowTab('containers')"
       style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$contBtnActive">
-      &#128230; Container Images
+      &#128230; AKS Containers
+    </button>
+    <button id="aks-cve-btn-vhd" onclick="aksCveShowTab('vhd')"
+      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$vhdBtnActive">
+      &#128187; VHD Node Images
     </button>
   </div>
+
+  <!-- ═══════════════════════ SEARCH TAB ═══════════════════════════ -->
+  <div id="aks-cve-panel-search" style="$searchTabStyle">
+    <div style="max-width:680px;margin:0 auto 32px;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:40px;margin-bottom:8px;">&#128269;</div>
+        <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">CVE Lookup</h2>
+        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS container releases and all VHD node images.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;">
+        <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
+          style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:inherit;font-size:14px;outline:none;" />
+        <button id="aks-cve-search-btn" onclick="aksCveSearch()"
+          style="padding:12px 22px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">
+          Search
+        </button>
+      </div>
+      <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;"></div>
+    </div>
+  </div><!-- /search panel -->
 
   <!-- ═══════════════════════════ VHD TAB ════════════════════════════ -->
   <div id="aks-cve-panel-vhd" style="$vhdTabStyle">
@@ -1453,25 +1478,7 @@ $initTopRowsHtml
 
   </div><!-- /containers panel -->
 
-  <!-- ═══════════════════════ UNIFIED CVE SEARCH ═══════════════════════ -->
-  <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
-    <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">&#128269; Search CVE — VHD &amp; Container Data</h3>
-    </div>
-    <div style="padding:14px 16px;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
-        <input id="aks-cve-search-input" type="text" placeholder="e.g. CVE-2025-23266" spellcheck="false"
-          style="flex:1;min-width:220px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;font-size:13px;outline:none;" />
-        <button id="aks-cve-search-btn" onclick="aksCveSearch()"
-          style="padding:8px 18px;border-radius:6px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
-          Search all $versionCount releases
-        </button>
-      </div>
-      <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;">
-        Enter a CVE ID to check its status across all $versionCount AKS container releases and all VHD node images.
-      </div>
-    </div>
-  </div>
+  <!-- search input/results live in #aks-cve-panel-search above -->
 
   <!-- Explorer link -->
   <div style="display:flex;justify-content:flex-end;padding:4px 0;">
@@ -1492,10 +1499,11 @@ $initTopRowsHtml
     }
 
     // ── Tab switching ──────────────────────────────────────────────────
-    var TAB_IDS = ['vhd','containers'];
+    var TAB_IDS = ['search','containers','vhd'];
     var TAB_COLORS = {
-      vhd:        {active:'border-bottom:2px solid #f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
-      containers: {active:'border-bottom:2px solid #93c5fd;color:#93c5fd;background:rgba(59,130,246,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'}
+      search:     {active:'border-bottom:2px solid #818cf8;color:#818cf8;background:rgba(99,102,241,0.08);',  inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
+      containers: {active:'border-bottom:2px solid #93c5fd;color:#93c5fd;background:rgba(59,130,246,0.08);', inactive:'border-bottom:none;color:#94a3b8;background:transparent;'},
+      vhd:        {active:'border-bottom:2px solid #f59e0b;color:#f59e0b;background:rgba(245,158,11,0.08);',  inactive:'border-bottom:none;color:#94a3b8;background:transparent;'}
     };
     window.aksCveShowTab = function(tab) {
       TAB_IDS.forEach(function(t) {
