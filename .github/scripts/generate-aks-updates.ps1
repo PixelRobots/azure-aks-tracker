@@ -1651,6 +1651,38 @@ $initTopRowsHtml
       }
 
       var out = '';
+      var showVhd = vhdImagesLoaded;
+      var showCtr = !noContainerHits;
+      var bothSections = showVhd && showCtr;
+      // Unique IDs for the section switcher
+      var _swTs = Date.now();
+      var vhdSectionId = 'vs-' + _swTs;
+      var ctrSectionId = 'cs-' + (_swTs + 1);
+      var vhdBtnId     = 'vb-' + _swTs;
+      var ctrBtnId     = 'cb-' + (_swTs + 1);
+      var switchFnName = 'aksSw_' + _swTs;
+
+      if (bothSections) {
+        out += '<script>function ' + switchFnName + '(w){'
+          + 'document.getElementById("' + vhdSectionId + '").style.display=w==="vhd"?"":"none";'
+          + 'document.getElementById("' + ctrSectionId + '").style.display=w==="ctr"?"":"none";'
+          + 'var vb=document.getElementById("' + vhdBtnId + '");'
+          + 'var cb=document.getElementById("' + ctrBtnId + '");'
+          + '[vb,cb].forEach(function(b,i){'
+          + 'var on=(i===0&&w==="vhd")||(i===1&&w==="ctr");'
+          + 'b.style.background=on?"rgba(99,102,241,0.3)":"rgba(255,255,255,0.04)";'
+          + 'b.style.color=on?"#c4b5fd":"#6b7280";'
+          + 'b.style.borderColor=on?"rgba(139,92,246,0.6)":"rgba(255,255,255,0.1)";'
+          + '});'
+          + '}<\/script>';
+
+        out += '<div style="display:flex;gap:6px;margin-bottom:14px;">'
+          + '<button id="' + vhdBtnId + '" onclick="' + switchFnName + '(\'vhd\')" '
+          + 'style="padding:6px 16px;border-radius:6px;border:1px solid rgba(139,92,246,0.6);background:rgba(99,102,241,0.3);color:#c4b5fd;font-size:12px;font-weight:600;cursor:pointer;">&#128187; VHD Node Images</button>'
+          + '<button id="' + ctrBtnId + '" onclick="' + switchFnName + '(\'ctr\')" '
+          + 'style="padding:6px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#6b7280;font-size:12px;font-weight:600;cursor:pointer;">&#128230; AKS Releases</button>'
+          + '</div>';
+      }
 
       // VHD node image table — always render when VHD data is loaded
       if (vhdImagesLoaded) {
@@ -1670,7 +1702,7 @@ $initTopRowsHtml
             : '<strong style="color:#34d399;">' + cveLink + '</strong> is <strong style="color:#34d399;">patched</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was previously detected.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' further image' + (cleanCount===1?'':'s') + ' had no trace of this CVE at all.)</span>' : '');
 
         var bannerRadius = '8px 8px 0 0'; // table always shown below banner
-        out += '<div style="margin-bottom:16px;">'
+        out += '<div' + (bothSections ? ' id="' + vhdSectionId + '"' : '') + ' style="margin-bottom:16px;">'
           + '<div style="padding:10px 14px;background:' + sumBg + ';border:1px solid ' + sumBd + ';border-radius:' + bannerRadius + ';font-size:13px;">'
           + '<span style="font-size:13px;font-weight:700;color:#f59e0b;margin-right:10px;">&#128187; VHD Node Images</span>'
           + sumIco + ' ' + sumTxt
@@ -1793,20 +1825,21 @@ $initTopRowsHtml
         var sbd  = activeLatest ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
         var sico = activeLatest ? '&#x1F534;' : '&#x2705;';
         var stxt = activeLatest
-          ? '<strong style="color:#f87171;">' + cveLink + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).'
-          : '<strong style="color:#34d399;">' + cveLink + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest container release (<strong>' + esc(latestVer) + '</strong>).';
+          ? '<strong style="color:#f87171;">' + cveLink + '</strong> is <strong style="color:#f87171;">still unpatched</strong> in the latest AKS release (<strong>' + esc(latestVer) + '</strong>).'
+          : '<strong style="color:#34d399;">' + cveLink + '</strong> is <strong style="color:#34d399;">not active</strong> in the latest AKS release (<strong>' + esc(latestVer) + '</strong>).';
 
         var pills = '';
         if (lastActive)  pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(220,38,38,0.12);color:#f87171;border-radius:4px;font-size:12px;font-weight:600;">&#x1F534; Last active: ' + esc(lastActive) + '</span>';
         pills += '<span style="display:inline-block;padding:3px 10px;margin:2px;background:rgba(255,255,255,0.08);color:#94a3b8;border-radius:4px;font-size:12px;">Affected ' + activeRels + ' release' + (activeRels === 1 ? '' : 's') + '</span>';
 
-        out += '<div style="margin-bottom:12px;padding:12px 16px;background:' + sbg + ';border:1px solid ' + sbd + ';border-radius:8px;">'
-          + '<div style="font-size:13px;font-weight:600;color:#93c5fd;margin-bottom:6px;">&#128230; Container Releases</div>'
+        out += (bothSections ? '<div id="' + ctrSectionId + '" style="display:none;">' : '')
+          + '<div style="margin-bottom:12px;padding:12px 16px;background:' + sbg + ';border:1px solid ' + sbd + ';border-radius:8px;">'
+          + '<div style="font-size:13px;font-weight:600;color:#93c5fd;margin-bottom:6px;">&#128230; AKS Releases</div>'
           + '<div style="font-size:14px;margin-bottom:8px;">' + sico + ' ' + stxt + '</div>'
           + '<div>' + pills + '</div></div>';
 
         out += '<div style="overflow-x:auto;">'
-          + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Container release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; all ' + allVersions.length + ' releases, newest first:</div>'
+          + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">AKS release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; all ' + allVersions.length + ' releases, newest first:</div>'
           + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
           + '<thead><tr style="background:rgba(255,255,255,0.05);">'
           + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>'
@@ -1843,7 +1876,8 @@ $initTopRowsHtml
             + '</tr>';
         });
 
-        out += '</tbody></table></div>';
+        out += '</tbody></table></div>'
+          + (bothSections ? '</div>' : '');
       }
 
       outEl.innerHTML = out;
