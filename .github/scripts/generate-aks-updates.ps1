@@ -1390,19 +1390,14 @@ function Get-AksCveTabHtml {
           <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">Node OS</label>
           <div style="position:relative;">
             <select id="aks-vhd-os-select"
-              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:210px;">
+              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:#1e293b;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:210px;">
             </select>
             <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">Version</label>
-          <div style="position:relative;">
-            <select id="aks-vhd-ver-select"
-              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:160px;">
-            </select>
-            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
-          </div>
+          <span style="font-size:12px;font-weight:600;color:#9ca3af;">Version</span>
+          <span id="aks-vhd-ver-label" style="font-size:12px;color:#e2e8f0;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 10px;">&#8212;</span>
         </div>
         <div style="display:flex;gap:16px;margin-left:auto;flex-wrap:wrap;align-items:center;">
           <span style="font-size:12px;color:#94a3b8;">Active CVEs:&nbsp;<strong id="aks-vhd-stat-active" style="color:#f87171;">&#8212;</strong></span>
@@ -1442,7 +1437,7 @@ function Get-AksCveTabHtml {
           <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">AKS Release</label>
           <div style="position:relative;">
             <select id="aks-cve-version-select"
-              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:180px;">
+              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:#1e293b;color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:180px;">
               $versionOptions
             </select>
             <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
@@ -1516,10 +1511,13 @@ $initTopRowsHtml
       });
     };
 
-    // ── VHD OS type / version cascade ─────────────────────────────────
+    // ── VHD OS type selector ───────────────────────────────────────────
     function renderVhdImage(imgName) {
       var d = VDATA.byImage[imgName];
       if (!d) return;
+      var sl = imgName.indexOf('/');
+      var verLabel = document.getElementById('aks-vhd-ver-label');
+      if (verLabel) verLabel.textContent = sl >= 0 ? imgName.substring(sl + 1) : imgName;
       var sa = document.getElementById('aks-vhd-stat-active');
       var sm = document.getElementById('aks-vhd-stat-mitigated');
       var sd = document.getElementById('aks-vhd-stat-date');
@@ -1542,38 +1540,24 @@ $initTopRowsHtml
     }
     (function() {
       var osSel = document.getElementById('aks-vhd-os-select');
-      var verSel = document.getElementById('aks-vhd-ver-select');
-      if (!osSel || !verSel) return;
-      // Build { osType -> [versions sorted newest-first] } from VDATA
-      var osVerMap = {};
+      if (!osSel) return;
+      // Build { osType -> latest full image key } from VDATA.images
+      var osToImg = {};
       (VDATA.images || []).forEach(function(img) {
         var sl = img.indexOf('/');
         if (sl < 0) return;
-        var os = img.substring(0, sl), ver = img.substring(sl + 1);
-        if (!osVerMap[os]) osVerMap[os] = [];
-        osVerMap[os].push(ver);
+        var os = img.substring(0, sl);
+        // Keep the entry with the lexically largest version (latest)
+        if (!osToImg[os] || img > osToImg[os]) osToImg[os] = img;
       });
-      Object.keys(osVerMap).forEach(function(os) {
-        osVerMap[os].sort(function(a, b) { return a > b ? -1 : 1; });
-      });
-      var osTypes = Object.keys(osVerMap).sort();
+      var osTypes = Object.keys(osToImg).sort();
       osTypes.forEach(function(os) {
         var opt = document.createElement('option');
-        opt.value = os; opt.textContent = os;
+        opt.value = osToImg[os]; opt.textContent = os;
         osSel.appendChild(opt);
       });
-      function populateVersions(os) {
-        verSel.innerHTML = '';
-        (osVerMap[os] || []).forEach(function(ver) {
-          var opt = document.createElement('option');
-          opt.value = os + '/' + ver; opt.textContent = ver;
-          verSel.appendChild(opt);
-        });
-        if (verSel.options.length) renderVhdImage(verSel.value);
-      }
-      osSel.addEventListener('change', function() { populateVersions(osSel.value); });
-      verSel.addEventListener('change', function() { renderVhdImage(verSel.value); });
-      if (osTypes.length) populateVersions(osTypes[0]);
+      osSel.addEventListener('change', function() { renderVhdImage(osSel.value); });
+      if (osSel.options.length) renderVhdImage(osSel.value);
     })();
 
     // ── Container version selector ─────────────────────────────────────
