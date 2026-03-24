@@ -1696,7 +1696,7 @@ $initTopRowsHtml
         var sumIco = hasActive ? '&#x1F534;' : '&#x2705;';
         var cleanCount = totalImgs - vhdImgNames.length;
         var sumTxt = noVhdHits
-          ? '<strong style="color:#34d399;">' + cveLink + '</strong> was <strong style="color:#34d399;">not detected</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image scans &mdash; all nodes appear clean. <span style="color:#6b7280;font-size:12px;">(Not detected means the CVE did not appear as an OS-level package vulnerability on those nodes. It may use a different package name, may not apply to that distro, or may have been patched before tracked history began.)</span>'
+          ? '<strong style="color:#34d399;">' + cveLink + '</strong> left <strong style="color:#34d399;">no trace</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image scans &mdash; all nodes appear clean. <span style="color:#6b7280;font-size:12px;">(No trace means the CVE did not appear as an OS-level package finding. It may not apply to this distro, use a different package name, or predate tracked history.)</span>'
           : hasActive
             ? '<strong style="color:#f87171;">' + cveLink + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' image' + (cleanCount===1?'':'s') + ' had no trace of this CVE in their scan data.)</span>' : '')
             : '<strong style="color:#34d399;">' + cveLink + '</strong> is <strong style="color:#34d399;">patched</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was previously detected.' + (cleanCount > 0 ? ' <span style="color:#6b7280;font-size:12px;">(' + cleanCount + ' further image' + (cleanCount===1?'':'s') + ' had no trace of this CVE at all.)</span>' : '');
@@ -1793,7 +1793,7 @@ $initTopRowsHtml
             badge = '<span style="display:inline-block;padding:2px 10px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-weight:700;font-size:12px;white-space:nowrap;">&#x2705; Patched</span>';
             pkgs  = entry.m.map(function(p) { return '<code style="background:rgba(52,211,153,0.1);color:#6ee7b7;padding:1px 6px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(p) + '</code>'; }).join('');
           } else {
-            badge = '<span style="display:inline-block;padding:2px 10px;background:rgba(255,255,255,0.05);color:#6b7280;border-radius:4px;font-weight:600;font-size:12px;white-space:nowrap;" title="CVE not detected in this image scan — node is clean.">&#x2796; Not detected</span>';
+            badge = '<span style="display:inline-block;padding:2px 10px;background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.18);border-radius:4px;font-weight:500;font-size:12px;white-space:nowrap;font-style:italic;" title="No trace of this CVE was found in this image\'s scan data. The CVE may not apply to this distro, use a different package name, or may predate tracked history.">&#x25CB; No trace found</span>';
             pkgs  = '';
           }
           out += '<tr ' + rowAttr + ' data-os="' + esc(osName) + '" style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + rowStyle + '">'
@@ -1855,7 +1855,7 @@ $initTopRowsHtml
           var badge;
           var rowBg  = '';
           if (!h) {
-            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,0.06);color:#6b7280;border-radius:4px;font-weight:600;font-size:12px;" title="This CVE was not detected in this release — the container or OS package may not be affected, or it was patched before this tracking period.">&#x2796; Not detected</span>';
+            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(148,163,184,0.08);color:#94a3b8;border:1px solid rgba(148,163,184,0.18);border-radius:4px;font-weight:500;font-size:12px;font-style:italic;" title="No trace of this CVE was found in this AKS release scan. It may not apply to this release, use a different package name, or was patched before tracking began.">&#x25CB; No trace found</span>';
           } else if (isAct) {
             badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>';
             rowBg  = 'background:rgba(220,38,38,0.05);';
