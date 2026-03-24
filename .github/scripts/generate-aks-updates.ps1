@@ -1749,7 +1749,7 @@ $initTopRowsHtml
           + '<div>' + pills + '</div></div>';
 
         out += '<div style="overflow-x:auto;">'
-          + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Container release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; newest first, only affected releases shown:</div>'
+          + '<div style="margin-bottom:6px;font-size:12px;color:#94a3b8;">Container release history for <strong style="color:#60a5fa;">' + esc(rawId) + '</strong> &mdash; all ' + allVersions.length + ' releases, newest first:</div>'
           + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
           + '<thead><tr style="background:rgba(255,255,255,0.05);">'
           + '<th style="padding:7px 10px;color:#9ca3af;font-weight:600;text-align:left;">Version</th>'
@@ -1760,18 +1760,25 @@ $initTopRowsHtml
 
         allVersions.slice().reverse().forEach(function(ver) {
           var h = hits[ver];
-          if (!h) return;
-          var isAct  = h.a.length > 0;
-          var badge  = isAct
-            ? '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>'
-            : '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;font-size:12px;">&#x2705; Fixed</span>';
-          var aNames = h.a.map(function(c) {
+          var isAct  = h && h.a.length > 0;
+          var isMit  = h && !isAct && h.m.length > 0;
+          var badge;
+          var rowBg  = '';
+          if (!h) {
+            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(255,255,255,0.06);color:#6b7280;border-radius:4px;font-weight:600;font-size:12px;">&#x2796; Not affected</span>';
+          } else if (isAct) {
+            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:600;font-size:12px;">&#x1F534; Active</span>';
+            rowBg  = 'background:rgba(220,38,38,0.05);';
+          } else {
+            badge  = '<span style="display:inline-block;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border-radius:4px;font-weight:600;font-size:12px;">&#x2705; Fixed</span>';
+          }
+          var aNames = h ? h.a.map(function(c) {
             return '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(c) + '</code>';
-          }).join('');
-          var mNames = h.m.map(function(c) {
+          }).join('') : '';
+          var mNames = h ? h.m.map(function(c) {
             return '<code style="background:rgba(16,185,129,0.12);padding:1px 5px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;color:#34d399;">' + esc(c) + '</code>';
-          }).join('');
-          out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + (isAct ? 'background:rgba(220,38,38,0.05);' : '') + '">'
+          }).join('') : '';
+          out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + '">'
             + '<td style="padding:7px 10px;font-weight:600;color:#e2e8f0;white-space:nowrap;">' + esc(ver) + '</td>'
             + '<td style="padding:7px 10px;text-align:center;">' + badge + '</td>'
             + '<td style="padding:7px 10px;">' + (aNames || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
