@@ -1370,9 +1370,7 @@ function Get-AksCveTabHtml {
         <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
           style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:inherit;font-size:14px;outline:none;" />
         <button id="aks-cve-search-btn" onclick="aksCveSearch()"
-          style="padding:12px 22px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">
-          Search
-        </button>
+          style="padding:12px 22px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">Search</button>
       </div>
       <div id="aks-cve-search-results" style="font-size:13px;color:#94a3b8;"></div>
     </div>
