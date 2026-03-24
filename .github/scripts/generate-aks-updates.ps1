@@ -1255,12 +1255,55 @@ function Get-AksCveTabHtml {
           $label  = if ($parts.Count -gt 1) { "$($parts[0]) ($($parts[1]))" } else { $_ }
           "<option value=""$_""$sel>$label</option>"
         }) -join "`n        "
+
+        # ── Save VHD data to cache so other runs can reuse it ─────────────
+        try {
+          $vhdCacheObj = [ordered]@{
+            jsVhdImagesArr    = $jsVhdImagesArr
+            vhdByImageJson    = $vhdByImageJson
+            vhdInitActive     = $vhdInitActive
+            vhdInitMitigated  = $vhdInitMitigated
+            vhdInitAffected   = $vhdInitAffected
+            vhdInitTotal      = $vhdInitTotal
+            vhdInitDate       = $vhdInitDate
+            vhdInitImage      = $vhdInitImage
+            vhdInitTopRowsHtml = $vhdInitTopRowsHtml
+            vhdImageOptions   = $vhdImageOptions
+            cachedAt          = (Get-Date -Format 'o')
+          }
+          $vhdCacheObj | ConvertTo-Json -Depth 2 -Compress | Set-Content -LiteralPath 'vhd-cache.json' -Encoding UTF8
+          Log "VHD data saved to vhd-cache.json ($($vhdImages.Count) images, $vhdInitActive active CVEs)"
+        } catch {
+          Write-Warning "Failed to write VHD cache: $_"
+        }
       }
     }
     catch {
       Write-Warning "VHD node-image CVE fetch failed (non-fatal): $_"
     }
     } # end if ($script:RefreshVhdCve)
+
+    # ── Load VHD data from cache when not doing a live refresh ─────────────────
+    if (-not $vhdAvailable -and (Test-Path 'vhd-cache.json')) {
+      try {
+        Log "Loading VHD data from cache (vhd-cache.json)..."
+        $vhdCacheObj       = Get-Content 'vhd-cache.json' -Raw | ConvertFrom-Json
+        $jsVhdImagesArr    = $vhdCacheObj.jsVhdImagesArr
+        $vhdByImageJson    = $vhdCacheObj.vhdByImageJson
+        $vhdInitActive     = [int]$vhdCacheObj.vhdInitActive
+        $vhdInitMitigated  = [int]$vhdCacheObj.vhdInitMitigated
+        $vhdInitAffected   = [int]$vhdCacheObj.vhdInitAffected
+        $vhdInitTotal      = [int]$vhdCacheObj.vhdInitTotal
+        $vhdInitDate       = $vhdCacheObj.vhdInitDate
+        $vhdInitImage      = $vhdCacheObj.vhdInitImage
+        $vhdInitTopRowsHtml = $vhdCacheObj.vhdInitTopRowsHtml
+        $vhdImageOptions   = $vhdCacheObj.vhdImageOptions
+        $vhdAvailable      = $true
+        Log "VHD cache loaded (cached $($vhdCacheObj.cachedAt)): $vhdInitActive active CVEs across $vhdInitTotal images"
+      } catch {
+        Write-Warning "Failed to load VHD cache: $_"
+      }
+    }
 
     # ── BUILD HTML ──────────────────────────────────────────────────────────────
 

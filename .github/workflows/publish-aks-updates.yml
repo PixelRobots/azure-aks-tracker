@@ -64,6 +64,24 @@ jobs:
             Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=false"
           }
 
+      - name: Commit VHD cache
+        if: steps.gen.conclusion == 'success'
+        run: |
+          if [ -f vhd-cache.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add vhd-cache.json
+            if git diff --staged --quiet; then
+              echo "VHD cache unchanged — nothing to commit."
+            else
+              git commit -m "chore: update VHD CVE cache [skip ci]"
+              git push
+              echo "VHD cache committed and pushed."
+            fi
+          else
+            echo "No vhd-cache.json produced — skipping cache commit."
+          fi
+
       - name: Get current WP page
         id: get
         if: steps.gen.conclusion == 'success'
