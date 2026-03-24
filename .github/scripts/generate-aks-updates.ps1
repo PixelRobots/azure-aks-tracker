@@ -1366,11 +1366,11 @@ function Get-AksCveTabHtml {
         <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">&#128269; CVE Lookup</h2>
         <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS releases and the last 3 VHD builds per node OS type.</p>
       </div>
-      <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:10px;">
+      <div style="display:flex;gap:8px;height:48px;margin-bottom:10px;">
         <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
-          style="flex:1;height:46px;box-sizing:border-box;padding:0 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:inherit;font-size:14px;outline:none;" />
+          style="flex:1;min-width:0;width:100%;height:100%;box-sizing:border-box;padding:0 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:inherit;font-size:14px;outline:none;appearance:none;-webkit-appearance:none;" />
         <button id="aks-cve-search-btn" onclick="aksCveSearch()"
-          style="height:46px;box-sizing:border-box;padding:0 22px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">Search</button>
+          style="height:100%;box-sizing:border-box;padding:0 22px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">Search</button>
       </div>
       <div style="text-align:right;margin-bottom:20px;">
         <a href="$cveExplorerUrl" target="_blank" rel="noopener" style="font-size:12px;color:#6b7280;text-decoration:none;">Need more detail? Open the full CVE Explorer &nbsp;&#8599;</a>
