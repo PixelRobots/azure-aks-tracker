@@ -1626,37 +1626,64 @@ $initTopRowsHtml
 
       var out = '';
 
-      // VHD summary section
+      // VHD node image table
       if (!noVhdHits) {
-        var vhdImgNames = Object.keys(vhdHits);
-        var vhdActiveImgs   = vhdImgNames.filter(function(i) { return vhdHits[i].a.length > 0; });
-        var vhdMitigImgs    = vhdImgNames.filter(function(i) { return vhdHits[i].m.length > 0 && vhdHits[i].a.length === 0; });
-        var vhdStatusBg  = vhdActiveImgs.length > 0 ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
-        var vhdStatusBd  = vhdActiveImgs.length > 0 ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
-        var vhdStatusIco = vhdActiveImgs.length > 0 ? '&#x1F534;' : '&#x2705;';
-        var vhdStatusTxt = vhdActiveImgs.length > 0
-          ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">active</strong> in ' + vhdActiveImgs.length + ' VHD node image(s).'
-          : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not currently active</strong> in any VHD node image.';
-        out += '<div style="margin-bottom:12px;padding:12px 16px;background:' + vhdStatusBg + ';border:1px solid ' + vhdStatusBd + ';border-radius:8px;">'
-          + '<div style="font-size:13px;font-weight:600;color:#f59e0b;margin-bottom:6px;">&#128187; VHD Node Images</div>'
-          + '<div style="font-size:13px;">' + vhdStatusIco + ' ' + vhdStatusTxt + '</div>';
-        if (vhdActiveImgs.length > 0) {
-          out += '<div style="margin-top:8px;">';
-          vhdActiveImgs.forEach(function(img) {
-            var label = img.indexOf('/') !== -1 ? img.split('/')[0] : img;
-            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(220,38,38,0.15);color:#fca5a5;border-radius:4px;font-size:12px;" title="' + esc(img) + '">' + esc(label) + '</span>';
-          });
-          out += '</div>';
-        }
-        if (vhdMitigImgs.length > 0) {
-          out += '<div style="margin-top:6px;font-size:12px;color:#94a3b8;">Mitigated in: ';
-          vhdMitigImgs.forEach(function(img) {
-            var label = img.indexOf('/') !== -1 ? img.split('/')[0] : img;
-            out += '<span style="display:inline-block;padding:2px 8px;margin:2px;background:rgba(16,185,129,0.12);color:#34d399;border-radius:4px;font-size:12px;" title="' + esc(img) + '">' + esc(label) + '</span>';
-          });
-          out += '</div>';
-        }
-        out += '</div>';
+        var vhdImgNames   = Object.keys(vhdHits);
+        var vhdActiveImgs = vhdImgNames.filter(function(i) { return vhdHits[i].a.length > 0; });
+        var hasActive     = vhdActiveImgs.length > 0;
+
+        var sumBg  = hasActive ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
+        var sumBd  = hasActive ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
+        var sumIco = hasActive ? '&#x1F534;' : '&#x2705;';
+        var sumTxt = hasActive
+          ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.'
+          : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in any VHD node image scanned (' + vhdImgNames.length + ' checked).';
+
+        out += '<div style="margin-bottom:16px;">'
+          + '<div style="padding:10px 14px;background:' + sumBg + ';border:1px solid ' + sumBd + ';border-radius:8px 8px 0 0;font-size:13px;">'
+          + '<span style="font-size:13px;font-weight:700;color:#f59e0b;margin-right:10px;">&#128187; VHD Node Images</span>'
+          + sumIco + ' ' + sumTxt
+          + '</div>'
+          + '<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.1);border-top:none;border-radius:0 0 8px 8px;">'
+          + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+          + '<thead><tr style="background:rgba(255,255,255,0.05);">'
+          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">Node OS</th>'
+          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">VHD Version</th>'
+          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:center;white-space:nowrap;">Status</th>'
+          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;">Affected packages</th>'
+          + '</tr></thead><tbody>';
+
+        // Sort: active images first, then mitigated
+        var sortedVhdImgs = vhdImgNames.slice().sort(function(a, b) {
+          var aAct = vhdHits[a].a.length > 0 ? 0 : 1;
+          var bAct = vhdHits[b].a.length > 0 ? 0 : 1;
+          return aAct - bAct || a.localeCompare(b);
+        });
+
+        sortedVhdImgs.forEach(function(img) {
+          var entry  = vhdHits[img];
+          var sl     = img.indexOf('/');
+          var osName = sl >= 0 ? img.substring(0, sl) : img;
+          var ver    = sl >= 0 ? img.substring(sl + 1) : '—';
+          var isAct  = entry.a.length > 0;
+          var rowBg  = isAct ? 'background:rgba(220,38,38,0.05);' : '';
+          var badge  = isAct
+            ? '<span style="display:inline-block;padding:2px 10px;background:rgba(220,38,38,0.2);color:#f87171;border-radius:4px;font-weight:700;font-size:12px;white-space:nowrap;">&#x1F534; Active</span>'
+            : '<span style="display:inline-block;padding:2px 10px;background:rgba(16,185,129,0.15);color:#34d399;border-radius:4px;font-weight:700;font-size:12px;white-space:nowrap;">&#x2705; Mitigated</span>';
+          var pkgs = (isAct ? entry.a : entry.m).map(function(p) {
+            var pkgBg = isAct ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.1)';
+            var pkgCl = isAct ? '#fca5a5' : '#6ee7b7';
+            return '<code style="background:' + pkgBg + ';color:' + pkgCl + ';padding:1px 6px;border-radius:3px;font-size:11px;display:inline-block;margin:1px;">' + esc(p) + '</code>';
+          }).join('');
+          out += '<tr style="border-top:1px solid rgba(255,255,255,0.06);' + rowBg + '">'
+            + '<td style="padding:8px 12px;font-weight:700;color:#e2e8f0;white-space:nowrap;">' + esc(osName) + '</td>'
+            + '<td style="padding:8px 12px;font-family:monospace;font-size:12px;color:#93c5fd;white-space:nowrap;">' + esc(ver) + '</td>'
+            + '<td style="padding:8px 12px;text-align:center;">' + badge + '</td>'
+            + '<td style="padding:8px 12px;">' + (pkgs || '<span style="color:#6b7280;">&mdash;</span>') + '</td>'
+            + '</tr>';
+        });
+
+        out += '</tbody></table></div></div>';
       }
 
       // Container release history
