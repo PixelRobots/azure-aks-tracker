@@ -1637,8 +1637,10 @@ $initTopRowsHtml
 
       var noContainerHits = Object.keys(hits).length === 0;
       var noVhdHits       = Object.keys(vhdHits).length === 0;
+      var vhdImagesLoaded = (VDATA.images || []).length > 0;
 
-      if (noContainerHits && noVhdHits) {
+      // Only short-circuit if there's genuinely nothing to show at all
+      if (noContainerHits && noVhdHits && !vhdImagesLoaded) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
           + '&#9989; <strong>' + esc(rawId) + '</strong> was not found in any of the '
           + allVersions.length + ' AKS container releases or any VHD node images. It may not affect AKS.</div>';
@@ -1647,32 +1649,37 @@ $initTopRowsHtml
 
       var out = '';
 
-      // VHD node image table
-      if (!noVhdHits) {
+      // VHD node image table — always render when VHD data is loaded
+      if (vhdImagesLoaded) {
         var vhdImgNames   = Object.keys(vhdHits);
         var vhdActiveImgs = vhdImgNames.filter(function(i) { return vhdHits[i].a.length > 0; });
         var hasActive     = vhdActiveImgs.length > 0;
+        var totalImgs     = (VDATA.images || []).length;
 
         var sumBg  = hasActive ? 'rgba(220,38,38,0.12)' : 'rgba(16,185,129,0.1)';
         var sumBd  = hasActive ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.25)';
         var sumIco = hasActive ? '&#x1F534;' : '&#x2705;';
-        var sumTxt = hasActive
-          ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.'
-          : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">not active</strong> in any VHD node image scanned (' + vhdImgNames.length + ' checked).';
+        var sumTxt = noVhdHits
+          ? '<strong style="color:#34d399;">' + esc(rawId) + '</strong> was <strong style="color:#34d399;">not found</strong> in any of the <strong>' + totalImgs + '</strong> VHD node image builds scanned.'
+          : hasActive
+            ? '<strong style="color:#f87171;">' + esc(rawId) + '</strong> is <strong style="color:#f87171;">still active</strong> in <strong>' + vhdActiveImgs.length + '</strong> of ' + vhdImgNames.length + ' VHD node image(s) scanned.'
+            : '<strong style="color:#34d399;">' + esc(rawId) + '</strong> is <strong style="color:#34d399;">mitigated</strong> in all ' + vhdImgNames.length + ' VHD node image(s) where it was found.';
 
+        var bannerRadius = noVhdHits ? '8px' : '8px 8px 0 0';
         out += '<div style="margin-bottom:16px;">'
-          + '<div style="padding:10px 14px;background:' + sumBg + ';border:1px solid ' + sumBd + ';border-radius:8px 8px 0 0;font-size:13px;">'
+          + '<div style="padding:10px 14px;background:' + sumBg + ';border:1px solid ' + sumBd + ';border-radius:' + bannerRadius + ';font-size:13px;">'
           + '<span style="font-size:13px;font-weight:700;color:#f59e0b;margin-right:10px;">&#128187; VHD Node Images</span>'
           + sumIco + ' ' + sumTxt
-          + '</div>'
-          + '<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.1);border-top:none;border-radius:0 0 8px 8px;">'
-          + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
-          + '<thead><tr style="background:rgba(255,255,255,0.05);">'
-          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">Node OS</th>'
-          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">VHD Version</th>'
-          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:center;white-space:nowrap;">Status</th>'
-          + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;">Affected packages</th>'
-          + '</tr></thead><tbody>';
+          + '</div>';
+        if (!noVhdHits) {
+          out += '<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.1);border-top:none;border-radius:0 0 8px 8px;">'
+            + '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+            + '<thead><tr style="background:rgba(255,255,255,0.05);">'
+            + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">Node OS</th>'
+            + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;white-space:nowrap;">VHD Version</th>'
+            + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:center;white-space:nowrap;">Status</th>'
+            + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;">Affected packages</th>'
+            + '</tr></thead><tbody>';
 
         // Sort: active first, then newest version first within same status
         var sortedVhdImgs = vhdImgNames.slice().sort(function(a, b) {
@@ -1706,7 +1713,9 @@ $initTopRowsHtml
             + '</tr>';
         });
 
-        out += '</tbody></table></div></div>';
+          out += '</tbody></table></div>';
+        }
+        out += '</div>';
       }
 
       // Container release history
