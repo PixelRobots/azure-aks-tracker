@@ -1847,6 +1847,11 @@ $initTopRowsHtml
       }
 
       outEl.innerHTML = out;
+      // <script> tags injected via innerHTML are not executed by the browser —
+      // manually eval each one so filter functions (vhdApply_*) are defined.
+      Array.prototype.forEach.call(outEl.querySelectorAll('script'), function(s) {
+        try { (new Function(s.textContent))(); } catch(e) { /* ignore */ }
+      });
     };
 
     document.getElementById('aks-cve-search-input').addEventListener('keydown', function(e) {
