@@ -1051,29 +1051,31 @@ function Get-AksCveTabHtml {
       Log "  VHD raw entries from index: $($rawEntries.Count) total"
 
       # Partition entries into full-path (type/version) and bare image-type names.
-      # When the _index returns full "{type}/{version}" paths it includes ALL historical
-      # versions — group by image type and keep only the latest version per type so we
-      # make exactly one scan-report request per image type.
-      $typeLatestMap = [ordered]@{}
+      # Keep the last $VHD_HISTORY_PER_OS versions per OS type (newest first) so the
+      # browse tab and CVE search cover recent history, not just a single snapshot.
+      $VHD_HISTORY_PER_OS = 3
+      $typeVersionsMap = [ordered]@{}   # OS -> [all versions found]
       $bareNames     = [System.Collections.Generic.List[string]]::new()
       foreach ($entry in $rawEntries) {
         if ($entry -match '^([^/]+)/(.+)$') {
           $imgType = $Matches[1]
           $imgVer  = $Matches[2]
-          if (-not $typeLatestMap.Contains($imgType)) {
-            $typeLatestMap[$imgType] = $imgVer
-          } elseif ([string]::CompareOrdinal($imgVer, $typeLatestMap[$imgType]) -gt 0) {
-            $typeLatestMap[$imgType] = $imgVer
+          if (-not $typeVersionsMap.Contains($imgType)) {
+            $typeVersionsMap[$imgType] = [System.Collections.Generic.List[string]]::new()
           }
+          $typeVersionsMap[$imgType].Add($imgVer)
         } else {
           $bareNames.Add($entry)
         }
       }
 
       $vhdImages = [System.Collections.Generic.List[string]]::new()
-      foreach ($imgType in $typeLatestMap.Keys) {
-        Log "  Using latest for ${imgType}: $($typeLatestMap[$imgType])"
-        $vhdImages.Add("$imgType/$($typeLatestMap[$imgType])")
+      foreach ($imgType in $typeVersionsMap.Keys) {
+        $topVersions = @($typeVersionsMap[$imgType] | Sort-Object -Descending) | Select-Object -First $VHD_HISTORY_PER_OS
+        foreach ($ver in $topVersions) {
+          Log "  Queuing ${imgType}: $ver"
+          $vhdImages.Add("$imgType/$ver")
+        }
       }
 
       # For bare image-type names, look up the latest available version from the per-image index.
@@ -1363,7 +1365,7 @@ function Get-AksCveTabHtml {
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:40px;margin-bottom:8px;">&#128269;</div>
         <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">CVE Lookup</h2>
-        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS container releases and all VHD node images.</p>
+        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS container releases and the last 3 VHD builds per node OS type.</p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;">
         <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
@@ -1396,8 +1398,13 @@ function Get-AksCveTabHtml {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <span style="font-size:12px;font-weight:600;color:#9ca3af;">Version</span>
-          <span id="aks-vhd-ver-label" style="font-size:12px;color:#e2e8f0;background:#1e293b;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 10px;">&#8212;</span>
+          <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">Version</label>
+          <div style="position:relative;">
+            <select id="aks-vhd-ver-select"
+              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:#1e293b;color:#e2e8f0;font-size:13px;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:160px;">
+            </select>
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
+          </div>
         </div>
         <div style="display:flex;gap:16px;margin-left:auto;flex-wrap:wrap;align-items:center;">
           <span style="font-size:12px;color:#94a3b8;">Active CVEs:&nbsp;<strong id="aks-vhd-stat-active" style="color:#f87171;">&#8212;</strong></span>
@@ -1511,13 +1518,10 @@ $initTopRowsHtml
       });
     };
 
-    // ── VHD OS type selector ───────────────────────────────────────────
+    // ── VHD OS type / version cascade ─────────────────────────────────
     function renderVhdImage(imgName) {
       var d = VDATA.byImage[imgName];
       if (!d) return;
-      var sl = imgName.indexOf('/');
-      var verLabel = document.getElementById('aks-vhd-ver-label');
-      if (verLabel) verLabel.textContent = sl >= 0 ? imgName.substring(sl + 1) : imgName;
       var sa = document.getElementById('aks-vhd-stat-active');
       var sm = document.getElementById('aks-vhd-stat-mitigated');
       var sd = document.getElementById('aks-vhd-stat-date');
@@ -1539,25 +1543,42 @@ $initTopRowsHtml
         '<tr><td colspan="4" style="padding:12px;text-align:center;color:#6b7280;">No package CVE data for this image.</td></tr>';
     }
     (function() {
-      var osSel = document.getElementById('aks-vhd-os-select');
-      if (!osSel) return;
-      // Build { osType -> latest full image key } from VDATA.images
-      var osToImg = {};
+      var osSel  = document.getElementById('aks-vhd-os-select');
+      var verSel = document.getElementById('aks-vhd-ver-select');
+      if (!osSel || !verSel) return;
+      // Build { osType -> [img keys sorted newest-first] } from VDATA.images
+      var osToImgs = {};
       (VDATA.images || []).forEach(function(img) {
         var sl = img.indexOf('/');
         if (sl < 0) return;
         var os = img.substring(0, sl);
-        // Keep the entry with the lexically largest version (latest)
-        if (!osToImg[os] || img > osToImg[os]) osToImg[os] = img;
+        if (!osToImgs[os]) osToImgs[os] = [];
+        osToImgs[os].push(img);
       });
-      var osTypes = Object.keys(osToImg).sort();
+      Object.keys(osToImgs).forEach(function(os) {
+        osToImgs[os].sort(function(a, b) { return a < b ? 1 : -1; }); // newest first
+      });
+      var osTypes = Object.keys(osToImgs).sort();
       osTypes.forEach(function(os) {
         var opt = document.createElement('option');
-        opt.value = osToImg[os]; opt.textContent = os;
+        opt.value = os; opt.textContent = os;
         osSel.appendChild(opt);
       });
-      osSel.addEventListener('change', function() { renderVhdImage(osSel.value); });
-      if (osSel.options.length) renderVhdImage(osSel.value);
+      function populateVersions(os) {
+        verSel.innerHTML = '';
+        (osToImgs[os] || []).forEach(function(imgKey, idx) {
+          var sl  = imgKey.indexOf('/');
+          var ver = sl >= 0 ? imgKey.substring(sl + 1) : imgKey;
+          var opt = document.createElement('option');
+          opt.value = imgKey;
+          opt.textContent = ver + (idx === 0 ? ' (latest)' : '');
+          verSel.appendChild(opt);
+        });
+        if (verSel.options.length) renderVhdImage(verSel.value);
+      }
+      osSel.addEventListener('change', function() { populateVersions(osSel.value); });
+      verSel.addEventListener('change', function() { renderVhdImage(verSel.value); });
+      if (osTypes.length) populateVersions(osTypes[0]);
     })();
 
     // ── Container version selector ─────────────────────────────────────
@@ -1653,11 +1674,13 @@ $initTopRowsHtml
           + '<th style="padding:8px 12px;color:#9ca3af;font-weight:600;text-align:left;">Affected packages</th>'
           + '</tr></thead><tbody>';
 
-        // Sort: active images first, then mitigated
+        // Sort: active first, then newest version first within same status
         var sortedVhdImgs = vhdImgNames.slice().sort(function(a, b) {
           var aAct = vhdHits[a].a.length > 0 ? 0 : 1;
           var bAct = vhdHits[b].a.length > 0 ? 0 : 1;
-          return aAct - bAct || a.localeCompare(b);
+          if (aAct !== bAct) return aAct - bAct;
+          // newest version first: sort full img key descending
+          return a < b ? 1 : -1;
         });
 
         sortedVhdImgs.forEach(function(img) {
