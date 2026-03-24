@@ -1749,7 +1749,7 @@ if ($script:CveOnly) {
     <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
       <h2>AKS CVE Security</h2>
-      <p>Live vulnerability data for the latest AKS release, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Shows unique active CVEs and improvements from the previous release across all AKS platform containers.</p>
+      <p>CVE security data for AKS container images and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by container release or node image.</p>
       $cveTabHtml
     </div>
     <!-- CVE_SECTION_END -->
@@ -2755,7 +2755,7 @@ $html = @"
     <ul>
       <li>Quickly scan meaningful AKS, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
-      <li>View live CVE security data for the latest AKS release, powered by the new <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
+      <li>Search and browse CVE security data across AKS container images and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
     </ul>
 
     </br>
@@ -2776,7 +2776,7 @@ $html = @"
     <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
       <h2>AKS CVE Security</h2>
-      <p>Live vulnerability data for the latest AKS release, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Shows unique active CVEs and improvements from the previous release across all AKS platform containers.</p>
+      <p>CVE security data for AKS container images and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by container release or node image.</p>
       $cveTabHtml
     </div>
     <!-- CVE_SECTION_END -->
