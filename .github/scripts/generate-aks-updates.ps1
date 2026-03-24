@@ -1694,30 +1694,34 @@ $initTopRowsHtml
         var osOptHtml = '<option value="">All OS types (' + totalImgs + ')</option>'
           + vhdOsList.map(function(os) { return '<option value="' + esc(os) + '">' + esc(os) + '</option>'; }).join('');
 
-        // Shared filter apply logic — referenced by both radio change and OS select change
-        var applyFnBody = 'var t=document.getElementById(\\'' + vhdTblId + '\\');'
-          + 'var showAll=(t.getAttribute(\\'data-filter\\')==\\'all\\');'
-          + 'var osEl=document.getElementById(\\'' + vhdOsFiltId + '\\');'
-          + 'var osVal=osEl?osEl.value:\\'\\';'
-          + 't.querySelectorAll(\\'tr[data-os]\\').forEach(function(r){'
-          + 'var osMatch=!osVal||r.getAttribute(\\'data-os\\')==osVal;'
-          + 'var typeMatch=showAll||r.hasAttribute(\\'data-affected\\');'
-          + 'r.style.display=(osMatch&&typeMatch)?\\'\\'\\':\\'none\\';});';
+        // Emit a named filter function so onchange handlers are simple calls — no inline escape hell
+        var applyFnName = 'vhdApply_' + vhdTblId.replace(/-/g,'_');
+        out += '<script>function ' + applyFnName + '(filterVal){'
+          + 'var t=document.getElementById("' + vhdTblId + '");'
+          + 'if(filterVal!==undefined)t.dataset.filter=filterVal;'
+          + 'var showAll=t.dataset.filter==="all";'
+          + 'var osEl=document.getElementById("' + vhdOsFiltId + '");'
+          + 'var osVal=osEl?osEl.value:"";'
+          + 'Array.prototype.forEach.call(t.querySelectorAll("tr[data-os]"),function(r){'
+          + 'var osOk=!osVal||r.dataset.os===osVal;'
+          + 'var typeOk=showAll||r.hasAttribute("data-affected");'
+          + 'r.style.display=(osOk&&typeOk)?"":"none";});'
+          + '}<\/script>';
 
         out += '<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.1);border-top:none;border-radius:0 0 8px 8px;">'
           + '<div style="padding:8px 12px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">'
           + '<span style="font-size:12px;color:#6b7280;white-space:nowrap;">Show:</span>'
           + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8;cursor:pointer;">'
-          + '<input type="radio" name="' + vhdFiltId + '" value="affected"' + affChecked + ' onchange="(function(){var t=document.getElementById(\'' + vhdTblId + '\');t.setAttribute(\'data-filter\',\'affected\');' + applyFnBody + '})()">'
+          + '<input type="radio" name="' + vhdFiltId + '" value="affected"' + affChecked + ' onchange="' + applyFnName + '(\'affected\')">'
           + ' Affected only (' + affectedCount + ')'
           + '</label>'
           + '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:#94a3b8;cursor:pointer;">'
-          + '<input type="radio" name="' + vhdFiltId + '" value="all"' + allChecked + ' onchange="(function(){var t=document.getElementById(\'' + vhdTblId + '\');t.setAttribute(\'data-filter\',\'all\');' + applyFnBody + '})()">'
+          + '<input type="radio" name="' + vhdFiltId + '" value="all"' + allChecked + ' onchange="' + applyFnName + '(\'all\')">'
           + ' All images (' + totalImgs + ')'
           + '</label>'
           + '<span style="margin-left:auto;display:flex;align-items:center;gap:6px;">'
           + '<label style="font-size:12px;color:#6b7280;">Filter OS:</label>'
-          + '<select id="' + vhdOsFiltId + '" onchange="(function(){' + applyFnBody + '})()" style="padding:3px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:#1e293b;color:#e2e8f0;font-size:12px;cursor:pointer;">'
+          + '<select id="' + vhdOsFiltId + '" onchange="' + applyFnName + '()" style="padding:3px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:#1e293b;color:#e2e8f0;font-size:12px;cursor:pointer;">'
           + osOptHtml + '</select></span>'
           + '</div>'
           + '<table id="' + vhdTblId + '" data-filter="' + defaultFilter + '" style="width:100%;border-collapse:collapse;font-size:13px;">'
