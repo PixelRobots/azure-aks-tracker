@@ -1347,13 +1347,13 @@ function Get-AksCveTabHtml {
       style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#e2e8f0;transition:all 0.15s;$searchBtnActive">
       &#128269; CVE Search
     </button>
-    <button id="aks-cve-btn-containers" onclick="aksCveShowTab('containers')"
-      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$contBtnActive">
-      &#128230; AKS Containers
-    </button>
     <button id="aks-cve-btn-vhd" onclick="aksCveShowTab('vhd')"
       style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$vhdBtnActive">
       &#128187; VHD Node Images
+    </button>
+    <button id="aks-cve-btn-containers" onclick="aksCveShowTab('containers')"
+      style="padding:10px 20px;border:none;border-radius:6px 6px 0 0;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;transition:all 0.15s;$contBtnActive">
+      &#128230; AKS Containers
     </button>
   </div>
 
@@ -1434,50 +1434,37 @@ function Get-AksCveTabHtml {
   <!-- ═══════════════════════ CONTAINER TAB ══════════════════════════ -->
   <div id="aks-cve-panel-containers" style="$containerTabStyle">
 
-    <!-- Container stat tiles + version selector -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">
-      <div style="background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:16px;text-align:center;">
-        <div id="aks-cve-active-count" style="font-size:32px;font-weight:800;color:#f87171;line-height:1;">$initActive</div>
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Active CVEs</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">unique, this release</div>
-      </div>
-      <div style="background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:16px;text-align:center;">
-        <div id="aks-cve-mitigated-count" style="font-size:32px;font-weight:800;color:#34d399;line-height:1;">$initMitigated</div>
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Mitigated</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">vs previous release</div>
-      </div>
-      <div style="background:rgba(245,158,11,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:16px;text-align:center;">
-        <div id="aks-cve-containers-count" style="font-size:32px;font-weight:800;color:#f59e0b;line-height:1;">$initAffected</div>
-        <div style="font-size:13px;font-weight:600;color:#e2e8f0;margin-top:4px;">Affected Containers</div>
-        <div id="aks-cve-containers-sub" style="font-size:11px;color:#94a3b8;margin-top:2px;">of $initTotal tracked</div>
-      </div>
-      <div style="background:rgba(59,130,246,0.15);border:1px solid rgba(147,197,253,0.3);border-radius:8px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
-        <div style="position:relative;width:100%;">
-          <select id="aks-cve-version-select"
-            style="width:100%;padding:6px 28px 6px 8px;border-radius:6px;border:1px solid rgba(147,197,253,0.45);background:rgba(30,58,138,0.5);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;">
-            $versionOptions
-          </select>
-          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#93c5fd;font-size:11px;">&#9660;</span>
-        </div>
-        <div style="font-size:11px;font-weight:600;color:#93c5fd;letter-spacing:0.03em;">AKS RELEASE</div>
-        <div id="aks-cve-report-date" style="font-size:10px;color:#94a3b8;">data as of $initDate</div>
-      </div>
-    </div>
-
-    <!-- Top containers table -->
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px;">
-      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <h3 style="margin:0;font-size:14px;font-weight:600;color:#e2e8f0;">Top Containers by Active CVEs</h3>
-        <span style="font-size:11px;color:#94a3b8;"><span style="display:inline-block;padding:1px 5px;background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:3px;font-size:10px;">k8s</span> = Kubernetes core component</span>
+
+      <!-- Filter bar -->
+      <div style="padding:12px 16px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:12px;font-weight:600;color:#9ca3af;white-space:nowrap;">AKS Release</label>
+          <div style="position:relative;">
+            <select id="aks-cve-version-select"
+              style="padding:6px 28px 6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:13px;font-weight:600;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:180px;">
+              $versionOptions
+            </select>
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#94a3b8;font-size:10px;">&#9660;</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;margin-left:auto;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:#94a3b8;">Active CVEs:&nbsp;<strong id="aks-cve-active-count" style="color:#f87171;">$initActive</strong></span>
+          <span style="font-size:12px;color:#94a3b8;">Mitigated:&nbsp;<strong id="aks-cve-mitigated-count" style="color:#34d399;">$initMitigated</strong></span>
+          <span style="font-size:12px;color:#94a3b8;">Affected:&nbsp;<strong id="aks-cve-containers-count" style="color:#f59e0b;">$initAffected</strong>&nbsp;<span id="aks-cve-containers-sub" style="color:#6b7280;">of $initTotal</span></span>
+          <span id="aks-cve-report-date" style="font-size:12px;color:#6b7280;">$initDate</span>
+        </div>
       </div>
+
+      <!-- Top containers table -->
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr style="background:rgba(255,255,255,0.05);">
               <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Namespace</th>
-              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Container</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:left;">Container&nbsp;<span style="display:inline-block;padding:1px 5px;background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:3px;font-size:10px;">k8s</span>&nbsp;= core</th>
               <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Active CVEs</th>
-              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated (vs prev)</th>
+              <th style="padding:8px 10px;font-size:12px;font-weight:600;color:#9ca3af;text-align:center;">Mitigated</th>
             </tr>
           </thead>
           <tbody id="aks-cve-top-tbody">
@@ -1597,8 +1584,8 @@ $initTopRowsHtml
       document.getElementById('aks-cve-active-count').textContent     = d.active;
       document.getElementById('aks-cve-mitigated-count').textContent  = d.mitigated;
       document.getElementById('aks-cve-containers-count').textContent = d.affected;
-      document.getElementById('aks-cve-containers-sub').textContent   = 'of ' + d.total + ' tracked';
-      document.getElementById('aks-cve-report-date').textContent      = 'data as of ' + d.date;
+      document.getElementById('aks-cve-containers-sub').textContent   = 'of ' + d.total;
+      document.getElementById('aks-cve-report-date').textContent      = d.date;
       var html = '';
       (d.top || []).forEach(function(row) {
         var mitCell = row[3] > 0
