@@ -1645,7 +1645,7 @@ $initTopRowsHtml
 
       if (noContainerHits && noVhdHits && !vhdImagesLoaded) {
         outEl.innerHTML = '<div style="margin-top:8px;padding:12px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;color:#34d399;font-size:13px;">'
-          + '&#9989; <strong>' + cveLink + '</strong> was not detected in any of the '
+          + '&#9989; <strong>' + cveLink + '</strong> left no trace in any of the '
           + allVersions.length + ' AKS container releases or any VHD node image scans. All nodes and containers appear clean.</div>';
         return;
       }
@@ -1881,10 +1881,16 @@ $initTopRowsHtml
       }
 
       outEl.innerHTML = out;
-      // <script> tags injected via innerHTML are not executed by the browser —
-      // manually eval each one so filter functions (vhdApply_*) are defined.
+      // <script> tags injected via innerHTML are not executed by the browser.
+      // Create real <script> elements and append to <head> so function
+      // declarations (vhdApply_*, aksSw_*) are registered on window.
       Array.prototype.forEach.call(outEl.querySelectorAll('script'), function(s) {
-        try { (new Function(s.textContent))(); } catch(e) { /* ignore */ }
+        try {
+          var el = document.createElement('script');
+          el.textContent = s.textContent;
+          document.head.appendChild(el);
+          document.head.removeChild(el);
+        } catch(e) { /* ignore */ }
       });
     };
 
