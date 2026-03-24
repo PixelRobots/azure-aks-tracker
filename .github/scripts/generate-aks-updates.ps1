@@ -1040,12 +1040,13 @@ function Get-AksCveTabHtml {
       # Extract all release entries from the index; try multiple known property names.
       # The API typically returns full "{imageType}/{version}" paths for all available releases.
       $rawEntries = @(
-        if     ($nodeIndex.PSObject.Properties['vhd_releases'])      { $nodeIndex.vhd_releases }
-        elseif ($nodeIndex.PSObject.Properties['vhd_release_names']) { $nodeIndex.vhd_release_names }
-        elseif ($nodeIndex.PSObject.Properties['node_image_names'])  { $nodeIndex.node_image_names }
-        elseif ($nodeIndex.PSObject.Properties['images'])            { $nodeIndex.images }
-        elseif ($nodeIndex -is [array])                              { $nodeIndex }
-        else                                                         { @() }
+        if     ($nodeIndex.PSObject.Properties['vhd_release_versions']) { $nodeIndex.vhd_release_versions }
+        elseif ($nodeIndex.PSObject.Properties['vhd_releases'])         { $nodeIndex.vhd_releases }
+        elseif ($nodeIndex.PSObject.Properties['vhd_release_names'])    { $nodeIndex.vhd_release_names }
+        elseif ($nodeIndex.PSObject.Properties['node_image_names'])     { $nodeIndex.node_image_names }
+        elseif ($nodeIndex.PSObject.Properties['images'])               { $nodeIndex.images }
+        elseif ($nodeIndex -is [array])                                 { $nodeIndex }
+        else                                                            { @() }
       )
       Log "  VHD raw entries from index: $($rawEntries.Count) total"
 
