@@ -33,6 +33,15 @@ $Repositories = @(
     IconUrl = "https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png"
     IconAlt = "Application Gateway for Containers"
     DocsBaseUrl = "https://learn.microsoft.com/azure/application-gateway/for-containers/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
+    Repo = "azure-stack-docs"
+    PathFilter = "^AKS-Arc/"  # Only AKS Arc docs
+    DisplayName = "AKS Arc"
+    IconUrl = "https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg"
+    IconAlt = "AKS Arc"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/aks/aksarc/"
   }
 )
 
@@ -2924,7 +2933,7 @@ $html = @"
 
   <div class="aks-intro">
     <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). It also shows the last 5 release notes from AKS.</p>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Arc, Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). AKS everywhere! It also shows the last 5 release notes from AKS.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
@@ -3094,7 +3103,7 @@ $digestHtml = @"
   <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
     <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 700; color: #111827;">$digestTitle</h2>
     <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #4b5563;">
-      The most meaningful Azure Kubernetes Service, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. Summaries are AI-filtered to skip trivial edits.
+      The most meaningful Azure Kubernetes Service, AKS Arc, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. AKS everywhere! Summaries are AI-filtered to skip trivial edits.
     </p>
     <p style="margin: 0; font-size: 13px; color: #059669; font-weight: 600;">
       📊 Updates this week: $digestCountBreakdown
