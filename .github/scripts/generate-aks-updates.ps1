@@ -934,22 +934,30 @@ function Get-AksCveTabHtml {
 
     $latestVersion = $versions[-1]
 
-    # Pre-fetch ALL versions and embed data in the HTML. This avoids browser CORS issues
+    # Limit the number of versions embedded in the page to keep the WordPress payload small.
+    # Each version's CVE data can be 50-100 KB of inline JS; embedding all versions causes HTTP 500.
+    # Older versions are accessible via the CVE Explorer link.
+    $MAX_EMBEDDED_CVE_VERSIONS = 5
+    # Select the most recent N versions. $latestVersion = $versions[-1] is always included
+    # because Select-Object -Last always retains the trailing elements of the array.
+    $embeddedVersions = @($versions | Select-Object -Last $MAX_EMBEDDED_CVE_VERSIONS)
+
+    # Pre-fetch selected versions and embed data in the HTML. This avoids browser CORS issues
     # since the CVE API does not return Access-Control-Allow-Origin headers for cross-origin requests.
-    Log "Pre-fetching CVE scan reports for all $($versions.Count) AKS releases..."
+    Log "Pre-fetching CVE scan reports for the last $($embeddedVersions.Count) of $($versions.Count) AKS releases..."
     $allReports = @{}
-    foreach ($ver in $versions) {
+    foreach ($ver in $embeddedVersions) {
       Log "  Fetching container CVE data for $ver..."
       $allReports[$ver] = Invoke-RestMethod -Uri "$cveApiBase/api/v1/aks-releases/$ver/scan-reports" -Method GET -TimeoutSec 30
     }
 
     # Build compact JS data for container images
-    $jsVersionsArr  = "[" + (($versions | ForEach-Object { "`"$_`"" }) -join ",") + "]"
+    $jsVersionsArr  = "[" + (($embeddedVersions | ForEach-Object { "`"$_`"" }) -join ",") + "]"
     $byVersionParts = [System.Collections.Generic.List[string]]::new()
     $initActive = 0; $initMitigated = 0; $initAffected = 0; $initTotal = 0
     $initDate = "N/A"; $initTopRowsHtml = ""
 
-    foreach ($ver in $versions) {
+    foreach ($ver in $embeddedVersions) {
       $report     = $allReports[$ver]
       $containers = @($report.container_targets)
       $rDate      = if ($report.report_time) { [DateTime]::Parse($report.report_time).ToString("yyyy-MM-dd") } else { "N/A" }
@@ -1024,10 +1032,10 @@ function Get-AksCveTabHtml {
     }
 
     $byVersionJson  = "{" + ($byVersionParts -join ",") + "}"
-    $versionCount   = $versions.Count
+    $versionCount   = $embeddedVersions.Count
 
-    # Version dropdown options (newest first)
-    $versionOptions = ($versions | Sort-Object -Descending | ForEach-Object {
+    # Version dropdown options (newest first, limited to embedded versions)
+    $versionOptions = ($embeddedVersions | Sort-Object -Descending | ForEach-Object {
       $sel = if ($_ -eq $latestVersion) { ' selected' } else { '' }
       "<option value=""$_""$sel>$_</option>"
     }) -join "`n        "
@@ -1373,7 +1381,7 @@ function Get-AksCveTabHtml {
     <div style="max-width:680px;margin:0 auto 32px;">
       <div style="text-align:center;margin-bottom:24px;">
         <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">&#128269; CVE Lookup</h2>
-        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across all $versionCount AKS releases and the last 3 VHD builds per node OS type.</p>
+        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across the $versionCount most recent AKS releases and the last 3 VHD builds per node OS type.</p>
       </div>
       <div style="display:flex;gap:8px;height:48px;margin-bottom:10px;">
         <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
