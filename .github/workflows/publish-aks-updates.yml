@@ -57,9 +57,13 @@ jobs:
             Set-Content -LiteralPath cve-section.html -Value $json.cve_section_html -Encoding UTF8
             Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=true"
           } else {
-            Set-Content -LiteralPath content.html   -Value $json.html        -Encoding UTF8
-            Set-Content -LiteralPath digest.html    -Value $json.digest_html -Encoding UTF8
-            Set-Content -LiteralPath digest.title   -Value $json.digest_title -Encoding UTF8
+            Set-Content -LiteralPath content.html        -Value $json.html                 -Encoding UTF8
+            Set-Content -LiteralPath digest-docs.html    -Value $json.digest_docs_html     -Encoding UTF8
+            Set-Content -LiteralPath digest-docs.title   -Value $json.digest_docs_title    -Encoding UTF8
+            Set-Content -LiteralPath digest-releases.html -Value $json.digest_releases_html -Encoding UTF8
+            Set-Content -LiteralPath digest-releases.title -Value $json.digest_releases_title -Encoding UTF8
+            Set-Content -LiteralPath digest-cve.html     -Value $json.digest_cve_html      -Encoding UTF8
+            Set-Content -LiteralPath digest-cve.title    -Value $json.digest_cve_title     -Encoding UTF8
             Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=false"
           }
@@ -195,36 +199,41 @@ jobs:
           Invoke-RestMethod -Uri $WpApi -Headers $postHeaders -Method POST -Body $body -TimeoutSec 30
           Write-Host "CVE section updated successfully in WordPress."
 
-      - name: Archive weekly digest
+      - name: Archive weekly digests
         if: github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true'
         run: |
           # Create archive directory
           mkdir -p archive
 
-          # Save digest with date in filename
+          # Save each digest with date in filename
           ARCHIVE_DATE=$(date +%Y-%m-%d)
-          cp digest.html "archive/weekly-digest-$ARCHIVE_DATE.html"
-          echo "Saved digest to archive/weekly-digest-$ARCHIVE_DATE.html"
+          for TYPE in docs releases cve; do
+            SRC="digest-${TYPE}.html"
+            DST="archive/weekly-digest-${TYPE}-${ARCHIVE_DATE}.html"
+            if [ ! -f "$SRC" ]; then
+              echo "Skipping $TYPE: file $SRC not found."
+            elif [ ! -s "$SRC" ]; then
+              echo "Skipping $TYPE: file $SRC is empty."
+            else
+              cp "$SRC" "$DST"
+              echo "Saved $SRC to $DST"
+            fi
+          done
 
           # Commit and push archive
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "archive/weekly-digest-$ARCHIVE_DATE.html"
+          git add archive/
           if git diff --staged --quiet; then
             echo "No archive changes to commit"
           else
-            git commit -m "Archive weekly digest for $ARCHIVE_DATE"
+            git commit -m "Archive weekly digests for $ARCHIVE_DATE"
             git push
           fi
 
-      - name: Create weekly WP post
+      - name: Create weekly WP posts
         if: github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true'
         run: |
-          if [ ! -s digest.html ]; then
-            echo "No digest content — skipping weekly post."
-            exit 0
-          fi
-
           # Function to retry curl commands with exponential backoff
           retry_curl() {
             local max_retries=3
@@ -251,17 +260,33 @@ jobs:
           }
 
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/posts"
-          TITLE=$(cat digest.title)
 
-          jq -n --rawfile content digest.html --arg title "$TITLE" \
-            '{title: $title,
-              status: "publish",
-              categories: [261],
-              content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->",
-              comment_status: "closed"}' \
-            > "$RUNNER_TEMP/wp-weekly.json"
+          post_if_nonempty() {
+            local html_file="$1"
+            local title_file="$2"
+            local label="$3"
 
-          retry_curl curl -sSf -X POST "$WP_API" \
-            -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-            -H "Content-Type: application/json" \
-            --data-binary @"$RUNNER_TEMP/wp-weekly.json"
+            if [ ! -s "$html_file" ]; then
+              echo "$label: no content — skipping."
+              return 0
+            fi
+
+            TITLE=$(cat "$title_file")
+            jq -n --rawfile content "$html_file" --arg title "$TITLE" \
+              '{title: $title,
+                status: "publish",
+                categories: [261],
+                content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->",
+                comment_status: "closed"}' \
+              > "$RUNNER_TEMP/wp-${label}.json"
+
+            echo "Posting $label digest to WordPress..."
+            retry_curl curl -sSf -X POST "$WP_API" \
+              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              -H "Content-Type: application/json" \
+              --data-binary @"$RUNNER_TEMP/wp-${label}.json"
+          }
+
+          post_if_nonempty digest-docs.html     digest-docs.title     docs
+          post_if_nonempty digest-releases.html digest-releases.title releases
+          post_if_nonempty digest-cve.html      digest-cve.title      cve

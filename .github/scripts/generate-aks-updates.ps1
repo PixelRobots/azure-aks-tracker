@@ -2697,6 +2697,91 @@ Log "Fetching AKS CVE vulnerability data..."
 $cveTabHtml = Get-AksCveTabHtml
 
 # Email-safe (table-based, inline styles only) CVE snapshot for the weekly digest
+function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
+  $trackerUrl = "https://pixelrobots.co.uk/aks-docs-tracker/"
+  if (-not $relList -or $relList.Count -eq 0) { return '' }
+
+  $cards = New-Object System.Collections.Generic.List[string]
+  foreach ($r in $relList) {
+    $titleRaw  = ($r.name ?? $r.tag_name)
+    $title     = Escape-Html $titleRaw
+    $url       = $r.html_url
+    $isPrerelease = [bool]$r.prerelease
+    $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+
+    $ai = $relSummaries[$r.id]
+    if (-not $ai) {
+      $bodyPlain = Convert-MarkdownToPlain ($r.body ?? "")
+      $ai = @{
+        summary          = Truncate $bodyPlain 400
+        breaking_changes = @()
+        key_features     = @()
+        good_to_know     = @()
+      }
+    }
+
+    $summaryHtml = "<p style='margin:0;font-size:14px;line-height:1.6;color:#374151;'>$(Escape-Html $ai.summary)</p>"
+
+    $sectionsHtml = ''
+    if ($ai.breaking_changes -and $ai.breaking_changes.Count) {
+      $lis = ($ai.breaking_changes | ForEach-Object { "<li style='margin-bottom:4px;font-size:13px;color:#374151;'>$(Escape-Html $_)</li>" }) -join ''
+      $sectionsHtml += "<div style='margin-top:10px;'><p style='margin:0 0 4px;font-size:13px;font-weight:700;color:#dc2626;'>&#10060; Breaking Changes</p><ul style='margin:0;padding-left:20px;'>$lis</ul></div>"
+    }
+    if ($ai.key_features -and $ai.key_features.Count) {
+      $lis = ($ai.key_features | ForEach-Object { "<li style='margin-bottom:4px;font-size:13px;color:#374151;'>$(Escape-Html $_)</li>" }) -join ''
+      $sectionsHtml += "<div style='margin-top:10px;'><p style='margin:0 0 4px;font-size:13px;font-weight:700;color:#2563eb;'>&#128273; Key Features</p><ul style='margin:0;padding-left:20px;'>$lis</ul></div>"
+    }
+    if ($ai.good_to_know -and $ai.good_to_know.Count) {
+      $lis = ($ai.good_to_know | ForEach-Object { "<li style='margin-bottom:4px;font-size:13px;color:#374151;'>$(Escape-Html $_)</li>" }) -join ''
+      $sectionsHtml += "<div style='margin-top:10px;'><p style='margin:0 0 4px;font-size:13px;font-weight:700;color:#059669;'>&#128161; Good to Know</p><ul style='margin:0;padding-left:20px;'>$lis</ul></div>"
+    }
+
+    $badgeHtml = if ($isPrerelease) { "<span style='display:inline-block;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:4px;font-size:11px;font-weight:600;margin-left:8px;'>Pre-release</span>" } else { '' }
+
+    $card = @"
+<div style="margin:20px 0;padding:18px;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin:0 0 4px 0;font-size:17px;font-weight:600;color:#1e40af;">$title$badgeHtml</h3>
+        <span style="font-size:12px;color:#6b7280;">&#128197; $publishedAt</span>
+      </td>
+      <td style="text-align:right;vertical-align:top;">
+        <a href="$url" style="display:inline-block;padding:8px 14px;font-size:12px;font-weight:600;text-decoration:none;border-radius:4px;background-color:#f8fafc;color:#475569;border:1px solid #e2e8f0;">View Release &#8599;</a>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding-top:12px;">
+        $summaryHtml
+        $sectionsHtml
+      </td>
+    </tr>
+  </table>
+</div>
+"@
+    $cards.Add($card.Trim())
+  }
+
+  return @"
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+  <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
+    <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$postTitle</h2>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
+      The latest AKS release notes with AI-generated summaries of breaking changes, key features, and good-to-know information.
+    </p>
+  </div>
+  <div>
+    $($cards -join "`n")
+  </div>
+  <div style="margin-top:20px;padding:16px;background-color:#ffffff;border-radius:6px;border:1px solid #e5e7eb;text-align:center;">
+    <p style="margin:0;font-size:13px;color:#6b7280;">
+      Full tracker with releases tab: <a href="$trackerUrl" style="color:#2563eb;text-decoration:none;font-weight:600;">Azure Container Services Docs Tracker</a>
+    </p>
+  </div>
+</div>
+"@.Trim()
+}
+
 function Get-AksCveDigestHtml {
   $cveApiBase     = "https://cve-api.prod-aks.azure.com"
   $cveExplorerUrl = "https://cve-api.prod-aks.azure.com/viewer/index.html"
@@ -3093,33 +3178,60 @@ foreach ($row in $sortedDocs) {
 
 $weekStart = (Get-Date -Date ((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')) -AsUTC).AddDays(-7)
 $weekEnd = (Get-Date).ToUniversalTime()
-$digestTitle = "Azure Container Services Docs - Weekly Update (" + $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd') + ")"
+$weekRange = $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd')
 
-Log "Building CVE digest block..."
-$cveDigestBlock = Get-AksCveDigestHtml
+$digestDocsTitle     = "Azure Container Services Docs - Weekly Update ($weekRange)"
+$digestReleasesTitle = "AKS Releases - Weekly Update ($weekRange)"
+$digestCveTitle      = "AKS CVE Security Snapshot - Weekly Update ($weekRange)"
 
-$digestHtml = @"
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
-  <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
-    <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 700; color: #111827;">$digestTitle</h2>
-    <p style="margin: 0 0 12px 0; font-size: 14px; line-height: 1.6; color: #4b5563;">
+# ── Docs-only digest ─────────────────────────────────────────────────────────
+$digestDocsHtml = @"
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+  <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
+    <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$digestDocsTitle</h2>
+    <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#4b5563;">
       The most meaningful Azure Kubernetes Service, AKS Arc, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. AKS everywhere! Summaries are AI-filtered to skip trivial edits.
     </p>
-    <p style="margin: 0; font-size: 13px; color: #059669; font-weight: 600;">
-      📊 Updates this week: $digestCountBreakdown
+    <p style="margin:0;font-size:13px;color:#059669;font-weight:600;">
+      &#128202; Updates this week: $digestCountBreakdown
     </p>
   </div>
   <div>
     $($digestItems -join "`n")
   </div>
-  $cveDigestBlock
-  <div style="margin-top: 20px; padding: 16px; background-color: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb; text-align: center;">
-    <p style="margin: 0; font-size: 13px; color: #6b7280;">
-      Full tracker with filters: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color: #2563eb; text-decoration: none; font-weight: 600;">Azure Container Services Docs Tracker</a>
+  <div style="margin-top:20px;padding:16px;background-color:#ffffff;border-radius:6px;border:1px solid #e5e7eb;text-align:center;">
+    <p style="margin:0;font-size:13px;color:#6b7280;">
+      Full tracker with filters: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb;text-decoration:none;font-weight:600;">Azure Container Services Docs Tracker</a>
     </p>
   </div>
 </div>
 "@.Trim()
+
+# ── Releases digest ───────────────────────────────────────────────────────────
+Log "Building releases digest block..."
+$digestReleasesHtml = Get-ReleasesDigestHtml -relList $releases -relSummaries $releaseSummaries -postTitle $digestReleasesTitle
+
+# ── CVE digest ────────────────────────────────────────────────────────────────
+Log "Building CVE digest block..."
+$cveDigestBlock = Get-AksCveDigestHtml
+$digestCveHtml = if ($cveDigestBlock) {
+  @"
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+  <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
+    <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$digestCveTitle</h2>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
+      Weekly CVE security snapshot for AKS releases and VHD node images, sourced from the AKS Vulnerability Data API.
+    </p>
+  </div>
+  $cveDigestBlock
+  <div style="margin-top:20px;padding:16px;background-color:#ffffff;border-radius:6px;border:1px solid #e5e7eb;text-align:center;">
+    <p style="margin:0;font-size:13px;color:#6b7280;">
+      Full CVE explorer: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb;text-decoration:none;font-weight:600;">Azure Container Services Docs Tracker</a>
+    </p>
+  </div>
+</div>
+"@.Trim()
+} else { '' }
 
 # =========================
 # OUTPUT (JSON with html + hash)
@@ -3129,12 +3241,15 @@ $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
 
 [pscustomobject]@{
-  html         = $html
-  hash         = $hash
-  ai_summaries = $finalResults
-  digest_html  = $digestHtml
-  digest_title = $digestTitle
-  digest_saved_to = $digestHtmlPath
+  html                 = $html
+  hash                 = $hash
+  ai_summaries         = $finalResults
+  digest_docs_html     = $digestDocsHtml
+  digest_docs_title    = $digestDocsTitle
+  digest_releases_html = $digestReleasesHtml
+  digest_releases_title = $digestReleasesTitle
+  digest_cve_html      = $digestCveHtml
+  digest_cve_title     = $digestCveTitle
 } | ConvertTo-Json -Depth 6
 
 Log "Enhanced AKS Docs Tracker completed successfully!"
