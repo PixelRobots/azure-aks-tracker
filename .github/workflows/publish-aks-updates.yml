@@ -156,6 +156,9 @@ jobs:
             '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}' \
             > "$RUNNER_TEMP/wp-payload.json"
 
+          echo "content.html size: $(wc -c < content.html) bytes"
+          echo "wp-payload.json size: $(wc -c < "$RUNNER_TEMP/wp-payload.json") bytes"
+
           retry_curl curl -sSf -X POST "$WP_API" \
             -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
             -H "Content-Type: application/json" \
