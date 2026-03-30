@@ -94,6 +94,7 @@ jobs:
             echo "Cache files unchanged — nothing to commit."
           else
             git commit -m "chore: update generated caches [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
             git push
             echo "Generated caches committed and pushed."
           fi
@@ -111,6 +112,7 @@ jobs:
               echo "WordPress CVE source unchanged — nothing to commit."
             else
               git commit -m "chore: update WordPress CVE source [skip ci]"
+              git pull --rebase origin "${GITHUB_REF_NAME}"
               git push
               echo "WordPress CVE source committed and pushed."
             fi
@@ -217,6 +219,7 @@ jobs:
             echo "No archive changes to commit"
           else
             git commit -m "Archive weekly docs digest for $ARCHIVE_DATE"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
             git push
           fi
     
