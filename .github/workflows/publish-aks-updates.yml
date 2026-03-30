@@ -67,22 +67,35 @@ jobs:
             Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=false"
           }
 
-      - name: Commit VHD cache
+      - name: Commit generated caches
         if: steps.gen.conclusion == 'success'
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          FILES_TO_ADD=""
           if [ -f vhd-cache.json ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add vhd-cache.json
-            if git diff --staged --quiet; then
-              echo "VHD cache unchanged — nothing to commit."
-            else
-              git commit -m "chore: update VHD CVE cache [skip ci]"
-              git push
-              echo "VHD cache committed and pushed."
-            fi
+            FILES_TO_ADD="$FILES_TO_ADD vhd-cache.json"
           else
-            echo "No vhd-cache.json produced — skipping cache commit."
+            echo "No vhd-cache.json produced."
+          fi
+          if [ -f docs-summary-cache.json ]; then
+            FILES_TO_ADD="$FILES_TO_ADD docs-summary-cache.json"
+          else
+            echo "No docs-summary-cache.json produced."
+          fi
+
+          if [ -z "$FILES_TO_ADD" ]; then
+            echo "No cache files produced — skipping cache commit."
+            exit 0
+          fi
+
+          git add $FILES_TO_ADD
+          if git diff --staged --quiet; then
+            echo "Cache files unchanged — nothing to commit."
+          else
+            git commit -m "chore: update generated caches [skip ci]"
+            git push
+            echo "Generated caches committed and pushed."
           fi
 
       - name: Commit WordPress CVE source

@@ -72,6 +72,8 @@ $ghHeaders = @{
 # CVE_REFRESH_VHD=true  - also fetch VHD node-image CVE data (26 OS image types).
 $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
+$DocsSummaryCachePath = 'docs-summary-cache.json'
+$DocsSummaryCacheMaxEntries = 2000
 
 function Get-PullRequestFiles {
   param([int]$prNumber, [string]$Owner, [string]$Repo)
@@ -100,6 +102,101 @@ function Get-CommitFiles {
 }
 
 function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
+
+function Get-TextSha256([string]$Text) {
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $bytes = [Text.Encoding]::UTF8.GetBytes(($Text ?? ''))
+    return (($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') }) -join '')
+  }
+  finally {
+    $sha256.Dispose()
+  }
+}
+
+function Get-GroupPatchSample($items) {
+  $lines = @()
+  foreach ($it in $items) {
+    if ($it.patch) {
+      $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' })
+    }
+  }
+  return (($lines | Select-Object -First 1200) -join "`n")
+}
+
+function Get-DocsSummaryCacheKey([string]$FilePath, $Items) {
+  $adds = ($Items | Measure-Object -Sum -Property additions).Sum
+  $dels = ($Items | Measure-Object -Sum -Property deletions).Sum
+  $subjects = (($Items.pr_title | Where-Object { $_ } | Select-Object -Unique | Sort-Object) -join '|')
+  $statuses = (($Items.status | Where-Object { $_ } | Select-Object -Unique | Sort-Object) -join '|')
+  $patchSample = Get-GroupPatchSample -items $Items
+  $payload = @(
+    $FilePath
+    [string]$adds
+    [string]$dels
+    $subjects
+    $statuses
+    $patchSample
+  ) -join "`n---`n"
+  return (Get-TextSha256 $payload)
+}
+
+function Load-DocsSummaryCache {
+  if (-not (Test-Path -LiteralPath $DocsSummaryCachePath)) {
+    return @{}
+  }
+
+  try {
+    $raw = Get-Content -LiteralPath $DocsSummaryCachePath -Raw
+    if (-not $raw) { return @{} }
+    $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
+    $cache = @{}
+    foreach ($entry in @($parsed.entries)) {
+      if (-not $entry.cache_key) { continue }
+      $cache[[string]$entry.cache_key] = @{
+        file       = [string]$entry.file
+        summary    = [string]$entry.summary
+        category   = [string]$entry.category
+        score      = [double]$entry.score
+        cached_at  = if ($entry.cached_at) { [string]$entry.cached_at } else { '' }
+      }
+    }
+    Log "Loaded docs summary cache with $($cache.Count) entries."
+    return $cache
+  }
+  catch {
+    Write-Warning "Failed to load docs summary cache: $_"
+    return @{}
+  }
+}
+
+function Save-DocsSummaryCache([hashtable]$Cache) {
+  try {
+    $entries = @(
+      foreach ($key in $Cache.Keys) {
+        $entry = $Cache[$key]
+        [pscustomobject]@{
+          cache_key = $key
+          file      = $entry.file
+          summary   = $entry.summary
+          category  = $entry.category
+          score     = [double]$entry.score
+          cached_at = if ($entry.cached_at) { $entry.cached_at } else { (Get-Date -Format 'o') }
+        }
+      }
+    ) | Sort-Object cached_at -Descending | Select-Object -First $DocsSummaryCacheMaxEntries
+
+    [pscustomobject]@{
+      generated_at = (Get-Date -Format 'o')
+      entries      = $entries
+    } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $DocsSummaryCachePath -Encoding UTF8
+
+    Log "Saved docs summary cache to $DocsSummaryCachePath ($($entries.Count) entries)."
+  }
+  catch {
+    Write-Warning "Failed to save docs summary cache: $_"
+  }
+}
 
 # =========================
 # ENHANCED FILTERING LOGIC
@@ -339,9 +436,9 @@ function Summarize-NewMarkdown([string]$path, [string]$Owner, [string]$Repo) {
   $raw = Get-GitHubContentBase64 -path $path -Owner $Owner -Repo $Repo
   if (-not $raw) { return "New page added." }
   $fm = Parse-YamlFrontMatter $raw
-  if ($fm.description) { return Truncate $fm.description 280 }
+  if ($fm.description) { return ($fm.description -replace '\s+', ' ').Trim() }
   $lead = Get-MarkdownLead $raw
-  if ($lead) { return Truncate $lead 280 }
+  if ($lead) { return ($lead -replace '\s+', ' ').Trim() }
   return "New page added."
 }
 
@@ -417,16 +514,38 @@ function Get-DocDisplayName([string]$Path) {
   return $name
 }
 
-# Rough category fallback (by path)
-function Compute-Category([string]$file) {
-  $f = $file.ToLower()
-  if ($f -match '/pci-') { return 'Compliance' }
-  if ($f -match '/network|/cni|/load-balancer|/egress|/ingress|/vnet|/subnet') { return 'Networking' }
-  if ($f -match '/security|/rbac|/aad|/defender|/keyvault|/tls|/certificate') { return 'Security' }
-  if ($f -match '/storage|/disk|/snapshot') { return 'Storage' }
-  if ($f -match '/node|/vm|/cvm|/keda|/gpu|/virt|/compute') { return 'Compute' }
-  if ($f -match '/monitor|/logging|/diagnostic|/troubleshoot|/upgrade|/backup') { return 'Operations' }
+# Rough category fallback using path and summary text
+function Compute-Category([string]$file, [string]$summary = "", [string]$preferred = "") {
+  $allowed = @('Networking', 'Security', 'Compute', 'Storage', 'Operations', 'Compliance', 'Cost', 'General')
+  if ($preferred -and $allowed -contains $preferred -and $preferred -ne 'General') { return $preferred }
+
+  $f = ($file ?? "").ToLower()
+  $s = ($summary ?? "").ToLower()
+  $blob = "$f`n$s"
+
+  if ($blob -match '(?i)\b(cost|pricing|price|budget|finops|optimization|best practice[s]?|best-practice[s]?|efficient|efficiency|right-size|rightsizing|quota cost)\b') { return 'Cost' }
+  if ($blob -match '(?i)\b(pci|hipaa|compliance|policy|governance|audit|regulatory|sovereign)\b') { return 'Compliance' }
+  if ($blob -match '(?i)\b(network|cni|load balancer|load-balancer|egress|ingress|vnet|subnet|dns|gateway|alb|application gateway|traffic|nat)\b') { return 'Networking' }
+  if ($blob -match '(?i)\b(security|rbac|aad|entra|defender|key vault|keyvault|tls|ssl|certificate|secret|identity|managed identity|auth|authentication|authorization)\b') { return 'Security' }
+  if ($blob -match '(?i)\b(storage|disk|snapshot|volume|persistent volume|persistentvolume|pvc|blob|file share)\b') { return 'Storage' }
+  if ($blob -match '(?i)\b(node|vm|cvm|keda|gpu|virt|compute|autoscaler|autoscaling|sku|machine|cpu|memory)\b') { return 'Compute' }
+  if ($blob -match '(?i)\b(monitor|logging|diagnostic|troubleshoot|upgrade|backup|restore|observability|alert|maintenance|availability|reliability|runbook)\b') { return 'Operations' }
   return 'General'
+}
+
+function CategoryToPillHtml([string]$category) {
+  $style = switch ($category) {
+    'Networking' { 'background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;' }
+    'Security'   { 'background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;' }
+    'Compute'    { 'background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;' }
+    'Storage'    { 'background:#dcfce7;color:#166534;border:1px solid #86efac;' }
+    'Operations' { 'background:#f3f4f6;color:#374151;border:1px solid #d1d5db;' }
+    'Compliance' { 'background:#fce7f3;color:#be185d;border:1px solid #f9a8d4;' }
+    'Cost'       { 'background:#fef3c7;color:#b45309;border:1px solid #fcd34d;' }
+    default      { 'background:#e5e7eb;color:#374151;border:1px solid #d1d5db;' }
+  }
+
+  return "<span class=""aks-doc-category"" style=""display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;$style"">$category</span>"
 }
 
 # =========================
@@ -868,7 +987,7 @@ $PatchSample
       $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $content }) } -MaxCompletionTokens 220 -Temperature 0.1
       $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
       $text = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
-      return (Truncate $text.Trim() 400)
+      return (($text -replace '\s+', ' ').Trim())
     }
     catch { }
   }
@@ -913,7 +1032,7 @@ $PatchSample
   }
 
   $s = ($bits -join ' ')
-  return (Truncate $s 300)
+  return (($s -replace '\s+', ' ').Trim())
 }
 
 # =========================
@@ -2081,39 +2200,6 @@ Log "Grouped into $($groups.Keys.Count) unique files"
 # AI INPUT PREPARATION
 # =========================
 
-# ===== Build AI input with enhanced pre-filtered data =====
-$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
-$aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
-
-$aiInput = [pscustomobject]@{
-  since  = $SINCE_ISO
-  groups = @(
-    foreach ($k in $groups.Keys) {
-      $items = $groups[$k]
-      $adds = ($items | Measure-Object -Sum -Property additions).Sum
-      $dels = ($items | Measure-Object -Sum -Property deletions).Sum
-      $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
-      $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
-
-      $lines = @()
-      foreach ($it in $items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
-      $patchSample = ($lines | Select-Object -First 1200) -join "`n"
-
-      [pscustomobject]@{
-        file            = $k
-        subjects        = $subjects
-        total_additions = $adds
-        total_deletions = $dels
-        commits_count   = $items.Count
-        statuses        = $statuses
-        patch_sample    = $patchSample
-      }
-    }
-  )
-}
-$aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
-Log "AI input prepared: $aiJsonPath"
-
 # Apply minimal pre-filtering before sending to AI - let AI do the heavy lifting
 Log "Applying minimal pre-filtering (only obvious trivial cases)..."
 Log "Total file groups to process: $($groups.Keys.Count)"
@@ -2174,13 +2260,77 @@ foreach ($k in $groups.Keys) {
 
 Log "Minimal pre-filtering complete: kept $($filteredGroups.Keys.Count) files, skipped $skippedCount obvious trivial changes"
 
-# Get AI summaries using enhanced filtering
+$docsSummaryCache = Load-DocsSummaryCache
+$groupCacheKeys = @{}
+$uncachedGroups = @{}
 $aiVerdicts = @{ ordered = @(); byFile = @{} }
-if ($PreferProvider) { 
-  $aiVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath 
+
+foreach ($k in $filteredGroups.Keys) {
+  $cacheKey = Get-DocsSummaryCacheKey -FilePath $k -Items $filteredGroups[$k]
+  $groupCacheKeys[$k] = $cacheKey
+  if ($docsSummaryCache.ContainsKey($cacheKey)) {
+    $entry = $docsSummaryCache[$cacheKey]
+    $cachedItem = [pscustomobject]@{
+      file     = $k
+      summary  = $entry.summary
+      category = $entry.category
+      score    = [double]$entry.score
+    }
+    $aiVerdicts.ordered += $cachedItem
+    $aiVerdicts.byFile[$k] = @{
+      summary  = $entry.summary
+      category = $entry.category
+      score    = [double]$entry.score
+    }
+  }
+  else {
+    $uncachedGroups[$k] = $filteredGroups[$k]
+  }
 }
-else { 
-  Log "AI disabled (no provider env configured)." 
+
+Log "Docs summary cache: $($filteredGroups.Keys.Count - $uncachedGroups.Keys.Count) hits, $($uncachedGroups.Keys.Count) misses"
+
+if ($uncachedGroups.Keys.Count -gt 0) {
+  $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
+  $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+  $aiInput = [pscustomobject]@{
+    since  = $SINCE_ISO
+    groups = @(
+      foreach ($k in $uncachedGroups.Keys) {
+        $items = $uncachedGroups[$k]
+        $adds = ($items | Measure-Object -Sum -Property additions).Sum
+        $dels = ($items | Measure-Object -Sum -Property deletions).Sum
+        $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
+        $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+        $patchSample = Get-GroupPatchSample -items $items
+
+        [pscustomobject]@{
+          file            = $k
+          subjects        = $subjects
+          total_additions = $adds
+          total_deletions = $dels
+          commits_count   = $items.Count
+          statuses        = $statuses
+          patch_sample    = $patchSample
+        }
+      }
+    )
+  }
+  $aiInput | ConvertTo-Json -Depth 6 | Set-Content -Path $aiJsonPath -Encoding UTF8
+  Log "AI input prepared for $($uncachedGroups.Keys.Count) uncached groups: $aiJsonPath"
+
+  $freshVerdicts = @{ ordered = @(); byFile = @{} }
+  if ($PreferProvider) {
+    $freshVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath
+  }
+  else {
+    Log "AI disabled (no provider env configured)."
+  }
+
+  $aiVerdicts.ordered += $freshVerdicts.ordered
+  foreach ($kvp in $freshVerdicts.byFile.GetEnumerator()) {
+    $aiVerdicts.byFile[$kvp.Key] = $kvp.Value
+  }
 }
 
 # ---- Fallback: force-keep any "added" files that AI missed
@@ -2396,6 +2546,22 @@ if ($forcedModified.Count -gt 0) {
 # Apply final filtering to remove trivial changes and duplicates
 $finalResults = Apply-FinalTrivialFiltering -aiVerdicts $aiVerdicts -filteredGroups $filteredGroups
 
+foreach ($item in @($finalResults.ordered)) {
+  $file = [string]$item.file
+  if (-not $groupCacheKeys.ContainsKey($file)) { continue }
+  if (-not $finalResults.byFile.ContainsKey($file)) { continue }
+  $entry = $finalResults.byFile[$file]
+  $docsSummaryCache[$groupCacheKeys[$file]] = @{
+    file      = $file
+    summary   = $entry.summary
+    category  = $entry.category
+    score     = [double]$entry.score
+    cached_at = (Get-Date -Format 'o')
+  }
+}
+
+Save-DocsSummaryCache -Cache $docsSummaryCache
+
 # Render DOCS sections — ONLY what passed final filtering, preserving order
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($row in @($finalResults.ordered)) {
@@ -2411,7 +2577,8 @@ foreach ($row in @($finalResults.ordered)) {
   
   $fileUrl = Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
   $summary = $finalResults.byFile[$file].summary
-  $category = if ($finalResults.byFile[$file].category) { $finalResults.byFile[$file].category } else { Compute-Category $file }
+  $category = Compute-Category -file $file -summary $summary -preferred $finalResults.byFile[$file].category
+  $categoryPill = CategoryToPillHtml $category
   
   # Handle both PR merged_at and commit date
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
@@ -2441,9 +2608,9 @@ foreach ($row in @($finalResults.ordered)) {
     <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category">$category</span>
+    $categoryPill
     $kindPill
-    <span class="aks-doc-updated-pill">Modified: $lastUpdated</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
