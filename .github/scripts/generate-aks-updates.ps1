@@ -934,9 +934,8 @@ function Get-AksCveTabHtml {
 
     $latestVersion = $versions[-1]
 
-    # Limit the number of versions embedded in the page to keep the WordPress payload small.
-    # Each version's CVE data can be 50-100 KB of inline JS; embedding all versions causes HTTP 500.
-    # Older versions are accessible via the CVE Explorer link.
+    # The plugin now renders the CVE section from a separately published HTML source file,
+    # so we can keep a deeper search history here without bloating the WordPress page update payload.
     $MAX_EMBEDDED_CVE_VERSIONS = 5
     # Select the most recent N versions. $latestVersion = $versions[-1] is always included
     # because Select-Object -Last always retains the trailing elements of the array.
@@ -1067,10 +1066,9 @@ function Get-AksCveTabHtml {
       )
       Log "  VHD raw entries from index: $($rawEntries.Count) total"
 
-      # Partition entries into full-path (type/version) and bare image-type names.
-      # Keep the last $VHD_HISTORY_PER_OS versions per OS type (newest first) so the
-      # browse tab and CVE search cover recent history, not just a single snapshot.
-      $VHD_HISTORY_PER_OS = 3
+      # The plugin-backed CVE source can carry deeper VHD history because it is no longer embedded
+      # directly in the WordPress page content.
+      $VHD_HISTORY_PER_OS = 5
       $typeVersionsMap = [ordered]@{}   # OS -> [all versions found]
       $bareNames     = [System.Collections.Generic.List[string]]::new()
       foreach ($entry in $rawEntries) {
@@ -2703,6 +2701,26 @@ $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else
 # =========================
 Log "Fetching AKS CVE vulnerability data..."
 $cveTabHtml = Get-AksCveTabHtml
+$cveSectionHtml = @"
+    <!-- CVE_SECTION_START -->
+    <div class="aks-tab-panel" id="aks-tab-cve">
+      <h2>AKS CVE Security</h2>
+      <p>CVE security data for AKS releases and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by container release or node image.</p>
+      $cveTabHtml
+    </div>
+    <!-- CVE_SECTION_END -->
+"@
+$cvePlaceholderSectionHtml = @"
+    <!-- CVE_SECTION_START -->
+    <div class="aks-tab-panel" id="aks-tab-cve">
+      <h2>AKS CVE Security</h2>
+      <p>CVE security data for AKS releases and VHD node images is rendered by the site plugin at page load. If the live view is temporarily unavailable, use the <a href="https://cve-api.prod-aks.azure.com/viewer/index.html" target="_blank" rel="noopener">AKS Vulnerability Data API explorer</a>.</p>
+      <div class="aks-cve-plugin-placeholder" data-source="wordpress-plugin">
+        <p style="color:#94a3b8;">Loading live CVE data...</p>
+      </div>
+    </div>
+    <!-- CVE_SECTION_END -->
+"@
 
 # Email-safe (table-based, inline styles only) CVE snapshot for the weekly digest
 function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
@@ -3053,13 +3071,7 @@ $html = @"
       <a class="aks-tab-link" href="#aks-tab-cve">🛡️ CVE Security</a>
     </nav>
 
-    <!-- CVE_SECTION_START -->
-    <div class="aks-tab-panel" id="aks-tab-cve">
-      <h2>AKS CVE Security</h2>
-      <p>CVE security data for AKS releases and VHD node images, sourced from the <strong>AKS Vulnerability Data API</strong> (Public Preview). Search any CVE ID instantly, or browse active CVEs by release or node image.</p>
-      $cveTabHtml
-    </div>
-    <!-- CVE_SECTION_END -->
+    $cvePlaceholderSectionHtml
 
     <div class="aks-tab-panel" id="aks-tab-releases">
       <div class="aks-releases">
@@ -3252,12 +3264,14 @@ $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -jo
   html                 = $html
   hash                 = $hash
   ai_summaries         = $finalResults
+  digest_docs_count    = @($sortedDocs).Count
   digest_docs_html     = $digestDocsHtml
   digest_docs_title    = $digestDocsTitle
   digest_releases_html = $digestReleasesHtml
   digest_releases_title = $digestReleasesTitle
   digest_cve_html      = $digestCveHtml
   digest_cve_title     = $digestCveTitle
+  cve_section_html     = $cveSectionHtml
 } | ConvertTo-Json -Depth 6
 
 Log "Enhanced AKS Docs Tracker completed successfully!"

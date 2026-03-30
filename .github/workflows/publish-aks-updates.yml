@@ -55,16 +55,15 @@ jobs:
           $json = Get-Content out.json -Raw | ConvertFrom-Json
           if ($json.cve_only) {
             Set-Content -LiteralPath cve-section.html -Value $json.cve_section_html -Encoding UTF8
+            Set-Content -LiteralPath wordpress-cve-section.html -Value $json.cve_section_html -Encoding UTF8
             Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=true"
           } else {
             Set-Content -LiteralPath content.html        -Value $json.html                 -Encoding UTF8
             Set-Content -LiteralPath digest-docs.html    -Value $json.digest_docs_html     -Encoding UTF8
             Set-Content -LiteralPath digest-docs.title   -Value $json.digest_docs_title    -Encoding UTF8
-            Set-Content -LiteralPath digest-releases.html -Value $json.digest_releases_html -Encoding UTF8
-            Set-Content -LiteralPath digest-releases.title -Value $json.digest_releases_title -Encoding UTF8
-            Set-Content -LiteralPath digest-cve.html     -Value $json.digest_cve_html      -Encoding UTF8
-            Set-Content -LiteralPath digest-cve.title    -Value $json.digest_cve_title     -Encoding UTF8
+            Set-Content -LiteralPath wordpress-cve-section.html -Value $json.cve_section_html -Encoding UTF8
             Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
+            Add-Content -Path $env:GITHUB_OUTPUT -Value "digest_docs_count=$($json.digest_docs_count)"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "cve_only=false"
           }
 
@@ -84,6 +83,26 @@ jobs:
             fi
           else
             echo "No vhd-cache.json produced — skipping cache commit."
+          fi
+
+      - name: Commit WordPress CVE source
+        if: steps.gen.conclusion == 'success'
+        run: |
+          if [ -f wordpress-cve-section.html ]; then
+            mkdir -p wordpress
+            cp wordpress-cve-section.html wordpress/aks-cve-section.html
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add wordpress/aks-cve-section.html
+            if git diff --staged --quiet; then
+              echo "WordPress CVE source unchanged — nothing to commit."
+            else
+              git commit -m "chore: update WordPress CVE source [skip ci]"
+              git push
+              echo "WordPress CVE source committed and pushed."
+            fi
+          else
+            echo "No wordpress-cve-section.html produced — skipping CVE source commit."
           fi
 
       - name: Get current WP page
@@ -164,78 +183,32 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @"$RUNNER_TEMP/wp-payload.json"
 
-      - name: Update WordPress CVE section only
-        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only == 'true'
-        shell: pwsh
-        run: |
-          $WpApi   = "${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          $authB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}"))
-          $headers = @{ Authorization = "Basic $authB64" }
-
-          # Fetch current page raw content (requires edit context)
-          $pageData   = Invoke-RestMethod -Uri "${WpApi}?context=edit" -Headers $headers -Method GET -TimeoutSec 30
-          $rawContent = $pageData.content.raw
-
-          if (-not $rawContent) {
-            Write-Error "Could not retrieve raw page content from WordPress. Aborting CVE section update."
-            exit 1
-          }
-
-          # Read the pre-built CVE section HTML produced by the script
-          $newSection = Get-Content cve-section.html -Raw
-
-          # Replace the CVE section between the start/end markers.
-          # The \s* around marker names allows for minor spacing variations in the page.
-          $updated = [regex]::Replace(
-            $rawContent,
-            '(?s)<!--\s*CVE_SECTION_START\s*-->.*?<!--\s*CVE_SECTION_END\s*-->',
-            [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $newSection }
-          )
-
-          if ($updated -eq $rawContent) {
-            Write-Warning "CVE section markers (<!-- CVE_SECTION_START/END -->) not found in WordPress page — no update performed. Verify markers exist in the page if CVE updates are expected."
-            exit 0
-          }
-
-          $body = @{ content = $updated; status = 'publish' } | ConvertTo-Json -Depth 3 -Compress
-          $postHeaders = $headers + @{ 'Content-Type' = 'application/json' }
-          Invoke-RestMethod -Uri $WpApi -Headers $postHeaders -Method POST -Body $body -TimeoutSec 30
-          Write-Host "CVE section updated successfully in WordPress."
-
-      - name: Archive weekly digests
-        if: github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true'
+      - name: Archive weekly docs digest
+        if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
           # Create archive directory
           mkdir -p archive
-
-          # Save each digest with date in filename
+    
+          # Save docs digest with date in filename
           ARCHIVE_DATE=$(date +%Y-%m-%d)
-          for TYPE in docs releases cve; do
-            SRC="digest-${TYPE}.html"
-            DST="archive/weekly-digest-${TYPE}-${ARCHIVE_DATE}.html"
-            if [ ! -f "$SRC" ]; then
-              echo "Skipping $TYPE: file $SRC not found."
-            elif [ ! -s "$SRC" ]; then
-              echo "Skipping $TYPE: file $SRC is empty."
-            else
-              cp "$SRC" "$DST"
-              echo "Saved $SRC to $DST"
-            fi
-          done
-
+          SRC="digest-docs.html"
+          DST="archive/weekly-digest-docs-${ARCHIVE_DATE}.html"
+          cp "$SRC" "$DST"
+          echo "Saved $SRC to $DST"
+    
           # Commit and push archive
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add archive/
+          git add "$DST"
           if git diff --staged --quiet; then
             echo "No archive changes to commit"
           else
-            git commit -m "Archive weekly digests for $ARCHIVE_DATE"
+            git commit -m "Archive weekly docs digest for $ARCHIVE_DATE"
             git push
           fi
-
-      - name: Create weekly WP posts
-        if: github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true'
+    
+      - name: Create weekly WP docs post
+        if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
           # Function to retry curl commands with exponential backoff
           retry_curl() {
@@ -263,33 +236,22 @@ jobs:
           }
 
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/posts"
+          if [ ! -s "digest-docs.html" ]; then
+            echo "docs: no content — skipping."
+            exit 0
+          fi
 
-          post_if_nonempty() {
-            local html_file="$1"
-            local title_file="$2"
-            local label="$3"
+          TITLE=$(cat "digest-docs.title")
+          jq -n --rawfile content "digest-docs.html" --arg title "$TITLE" \
+            '{title: $title,
+              status: "publish",
+              categories: [261],
+              content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->",
+              comment_status: "closed"}' \
+            > "$RUNNER_TEMP/wp-docs.json"
 
-            if [ ! -s "$html_file" ]; then
-              echo "$label: no content — skipping."
-              return 0
-            fi
-
-            TITLE=$(cat "$title_file")
-            jq -n --rawfile content "$html_file" --arg title "$TITLE" \
-              '{title: $title,
-                status: "publish",
-                categories: [261],
-                content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->",
-                comment_status: "closed"}' \
-              > "$RUNNER_TEMP/wp-${label}.json"
-
-            echo "Posting $label digest to WordPress..."
-            retry_curl curl -sSf -X POST "$WP_API" \
-              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-              -H "Content-Type: application/json" \
-              --data-binary @"$RUNNER_TEMP/wp-${label}.json"
-          }
-
-          post_if_nonempty digest-docs.html     digest-docs.title     docs
-          post_if_nonempty digest-releases.html digest-releases.title releases
-          post_if_nonempty digest-cve.html      digest-cve.title      cve
+          echo "Posting docs digest to WordPress..."
+          retry_curl curl -sSf -X POST "$WP_API" \
+            -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @"$RUNNER_TEMP/wp-docs.json"
