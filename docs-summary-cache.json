@@ -1,405 +1,29 @@
 {
-  "generated_at": "2026-03-30T13:09:27.1201623+00:00",
+  "generated_at": "2026-03-30T18:25:13.8654917+00:00",
   "entries": [
     {
-      "cache_key": "a58bb26b65216a9758b5e09e2f3a2d2fd3f627a6a27529a52dfa37d5030eb324",
-      "file": "articles/aks/enable-host-encryption.md",
-      "summary": "The documentation now clarifies that host-based encryption can only be enabled in Azure regions that support server-side encryption of Azure Managed Disks and with specific supported VM sizes. This distinction helps users understand the prerequisites for utilizing host-based encryption effectively.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1101783+00:00"
-    },
-    {
-      "cache_key": "899145125f6b50a8969e3e84609c5a54405031364c808e728ef0fc106c572186",
-      "file": "articles/aks/automatic/aks-automatic-managed-system-node-pools-about.md",
-      "summary": "The documentation now clarifies that workloads requiring `nodes/proxy` permissions are restricted to approved system users and groups, enhancing security awareness for users managing AKS Automatic clusters. Additionally, the link to the section on creating an AKS Automatic cluster with managed system node pools has been updated for better accessibility.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1101334+00:00"
-    },
-    {
-      "cache_key": "e15009b6756e71add84cda587f0e02a2fb915e2a71f5bb9869b646f54a2bf542",
-      "file": "articles/aks/howto-deploy-java-quarkus-app.md",
-      "summary": "The documentation has been refreshed with the latest updates regarding deploying Java applications on AKS, ensuring that users have access to the most current practices and recommendations.",
+      "cache_key": "cfa1d69efed97dc2b6e4f0dcc04843d1226bcecd3bd8befc9b0aa85e3522a92a",
+      "file": "articles/aks/ai-toolchain-operator-tool-calling.md",
+      "summary": "The document has been updated to enhance the explanation of the Model Context Protocol (MCP) and its integration with AKS, providing clearer guidance on tool calling capabilities.",
       "category": "General",
       "score": 0.8,
-      "cached_at": "2026-03-30T13:09:27.1100942+00:00"
+      "cached_at": "2026-03-30T18:25:13.8581206+00:00"
     },
     {
-      "cache_key": "6e59ee206d643649aa7faaa8ae081a4bb71965a0103b14b8a8eee45557b931b9",
-      "file": "articles/aks/use-network-policies-in-the-azure-portal.md",
-      "summary": "The customer intent section has been refined for clarity, ensuring that DevOps engineers understand the purpose of implementing network policies in Azure Kubernetes Service.",
-      "category": "Networking",
-      "score": 0.6,
-      "cached_at": "2026-03-30T13:09:27.1100558+00:00"
-    },
-    {
-      "cache_key": "b4b9bef092d109125c1823350d17c189eac752f5a14150249da1e3b6b805b228",
-      "file": "articles/aks/upgrade-node-image.md",
-      "summary": "The documentation has been updated to include a new release tracker for node image upgrades, providing users with better visibility on the rollout status of updates across regions.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1100194+00:00"
-    },
-    {
-      "cache_key": "8069cf72331cfec2122aee75f37fd6dadfbb7a2a8044d59d1f1ee3b3d6e0cbae",
-      "file": "articles/aks/howto-deploy-java-wls-app.md",
-      "summary": "The date metadata has been updated to reflect the latest information. This ensures that users are aware of the most current version of the documentation.",
-      "category": "General",
-      "score": 0.5,
-      "cached_at": "2026-03-30T13:09:27.1099829+00:00"
-    },
-    {
-      "cache_key": "17cf87a521b6c8ddc6a1c4ebd9612bcb920b9c3c06de760c8c6ff0db082e94fb",
-      "file": "articles/aks/azure-disk-customer-managed-keys.md",
-      "summary": "The title and references to Azure Managed Disks have been updated for consistency. This change enhances the clarity of the documentation regarding customer-managed keys for disk encryption in AKS.",
-      "category": "Security",
-      "score": 0.7,
-      "cached_at": "2026-03-30T13:09:27.1099458+00:00"
-    },
-    {
-      "cache_key": "d78f68b10ebc139386611b8ff3356876802ab1935d1ac6f8c10fd3a21cdf7915",
-      "file": "articles/aks/csi-disk-move-subscriptions.md",
-      "summary": "The documentation now specifies the correct terminology for Azure Managed Disks, ensuring consistency in the language used throughout the article. This change improves clarity for users following the instructions.",
-      "category": "Storage",
-      "score": 0.8,
-      "cached_at": "2026-03-30T13:09:27.1099070+00:00"
-    },
-    {
-      "cache_key": "04febe7d761b4222c96857d27904244d563e38f8b9790aa3f968d2948eb076a0",
-      "file": "articles/aks/app-routing-migration.md",
-      "summary": "This article has been updated to reflect the migration process from the deprecated HTTP application routing feature to the application routing add-on in Azure Kubernetes Service (AKS). It emphasizes the importance of migrating to maintain a supported configuration and includes prerequisites and steps for enabling the new add-on.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1098696+00:00"
-    },
-    {
-      "cache_key": "7da93857f04440be5ec6b7be8ffbf8a43d80bab13646cb87473a05aa2c7a36ec",
-      "file": "articles/application-network/supported-versions.md",
-      "summary": "Learn about the supported versions of Azure Kubernetes Application Network, their compatible AKS versions, and how to check available versions in your region.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1098306+00:00"
-    },
-    {
-      "cache_key": "4f2f2a97be4dfed3fc0049577224f2d55659a2be966e81ce94ea47ef3231f5ab",
-      "file": "articles/aks/node-access.md",
-      "summary": "The documentation now clarifies the options for securely connecting to AKS Linux and Windows nodes, emphasizing the requirement for Kubernetes API access or the AKS ARM API for private IP information. Additionally, the command examples have been updated to reflect the correct image for `kubectl debug`, ensuring users can accurately execute commands to connect to their nodes. The section titles have also been revised for consistency, enhancing the overall clarity of the guide.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1097920+00:00"
-    },
-    {
-      "cache_key": "4a3f2b920210c264b7e75d343dffe15148fc4a73fcc981b7ee7d690866c95290",
-      "file": "articles/application-network/upgrades.md",
-      "summary": "Learn how to configure minor version upgrades for Azure Kubernetes Application Network members using self-managed and fully-managed upgrade modes, including how to select versions, initiate upgrades, and roll back if needed.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1097533+00:00"
-    },
-    {
-      "cache_key": "417853a3949be8779b1d4f28b3ee388493f8e11dbf8a60f283fe9f6b8c099cda",
-      "file": "articles/aks/delete-node-pool.md",
-      "summary": "The documentation for deleting a node pool in Azure Kubernetes Service (AKS) has been updated to reflect a change in the command parameter. Users can now use the `--ignore-pdb` flag instead of `--ignore-pod-disruption-budget` when executing the `az aks nodepool delete` command to bypass PodDisruptionBudgets. This change simplifies the command syntax for users managing node pool deletions.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1097146+00:00"
-    },
-    {
-      "cache_key": "6f5671571c1af89a86f721742a28e49a0eb008e9fb588cbd799b4c0e8f9682f7",
-      "file": "articles/aks/roll-back-node-pool-version.md",
-      "summary": "Learn how to roll back node pool versions in Azure Kubernetes Service (AKS) to recover from upgrade issues and maintain cluster stability.",
-      "category": "Compute",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1096739+00:00"
-    },
-    {
-      "cache_key": "9586283d0b603206aab3fd3903d3ce7213bf5c32c1d0371efb82c978c1722e32",
-      "file": "articles/container-registry/container-registry-skus.md",
-      "summary": "The documentation now specifies that all SKUs (Basic, Standard, and Premium) in Azure Container Registry have zone redundancy enabled by default in supported regions. This enhancement informs users that they can expect improved availability and resilience for their container images without needing to configure this feature manually.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1096280+00:00"
-    },
-    {
-      "cache_key": "3b2a573678a7e5849d643c86b43cd007edec99b80f623719f6fecc85db9c1537",
-      "file": "articles/aks/agentic-cli-for-aks-service-account-workload-identity-setup.md",
-      "summary": "The documentation has been updated to clarify the prerequisites for creating a service account and configuring workload identity for the Agentic CLI in Azure Kubernetes Service (AKS). Users are now explicitly instructed to use Azure CLI version 2.76 or later and to set their active subscription before proceeding. Additionally, the steps for creating Kubernetes service accounts and assigning permissions have been refined, including commands for verifying the successful creation of these resources.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1095670+00:00"
-    },
-    {
-      "cache_key": "b05224003db9f15764cba414d8b4de37aa326116b1a32fccb5682f687a6db4b3",
-      "file": "articles/container-registry/container-registry-storage.md",
-      "summary": "The documentation now states that zone redundancy is enabled by default in select Azure regions for Azure container registries, enhancing resilience and high availability. Previously, users had to optionally enable this feature, which is part of the Premium service tier, to benefit from replication across multiple availability zones. This change simplifies the setup process for users looking to improve the reliability and performance of their registries.",
-      "category": "Storage",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1095336+00:00"
-    },
-    {
-      "cache_key": "9ce1cac87b58f4f2ef36c9e8aedf03c22f7ba6f04fc89c4d82ad9e9aca8b34be",
-      "file": "articles/aks/csi-storage-drivers.md",
-      "summary": "The documentation for the Container Storage Interface (CSI) drivers on Azure Kubernetes Service (AKS) has been updated to include support for Azure Blob storage alongside Azure Disks and Azure Files, enhancing users' ability to manage persistent storage for containerized applications. Additionally, users are now informed that starting with Kubernetes version 1.26, in-tree persistent volume types for Azure storage are deprecated, and they should migrate to the corresponding CSI drivers to ensure continued support. The commands for enabling and disabling the Azure Disks, Azure Files, and Azure Blob storage CSI drivers on existing AKS clusters have also been clarified and expanded.",
-      "category": "Storage",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1095019+00:00"
-    },
-    {
-      "cache_key": "afb69a3936042196062c91c9c793a9bf8eaecc353ffd3c454493a1e03b1e2773",
-      "file": "articles/application-network/architecture.md",
-      "summary": "Learn about the architecture of Azure Kubernetes Application Network including management plane, control plane, data plane, and multi-cluster service discovery.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1094693+00:00"
-    },
-    {
-      "cache_key": "b71e1c709b316bc7609e432bf1c91167cbc2b2fc61a8e71aefd973bf60ef5f0a",
-      "file": "articles/aks/dapr-overview.md",
-      "summary": "The documentation for the Dapr extension for Azure Kubernetes Service (AKS) has been updated to clarify the support level Microsoft offers for the Dapr extension, including specific guidance on issue handling for extension operations and the Dapr runtime. Additionally, the language has been refined for clarity, such as changing \"made easy with support for\" to \"made easy with support for CloudEvent filtering and *at-least-once* semantics for message delivery.\" Users can now find more precise information on managing secrets and migrating from Dapr open source to the Dapr extension for AKS.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1094377+00:00"
-    },
-    {
-      "cache_key": "0a9967cbf89fb827bc5f5cda5c0d85dccf856625b1db846372095ef6c90e6a9f",
-      "file": "articles/aks/quickstart-dapr.md",
-      "summary": "The documentation for deploying an application with the Dapr extension for Azure Kubernetes Service (AKS) has been updated to clarify the use of the Dapr extension instead of the Dapr cluster extension. Users will now find improved instructions for setting up their environment, including updated references to the Azure Cache for Redis quickstart and clearer navigation paths within the Azure portal. Additionally, the commands and examples have been standardized for consistency, enhancing the overall usability of the quickstart guide.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1094058+00:00"
-    },
-    {
-      "cache_key": "ee5a298a0f8b83fe8cc76edc50c758356b2f763f315754518aa6048a0316e4ae",
-      "file": "articles/aks/managed-gateway-api.md",
-      "summary": "The documentation for the Azure Kubernetes Service (AKS) Managed Gateway API installation has been updated to clarify that the installation is now in preview. Users can now install the Managed Gateway API Custom Resource Definitions (CRDs) on their AKS clusters and must ensure compatibility with the Istio add-on version `asm-1-26` or later. Additionally, users are required to register the `ManagedGatewayAPIPreview` feature flag and install or update the `aks-preview` extension to version `19.0.0b4` or later to utilize the Managed Gateway API functionality.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1093736+00:00"
-    },
-    {
-      "cache_key": "169a4336d94fb05eca6141fe425c740e249350465ed3a8418b00210f4d29207f",
-      "file": "articles/aks/virtual-nodes-cli.md",
-      "summary": "The documentation now includes a new section detailing how to grant the *Network Contributor* role to the managed identity for the virtual node add-on named *aciconnectorlinux-<aks-cluster-name>*. Users can follow the provided Azure CLI commands to assign this role on the subnet used by virtual nodes, enhancing their ability to manage network permissions effectively.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1093423+00:00"
-    },
-    {
-      "cache_key": "e798c64afd01d4b87fd8b8aff967b991b09322c300dff5fcf48cb2966f1cff63",
-      "file": "articles/aks/release-tracker.md",
-      "summary": "The AKS release tracker now provides real-time information on security patches, bug fixes, and feature updates for all AKS clusters. It includes a regional breakdown of independent release trains, enhancing user awareness of updates affecting their clusters.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1093099+00:00"
-    },
-    {
-      "cache_key": "3679f7302723d928c5bf24662b94a6c1791bc56519e637ff3805570193bb3568",
-      "file": "articles/application-network/planned-maintenance.md",
-      "summary": "Learn how to use planned maintenance to schedule component upgrades for Azure Kubernetes Application Network members, including in-cluster data plane components and control plane components.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1092767+00:00"
-    },
-    {
-      "cache_key": "c57eba5a45636161a1c49a7d7b610472d6f5e6bd05289c4adb75daa635af6ce9",
-      "file": "articles/aks/container-network-security-cilium-mutual-tls-how-to.md",
-      "summary": "Get started with Cilium mTLS encryption for Advanced Container Networking Services on your AKS cluster.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1092444+00:00"
-    },
-    {
-      "cache_key": "c9e7c0175eb98dafc94cb78c41941519ce76aaca54e50582bae15702fdc2bd16",
-      "file": "articles/kubernetes-fleet/concepts-cross-cluster-networking.md",
-      "summary": "This article provides a conceptual overview of Cross-cluster networking for Azure Kubernetes Fleet Manager.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1092134+00:00"
-    },
-    {
-      "cache_key": "8aebe6a356c9d49f4ccbef44d961c1c9364bb8b1a49029ffb8c992aca0285946",
-      "file": "articles/application-gateway/for-containers/web-application-firewall.md",
-      "summary": "The documentation now specifies that the Application Gateway for Containers WAF supports only the Default Rule Set (DRS) 2.1 managed rule set, clarifying the version of the rule set that users can utilize. This change ensures users are aware of the specific version available for their configurations, impacting how they implement security measures in their applications.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1091829+00:00"
-    },
-    {
-      "cache_key": "b1d608063334f70ccf1d14912d5f4819c36e1e38c159dfed3212305deb799425",
-      "file": "articles/kubernetes-fleet/concepts-choosing-fleet.md",
-      "summary": "Updates content with clarifications and improvements.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1091501+00:00"
-    },
-    {
-      "cache_key": "7413b1dcd2901d126ed6594ea5b324fc46963effecca6eb2a474746dae850230",
-      "file": "articles/aks/container-network-observability-logs.md",
-      "summary": "The documentation for the Log Analytics table has been updated to reflect the correct name change from `RetinaNetworkFlowLogs` to `ContainerNetworkLogs`. Additionally, the note regarding the delay before new data appears in the `ContainerNetworkLogs` table has been clarified to match this updated naming. Users should now refer to the correct table name when accessing network logs.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1091187+00:00"
-    },
-    {
-      "cache_key": "a8ebb3821fe5f2688bedb9d6a134a79f2adb78b76909a44913e888b9d10fc1a0",
-      "file": "articles/aks/create-volume-azure-blob-storage.md",
-      "summary": "Learn how to create and manage persistent volumes using Azure Blob storage with the Container Storage Interface (CSI) driver in Azure Kubernetes Service (AKS) to provide scalable and reliable storage for your containerized applications.",
-      "category": "Storage",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1090873+00:00"
-    },
-    {
-      "cache_key": "e9606df792d79c9d87aa0ce8717c03d1f233b44554e225104a6e5317a6c8e539",
-      "file": "articles/application-gateway/for-containers/prometheus-grafana.md",
-      "summary": "The documentation has been updated to clarify the configuration process for integrating Application Gateway for Containers with Prometheus and Grafana. Users can now enable Prometheus metrics and container logs directly from the Azure portal by navigating to their AKS cluster and selecting the appropriate options under the Monitoring tab. Additionally, the section on Azure Monitor dashboards with Grafana has been enhanced to emphasize the availability of prebuilt dashboards and the ability to create custom visualizations without leaving Azure Monitor.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1090562+00:00"
-    },
-    {
-      "cache_key": "a3d27695b139691a68797bf4c768ac7eb3452eaf6e43ebf86d21ba11541c30e3",
-      "file": "articles/aks/vertical-pod-autoscaler.md",
-      "summary": "The documentation for the Vertical Pod Autoscaler (VPA) has been updated to reflect the deprecation of the `Auto` update mode, which is now an alias for `Recreate` mode, effective from VPA version 1.4.0 (AKS 1.34+). Additionally, a new `InPlaceOrRecreate` mode has been introduced, allowing VPA to update pod resource requests without restarting the pod when possible, enhancing operational efficiency. Users are now advised to set the `updateMode` to either `Recreate`, `InPlaceOrRecreate`, or `Initial` based on their requirements.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1090242+00:00"
-    },
-    {
-      "cache_key": "a23f43b55671f800f3a6b0ad586325db8a9c77fe0c0271a5c2820a5b275fdf23",
-      "file": "articles/aks/tutorial-kubernetes-deploy-azure-container-storage.md",
-      "summary": "The tutorial on deploying Azure Container Storage in Azure Kubernetes Service (AKS) has been updated to remove the version-specific reference to \"version 1.x.x,\" allowing users to deploy the latest version without specifying it. Additionally, a new requirement for a version pinning parameter `--container-storage-version 1` has been introduced for installation, and users are now instructed to install the Azure CLI version 2.83.0 or later. The tutorial also clarifies that it applies to Azure Container Storage (version 2.x.x), which supports local NVMe disk and Azure Elastic SAN as backing storage types.",
-      "category": "Storage",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1089941+00:00"
-    },
-    {
-      "cache_key": "0f9e2e8c1bd2974d46182b1793c39c694292f4e13c17c67bed6adb4b482802a4",
-      "file": "articles/kubernetes-fleet/concepts-update-orchestration.md",
-      "summary": "The documentation for the update orchestration article has been enhanced to include a new feature, \"Maximum Concurrency,\" which allows users to control how many clusters can upgrade concurrently within an update stage or group. Additionally, the auto-upgrade profile section now clarifies that users can generate an update run at any time using the `az fleet autoupgradeprofile generate-update-run` command, providing more flexibility in managing updates.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1089640+00:00"
-    },
-    {
-      "cache_key": "6f7d9e4507403e17fbfd0a46c64a2906e63491848a70a2513e3387cd84ae2ced",
-      "file": "articles/aks/upgrade-options.md",
-      "summary": "The documentation now clarifies that users can utilize the `maxUnavailable` parameter to upgrade existing nodes instead of deploying new ones, enhancing control over node availability during upgrades. Additionally, it emphasizes lowering the `maxSurge` setting to minimize extra capacity requirements, providing users with more efficient upgrade strategies. For further details, users are directed to the updated sections on customizing unavailable nodes and node surge upgrades.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1089331+00:00"
-    },
-    {
-      "cache_key": "d1d15abca596ad5d48347d0a5fb97f2f8a3ee271f862c85bc9c76c027b3163eb",
-      "file": "AKS-Arc/includes/supported-gpu-models.md",
-      "summary": "The documentation now specifies that Azure Kubernetes Service (AKS) on Azure local supports the NVIDIA RTX Pro 6000 GPU model, along with its associated VM sizes, which include Standard_NC16_RTX6000Pro and Standard_NC32_RTX6000Pro configurations. Additionally, the GPU model names have been standardized to use \"NVIDIA\" instead of \"NVidia\" throughout the document, enhancing clarity for users.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1089030+00:00"
-    },
-    {
-      "cache_key": "a31013a9c38b178540cb37d4fa6ea26367efcca870b7ec104a65b39ada219654",
-      "file": "articles/aks/egress-outboundtype.md",
-      "summary": "The documentation now specifies that when using the `userAssignedNatGateway` option with bring-your-own virtual networking, both Standard and StandardV2 NAT Gateways are supported. It emphasizes that StandardV2 is recommended due to its zone-redundancy and superior bandwidth and throughput capabilities compared to Standard. Users can refer to the updated section for more detailed information on StandardV2 NAT Gateway.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1088714+00:00"
-    },
-    {
-      "cache_key": "bacc372d609ce96b3adb9f94abc206c091a22ed0cfdffb601acedbe726b6bc3c",
-      "file": "articles/container-registry/container-registry-rbac-built-in-roles-directory-reference.md",
-      "summary": "The documentation has been updated to remove references to availability zones and zone redundancy from the built-in roles for Azure Container Registry. Users will now find that the roles related to creating, updating, viewing, listing, and deleting registries no longer include these features, which may impact how they manage registry configurations.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1088386+00:00"
-    },
-    {
-      "cache_key": "c2f7b0f0cf694b1015e09af77a0f6b8b9dc6be1d666098176bc90686af6b29c9",
-      "file": "articles/aks/external-identity-provider-authentication-overview.md",
-      "summary": "The documentation for Azure Kubernetes Service (AKS) has been updated to provide a clearer overview of using external identity providers with structured authentication. Users can now better understand how to configure these providers for control plane access, including support for industry-standard OpenID Connect (OIDC) identity providers like Google and GitHub, as well as the ability to implement custom claim validation and user mapping rules. Additionally, the article now emphasizes the security considerations and requirements for external identity providers, enhancing guidance for users integrating their existing identity infrastructure with AKS.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1088071+00:00"
-    },
-    {
-      "cache_key": "c1944914e903bd8df2ef7d00bb2cf77cd8d0fe261dd84a61908970c8ae97791e",
-      "file": "articles/aks/includes/flatcar-preview-retirement.md",
-      "summary": "This new file announces the retirement of Flatcar Container Linux support in AKS, effective June 8, 2026. It advises users to migrate to supported Linux OS options to avoid disruptions.",
-      "category": "General",
-      "score": 0.8,
-      "cached_at": "2026-03-30T13:09:27.1087754+00:00"
-    },
-    {
-      "cache_key": "b9a7724f62f4bfeb15a4b2dd9e6087c83cba5fd486e0d1b0324d49d28c42d5a8",
-      "file": "articles/aks/dapr-settings.md",
-      "summary": "The documentation for configuring the Dapr extension for Azure Kubernetes Service (AKS) has been updated to clarify the use of parameters and configuration settings. Users can now see improved examples for commands, including the use of `<your-AKS-cluster>` and `<your-resource-group>` placeholders, making it easier to customize their configurations. Additionally, the section on sensitive configuration settings emphasizes the use of the `--configuration-protected-settings` parameter for enhanced security.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1087437+00:00"
-    },
-    {
-      "cache_key": "0e7c2960a2f7d4d490b6c713ee71e09b4732afa66ecc6c051df91815bdfb069f",
-      "file": "articles/kubernetes-fleet/howto-managed-namespaces.md",
-      "summary": "Updates content with clarifications and improvements.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1086973+00:00"
-    },
-    {
-      "cache_key": "f535c392f188cf084ba306d003c85448b69d2e529963074f77ec74580b75a52e",
-      "file": "articles/container-registry/zone-redundancy.md",
-      "summary": "The documentation now clarifies that zone redundancy is enabled by default for all Azure container registries in regions that support availability zones, applicable to all service tiers without additional cost or action required from users. Additionally, the section on the `zoneRedundancy` property has been updated to indicate that while it still exists for backward compatibility, it no longer controls behavior and is scheduled for deprecation, meaning users do not need to set it explicitly.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1086630+00:00"
-    },
-    {
-      "cache_key": "62f1fe57b4948c144ff1853524cd7c619490637d75aa5b397770702702f52bb5",
-      "file": "articles/aks/use-advanced-container-networking-services.md",
-      "summary": "The documentation now specifies that users must have Azure CLI version 2.79.0 or higher to utilize advanced container networking services. Additionally, the default behavior for enabling fully qualified domain name (FQDN) filtering policies has changed; users can now enable FQDN filtering by default with the `--enable-acns` parameter, while Layer 7 and FQDN policies can be enabled by setting the `--acns-advanced-networkpolicies` parameter to `L7`.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1086214+00:00"
-    },
-    {
-      "cache_key": "9b2b45d9390fe0098c7d73acd89b02b507c9c9bfec2fd9db5536637b04c732bc",
-      "file": "articles/application-network/metrics.md",
-      "summary": "Learn how to configure and view Azure Kubernetes Application Network metrics in Azure Monitor, including data plane metrics from your workloads and Azure Kubernetes Application Network components.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1085615+00:00"
-    },
-    {
-      "cache_key": "5bba5b604e9fd279d911aebadfdda6b3855d40eed77f10123862592566362cea",
-      "file": "articles/aks/how-to-apply-l7-policies.md",
-      "summary": "The documentation now includes updated instructions for installing and updating the `aks-preview` Azure CLI extension, specifying that the minimum version required is `14.0.0b6`. Additionally, users can register the `AdvancedNetworkingL7PolicyPreview` feature flag and verify its registration status using the `az feature show` command, enhancing their ability to manage advanced networking policies in Azure Kubernetes Service.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1085285+00:00"
-    },
-    {
-      "cache_key": "2af03b88566ea362193c2b7e8fd8093d6be5bb69844701a21f4cdf9e7a16bac4",
-      "file": "articles/kubernetes-fleet/concepts-rollout-strategy.md",
-      "summary": "The documentation now includes a note specifying that each rollout strategy can define a maximum of 31 stages, which helps ensure reasonable execution times. This change clarifies the limitations users need to consider when configuring their rollout strategies in Kubernetes Fleet.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1084988+00:00"
-    },
-    {
-      "cache_key": "66b1b61544cb2bee100a44933de06d8c06563ed5973b23675ee1ab91e3ed4a47",
-      "file": "articles/application-network/security.md",
-      "summary": "Learn about the security features in Azure Kubernetes Application Network, including mTLS, workload identities, certificate management, and authorization policies for secure service-to-service communication in AKS.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1084675+00:00"
-    },
-    {
-      "cache_key": "a2dad475d8578b4347994730d88cbb3016ab0fa62bbb43ddbf2dd04bad3fd4b4",
-      "file": "articles/aks/windows-annual-channel.md",
-      "summary": "This document now includes a note about the retirement of the Windows annual channel, providing users with important information regarding future support.",
+      "cache_key": "ca48efc06a77c8ee70adbce8e01aa74a283e8595f71d0e94f892f6bddac54146",
+      "file": "articles/aks/learn/quick-kubernetes-deploy-powershell.md",
+      "summary": "Minor updates were made to the PowerShell quickstart guide for deploying Kubernetes, including changes to example resource IDs to reflect more realistic scenarios.",
       "category": "General",
       "score": 0.6,
-      "cached_at": "2026-03-30T13:09:27.1084352+00:00"
+      "cached_at": "2026-03-30T18:25:13.8581013+00:00"
+    },
+    {
+      "cache_key": "9b749f37a63cb5c632335e8beac30c2b205ee5112fcdeca59c5245761956fab7",
+      "file": "articles/aks/http-proxy.md",
+      "summary": "The documentation has been updated to clarify the requirements for disabling the HTTP proxy in Azure Kubernetes Service (AKS). It now specifies that noProxy hosts must be RFC 1123 compliant and that disabling the HTTP Proxy requires a minimum CLI version of 2.85.0.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8580816+00:00"
     },
     {
       "cache_key": "9fcd7a0330f64e1982915937705d5e7ded709453f9b6113c75f58e85a4466cb5",
@@ -407,311 +31,7 @@
       "summary": "The documentation now includes information on enabling the application routing Gateway API implementation, allowing users to manage ingress traffic using the Kubernetes Gateway API. This enhancement provides users with a more efficient way to handle traffic routing in their AKS environments.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1084014+00:00"
-    },
-    {
-      "cache_key": "ed9c9fe7348f996698a8001305dd3e32b9d6a853fda5d7b852629676fe595232",
-      "file": "articles/aks/update-azure-cni.md",
-      "summary": "The documentation now includes a new section on the supported migration path for Azure Kubernetes Service (AKS), detailing that migration to Azure CNI Overlay is a one-way operation from both Azure CNI (Node Subnet) and Kubenet. Users must detach any associated route tables when updating from Kubenet, and a user-assigned managed identity is required for this process. Additionally, it clarifies that updating to Azure CNI Powered by Cilium is not supported for clusters with Windows node pools and provides specific steps for migrating to this configuration.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1083685+00:00"
-    },
-    {
-      "cache_key": "9bc5cb0027b127598fd0493ddf5948dae3d7ef7f0b22130678c66cacb33c40c5",
-      "file": "articles/aks/reliability-availability-zones-configure.md",
-      "summary": "The documentation for configuring Azure Kubernetes Service (AKS) with availability zones has been updated to include instructions for using both the Azure CLI and Terraform, enhancing user flexibility in resource management. Users can now create AKS clusters and node pools that span multiple availability zones using specific commands and parameters, such as `--zones` for the Azure CLI and corresponding Terraform configurations. Additionally, prerequisites for using Terraform have been clarified, ensuring users are well-prepared to implement these configurations.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1083364+00:00"
-    },
-    {
-      "cache_key": "21d521ab847b20d954f58439bf71377a97007370d8100ee69b17acde7e7b13af",
-      "file": "articles/aks/nat-gateway.md",
-      "summary": "The documentation now recommends deploying a StandardV2 NAT gateway resource for improved zone-redundancy, which allows for continued outbound connectivity even if a single availability zone fails. Users are informed that a Standard NAT gateway only provides resiliency within its specific availability zone, highlighting the advantages of using the StandardV2 option for enhanced reliability across multiple zones.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1083035+00:00"
-    },
-    {
-      "cache_key": "9c4f6d5bf4eeb3f77ee30152a7717ca0f3bbc2ce1fd89763656f0d79ad463ccf",
-      "file": "articles/aks/dapr-workflow.md",
-      "summary": "The documentation for deploying workflows with the Dapr extension for Azure Kubernetes Service (AKS) has been updated to improve clarity and usability. Users are now instructed to replace placeholder values in commands, such as `<your-resource-group>` and `<your-AKS-cluster>`, making it easier to customize the commands for their specific environments. Additionally, the section on prerequisites has been rephrased for better readability, ensuring users understand the necessary steps before installation.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1082717+00:00"
-    },
-    {
-      "cache_key": "5f752073770b52c05b2bdf82713ac26b6617ba90da962290cb13fb43cce0ef0a",
-      "file": "articles/kubernetes-fleet/quickstart-create-fleet-and-members.md",
-      "summary": "Updates content with clarifications and improvements.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1082399+00:00"
-    },
-    {
-      "cache_key": "1fcbfe3dd62a65cde052d6c2c94b15df7d85a397234ad01d0a7d86b3a4e27861",
-      "file": "articles/application-network/observability.md",
-      "summary": "Learn about the observability features available for Azure Kubernetes Application Network, including supported metrics, logs, and tracing capabilities, as well as workspace options for monitoring.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1082080+00:00"
-    },
-    {
-      "cache_key": "af53b9744726c1d6be6ccc7bea4e963001de72c272d43a1a3790dea48e45c5ae",
-      "file": "articles/aks/create-volume-azure-disk.md",
-      "summary": "Learn how to create and manage persistent volumes using Azure Disks with the Container Storage Interface (CSI) driver in Azure Kubernetes Service (AKS) to provide scalable and reliable storage for your containerized applications.",
-      "category": "Storage",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1081746+00:00"
-    },
-    {
-      "cache_key": "ec7169c8e7d8900c468554c6dc9917751cf3b3772fda69e7c239477d3136c9c8",
-      "file": "articles/aks/includes/service-connector/csi-secrets-store-service-connector.md",
-      "summary": "The documentation now includes updated commands for creating Azure resources, specifically for setting up an AKS cluster with managed identity enabled. Users can follow the revised steps to create a resource group, AKS cluster, Azure key vault, and secrets in the key vault using the `az` CLI commands provided, ensuring they have the correct parameters and examples for successful execution.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1081405+00:00"
-    },
-    {
-      "cache_key": "262cd0622e884ac81320923b30417ee4096e97b487459232f831c439c3cc2238",
-      "file": "articles/aks/configure-static-egress-gateway.md",
-      "summary": "The documentation now clarifies that static private IP support is no longer in preview and requires Kubernetes version 1.34 or later, along with the `Microsoft.ContainerService/StaticEgressGatewayPreview` Azure Feature Exposure Control flag enabled. Users can define the gateway configuration by creating a `StaticGatewayConfiguration` custom resource, with an example YAML configuration provided for reference.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1081073+00:00"
-    },
-    {
-      "cache_key": "8247610f55c3651b54f96c3aebe642c4ca238f413914acabfbed58edf8d08163",
-      "file": "articles/aks/auto-upgrade-cluster.md",
-      "summary": "The documentation now clarifies that the `node-image` cluster autoupgrade channel is considered legacy and should no longer be used, which impacts how users manage their upgrade channels. Additionally, the examples for the `az aks create` and `az aks update` commands have been updated to use placeholder values for resource group and cluster names, enhancing clarity for users when executing these commands.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1080736+00:00"
-    },
-    {
-      "cache_key": "20348696b8373f0d790a136cee616181b0d3d6562d170fb173fa055fad793585",
-      "file": "articles/application-network/overview.md",
-      "summary": "Learn about Azure Kubernetes Application Network, a fully managed, ambient-based service network solution for Azure Kubernetes Service (AKS) that enables secure, policy-driven communication between services without sidecars or changes to your applications.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1080379+00:00"
-    },
-    {
-      "cache_key": "d3b8ebbfa6fe22779fce17231f0620032a93f29391f7d096f40cfbefa7082dec",
-      "file": "articles/aks/virtual-machines-node-pools.md",
-      "summary": "The documentation now clarifies that when creating a Virtual Machines node pool, users can perform multi-SKU manual scaling and single SKU autoscaling. Additionally, it emphasizes that to enable the cluster autoscaler, users must remove all but one scale profile from the node pool. A new section has been added detailing the requirements for deploying Virtual Machines node pools into a custom virtual network, including the necessity of a user-assigned managed identity with Network Contributor permissions.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1080032+00:00"
-    },
-    {
-      "cache_key": "46431d57cb58a2769d175c77a1b41a360868ce217c44b73c11b8595e7bcdef7b",
-      "file": "AKS-Arc/arc-gateway-aks-arc.md",
-      "summary": "The documentation has been updated to clarify that the Azure Arc gateway simplifies network configuration specifically for AKS on Azure Local clusters. Users are now instructed to complete prerequisites for creating AKS clusters on Azure Local before using the Arc gateway. Additionally, the article emphasizes the need to allow specific URLs and endpoints through enterprise firewalls when utilizing the Arc gateway with AKS on Azure Local.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1079668+00:00"
-    },
-    {
-      "cache_key": "49c5c6664e26f1e57345beeabce7653f54768a078be466c476fb13af6f4fe3fc",
-      "file": "articles/aks/best-practices-cost.md",
-      "summary": "The documentation now correctly references the Azure Savings Plan overview, ensuring users have accurate information on purchasing options when Azure Reservations are not feasible due to varied resource usage across SKUs and regions. This change clarifies the commitment to a fixed hourly spend on compute resources, enhancing user understanding of cost management strategies in Azure.",
-      "category": "Cost",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1079313+00:00"
-    },
-    {
-      "cache_key": "4dbfd1c1e4bad6a66ae199805fd34579b7405ac70f638e6b68b5c817ad584766",
-      "file": "articles/aks/use-ultra-disks.md",
-      "summary": "The documentation for using Azure Ultra Disks on AKS has been updated to ensure consistent capitalization throughout the article, enhancing clarity for users. Users can now easily identify commands and parameters related to Ultra Disks, such as `--enable-ultra-ssd`, which is crucial for configuring both new and existing AKS clusters to utilize these high-performance disks. Additionally, the article emphasizes the limitations and requirements for deploying Ultra Disks, ensuring users are well-informed about compatibility with node pools and specific VM series.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1078949+00:00"
-    },
-    {
-      "cache_key": "032d4f8939208c11511f49f5f38260314bbff781b88d458d3b3ec3c997c48e35",
-      "file": "AKS-Arc/supported-kubernetes-versions.md",
-      "summary": "The documentation has been updated to reflect the addition of Kubernetes version 2603 to the supported versions for AKS on Azure Arc. Users can now see that versions 1.31, 1.32, and 1.33 include 2603 in their respective supported version lists, enhancing clarity on compatibility for deployments.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1078595+00:00"
-    },
-    {
-      "cache_key": "a1de57f36654be14c88cc09e63d7fbef60af0c6c94f02f232ca7471ed5410767",
-      "file": "articles/container-registry/container-registry-rbac-built-in-roles-overview.md",
-      "summary": "The documentation for Azure Container Registry has been updated to clarify the configuration of geo-replications and the role assignments for various identity types, including Azure Container Apps and Azure Machine Learning identities. Users can now better understand how to assign roles and manage permissions using Microsoft Entra-based access control, including the ability to scope role assignments to specific repositories. Additionally, the note regarding connected registries has been emphasized, stating that they do not support Azure role assignments or Microsoft Entra-based permissions management.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1078244+00:00"
-    },
-    {
-      "cache_key": "c73186ee1f35f9c8961667478b1447f9f8bab5a962a3500fd6ed916a0e854cd8",
-      "file": "articles/aks/localdns-custom.md",
-      "summary": "The documentation now clarifies that when using the `Preferred` mode for LocalDNS in AKS, applying this mode will trigger a node reimage operation, allowing users to test their configuration for errors without impacting DNS resolution. Additionally, a new section has been added regarding DNS resolution issues when using Azure CNI Powered by Cilium, detailing the need for explicit permissions in network policies to allow pod egress to LocalDNS IP addresses, along with example CiliumNetworkPolicy YAML configurations for different versions.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1077900+00:00"
-    },
-    {
-      "cache_key": "fdc17b5270c0bdac97562a9b2088cdd21896d82371387498abd6aa3c732a3501",
-      "file": "articles/aks/blue-green-node-pool-upgrade.md",
-      "summary": "Perform upgrades of AKS node pools using a blue-green deployment strategy to ensure workload availability during updates.",
-      "category": "Compute",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1077543+00:00"
-    },
-    {
-      "cache_key": "2a27143bdcf6cf4a4a9cdb41d061f97699c55228a777c11782d95beac561599d",
-      "file": "articles/kubernetes-fleet/concepts-fleet-arc-integration.md",
-      "summary": "Updates content with clarifications and improvements.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1077185+00:00"
-    },
-    {
-      "cache_key": "0a85f86eaf4977e097f92f15fddcf8cacd523395bff1b0992979f21f578adeba",
-      "file": "articles/aks/tutorial-kubernetes-upgrade-cluster.md",
-      "summary": "The documentation for upgrading an AKS cluster has been updated to clarify the steps involved in checking available Kubernetes versions and performing the upgrade. Users can now navigate to the **Upgrades** section in the Azure portal to select the desired Kubernetes version for upgrade, and the instructions have been streamlined for better clarity. Additionally, example outputs have been updated to reflect changes in resource identifiers, enhancing the accuracy of the upgrade process.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1076786+00:00"
-    },
-    {
-      "cache_key": "fddfcdac98378509f16b9ced2f5af6ce6255346df14cd2a4a218c6096cd914e3",
-      "file": "articles/aks/best-practices-storage-nvme.md",
-      "summary": "The documentation now clarifies that to back `emptyDir` volumes with local NVMe disks, users must configure the kubelet storage path to point to an NVMe mount point during node initialization, which requires custom node bootstrap scripting. Additionally, it specifies that data is deleted if the Pod is removed from the node, rather than lost if rescheduled. Users can also specify the NVMe disk path in the Pod spec for optimal performance.",
-      "category": "Cost",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1076331+00:00"
-    },
-    {
-      "cache_key": "205f8b0e7a0ec52d120abd1cf64a712362729f9f1bdf4595f2fca545267bc7e2",
-      "file": "articles/application-network/logs.md",
-      "summary": "Learn how to enable and view data plane and control plane logs for Azure Kubernetes Application Network in Azure Monitor using Container Insights and diagnostic settings.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1075685+00:00"
-    },
-    {
-      "cache_key": "a9df11d3570e9decf800e38993da0c027be7fc34a44a42204c54e05461b9229d",
-      "file": "articles/kubernetes-fleet/howto-staged-update-run.md",
-      "summary": "The documentation now clarifies that labels can be applied to member clusters to create stages and control the deployment order within each stage. Users can utilize the updated command to apply labels to member clusters, enhancing their ability to manage deployments effectively.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1075344+00:00"
-    },
-    {
-      "cache_key": "a569803695cb9fbe02f9777b1f8d4e320502cffc70019a8820cec7cd3235cf65",
-      "file": "articles/aks/azure-linux-aks-partner-solutions.md",
-      "summary": "The documentation now includes a new section for TrendAI, detailing its capabilities in providing proactive security for cloud-native and containerized workloads on Azure Kubernetes Service. Users can benefit from a unified view of risk across container and runtime activities, enabling better prioritization and actionable insights for managing security in dynamic Kubernetes environments. Additionally, the partner solutions list has been updated to reflect the inclusion of TrendAI under the Security category.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1075009+00:00"
-    },
-    {
-      "cache_key": "30345cbe5307b3b561fd158c4ff63a14eac8233f2053f77ee00cc720a96081da",
-      "file": "articles/aks/csi-secrets-store-identity-access.md",
-      "summary": "The documentation now includes a new section on validating Key Vault secrets, providing users with specific commands to check the contents of the secrets store. Users can execute `kubectl exec` commands to list secrets and display a specific secret, enhancing their ability to verify and troubleshoot secret management in their deployments.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1074677+00:00"
-    },
-    {
-      "cache_key": "f31789e92dccb5d5c93acfc0f3bde6719c092a02a58c89deabd65bda2d3e7624",
-      "file": "articles/application-network/traffic-management-use-cases.md",
-      "summary": "Learn how to use Azure Kubernetes Application Network for traffic management with Istio ambient mode and Kubernetes Gateway API, including L4/L7 authorization policies, JWT claim-based routing, traffic shifting, and fault injection across multiple AKS clusters.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1074279+00:00"
-    },
-    {
-      "cache_key": "430a270402fbb19fbd2756bf68c9421ed4c5f48f9e2840f5c2ac1e4a0d170806",
-      "file": "articles/aks/istio-plugin-ca.md",
-      "summary": "The title and description have been updated for clarity regarding the use of CA certificates for the Istio-based service mesh add-on on AKS, improving user understanding.",
-      "category": "General",
-      "score": 0.7,
-      "cached_at": "2026-03-30T13:09:27.1073864+00:00"
-    },
-    {
-      "cache_key": "5a5aac200a9fe5b5236032ec98af06e64e5bd43217c4a7d8014e9ea3caf2cd92",
-      "file": "articles/aks/open-ai-secure-access-quickstart.md",
-      "summary": "The documentation now specifies that users need a custom domain name enabled on their Azure OpenAI account for Microsoft Entra authorization, with updated references to \"Foundry Tools\" instead of \"Azure AI services.\" This change clarifies the context in which the custom domain name is applicable.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1073461+00:00"
-    },
-    {
-      "cache_key": "ada489d90ddbdcf24a439e4d37bd20d4e2265204869cc2bb33df12b96f64967a",
-      "file": "articles/aks/flatcar-container-linux-for-aks.md",
-      "summary": "The documentation now includes a note regarding the retirement of Flatcar Container Linux for AKS, emphasizing that there is no in-place migration path to another operating system. Users must create new node pools with a supported Linux OS, migrate their workloads, and then delete the old Flatcar Container Linux node pools. For further details on supported node OS options, users can refer to the AKS node OS documentation.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1073037+00:00"
-    },
-    {
-      "cache_key": "1664caf13ce8f53c7d234679dde973385477a2ce1422610d18af38ecdfd265ce",
-      "file": "articles/aks/includes/windows-annual-channel-retirement.md",
-      "summary": "[!IMPORTANT]",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1072598+00:00"
-    },
-    {
-      "cache_key": "3a35b6541f0b7bb40a40e7bef189ba5cfc2eb89cef3e885e607298cd1ff6cb2b",
-      "file": "articles/aks/agentic-cli-for-aks-install.md",
-      "summary": "The article has been significantly modified to clarify the installation and configuration of the agentic CLI for AKS, including detailed instructions for both client and cluster modes.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1072155+00:00"
-    },
-    {
-      "cache_key": "3237a599a300776b1400c3b9922030ced17fade2d99b0d5a04bd55eccab70d03",
-      "file": "articles/aks/learn/quick-kubernetes-deploy-cli.md",
-      "summary": "The documentation for deploying an Azure Kubernetes Service (AKS) cluster using Azure CLI has been updated to clarify that users can now deploy the cluster with default settings and a multi-container application. Additionally, users are instructed to replace placeholders for `<defaultPassword>` in the YAML manifest, ensuring proper configuration for the RabbitMQ instance. The output examples have also been refined to enhance clarity regarding the application's public IP address and its HTML response.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1071750+00:00"
-    },
-    {
-      "cache_key": "d6835c88b6b2586ac48a61d99dc9a7596b235041ace0102803107e85bcc637c8",
-      "file": "articles/aks/cluster-container-registry-integration.md",
-      "summary": "The documentation now clarifies that the `az aks --attach-acr` command is not supported for ABAC-enabled ACR registries configured with \"RBAC Registry + ABAC Repository Permissions.\" Users must manually assign the `Container Registry Repository Reader` role using the Azure Portal, `az role assignment` CLI, or Azure Resource Manager to grant image pull permissions for these registries. This change emphasizes the need for users to adjust their role assignment approach when working with ABAC-enabled ACR registries.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1071297+00:00"
-    },
-    {
-      "cache_key": "4b159011ac4851a019885b6d8b00618c00dd572d58698830d4dec9e8c3b08503",
-      "file": "articles/container-registry/container-registry-concepts.md",
-      "summary": "The documentation for Azure Container Registry has been updated to clarify the introduction of key concepts, emphasizing user control over container content and enhanced features like geo-replication and tag locking. Additionally, the instructions for addressing registry artifacts have been refined, specifying the format for push and pull operations, including examples for using Docker commands with tags and digests. Users can now better understand how to manage repository names, tags, and manifests, improving their overall experience with the service.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1070822+00:00"
-    },
-    {
-      "cache_key": "fc390e96005f3f2f118172e392ee962242a121f497cbd8c536ee725395cb9c82",
-      "file": "articles/aks/use-network-policies.md",
-      "summary": "The documentation now includes a new section on identifying impacted AKS clusters using an Azure Resource Graph query, allowing users to easily find clusters with Linux node pools that utilize Azure Network Policy Manager. Additionally, the recommendation for using Cilium has been expanded to highlight its advantages, including support for Kubernetes-native policies and better performance through an eBPF-based dataplane. A cautionary note has also been added regarding the retirement of Azure Network Policy Manager for Linux nodes, advising users to transition to Azure CNI Powered by Cilium for new deployments.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1070409+00:00"
-    },
-    {
-      "cache_key": "cb7fc6362f9cec72ad517a6f9bbe7ebf6fb47a7ca1af70797b5b6edeba778c0e",
-      "file": "articles/aks/app-routing-gateway-api-tls.md",
-      "summary": "Secure ingress traffic with the application routing Gateway API implementation using AKV and the Secrets Store CSI Driver",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1069995+00:00"
-    },
-    {
-      "cache_key": "2dfec97f7872483d1e8c813e996515ab2ee1d54dced34461255d0cd0a0eb071e",
-      "file": "articles/aks/compare-container-options-with-aks.md",
-      "summary": "Understand when to use Azure Kubernetes Service (AKS) and how it compares to other container options including Azure Container Instances, Azure App Service, Azure Functions, and Azure Container Apps.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1069551+00:00"
+      "cached_at": "2026-03-30T18:25:13.8580625+00:00"
     },
     {
       "cache_key": "bf024cc136ad909168dd47f0f63521db2819828c7a455a753da59e2b4cce20ee",
@@ -719,167 +39,23 @@
       "summary": "Learn how to create and manage persistent volumes using Azure Files with the Container Storage Interface (CSI) driver in Azure Kubernetes Service (AKS) to provide scalable and reliable storage for your containerized applications.",
       "category": "Storage",
       "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1069089+00:00"
+      "cached_at": "2026-03-30T18:25:13.8580426+00:00"
     },
     {
-      "cache_key": "9ddd554bededaa8e287b965193c6b80abebf3dfefc3657e9b217ddef75e80a5d",
-      "file": "articles/aks/container-network-security-cilium-mutual-tls-concepts.md",
-      "summary": "An overview of Advanced Container Networking Services' Cilium mTLS encryption capabilities on Azure Kubernetes Service (AKS).",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1068641+00:00"
-    },
-    {
-      "cache_key": "d6691f379514ca0cd47151acc74c7d32f73bc40f45ab5ace5f9f430ac5162602",
-      "file": "articles/aks/cluster-health-monitor.md",
-      "summary": "Learn how the Cluster Health Monitor checker in Azure Kubernetes Service (AKS) runs data plane health checks and supports CoreDNS remediation.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1068191+00:00"
-    },
-    {
-      "cache_key": "fde6ae9fbc56077233fa105056b19097437353100ae012c28acc028ba9347f11",
-      "file": "articles/aks/best-practices-performance-scale.md",
-      "summary": "The documentation now clarifies the default disk types used by AKS when ephemeral OS disks are not available, specifically highlighting that Standard SSDs are used when Premium SSDs are incompatible. Additionally, the comparison table for Standard SSDs and Standard HDDs has been updated for clarity, ensuring users understand the performance characteristics and suitable use cases for each disk type.",
-      "category": "Cost",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1067767+00:00"
-    },
-    {
-      "cache_key": "d5a37e293184d8020bf4f032713b84969a541a113bdb52be2ba73e4b885cc747",
-      "file": "articles/aks/use-managed-identity.md",
-      "summary": "The documentation now clarifies that once a cluster is created with a managed identity in Azure Kubernetes Service (AKS), users cannot switch back to using a service principal. This change emphasizes the permanence of the managed identity choice during cluster creation.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1067347+00:00"
-    },
-    {
-      "cache_key": "cbf1c3f6b6e1251336402c87ed52c3b64983afd79335bc15c9005971a346e50d",
-      "file": "articles/aks/upgrade-os-version.md",
-      "summary": "The documentation now specifies that clusters and node pools using the `Ubuntu` OS SKU will automatically migrate to Ubuntu 24.04 when upgrading to Kubernetes version 1.35 or higher. Additionally, users should validate workloads relying on container runtime behavior with containerd 2.0 after migrating to Ubuntu 24.04. The support for Ubuntu 22.04 has been extended to Kubernetes versions 1.25 to 1.36, and the rollback command `--os-sku Ubuntu2204` is clarified for use with Kubernetes versions up to 1.36, with a requirement to update the OS SKU for versions 1.37 and above.",
+      "cache_key": "8247610f55c3651b54f96c3aebe642c4ca238f413914acabfbed58edf8d08163",
+      "file": "articles/aks/auto-upgrade-cluster.md",
+      "summary": "The documentation now clarifies that the `node-image` cluster autoupgrade channel is considered legacy and should no longer be used, which impacts how users manage their upgrade channels. Additionally, the examples for the `az aks create` and `az aks update` commands have been updated to use placeholder values for resource group and cluster names, enhancing clarity for users when executing these commands.",
       "category": "Operations",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1066946+00:00"
+      "cached_at": "2026-03-30T18:25:13.8580225+00:00"
     },
     {
-      "cache_key": "a49f3618b63964481abc551c9e99e98de12f13170447c84d5b8f88c374cd8f60",
-      "file": "articles/aks/azure-cni-powered-by-cilium.md",
-      "summary": "The documentation has been updated to reflect new versions of Cilium compatible with Azure CNI, specifically noting that versions 1.14.20, 1.16.16, 1.17.9, 1.18.6, and 1.35 are now supported. Users can now utilize these updated versions for enhanced functionality and performance in their Azure Kubernetes Service (AKS) deployments.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1066502+00:00"
-    },
-    {
-      "cache_key": "b4b3f011322584ac9cfae1fa6aff11b0ed18310794462cf34a204ff9a9db82f7",
-      "file": "articles/aks/agentic-cli-for-aks-overview.md",
-      "summary": "The documentation for the Agentic CLI for Azure Kubernetes Service (AKS) has been updated to clarify that it is currently in preview. A new table has been added to summarize the ideal use cases and characteristics of the two deployment modes: **client mode** and **cluster mode**, helping users choose the best option for their environment. Additionally, best practices for using the Agentic CLI have been expanded to include guidance on starting with broad diagnostic queries and using descriptive problem statements for better AI analysis.",
+      "cache_key": "0a9967cbf89fb827bc5f5cda5c0d85dccf856625b1db846372095ef6c90e6a9f",
+      "file": "articles/aks/quickstart-dapr.md",
+      "summary": "The documentation for deploying an application with the Dapr extension for Azure Kubernetes Service (AKS) has been updated to clarify the use of the Dapr extension instead of the Dapr cluster extension. Users will now find improved instructions for setting up their environment, including updated references to the Azure Cache for Redis quickstart and clearer navigation paths within the Azure portal. Additionally, the commands and examples have been standardized for consistency, enhancing the overall usability of the quickstart guide.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1065787+00:00"
-    },
-    {
-      "cache_key": "5ce33635e63b7e3fdea5be7e0de33a075f40578f097fbb03790b58869f946e6e",
-      "file": "articles/aks/migrate-from-npm-to-cilium-network-policy.md",
-      "summary": "The document now includes a query for identifying impacted AKS clusters using Azure Network Policy Manager (NPM) and highlights the benefits of migrating to Cilium Network Policy, emphasizing improved compliance and performance.",
-      "category": "Networking",
-      "score": 0.85,
-      "cached_at": "2026-03-30T13:09:27.1065394+00:00"
-    },
-    {
-      "cache_key": "b494abf31a2a7d1b508061443e4dd35acd40cf459ff9b66c8ad653c95677f4ca",
-      "file": "articles/aks/outbound-rules-control-egress.md",
-      "summary": "The documentation has been updated to clarify the FQDN rules for the AKS konnectivity-agent, specifically noting that while the rule for `*.hcp.<location>.azmk8s.io` is required for Node to API server communication in clusters with the konnectivity-agent enabled, it is not necessary for private clusters due to their use of private networking. Additionally, the requirements for using the Azure Key Vault provider with the Istio-based service mesh add-on have been specified, emphasizing its necessity when setting up secure ingress gateways or a plug-in certificate authority.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1065007+00:00"
-    },
-    {
-      "cache_key": "c2c9fe67b3b4b8d9db0f10985804d6bb12247848bcb233eac44d97d07dad9f3c",
-      "file": "articles/application-network/get-started.md",
-      "summary": "Learn how to get started with Azure Kubernetes Application Network for AKS, including prerequisites, creating an Application Network resource, connecting an AKS cluster as a member, and managing resources.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1064598+00:00"
-    },
-    {
-      "cache_key": "3e069811a8a1a97976bc4b5890095686fcbfcf45c4b407173180d5a96dafea72",
-      "file": "articles/kubernetes-fleet/update-create-update-strategy.md",
-      "summary": "The documentation now includes detailed guidance on using the `maxConcurrency` parameter in the JSON file for defining update strategies. Users can specify how many clusters can upgrade concurrently at both the stage and group levels, allowing for more controlled rollouts or faster upgrades across fleets. The updated examples clarify the use of fixed integers and percentages for concurrency settings, enhancing user understanding of managing update processes.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1064201+00:00"
-    },
-    {
-      "cache_key": "3a0566c7076254787cfb4057666d2619e24ce766a40cfa1a667715dff61859fb",
-      "file": "articles/aks/use-premium-v2-disks.md",
-      "summary": "The documentation has been updated to clarify that Azure Premium SSD v2 disks require node pools deployed in regions that support these disks, with a reference to the list of supported regions. Additionally, the text now specifies that a persistent volume claim (PVC) can use the previously created storage class to create an Ultra Disk, and it corrects the terminology regarding Input/Output Operations Per Second (IOPS) and throughput limits for Azure Premium SSD v2, emphasizing that these are not supported through AKS.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1063795+00:00"
-    },
-    {
-      "cache_key": "f204fdf165aa6d8a9803c59f1127d2468dcd7bd816b98fd1f3ea30ef0086e5cf",
-      "file": "articles/container-registry/container-registry-soft-delete-policy.md",
-      "summary": "The documentation now clarifies that the soft delete policy does not support registries configured for geo-replication or artifact cache, removing the previous mention of zone redundancy. This change helps users understand the limitations of the soft delete feature when using specific configurations in Azure Container Registry.",
-      "category": "Compliance",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1063396+00:00"
-    },
-    {
-      "cache_key": "4814a4de8cb893f3de2a3bc192234e031f8f81d45023e975a4032afc1c284dd1",
-      "file": "articles/aks/use-oidc-issuer.md",
-      "summary": "The documentation now clarifies that the OIDC issuer is enabled by default only for newly created AKS clusters running Kubernetes version 1.34 and above, while existing clusters require manual enablement regardless of the Kubernetes version. Additionally, it specifies that enabling the OIDC issuer on existing clusters necessitates an API server restart, which will result in brief downtime. Users should also note that the maximum token lifetime is set to 24 hours, and projected service account tokens are mandatory for Kubernetes 1.30+ clusters.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1062974+00:00"
-    },
-    {
-      "cache_key": "5591bdcbd5d07251658210eba45429963431266aa97b5d80864d7da8ff80ba8f",
-      "file": "articles/application-gateway/for-containers/application-gateway-for-containers-components.md",
-      "summary": "The documentation for Application Gateway for Containers has been updated to include detailed connectivity requirements essential for its operation. Users can now find specific outbound and inbound connectivity details, including necessary endpoints, ports, and their purposes, which will aid in configuring and troubleshooting their setups effectively. Additionally, the format for frontends has been clarified, specifying that they may only listen on ports 443 and 80.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1062541+00:00"
-    },
-    {
-      "cache_key": "dbedd79e46d466a5a9bf451475839cc0841ca2bd521eb8925adb2d9d633944a5",
-      "file": "articles/aks/istio-gateway-api.md",
-      "summary": "The documentation now specifies that the Istio service mesh add-on and the application routing Gateway API implementation cannot be enabled simultaneously, requiring users to disable one before enabling the other. Additionally, it clarifies that configuring HTTPS ingress access to HTTPS services via the TLSRoute resource is currently unsupported. Users are also informed that ConfigMap customizations for Gateway resources must adhere to a resource customization allow list, with disallowed fields blocked by managed webhooks.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1062130+00:00"
-    },
-    {
-      "cache_key": "bf4de4b04a2afd3220a5bb6da7338a9bb4f9c01bc8b76ba3f4910b79171a695e",
-      "file": "articles/aks/tutorial-kubernetes-deploy-cluster.md",
-      "summary": "The tutorial now clarifies that users can create a cluster with fewer than three nodes, in addition to the previous requirement of a three-node cluster for optimal operation. This change allows for more flexibility in cluster creation, enabling users to omit the node VM size parameter to use the default VM size if needed.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1061713+00:00"
-    },
-    {
-      "cache_key": "b46e29a8c7dd175ebdebe504256cacbb8f211d44cd7aba3f571106a4ea5e64bb",
-      "file": "articles/aks/configure-node-binpack-scheduler.md",
-      "summary": "Learn how to configure scheduler profiles to reduce idle costs and improve node utilization on Azure Kubernetes Service (AKS).",
-      "category": "Compute",
-      "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1061286+00:00"
-    },
-    {
-      "cache_key": "17fe5d198402f909d9b352538b931843a0248d66efe076b36ec5f6f709ad1416",
-      "file": "articles/aks/cost-analysis.md",
-      "summary": "The documentation now specifies that the AKS cost analysis add-on supports approximately 7,000 containers per cluster, contingent on the current 4-GB memory limit, which may change in the future. This update provides users with clearer expectations regarding the scalability of their AKS clusters.",
-      "category": "Cost",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1060834+00:00"
-    },
-    {
-      "cache_key": "317db46b60281c3def450cda6a8e69b18ae66a2f7a10c4d2c079b9b052b99b62",
-      "file": "articles/kubernetes-fleet/concepts-preview-api-lifecycle.md",
-      "summary": "Updates content with clarifications and improvements.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1060414+00:00"
+      "cached_at": "2026-03-30T18:25:13.8580035+00:00"
     },
     {
       "cache_key": "cc749ab01f333be3d4a7f02137de945d21218b23a2abe852a9a5de16e5bb33ce",
@@ -887,135 +63,119 @@
       "summary": "The documentation has been updated to reflect the rebranding of the Azure AI Foundry portal to the Microsoft Foundry portal. Users should now refer to the Microsoft Foundry portal when navigating from the Overview blade and when retrieving their Azure OpenAI deployment name.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1060026+00:00"
+      "cached_at": "2026-03-30T18:25:13.8579847+00:00"
     },
     {
-      "cache_key": "06cc18deb8aac30430fd3ddd0c815a39f21268c6eadc5571816fdb858c8e7594",
-      "file": "articles/aks/csi-secrets-store-driver.md",
-      "summary": "The documentation for the Azure Key Vault command has been updated to remove the location parameter from the `az keyvault update` command. Users can now update their Key Vault settings without specifying the location, simplifying the command usage.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1059653+00:00"
-    },
-    {
-      "cache_key": "bfc2d66c6a1fcd1208f7975e6ab181cc44f52e426d1f2a1921b8a0ed4311e145",
-      "file": "articles/aks/app-routing-gateway-api.md",
-      "summary": "Use the application routing add-on to manage ingress traffic on Azure Kubernetes Service (AKS) using the Kubernetes Gateway API.",
+      "cache_key": "205f8b0e7a0ec52d120abd1cf64a712362729f9f1bdf4595f2fca545267bc7e2",
+      "file": "articles/application-network/logs.md",
+      "summary": "Learn how to enable and view data plane and control plane logs for Azure Kubernetes Application Network in Azure Monitor using Container Insights and diagnostic settings.",
       "category": "Networking",
       "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1059193+00:00"
+      "cached_at": "2026-03-30T18:25:13.8579650+00:00"
     },
     {
-      "cache_key": "664c3282a1276f1c09e11b82dc18ffad7c84f79ef44f6923b0e79d40e038e75c",
-      "file": "articles/aks/concepts-network-azure-cni-overlay.md",
-      "summary": "The documentation now includes support for Windows Server 2025 (Preview) in the OS platforms supported section, allowing users to utilize this newer version in their Azure CNI overlay configurations. This update enhances compatibility for users looking to deploy on the latest Windows Server platform.",
+      "cache_key": "afb69a3936042196062c91c9c793a9bf8eaecc353ffd3c454493a1e03b1e2773",
+      "file": "articles/application-network/architecture.md",
+      "summary": "Learn about the architecture of Azure Kubernetes Application Network including management plane, control plane, data plane, and multi-cluster service discovery.",
       "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1058752+00:00"
-    },
-    {
-      "cache_key": "274431c5ed1ace56109653cabbf57a28b24f29f67b9a35e46b6c680f3d20cfe9",
-      "file": "articles/aks/kaito-custom-inference-model.md",
-      "summary": "The documentation for the Kaito custom inference model has been updated to use the SmolLM2-1.7B-Instruct model instead of the previous Bloom-1B7 model, along with a new base image tag of 0.2.0. Users can now follow revised instructions to set up their deployment YAML, including updated parameters for instance type and model ID, and they are guided to port forward the inference service to their local machine after the workspace is ready. Additionally, the testing process has been streamlined to include the installation of the OpenAI Python client and a new script for testing the model's inference capabilities.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1058296+00:00"
-    },
-    {
-      "cache_key": "3421242ba3a86558323912793e165a83a6445475f4a61822733314cd64250302",
-      "file": "articles/aks/aks-model-context-protocol-server.md",
-      "summary": "Learn how to install and use the Model Context Protocol (MCP) server to intelligently troubleshoot and manage your Azure Kubernetes Service (AKS) clusters.",
-      "category": "General",
       "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1057877+00:00"
+      "cached_at": "2026-03-30T18:25:13.8579456+00:00"
     },
     {
-      "cache_key": "872a80e0ae105774e2c17fdd1d5a063a946a9f97961cd606e60dc5c67ac9f181",
-      "file": "articles/aks/private-apiserver-vnet-integration-cluster.md",
-      "summary": "The documentation has been updated to clarify that the article applies specifically to private AKS clusters created with API Server VNet Integration using a bring-your-own VNet configuration. Users can now follow detailed steps to expose the API server through a Private Link Service and connect from a separate virtual network, including creating necessary subnets, configuring private DNS, and managing permissions. Additionally, the instructions for deploying a private AKS cluster have been enhanced to include specific commands and requirements for setting up the network infrastructure.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1057452+00:00"
-    },
-    {
-      "cache_key": "e39f7f6df43692501d182fbe4f8d320d6ae30a5dcf6468217c7f632a6a57358f",
-      "file": "articles/aks/optimize-aks-costs.md",
-      "summary": "The documentation for Azure Savings Plans has been updated to correct the link to the overview page, now directing users to the correct resource for understanding savings plans. This change ensures that users can access accurate information regarding the benefits and commitments associated with Azure Savings Plans, enhancing their ability to optimize costs effectively.",
+      "cache_key": "b9a7724f62f4bfeb15a4b2dd9e6087c83cba5fd486e0d1b0324d49d28c42d5a8",
+      "file": "articles/aks/dapr-settings.md",
+      "summary": "The documentation for configuring the Dapr extension for Azure Kubernetes Service (AKS) has been updated to clarify the use of parameters and configuration settings. Users can now see improved examples for commands, including the use of `<your-AKS-cluster>` and `<your-resource-group>` placeholders, making it easier to customize their configurations. Additionally, the section on sensitive configuration settings emphasizes the use of the `--configuration-protected-settings` parameter for enhanced security.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1057051+00:00"
+      "cached_at": "2026-03-30T18:25:13.8579258+00:00"
     },
     {
-      "cache_key": "d5d9b4804ed3b09c311ece1fb72c15f8750b743df359b42aa38006f36e2305ec",
-      "file": "articles/aks/scale-cluster.md",
-      "summary": "The documentation for manually scaling nodes in an Azure Kubernetes Service (AKS) cluster has been updated to clarify that users must disable the cluster autoscaler to force a user node pool to scale to 0 nodes. Additionally, it now specifies that users can allow autoscaling to zero nodes on autoscaled user node pools by setting the `--min-count` parameter of the Cluster Autoscaler to 0. These changes enhance user understanding of scaling limitations and options within AKS.",
+      "cache_key": "b05224003db9f15764cba414d8b4de37aa326116b1a32fccb5682f687a6db4b3",
+      "file": "articles/container-registry/container-registry-storage.md",
+      "summary": "The documentation now states that zone redundancy is enabled by default in select Azure regions for Azure container registries, enhancing resilience and high availability. Previously, users had to optionally enable this feature, which is part of the Premium service tier, to benefit from replication across multiple availability zones. This change simplifies the setup process for users looking to improve the reliability and performance of their registries.",
+      "category": "Storage",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8579063+00:00"
+    },
+    {
+      "cache_key": "d6691f379514ca0cd47151acc74c7d32f73bc40f45ab5ace5f9f430ac5162602",
+      "file": "articles/aks/cluster-health-monitor.md",
+      "summary": "Learn how the Cluster Health Monitor checker in Azure Kubernetes Service (AKS) runs data plane health checks and supports CoreDNS remediation.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8578852+00:00"
+    },
+    {
+      "cache_key": "3a0566c7076254787cfb4057666d2619e24ce766a40cfa1a667715dff61859fb",
+      "file": "articles/aks/use-premium-v2-disks.md",
+      "summary": "The documentation has been updated to clarify that Azure Premium SSD v2 disks require node pools deployed in regions that support these disks, with a reference to the list of supported regions. Additionally, the text now specifies that a persistent volume claim (PVC) can use the previously created storage class to create an Ultra Disk, and it corrects the terminology regarding Input/Output Operations Per Second (IOPS) and throughput limits for Azure Premium SSD v2, emphasizing that these are not supported through AKS.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1056645+00:00"
+      "cached_at": "2026-03-30T18:25:13.8578652+00:00"
     },
     {
-      "cache_key": "7d85e0934a8c425c557a52d49f7375b4be51cedce17b061b3e0ba35afebf0d6e",
-      "file": "articles/aks/includes/ingress-nginx-retirement.md",
-      "summary": "The documentation now emphasizes that users of the application routing add-on for AKS should migrate to the application routing Gateway API implementation for a more robust ingress traffic management experience. Additionally, it clarifies that while production workloads remain fully supported through November 2026, users do not need to switch to a different ingress product immediately, as critical security patches will be provided until that date.",
-      "category": "Networking",
+      "cache_key": "fde6ae9fbc56077233fa105056b19097437353100ae012c28acc028ba9347f11",
+      "file": "articles/aks/best-practices-performance-scale.md",
+      "summary": "The documentation now clarifies the default disk types used by AKS when ephemeral OS disks are not available, specifically highlighting that Standard SSDs are used when Premium SSDs are incompatible. Additionally, the comparison table for Standard SSDs and Standard HDDs has been updated for clarity, ensuring users understand the performance characteristics and suitable use cases for each disk type.",
+      "category": "Cost",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1055926+00:00"
+      "cached_at": "2026-03-30T18:25:13.8578377+00:00"
     },
     {
-      "cache_key": "4799cabc6f24dda856077c7282ea9fb49b6c6afd1a08417c24550b3874d47e1a",
-      "file": "articles/aks/dapr.md",
-      "summary": "The Dapr installation guide has been updated with new information on prerequisites and installation steps, enhancing the clarity and usability of the documentation.",
-      "category": "General",
-      "score": 0.8,
-      "cached_at": "2026-03-30T13:09:27.1055507+00:00"
-    },
-    {
-      "cache_key": "7bd3df22de1de1f773ddf2bf8830e624716b348d69ddd9a1aa3a6a56a065dcd5",
-      "file": "articles/aks/migrate-key-management-service-platform-managed-key-customer-managed-key.md",
-      "summary": "The documentation now specifies that any policy blocking the updating of secrets must be disabled prior to initiating the migration process, as this process involves updating secrets. This clarification helps users ensure a smooth migration of key management services without encountering issues related to secret updates.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1055098+00:00"
-    },
-    {
-      "cache_key": "9ba96fa7c17c7928a6295d7a37f46db691002d7b40e8530beb30460d08a95256",
-      "file": "articles/aks/kafka-overview.md",
-      "summary": "The documentation now specifies that for Kafka deployments on AKS, the Azure Disk CSI driver provides persistent volumes backed by Azure Managed Disks, enhancing clarity on storage options. Additionally, the reference to \"Premium SSD v2 disk configurations\" has been updated to \"Premium SSD v2 configurations,\" which may affect how users interpret the available disk options for different Kafka cluster sizes.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1054673+00:00"
-    },
-    {
-      "cache_key": "7078fd0bfe85eacafeb21cdce032c0745164dabc709d8a75b32804076451d112",
-      "file": "articles/aks/upgrade-conceptual.md",
-      "summary": "The documentation has been updated with new diagrams that illustrate the upgrade process for Azure Kubernetes Service (AKS), specifically focusing on rolling upgrades and Blue-Green deployments. Users can now refer to clearer visual representations of the upgrade steps, including the management of surge nodes, Pod Disruption Budgets, and the transition between blue and green node pools, enhancing their understanding of the upgrade mechanics.",
+      "cache_key": "0a85f86eaf4977e097f92f15fddcf8cacd523395bff1b0992979f21f578adeba",
+      "file": "articles/aks/tutorial-kubernetes-upgrade-cluster.md",
+      "summary": "The documentation for upgrading an AKS cluster has been updated to clarify the steps involved in checking available Kubernetes versions and performing the upgrade. Users can now navigate to the **Upgrades** section in the Azure portal to select the desired Kubernetes version for upgrade, and the instructions have been streamlined for better clarity. Additionally, example outputs have been updated to reflect changes in resource identifiers, enhancing the accuracy of the upgrade process.",
       "category": "Operations",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1054242+00:00"
+      "cached_at": "2026-03-30T18:25:13.8577957+00:00"
     },
     {
-      "cache_key": "6902540b2eb45de766a9f567bf21bb3285b4113d9fcc700e219130c1955453b7",
-      "file": "articles/aks/includes/aks-automatic/aks-automatic-limitations.md",
-      "summary": "The limitations section has been expanded to clarify the implications of node resource group lockdown in AKS Automatic clusters, guiding users on how to manage their network configurations.",
+      "cache_key": "5ce33635e63b7e3fdea5be7e0de33a075f40578f097fbb03790b58869f946e6e",
+      "file": "articles/aks/migrate-from-npm-to-cilium-network-policy.md",
+      "summary": "The document now includes a query for identifying impacted AKS clusters using Azure Network Policy Manager (NPM) and highlights the benefits of migrating to Cilium Network Policy, emphasizing improved compliance and performance.",
       "category": "Networking",
-      "score": 0.75,
-      "cached_at": "2026-03-30T13:09:27.1053821+00:00"
+      "score": 0.85,
+      "cached_at": "2026-03-30T18:25:13.8577768+00:00"
     },
     {
-      "cache_key": "e3ffdb9ce7c02273959b75e07404904a4ab44b6ae1ea15d32f5d946eefe85a1d",
-      "file": "articles/kubernetes-fleet/concepts-member-cluster-types.md",
-      "summary": "Updates content with clarifications and improvements.",
+      "cache_key": "f535c392f188cf084ba306d003c85448b69d2e529963074f77ec74580b75a52e",
+      "file": "articles/container-registry/zone-redundancy.md",
+      "summary": "The documentation now clarifies that zone redundancy is enabled by default for all Azure container registries in regions that support availability zones, applicable to all service tiers without additional cost or action required from users. Additionally, the section on the `zoneRedundancy` property has been updated to indicate that while it still exists for backward compatibility, it no longer controls behavior and is scheduled for deprecation, meaning users do not need to set it explicitly.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1053398+00:00"
+      "cached_at": "2026-03-30T18:25:13.8577572+00:00"
     },
     {
-      "cache_key": "c076b9efbfd880c6b502728a7943adaafc421742266d39a405e06808df3e9da8",
-      "file": "articles/kubernetes-fleet/concepts-multi-cluster-networking-overview.md",
-      "summary": "This article provides a conceptual overview of Azure Kubernetes Fleet Manager multi-cluster networking.",
+      "cache_key": "4f2f2a97be4dfed3fc0049577224f2d55659a2be966e81ce94ea47ef3231f5ab",
+      "file": "articles/aks/node-access.md",
+      "summary": "The documentation now clarifies the options for securely connecting to AKS Linux and Windows nodes, emphasizing the requirement for Kubernetes API access or the AKS ARM API for private IP information. Additionally, the command examples have been updated to reflect the correct image for `kubectl debug`, ensuring users can accurately execute commands to connect to their nodes. The section titles have also been revised for consistency, enhancing the overall clarity of the guide.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8577378+00:00"
+    },
+    {
+      "cache_key": "1664caf13ce8f53c7d234679dde973385477a2ce1422610d18af38ecdfd265ce",
+      "file": "articles/aks/includes/windows-annual-channel-retirement.md",
+      "summary": "[!IMPORTANT]",
       "category": "General",
       "score": 1.0,
-      "cached_at": "2026-03-30T13:09:27.1052939+00:00"
+      "cached_at": "2026-03-30T18:25:13.8577180+00:00"
+    },
+    {
+      "cache_key": "17cf87a521b6c8ddc6a1c4ebd9612bcb920b9c3c06de760c8c6ff0db082e94fb",
+      "file": "articles/aks/azure-disk-customer-managed-keys.md",
+      "summary": "The title and references to Azure Managed Disks have been updated for consistency. This change enhances the clarity of the documentation regarding customer-managed keys for disk encryption in AKS.",
+      "category": "Security",
+      "score": 0.7,
+      "cached_at": "2026-03-30T18:25:13.8576989+00:00"
+    },
+    {
+      "cache_key": "b46e29a8c7dd175ebdebe504256cacbb8f211d44cd7aba3f571106a4ea5e64bb",
+      "file": "articles/aks/configure-node-binpack-scheduler.md",
+      "summary": "Learn how to configure scheduler profiles to reduce idle costs and improve node utilization on Azure Kubernetes Service (AKS).",
+      "category": "Compute",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8576797+00:00"
     },
     {
       "cache_key": "f7eea88cef11b53c0d60564979a6232b7638f82777170d5a3d7a72cd887bfbbb",
@@ -1023,63 +183,127 @@
       "summary": "The documentation now clarifies that the `GPU only` node conditions apply to all GPU node pools utilizing AKS-managed GPU drivers, rather than being limited to specific VM sizes. Additionally, it specifies that the `GPU only (managed GPU)` conditions are exclusive to node pools with the fully managed GPU experience enabled, enhancing user understanding of GPU health monitoring capabilities in AKS.",
       "category": "Compute",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1052397+00:00"
+      "cached_at": "2026-03-30T18:25:13.8576604+00:00"
     },
     {
-      "cache_key": "02cd5b5b90bfb1fafa188df7bb7c1ff769f07f4a14f0f01fd2458ee109394225",
-      "file": "articles/aks/start-stop-cluster.md",
-      "summary": "The documentation now includes important cautionary notes regarding the potential rejection of the stop operation for AKS clusters that have `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` affecting cluster-scoped resources. Users are advised to adjust their webhook configurations to avoid validation errors during stop/start operations, with specific recommendations on narrowing rules, scoping to namespaced resources, or modifying the failure policy.",
+      "cache_key": "0e7c2960a2f7d4d490b6c713ee71e09b4732afa66ecc6c051df91815bdfb069f",
+      "file": "articles/kubernetes-fleet/howto-managed-namespaces.md",
+      "summary": "Updates content with clarifications and improvements.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1052183+00:00"
+      "cached_at": "2026-03-30T18:25:13.8576410+00:00"
     },
     {
-      "cache_key": "0c6e8350fcf1da818c9f53ad11326c86ae40d7d8a602873f7a10fb4f8c43c072",
-      "file": "articles/aks/use-vertical-pod-autoscaler.md",
-      "summary": "The documentation for the Vertical Pod Autoscaler (VPA) in AKS has been updated to reflect that the `Auto` update mode is deprecated as of VPA version 1.4.0, and users should now use `Recreate` mode by default. Additionally, the section on high availability now specifies that VPA components will run with two replicas each by default starting from AKS 1.34, enhancing resilience during autoscaling operations. Users can also limit pod restarts by using the `InPlaceOrRecreate` update mode, which is now available on AKS 1.34 and later.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1051977+00:00"
+      "cache_key": "9ddd554bededaa8e287b965193c6b80abebf3dfefc3657e9b217ddef75e80a5d",
+      "file": "articles/aks/container-network-security-cilium-mutual-tls-concepts.md",
+      "summary": "An overview of Advanced Container Networking Services' Cilium mTLS encryption capabilities on Azure Kubernetes Service (AKS).",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8576221+00:00"
     },
     {
-      "cache_key": "969867664e11d6da2ecc868a6782a5b15913e33fb5fb1fca03008878b3f61a71",
-      "file": "articles/aks/dapr-migration.md",
-      "summary": "The documentation has been updated to clarify the process of migrating from Dapr OSS to the Dapr Extension for Azure Kubernetes Service (AKS). Users can now find improved instructions for checking existing Dapr installations and configuring them using the Azure CLI, with placeholders for cluster and resource group names to enhance clarity. Additionally, the section titles have been refined for better readability, emphasizing high availability mode and next steps.",
+      "cache_key": "a58bb26b65216a9758b5e09e2f3a2d2fd3f627a6a27529a52dfa37d5030eb324",
+      "file": "articles/aks/enable-host-encryption.md",
+      "summary": "The documentation now clarifies that host-based encryption can only be enabled in Azure regions that support server-side encryption of Azure Managed Disks and with specific supported VM sizes. This distinction helps users understand the prerequisites for utilizing host-based encryption effectively.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1051764+00:00"
+      "cached_at": "2026-03-30T18:25:13.8576027+00:00"
     },
     {
-      "cache_key": "19c1699c6e7dc7221089253c1c9b12d3a7f41ca4c387a3a628807e580a009b03",
-      "file": "articles/aks/identity-bindings-concepts.md",
-      "summary": "The documentation now specifies that for .NET, the `WorkloadIdentityCredential` identity binding mode is disabled by default in version **v1.18.0-beta.3**, and users must set `WorkloadIdentityCredentialOptions.IsAzureProxyEnabled` to `true` to enable it. Additionally, for Java, users should now call `enableAzureProxy()` on `WorkloadIdentityCredentialBuilder` starting from version **v1.19.0-beta.2**. A note has been added to clarify that identity bindings support is only available in **Azure.Identity v1.18.0-beta.3**.",
-      "category": "Security",
+      "cache_key": "5f752073770b52c05b2bdf82713ac26b6617ba90da962290cb13fb43cce0ef0a",
+      "file": "articles/kubernetes-fleet/quickstart-create-fleet-and-members.md",
+      "summary": "Updates content with clarifications and improvements.",
+      "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1051561+00:00"
+      "cached_at": "2026-03-30T18:25:13.8575828+00:00"
     },
     {
-      "cache_key": "566a5d753c7060766c5d0eeabc4a2a511ef83a633725075c13f0f69fabfca861",
-      "file": "articles/aks/gpu-health-monitoring.md",
-      "summary": "The documentation now includes detailed information about the new **GPUClockThrottling** feature, which allows users to monitor GPU clock throttling conditions that may indicate performance issues due to thermal, power, or hardware constraints. Additionally, the **UnhealthyNvidiaDevicePlugin** section has been added, informing users that the health of the NVIDIA device plugin service is monitored for GPU node pools using the AKS managed GPU experience, ensuring that GPU resources are available for scheduling workloads.",
+      "cache_key": "d1d15abca596ad5d48347d0a5fb97f2f8a3ee271f862c85bc9c76c027b3163eb",
+      "file": "AKS-Arc/includes/supported-gpu-models.md",
+      "summary": "The documentation now specifies that Azure Kubernetes Service (AKS) on Azure local supports the NVIDIA RTX Pro 6000 GPU model, along with its associated VM sizes, which include Standard_NC16_RTX6000Pro and Standard_NC32_RTX6000Pro configurations. Additionally, the GPU model names have been standardized to use \"NVIDIA\" instead of \"NVidia\" throughout the document, enhancing clarity for users.",
       "category": "Compute",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1051357+00:00"
+      "cached_at": "2026-03-30T18:25:13.8575637+00:00"
     },
     {
-      "cache_key": "ec4ad6c08a2877e56871f642778445ca6dddf5ef31c319b5976bdbb8b99d5fbf",
-      "file": "articles/aks/istio-upgrade.md",
-      "summary": "The documentation for horizontal pod autoscaling customization in Istio has been updated to reflect a change in the section title, now referred to as \"horizontal pod autoscaling HPA customization.\" This change clarifies the focus of the content, helping users better understand the specific customization options available for HPA in Istio.",
-      "category": "Operations",
+      "cache_key": "e3ffdb9ce7c02273959b75e07404904a4ab44b6ae1ea15d32f5d946eefe85a1d",
+      "file": "articles/kubernetes-fleet/concepts-member-cluster-types.md",
+      "summary": "Updates content with clarifications and improvements.",
+      "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1051147+00:00"
+      "cached_at": "2026-03-30T18:25:13.8575448+00:00"
     },
     {
-      "cache_key": "5ada58a6660ad7c966d26b7d8ecc457694c31e6fefdb3ff694713083211c71fb",
-      "file": "articles/aks/agentic-cli-for-aks-troubleshoot.md",
-      "summary": "The documentation for troubleshooting the Agentic CLI for Azure Kubernetes Service (AKS) has been updated to clarify that the article is in preview. Users can now find more detailed troubleshooting steps for Docker-related issues, Azure credentials issues, service account and RBAC issues, and workload identity issues, including specific commands and solutions for common errors. Additionally, the instructions for verifying and configuring service accounts and permissions have been enhanced for better clarity and usability.",
-      "category": "Operations",
+      "cache_key": "a8ebb3821fe5f2688bedb9d6a134a79f2adb78b76909a44913e888b9d10fc1a0",
+      "file": "articles/aks/create-volume-azure-blob-storage.md",
+      "summary": "Learn how to create and manage persistent volumes using Azure Blob storage with the Container Storage Interface (CSI) driver in Azure Kubernetes Service (AKS) to provide scalable and reliable storage for your containerized applications.",
+      "category": "Storage",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8575253+00:00"
+    },
+    {
+      "cache_key": "06cc18deb8aac30430fd3ddd0c815a39f21268c6eadc5571816fdb858c8e7594",
+      "file": "articles/aks/csi-secrets-store-driver.md",
+      "summary": "The documentation for the Azure Key Vault command has been updated to remove the location parameter from the `az keyvault update` command. Users can now update their Key Vault settings without specifying the location, simplifying the command usage.",
+      "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1050918+00:00"
+      "cached_at": "2026-03-30T18:25:13.8575062+00:00"
+    },
+    {
+      "cache_key": "cb7fc6362f9cec72ad517a6f9bbe7ebf6fb47a7ca1af70797b5b6edeba778c0e",
+      "file": "articles/aks/app-routing-gateway-api-tls.md",
+      "summary": "Secure ingress traffic with the application routing Gateway API implementation using AKV and the Secrets Store CSI Driver",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8574871+00:00"
+    },
+    {
+      "cache_key": "c9e7c0175eb98dafc94cb78c41941519ce76aaca54e50582bae15702fdc2bd16",
+      "file": "articles/kubernetes-fleet/concepts-cross-cluster-networking.md",
+      "summary": "This article provides a conceptual overview of Cross-cluster networking for Azure Kubernetes Fleet Manager.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8574670+00:00"
+    },
+    {
+      "cache_key": "c1944914e903bd8df2ef7d00bb2cf77cd8d0fe261dd84a61908970c8ae97791e",
+      "file": "articles/aks/includes/flatcar-preview-retirement.md",
+      "summary": "This new file announces the retirement of Flatcar Container Linux support in AKS, effective June 8, 2026. It advises users to migrate to supported Linux OS options to avoid disruptions.",
+      "category": "General",
+      "score": 0.8,
+      "cached_at": "2026-03-30T18:25:13.8574478+00:00"
+    },
+    {
+      "cache_key": "4b159011ac4851a019885b6d8b00618c00dd572d58698830d4dec9e8c3b08503",
+      "file": "articles/container-registry/container-registry-concepts.md",
+      "summary": "The documentation for Azure Container Registry has been updated to clarify the introduction of key concepts, emphasizing user control over container content and enhanced features like geo-replication and tag locking. Additionally, the instructions for addressing registry artifacts have been refined, specifying the format for push and pull operations, including examples for using Docker commands with tags and digests. Users can now better understand how to manage repository names, tags, and manifests, improving their overall experience with the service.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8574287+00:00"
+    },
+    {
+      "cache_key": "9ce1cac87b58f4f2ef36c9e8aedf03c22f7ba6f04fc89c4d82ad9e9aca8b34be",
+      "file": "articles/aks/csi-storage-drivers.md",
+      "summary": "The documentation for the Container Storage Interface (CSI) drivers on Azure Kubernetes Service (AKS) has been updated to include support for Azure Blob storage alongside Azure Disks and Azure Files, enhancing users' ability to manage persistent storage for containerized applications. Additionally, users are now informed that starting with Kubernetes version 1.26, in-tree persistent volume types for Azure storage are deprecated, and they should migrate to the corresponding CSI drivers to ensure continued support. The commands for enabling and disabling the Azure Disks, Azure Files, and Azure Blob storage CSI drivers on existing AKS clusters have also been clarified and expanded.",
+      "category": "Storage",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8574096+00:00"
+    },
+    {
+      "cache_key": "3237a599a300776b1400c3b9922030ced17fade2d99b0d5a04bd55eccab70d03",
+      "file": "articles/aks/learn/quick-kubernetes-deploy-cli.md",
+      "summary": "The documentation for deploying an Azure Kubernetes Service (AKS) cluster using Azure CLI has been updated to clarify that users can now deploy the cluster with default settings and a multi-container application. Additionally, users are instructed to replace placeholders for `<defaultPassword>` in the YAML manifest, ensuring proper configuration for the RabbitMQ instance. The output examples have also been refined to enhance clarity regarding the application's public IP address and its HTML response.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8573895+00:00"
+    },
+    {
+      "cache_key": "2a27143bdcf6cf4a4a9cdb41d061f97699c55228a777c11782d95beac561599d",
+      "file": "articles/kubernetes-fleet/concepts-fleet-arc-integration.md",
+      "summary": "Updates content with clarifications and improvements.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8573701+00:00"
     },
     {
       "cache_key": "526205720e3853ffafcf273d5ded0ca45c169d31aa8dd301745b9d8f8b3c2aa2",
@@ -1087,15 +311,183 @@
       "summary": "The documentation now specifies that Pod CIDR expansion is supported only on AKS clusters running Kubernetes version 1.33. This clarification helps users understand the version requirements for utilizing this feature effectively.",
       "category": "Networking",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1050678+00:00"
+      "cached_at": "2026-03-30T18:25:13.8573509+00:00"
     },
     {
-      "cache_key": "4f9d1c3f0c91e1ffd814276c42b2822fb601eb6c2fa6381cf45e8b8901690d59",
-      "file": "articles/kubernetes-fleet/update-automation.md",
+      "cache_key": "46431d57cb58a2769d175c77a1b41a360868ce217c44b73c11b8595e7bcdef7b",
+      "file": "AKS-Arc/arc-gateway-aks-arc.md",
+      "summary": "The documentation has been updated to clarify that the Azure Arc gateway simplifies network configuration specifically for AKS on Azure Local clusters. Users are now instructed to complete prerequisites for creating AKS clusters on Azure Local before using the Arc gateway. Additionally, the article emphasizes the need to allow specific URLs and endpoints through enterprise firewalls when utilizing the Arc gateway with AKS on Azure Local.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8573318+00:00"
+    },
+    {
+      "cache_key": "5ada58a6660ad7c966d26b7d8ecc457694c31e6fefdb3ff694713083211c71fb",
+      "file": "articles/aks/agentic-cli-for-aks-troubleshoot.md",
+      "summary": "The documentation for troubleshooting the Agentic CLI for Azure Kubernetes Service (AKS) has been updated to clarify that the article is in preview. Users can now find more detailed troubleshooting steps for Docker-related issues, Azure credentials issues, service account and RBAC issues, and workload identity issues, including specific commands and solutions for common errors. Additionally, the instructions for verifying and configuring service accounts and permissions have been enhanced for better clarity and usability.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8573115+00:00"
+    },
+    {
+      "cache_key": "62f1fe57b4948c144ff1853524cd7c619490637d75aa5b397770702702f52bb5",
+      "file": "articles/aks/use-advanced-container-networking-services.md",
+      "summary": "The documentation now specifies that users must have Azure CLI version 2.79.0 or higher to utilize advanced container networking services. Additionally, the default behavior for enabling fully qualified domain name (FQDN) filtering policies has changed; users can now enable FQDN filtering by default with the `--enable-acns` parameter, while Layer 7 and FQDN policies can be enabled by setting the `--acns-advanced-networkpolicies` parameter to `L7`.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8572919+00:00"
+    },
+    {
+      "cache_key": "fddfcdac98378509f16b9ced2f5af6ce6255346df14cd2a4a218c6096cd914e3",
+      "file": "articles/aks/best-practices-storage-nvme.md",
+      "summary": "The documentation now clarifies that to back `emptyDir` volumes with local NVMe disks, users must configure the kubelet storage path to point to an NVMe mount point during node initialization, which requires custom node bootstrap scripting. Additionally, it specifies that data is deleted if the Pod is removed from the node, rather than lost if rescheduled. Users can also specify the NVMe disk path in the Pod spec for optimal performance.",
+      "category": "Cost",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8572726+00:00"
+    },
+    {
+      "cache_key": "2dfec97f7872483d1e8c813e996515ab2ee1d54dced34461255d0cd0a0eb071e",
+      "file": "articles/aks/compare-container-options-with-aks.md",
+      "summary": "Understand when to use Azure Kubernetes Service (AKS) and how it compares to other container options including Azure Container Instances, Azure App Service, Azure Functions, and Azure Container Apps.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8572535+00:00"
+    },
+    {
+      "cache_key": "3b2a573678a7e5849d643c86b43cd007edec99b80f623719f6fecc85db9c1537",
+      "file": "articles/aks/agentic-cli-for-aks-service-account-workload-identity-setup.md",
+      "summary": "The documentation has been updated to clarify the prerequisites for creating a service account and configuring workload identity for the Agentic CLI in Azure Kubernetes Service (AKS). Users are now explicitly instructed to use Azure CLI version 2.76 or later and to set their active subscription before proceeding. Additionally, the steps for creating Kubernetes service accounts and assigning permissions have been refined, including commands for verifying the successful creation of these resources.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8572339+00:00"
+    },
+    {
+      "cache_key": "4814a4de8cb893f3de2a3bc192234e031f8f81d45023e975a4032afc1c284dd1",
+      "file": "articles/aks/use-oidc-issuer.md",
+      "summary": "The documentation now clarifies that the OIDC issuer is enabled by default only for newly created AKS clusters running Kubernetes version 1.34 and above, while existing clusters require manual enablement regardless of the Kubernetes version. Additionally, it specifies that enabling the OIDC issuer on existing clusters necessitates an API server restart, which will result in brief downtime. Users should also note that the maximum token lifetime is set to 24 hours, and projected service account tokens are mandatory for Kubernetes 1.30+ clusters.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8572141+00:00"
+    },
+    {
+      "cache_key": "cbf1c3f6b6e1251336402c87ed52c3b64983afd79335bc15c9005971a346e50d",
+      "file": "articles/aks/upgrade-os-version.md",
+      "summary": "The documentation now specifies that clusters and node pools using the `Ubuntu` OS SKU will automatically migrate to Ubuntu 24.04 when upgrading to Kubernetes version 1.35 or higher. Additionally, users should validate workloads relying on container runtime behavior with containerd 2.0 after migrating to Ubuntu 24.04. The support for Ubuntu 22.04 has been extended to Kubernetes versions 1.25 to 1.36, and the rollback command `--os-sku Ubuntu2204` is clarified for use with Kubernetes versions up to 1.36, with a requirement to update the OS SKU for versions 1.37 and above.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8571947+00:00"
+    },
+    {
+      "cache_key": "d5a37e293184d8020bf4f032713b84969a541a113bdb52be2ba73e4b885cc747",
+      "file": "articles/aks/use-managed-identity.md",
+      "summary": "The documentation now clarifies that once a cluster is created with a managed identity in Azure Kubernetes Service (AKS), users cannot switch back to using a service principal. This change emphasizes the permanence of the managed identity choice during cluster creation.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8571750+00:00"
+    },
+    {
+      "cache_key": "21d521ab847b20d954f58439bf71377a97007370d8100ee69b17acde7e7b13af",
+      "file": "articles/aks/nat-gateway.md",
+      "summary": "The documentation now recommends deploying a StandardV2 NAT gateway resource for improved zone-redundancy, which allows for continued outbound connectivity even if a single availability zone fails. Users are informed that a Standard NAT gateway only provides resiliency within its specific availability zone, highlighting the advantages of using the StandardV2 option for enhanced reliability across multiple zones.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8571556+00:00"
+    },
+    {
+      "cache_key": "b1d608063334f70ccf1d14912d5f4819c36e1e38c159dfed3212305deb799425",
+      "file": "articles/kubernetes-fleet/concepts-choosing-fleet.md",
       "summary": "Updates content with clarifications and improvements.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1050463+00:00"
+      "cached_at": "2026-03-30T18:25:13.8571369+00:00"
+    },
+    {
+      "cache_key": "a31013a9c38b178540cb37d4fa6ea26367efcca870b7ec104a65b39ada219654",
+      "file": "articles/aks/egress-outboundtype.md",
+      "summary": "The documentation now specifies that when using the `userAssignedNatGateway` option with bring-your-own virtual networking, both Standard and StandardV2 NAT Gateways are supported. It emphasizes that StandardV2 is recommended due to its zone-redundancy and superior bandwidth and throughput capabilities compared to Standard. Users can refer to the updated section for more detailed information on StandardV2 NAT Gateway.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8571169+00:00"
+    },
+    {
+      "cache_key": "5a5aac200a9fe5b5236032ec98af06e64e5bd43217c4a7d8014e9ea3caf2cd92",
+      "file": "articles/aks/open-ai-secure-access-quickstart.md",
+      "summary": "The documentation now specifies that users need a custom domain name enabled on their Azure OpenAI account for Microsoft Entra authorization, with updated references to \"Foundry Tools\" instead of \"Azure AI services.\" This change clarifies the context in which the custom domain name is applicable.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8570972+00:00"
+    },
+    {
+      "cache_key": "e15009b6756e71add84cda587f0e02a2fb915e2a71f5bb9869b646f54a2bf542",
+      "file": "articles/aks/howto-deploy-java-quarkus-app.md",
+      "summary": "The documentation has been refreshed with the latest updates regarding deploying Java applications on AKS, ensuring that users have access to the most current practices and recommendations.",
+      "category": "General",
+      "score": 0.8,
+      "cached_at": "2026-03-30T18:25:13.8570774+00:00"
+    },
+    {
+      "cache_key": "6f7d9e4507403e17fbfd0a46c64a2906e63491848a70a2513e3387cd84ae2ced",
+      "file": "articles/aks/upgrade-options.md",
+      "summary": "The documentation now clarifies that users can utilize the `maxUnavailable` parameter to upgrade existing nodes instead of deploying new ones, enhancing control over node availability during upgrades. Additionally, it emphasizes lowering the `maxSurge` setting to minimize extra capacity requirements, providing users with more efficient upgrade strategies. For further details, users are directed to the updated sections on customizing unavailable nodes and node surge upgrades.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8570584+00:00"
+    },
+    {
+      "cache_key": "30345cbe5307b3b561fd158c4ff63a14eac8233f2053f77ee00cc720a96081da",
+      "file": "articles/aks/csi-secrets-store-identity-access.md",
+      "summary": "The documentation now includes a new section on validating Key Vault secrets, providing users with specific commands to check the contents of the secrets store. Users can execute `kubectl exec` commands to list secrets and display a specific secret, enhancing their ability to verify and troubleshoot secret management in their deployments.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8570388+00:00"
+    },
+    {
+      "cache_key": "3679f7302723d928c5bf24662b94a6c1791bc56519e637ff3805570193bb3568",
+      "file": "articles/application-network/planned-maintenance.md",
+      "summary": "Learn how to use planned maintenance to schedule component upgrades for Azure Kubernetes Application Network members, including in-cluster data plane components and control plane components.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8570194+00:00"
+    },
+    {
+      "cache_key": "6f5671571c1af89a86f721742a28e49a0eb008e9fb588cbd799b4c0e8f9682f7",
+      "file": "articles/aks/roll-back-node-pool-version.md",
+      "summary": "Learn how to roll back node pool versions in Azure Kubernetes Service (AKS) to recover from upgrade issues and maintain cluster stability.",
+      "category": "Compute",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8570001+00:00"
+    },
+    {
+      "cache_key": "664c3282a1276f1c09e11b82dc18ffad7c84f79ef44f6923b0e79d40e038e75c",
+      "file": "articles/aks/concepts-network-azure-cni-overlay.md",
+      "summary": "The documentation now includes support for Windows Server 2025 (Preview) in the OS platforms supported section, allowing users to utilize this newer version in their Azure CNI overlay configurations. This update enhances compatibility for users looking to deploy on the latest Windows Server platform.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8569802+00:00"
+    },
+    {
+      "cache_key": "262cd0622e884ac81320923b30417ee4096e97b487459232f831c439c3cc2238",
+      "file": "articles/aks/configure-static-egress-gateway.md",
+      "summary": "The documentation now clarifies that static private IP support is no longer in preview and requires Kubernetes version 1.34 or later, along with the `Microsoft.ContainerService/StaticEgressGatewayPreview` Azure Feature Exposure Control flag enabled. Users can define the gateway configuration by creating a `StaticGatewayConfiguration` custom resource, with an example YAML configuration provided for reference.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8569610+00:00"
+    },
+    {
+      "cache_key": "e798c64afd01d4b87fd8b8aff967b991b09322c300dff5fcf48cb2966f1cff63",
+      "file": "articles/aks/release-tracker.md",
+      "summary": "The AKS release tracker now provides real-time information on security patches, bug fixes, and feature updates for all AKS clusters. It includes a regional breakdown of independent release trains, enhancing user awareness of updates affecting their clusters.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8569420+00:00"
+    },
+    {
+      "cache_key": "7413b1dcd2901d126ed6594ea5b324fc46963effecca6eb2a474746dae850230",
+      "file": "articles/aks/container-network-observability-logs.md",
+      "summary": "The documentation for the Log Analytics table has been updated to reflect the correct name change from `RetinaNetworkFlowLogs` to `ContainerNetworkLogs`. Additionally, the note regarding the delay before new data appears in the `ContainerNetworkLogs` table has been clarified to match this updated naming. Users should now refer to the correct table name when accessing network logs.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8569230+00:00"
     },
     {
       "cache_key": "b4f16fe64c38d0b479453cd83a57d5fd054166f03a7489893572e1a763713d82",
@@ -1103,15 +495,87 @@
       "summary": "Updates content with clarifications and improvements.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1050233+00:00"
+      "cached_at": "2026-03-30T18:25:13.8569036+00:00"
     },
     {
-      "cache_key": "f2685255413e2de779deff7e857a112715e376113c3e1be9f805c5d89476457f",
-      "file": "articles/kubernetes-fleet/intelligent-resource-placement.md",
+      "cache_key": "ee5a298a0f8b83fe8cc76edc50c758356b2f763f315754518aa6048a0316e4ae",
+      "file": "articles/aks/managed-gateway-api.md",
+      "summary": "The documentation for the Azure Kubernetes Service (AKS) Managed Gateway API installation has been updated to clarify that the installation is now in preview. Users can now install the Managed Gateway API Custom Resource Definitions (CRDs) on their AKS clusters and must ensure compatibility with the Istio add-on version `asm-1-26` or later. Additionally, users are required to register the `ManagedGatewayAPIPreview` feature flag and install or update the `aks-preview` extension to version `19.0.0b4` or later to utilize the Managed Gateway API functionality.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8568845+00:00"
+    },
+    {
+      "cache_key": "430a270402fbb19fbd2756bf68c9421ed4c5f48f9e2840f5c2ac1e4a0d170806",
+      "file": "articles/aks/istio-plugin-ca.md",
+      "summary": "The title and description have been updated for clarity regarding the use of CA certificates for the Istio-based service mesh add-on on AKS, improving user understanding.",
+      "category": "General",
+      "score": 0.7,
+      "cached_at": "2026-03-30T18:25:13.8568644+00:00"
+    },
+    {
+      "cache_key": "a2dad475d8578b4347994730d88cbb3016ab0fa62bbb43ddbf2dd04bad3fd4b4",
+      "file": "articles/aks/windows-annual-channel.md",
+      "summary": "This document now includes a note about the retirement of the Windows annual channel, providing users with important information regarding future support.",
+      "category": "General",
+      "score": 0.6,
+      "cached_at": "2026-03-30T18:25:13.8568394+00:00"
+    },
+    {
+      "cache_key": "17fe5d198402f909d9b352538b931843a0248d66efe076b36ec5f6f709ad1416",
+      "file": "articles/aks/cost-analysis.md",
+      "summary": "The documentation now specifies that the AKS cost analysis add-on supports approximately 7,000 containers per cluster, contingent on the current 4-GB memory limit, which may change in the future. This update provides users with clearer expectations regarding the scalability of their AKS clusters.",
+      "category": "Cost",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8567981+00:00"
+    },
+    {
+      "cache_key": "4f9d1c3f0c91e1ffd814276c42b2822fb601eb6c2fa6381cf45e8b8901690d59",
+      "file": "articles/kubernetes-fleet/update-automation.md",
       "summary": "Updates content with clarifications and improvements.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1050006+00:00"
+      "cached_at": "2026-03-30T18:25:13.8567793+00:00"
+    },
+    {
+      "cache_key": "b494abf31a2a7d1b508061443e4dd35acd40cf459ff9b66c8ad653c95677f4ca",
+      "file": "articles/aks/outbound-rules-control-egress.md",
+      "summary": "The documentation has been updated to clarify the FQDN rules for the AKS konnectivity-agent, specifically noting that while the rule for `*.hcp.<location>.azmk8s.io` is required for Node to API server communication in clusters with the konnectivity-agent enabled, it is not necessary for private clusters due to their use of private networking. Additionally, the requirements for using the Azure Key Vault provider with the Istio-based service mesh add-on have been specified, emphasizing its necessity when setting up secure ingress gateways or a plug-in certificate authority.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8567603+00:00"
+    },
+    {
+      "cache_key": "7d85e0934a8c425c557a52d49f7375b4be51cedce17b061b3e0ba35afebf0d6e",
+      "file": "articles/aks/includes/ingress-nginx-retirement.md",
+      "summary": "The documentation now emphasizes that users of the application routing add-on for AKS should migrate to the application routing Gateway API implementation for a more robust ingress traffic management experience. Additionally, it clarifies that while production workloads remain fully supported through November 2026, users do not need to switch to a different ingress product immediately, as critical security patches will be provided until that date.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8567406+00:00"
+    },
+    {
+      "cache_key": "a49f3618b63964481abc551c9e99e98de12f13170447c84d5b8f88c374cd8f60",
+      "file": "articles/aks/azure-cni-powered-by-cilium.md",
+      "summary": "The documentation has been updated to reflect new versions of Cilium compatible with Azure CNI, specifically noting that versions 1.14.20, 1.16.16, 1.17.9, 1.18.6, and 1.35 are now supported. Users can now utilize these updated versions for enhanced functionality and performance in their Azure Kubernetes Service (AKS) deployments.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8567213+00:00"
+    },
+    {
+      "cache_key": "dbedd79e46d466a5a9bf451475839cc0841ca2bd521eb8925adb2d9d633944a5",
+      "file": "articles/aks/istio-gateway-api.md",
+      "summary": "The documentation now specifies that the Istio service mesh add-on and the application routing Gateway API implementation cannot be enabled simultaneously, requiring users to disable one before enabling the other. Additionally, it clarifies that configuring HTTPS ingress access to HTTPS services via the TLSRoute resource is currently unsupported. Users are also informed that ConfigMap customizations for Gateway resources must adhere to a resource customization allow list, with disallowed fields blocked by managed webhooks.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8567020+00:00"
+    },
+    {
+      "cache_key": "6e59ee206d643649aa7faaa8ae081a4bb71965a0103b14b8a8eee45557b931b9",
+      "file": "articles/aks/use-network-policies-in-the-azure-portal.md",
+      "summary": "The customer intent section has been refined for clarity, ensuring that DevOps engineers understand the purpose of implementing network policies in Azure Kubernetes Service.",
+      "category": "Networking",
+      "score": 0.6,
+      "cached_at": "2026-03-30T18:25:13.8566832+00:00"
     },
     {
       "cache_key": "a3042f13fb02871f54cb40be984dedc7549220d8460cd2c99a2c6b1d3b26d8a3",
@@ -1119,15 +583,31 @@
       "summary": "The documentation has been updated to reflect that Fleet Manager now supports joining up to 500 Kubernetes clusters, an increase from the previous limit of 200. This change allows users to manage a larger number of clusters, which can include a mix of AKS and Arc-enabled Kubernetes. Additionally, the feedback request has been updated to reflect this new limit, inviting users to provide input if they require support for more than 500 clusters.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1049768+00:00"
+      "cached_at": "2026-03-30T18:25:13.8566628+00:00"
     },
     {
-      "cache_key": "9e6a3ab8ab90f3e3ce93353f4b0e942d227a78511b41b9f532fc32a5f13734f1",
-      "file": "articles/aks/external-identity-provider-authentication-configure.md",
-      "summary": "The documentation now specifies that users can configure both GitHub and Google Identity external identity providers for Azure Kubernetes Service (AKS) control plane authentication using structured authentication. Additionally, it includes detailed instructions for setting up JWT authenticator configurations for both identity providers, enhancing the clarity on how to validate and process tokens from these external sources. Users are also guided on creating necessary repository secrets and environment variables for GitHub Actions OIDC authentication, improving the overall setup process.",
-      "category": "Security",
+      "cache_key": "2af03b88566ea362193c2b7e8fd8093d6be5bb69844701a21f4cdf9e7a16bac4",
+      "file": "articles/kubernetes-fleet/concepts-rollout-strategy.md",
+      "summary": "The documentation now includes a note specifying that each rollout strategy can define a maximum of 31 stages, which helps ensure reasonable execution times. This change clarifies the limitations users need to consider when configuring their rollout strategies in Kubernetes Fleet.",
+      "category": "General",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1049541+00:00"
+      "cached_at": "2026-03-30T18:25:13.8566436+00:00"
+    },
+    {
+      "cache_key": "4a3f2b920210c264b7e75d343dffe15148fc4a73fcc981b7ee7d690866c95290",
+      "file": "articles/application-network/upgrades.md",
+      "summary": "Learn how to configure minor version upgrades for Azure Kubernetes Application Network members using self-managed and fully-managed upgrade modes, including how to select versions, initiate upgrades, and roll back if needed.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8566244+00:00"
+    },
+    {
+      "cache_key": "b71e1c709b316bc7609e432bf1c91167cbc2b2fc61a8e71aefd973bf60ef5f0a",
+      "file": "articles/aks/dapr-overview.md",
+      "summary": "The documentation for the Dapr extension for Azure Kubernetes Service (AKS) has been updated to clarify the support level Microsoft offers for the Dapr extension, including specific guidance on issue handling for extension operations and the Dapr runtime. Additionally, the language has been refined for clarity, such as changing \"made easy with support for\" to \"made easy with support for CloudEvent filtering and *at-least-once* semantics for message delivery.\" Users can now find more precise information on managing secrets and migrating from Dapr open source to the Dapr extension for AKS.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8566045+00:00"
     },
     {
       "cache_key": "5b88549a1b6b6a330b05f34afea26f856813c07a4c2b51f69f4c766cffee533e",
@@ -1135,7 +615,95 @@
       "summary": "The documentation has been updated to reflect the correct naming of the Log Analytics table, changing from `RetinaNetworkFlowLogs` to `ContainerNetworkLogs`. Additionally, the instructions now specify that after re-enabling, users should allow a short delay before new data appears in the `ContainerNetworkLogs` table.",
       "category": "Networking",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1049282+00:00"
+      "cached_at": "2026-03-30T18:25:13.8565849+00:00"
+    },
+    {
+      "cache_key": "e39f7f6df43692501d182fbe4f8d320d6ae30a5dcf6468217c7f632a6a57358f",
+      "file": "articles/aks/optimize-aks-costs.md",
+      "summary": "The documentation for Azure Savings Plans has been updated to correct the link to the overview page, now directing users to the correct resource for understanding savings plans. This change ensures that users can access accurate information regarding the benefits and commitments associated with Azure Savings Plans, enhancing their ability to optimize costs effectively.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8565654+00:00"
+    },
+    {
+      "cache_key": "bacc372d609ce96b3adb9f94abc206c091a22ed0cfdffb601acedbe726b6bc3c",
+      "file": "articles/container-registry/container-registry-rbac-built-in-roles-directory-reference.md",
+      "summary": "The documentation has been updated to remove references to availability zones and zone redundancy from the built-in roles for Azure Container Registry. Users will now find that the roles related to creating, updating, viewing, listing, and deleting registries no longer include these features, which may impact how they manage registry configurations.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8565465+00:00"
+    },
+    {
+      "cache_key": "3e069811a8a1a97976bc4b5890095686fcbfcf45c4b407173180d5a96dafea72",
+      "file": "articles/kubernetes-fleet/update-create-update-strategy.md",
+      "summary": "The documentation now includes detailed guidance on using the `maxConcurrency` parameter in the JSON file for defining update strategies. Users can specify how many clusters can upgrade concurrently at both the stage and group levels, allowing for more controlled rollouts or faster upgrades across fleets. The updated examples clarify the use of fixed integers and percentages for concurrency settings, enhancing user understanding of managing update processes.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8565268+00:00"
+    },
+    {
+      "cache_key": "f31789e92dccb5d5c93acfc0f3bde6719c092a02a58c89deabd65bda2d3e7624",
+      "file": "articles/application-network/traffic-management-use-cases.md",
+      "summary": "Learn how to use Azure Kubernetes Application Network for traffic management with Istio ambient mode and Kubernetes Gateway API, including L4/L7 authorization policies, JWT claim-based routing, traffic shifting, and fault injection across multiple AKS clusters.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8565081+00:00"
+    },
+    {
+      "cache_key": "d5d9b4804ed3b09c311ece1fb72c15f8750b743df359b42aa38006f36e2305ec",
+      "file": "articles/aks/scale-cluster.md",
+      "summary": "The documentation for manually scaling nodes in an Azure Kubernetes Service (AKS) cluster has been updated to clarify that users must disable the cluster autoscaler to force a user node pool to scale to 0 nodes. Additionally, it now specifies that users can allow autoscaling to zero nodes on autoscaled user node pools by setting the `--min-count` parameter of the Cluster Autoscaler to 0. These changes enhance user understanding of scaling limitations and options within AKS.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8564890+00:00"
+    },
+    {
+      "cache_key": "b4b9bef092d109125c1823350d17c189eac752f5a14150249da1e3b6b805b228",
+      "file": "articles/aks/upgrade-node-image.md",
+      "summary": "The documentation has been updated to include a new release tracker for node image upgrades, providing users with better visibility on the rollout status of updates across regions.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8564695+00:00"
+    },
+    {
+      "cache_key": "169a4336d94fb05eca6141fe425c740e249350465ed3a8418b00210f4d29207f",
+      "file": "articles/aks/virtual-nodes-cli.md",
+      "summary": "The documentation now includes a new section detailing how to grant the *Network Contributor* role to the managed identity for the virtual node add-on named *aciconnectorlinux-<aks-cluster-name>*. Users can follow the provided Azure CLI commands to assign this role on the subnet used by virtual nodes, enhancing their ability to manage network permissions effectively.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8564498+00:00"
+    },
+    {
+      "cache_key": "49c5c6664e26f1e57345beeabce7653f54768a078be466c476fb13af6f4fe3fc",
+      "file": "articles/aks/best-practices-cost.md",
+      "summary": "The documentation now correctly references the Azure Savings Plan overview, ensuring users have accurate information on purchasing options when Azure Reservations are not feasible due to varied resource usage across SKUs and regions. This change clarifies the commitment to a fixed hourly spend on compute resources, enhancing user understanding of cost management strategies in Azure.",
+      "category": "Cost",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8564301+00:00"
+    },
+    {
+      "cache_key": "d3b8ebbfa6fe22779fce17231f0620032a93f29391f7d096f40cfbefa7082dec",
+      "file": "articles/aks/virtual-machines-node-pools.md",
+      "summary": "The documentation now clarifies that when creating a Virtual Machines node pool, users can perform multi-SKU manual scaling and single SKU autoscaling. Additionally, it emphasizes that to enable the cluster autoscaler, users must remove all but one scale profile from the node pool. A new section has been added detailing the requirements for deploying Virtual Machines node pools into a custom virtual network, including the necessity of a user-assigned managed identity with Network Contributor permissions.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8564113+00:00"
+    },
+    {
+      "cache_key": "5591bdcbd5d07251658210eba45429963431266aa97b5d80864d7da8ff80ba8f",
+      "file": "articles/application-gateway/for-containers/application-gateway-for-containers-components.md",
+      "summary": "The documentation for Application Gateway for Containers has been updated to include detailed connectivity requirements essential for its operation. Users can now find specific outbound and inbound connectivity details, including necessary endpoints, ports, and their purposes, which will aid in configuring and troubleshooting their setups effectively. Additionally, the format for frontends has been clarified, specifying that they may only listen on ports 443 and 80.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8563913+00:00"
+    },
+    {
+      "cache_key": "a1de57f36654be14c88cc09e63d7fbef60af0c6c94f02f232ca7471ed5410767",
+      "file": "articles/container-registry/container-registry-rbac-built-in-roles-overview.md",
+      "summary": "The documentation for Azure Container Registry has been updated to clarify the configuration of geo-replications and the role assignments for various identity types, including Azure Container Apps and Azure Machine Learning identities. Users can now better understand how to assign roles and manage permissions using Microsoft Entra-based access control, including the ability to scope role assignments to specific repositories. Additionally, the note regarding connected registries has been emphasized, stating that they do not support Azure role assignments or Microsoft Entra-based permissions management.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8563707+00:00"
     },
     {
       "cache_key": "e2eabb562a72b57cf4f6e361f5d9d395d553e2861549fba601b1bc5370adbbf5",
@@ -1143,7 +711,463 @@
       "summary": "The documentation now clarifies that when selecting a VM SKU that supports Ephemeral OS disks without specifying an OS disk size, AKS will provision an Ephemeral OS disk that scales with the VM's temporary storage, provided it meets the minimum requirement of 128 GiB. Additionally, it emphasizes that the latest VM series, such as the Standard_E2bds_v5, has specific temporary storage limitations that affect the default disk provisioning behavior. Users are now better informed about the implications of their VM size choices on disk provisioning and performance.",
       "category": "Storage",
       "score": 0.9,
-      "cached_at": "2026-03-30T13:09:27.1048899+00:00"
+      "cached_at": "2026-03-30T18:25:13.8563505+00:00"
+    },
+    {
+      "cache_key": "ec7169c8e7d8900c468554c6dc9917751cf3b3772fda69e7c239477d3136c9c8",
+      "file": "articles/aks/includes/service-connector/csi-secrets-store-service-connector.md",
+      "summary": "The documentation now includes updated commands for creating Azure resources, specifically for setting up an AKS cluster with managed identity enabled. Users can follow the revised steps to create a resource group, AKS cluster, Azure key vault, and secrets in the key vault using the `az` CLI commands provided, ensuring they have the correct parameters and examples for successful execution.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8563307+00:00"
+    },
+    {
+      "cache_key": "e9606df792d79c9d87aa0ce8717c03d1f233b44554e225104a6e5317a6c8e539",
+      "file": "articles/application-gateway/for-containers/prometheus-grafana.md",
+      "summary": "The documentation has been updated to clarify the configuration process for integrating Application Gateway for Containers with Prometheus and Grafana. Users can now enable Prometheus metrics and container logs directly from the Azure portal by navigating to their AKS cluster and selecting the appropriate options under the Monitoring tab. Additionally, the section on Azure Monitor dashboards with Grafana has been enhanced to emphasize the availability of prebuilt dashboards and the ability to create custom visualizations without leaving Azure Monitor.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8563112+00:00"
+    },
+    {
+      "cache_key": "9c4f6d5bf4eeb3f77ee30152a7717ca0f3bbc2ce1fd89763656f0d79ad463ccf",
+      "file": "articles/aks/dapr-workflow.md",
+      "summary": "The documentation for deploying workflows with the Dapr extension for Azure Kubernetes Service (AKS) has been updated to improve clarity and usability. Users are now instructed to replace placeholder values in commands, such as `<your-resource-group>` and `<your-AKS-cluster>`, making it easier to customize the commands for their specific environments. Additionally, the section on prerequisites has been rephrased for better readability, ensuring users understand the necessary steps before installation.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8562914+00:00"
+    },
+    {
+      "cache_key": "a9df11d3570e9decf800e38993da0c027be7fc34a44a42204c54e05461b9229d",
+      "file": "articles/kubernetes-fleet/howto-staged-update-run.md",
+      "summary": "The documentation now clarifies that labels can be applied to member clusters to create stages and control the deployment order within each stage. Users can utilize the updated command to apply labels to member clusters, enhancing their ability to manage deployments effectively.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8562723+00:00"
+    },
+    {
+      "cache_key": "274431c5ed1ace56109653cabbf57a28b24f29f67b9a35e46b6c680f3d20cfe9",
+      "file": "articles/aks/kaito-custom-inference-model.md",
+      "summary": "The documentation for the Kaito custom inference model has been updated to use the SmolLM2-1.7B-Instruct model instead of the previous Bloom-1B7 model, along with a new base image tag of 0.2.0. Users can now follow revised instructions to set up their deployment YAML, including updated parameters for instance type and model ID, and they are guided to port forward the inference service to their local machine after the workspace is ready. Additionally, the testing process has been streamlined to include the installation of the OpenAI Python client and a new script for testing the model's inference capabilities.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8562521+00:00"
+    },
+    {
+      "cache_key": "bfc2d66c6a1fcd1208f7975e6ab181cc44f52e426d1f2a1921b8a0ed4311e145",
+      "file": "articles/aks/app-routing-gateway-api.md",
+      "summary": "Use the application routing add-on to manage ingress traffic on Azure Kubernetes Service (AKS) using the Kubernetes Gateway API.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8562333+00:00"
+    },
+    {
+      "cache_key": "a23f43b55671f800f3a6b0ad586325db8a9c77fe0c0271a5c2820a5b275fdf23",
+      "file": "articles/aks/tutorial-kubernetes-deploy-azure-container-storage.md",
+      "summary": "The tutorial on deploying Azure Container Storage in Azure Kubernetes Service (AKS) has been updated to remove the version-specific reference to \"version 1.x.x,\" allowing users to deploy the latest version without specifying it. Additionally, a new requirement for a version pinning parameter `--container-storage-version 1` has been introduced for installation, and users are now instructed to install the Azure CLI version 2.83.0 or later. The tutorial also clarifies that it applies to Azure Container Storage (version 2.x.x), which supports local NVMe disk and Azure Elastic SAN as backing storage types.",
+      "category": "Storage",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8562138+00:00"
+    },
+    {
+      "cache_key": "9b2b45d9390fe0098c7d73acd89b02b507c9c9bfec2fd9db5536637b04c732bc",
+      "file": "articles/application-network/metrics.md",
+      "summary": "Learn how to configure and view Azure Kubernetes Application Network metrics in Azure Monitor, including data plane metrics from your workloads and Azure Kubernetes Application Network components.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8561934+00:00"
+    },
+    {
+      "cache_key": "899145125f6b50a8969e3e84609c5a54405031364c808e728ef0fc106c572186",
+      "file": "articles/aks/automatic/aks-automatic-managed-system-node-pools-about.md",
+      "summary": "The documentation now clarifies that workloads requiring `nodes/proxy` permissions are restricted to approved system users and groups, enhancing security awareness for users managing AKS Automatic clusters. Additionally, the link to the section on creating an AKS Automatic cluster with managed system node pools has been updated for better accessibility.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8561738+00:00"
+    },
+    {
+      "cache_key": "d6835c88b6b2586ac48a61d99dc9a7596b235041ace0102803107e85bcc637c8",
+      "file": "articles/aks/cluster-container-registry-integration.md",
+      "summary": "The documentation now clarifies that the `az aks --attach-acr` command is not supported for ABAC-enabled ACR registries configured with \"RBAC Registry + ABAC Repository Permissions.\" Users must manually assign the `Container Registry Repository Reader` role using the Azure Portal, `az role assignment` CLI, or Azure Resource Manager to grant image pull permissions for these registries. This change emphasizes the need for users to adjust their role assignment approach when working with ABAC-enabled ACR registries.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8561545+00:00"
+    },
+    {
+      "cache_key": "19c1699c6e7dc7221089253c1c9b12d3a7f41ca4c387a3a628807e580a009b03",
+      "file": "articles/aks/identity-bindings-concepts.md",
+      "summary": "The documentation now specifies that for .NET, the `WorkloadIdentityCredential` identity binding mode is disabled by default in version **v1.18.0-beta.3**, and users must set `WorkloadIdentityCredentialOptions.IsAzureProxyEnabled` to `true` to enable it. Additionally, for Java, users should now call `enableAzureProxy()` on `WorkloadIdentityCredentialBuilder` starting from version **v1.19.0-beta.2**. A note has been added to clarify that identity bindings support is only available in **Azure.Identity v1.18.0-beta.3**.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8561348+00:00"
+    },
+    {
+      "cache_key": "8aebe6a356c9d49f4ccbef44d961c1c9364bb8b1a49029ffb8c992aca0285946",
+      "file": "articles/application-gateway/for-containers/web-application-firewall.md",
+      "summary": "The documentation now specifies that the Application Gateway for Containers WAF supports only the Default Rule Set (DRS) 2.1 managed rule set, clarifying the version of the rule set that users can utilize. This change ensures users are aware of the specific version available for their configurations, impacting how they implement security measures in their applications.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8561137+00:00"
+    },
+    {
+      "cache_key": "969867664e11d6da2ecc868a6782a5b15913e33fb5fb1fca03008878b3f61a71",
+      "file": "articles/aks/dapr-migration.md",
+      "summary": "The documentation has been updated to clarify the process of migrating from Dapr OSS to the Dapr Extension for Azure Kubernetes Service (AKS). Users can now find improved instructions for checking existing Dapr installations and configuring them using the Azure CLI, with placeholders for cluster and resource group names to enhance clarity. Additionally, the section titles have been refined for better readability, emphasizing high availability mode and next steps.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8560939+00:00"
+    },
+    {
+      "cache_key": "fdc17b5270c0bdac97562a9b2088cdd21896d82371387498abd6aa3c732a3501",
+      "file": "articles/aks/blue-green-node-pool-upgrade.md",
+      "summary": "Perform upgrades of AKS node pools using a blue-green deployment strategy to ensure workload availability during updates.",
+      "category": "Compute",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8560737+00:00"
+    },
+    {
+      "cache_key": "66b1b61544cb2bee100a44933de06d8c06563ed5973b23675ee1ab91e3ed4a47",
+      "file": "articles/application-network/security.md",
+      "summary": "Learn about the security features in Azure Kubernetes Application Network, including mTLS, workload identities, certificate management, and authorization policies for secure service-to-service communication in AKS.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8560527+00:00"
+    },
+    {
+      "cache_key": "0f9e2e8c1bd2974d46182b1793c39c694292f4e13c17c67bed6adb4b482802a4",
+      "file": "articles/kubernetes-fleet/concepts-update-orchestration.md",
+      "summary": "The documentation for the update orchestration article has been enhanced to include a new feature, \"Maximum Concurrency,\" which allows users to control how many clusters can upgrade concurrently within an update stage or group. Additionally, the auto-upgrade profile section now clarifies that users can generate an update run at any time using the `az fleet autoupgradeprofile generate-update-run` command, providing more flexibility in managing updates.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8560328+00:00"
+    },
+    {
+      "cache_key": "c2f7b0f0cf694b1015e09af77a0f6b8b9dc6be1d666098176bc90686af6b29c9",
+      "file": "articles/aks/external-identity-provider-authentication-overview.md",
+      "summary": "The documentation for Azure Kubernetes Service (AKS) has been updated to provide a clearer overview of using external identity providers with structured authentication. Users can now better understand how to configure these providers for control plane access, including support for industry-standard OpenID Connect (OIDC) identity providers like Google and GitHub, as well as the ability to implement custom claim validation and user mapping rules. Additionally, the article now emphasizes the security considerations and requirements for external identity providers, enhancing guidance for users integrating their existing identity infrastructure with AKS.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8560124+00:00"
+    },
+    {
+      "cache_key": "af53b9744726c1d6be6ccc7bea4e963001de72c272d43a1a3790dea48e45c5ae",
+      "file": "articles/aks/create-volume-azure-disk.md",
+      "summary": "Learn how to create and manage persistent volumes using Azure Disks with the Container Storage Interface (CSI) driver in Azure Kubernetes Service (AKS) to provide scalable and reliable storage for your containerized applications.",
+      "category": "Storage",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8559917+00:00"
+    },
+    {
+      "cache_key": "9586283d0b603206aab3fd3903d3ce7213bf5c32c1d0371efb82c978c1722e32",
+      "file": "articles/container-registry/container-registry-skus.md",
+      "summary": "The documentation now specifies that all SKUs (Basic, Standard, and Premium) in Azure Container Registry have zone redundancy enabled by default in supported regions. This enhancement informs users that they can expect improved availability and resilience for their container images without needing to configure this feature manually.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8559713+00:00"
+    },
+    {
+      "cache_key": "317db46b60281c3def450cda6a8e69b18ae66a2f7a10c4d2c079b9b052b99b62",
+      "file": "articles/kubernetes-fleet/concepts-preview-api-lifecycle.md",
+      "summary": "Updates content with clarifications and improvements.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8559517+00:00"
+    },
+    {
+      "cache_key": "9bc5cb0027b127598fd0493ddf5948dae3d7ef7f0b22130678c66cacb33c40c5",
+      "file": "articles/aks/reliability-availability-zones-configure.md",
+      "summary": "The documentation for configuring Azure Kubernetes Service (AKS) with availability zones has been updated to include instructions for using both the Azure CLI and Terraform, enhancing user flexibility in resource management. Users can now create AKS clusters and node pools that span multiple availability zones using specific commands and parameters, such as `--zones` for the Azure CLI and corresponding Terraform configurations. Additionally, prerequisites for using Terraform have been clarified, ensuring users are well-prepared to implement these configurations.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8559310+00:00"
+    },
+    {
+      "cache_key": "c2c9fe67b3b4b8d9db0f10985804d6bb12247848bcb233eac44d97d07dad9f3c",
+      "file": "articles/application-network/get-started.md",
+      "summary": "Learn how to get started with Azure Kubernetes Application Network for AKS, including prerequisites, creating an Application Network resource, connecting an AKS cluster as a member, and managing resources.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8559105+00:00"
+    },
+    {
+      "cache_key": "1fcbfe3dd62a65cde052d6c2c94b15df7d85a397234ad01d0a7d86b3a4e27861",
+      "file": "articles/application-network/observability.md",
+      "summary": "Learn about the observability features available for Azure Kubernetes Application Network, including supported metrics, logs, and tracing capabilities, as well as workspace options for monitoring.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8558909+00:00"
+    },
+    {
+      "cache_key": "c57eba5a45636161a1c49a7d7b610472d6f5e6bd05289c4adb75daa635af6ce9",
+      "file": "articles/aks/container-network-security-cilium-mutual-tls-how-to.md",
+      "summary": "Get started with Cilium mTLS encryption for Advanced Container Networking Services on your AKS cluster.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8558712+00:00"
+    },
+    {
+      "cache_key": "a569803695cb9fbe02f9777b1f8d4e320502cffc70019a8820cec7cd3235cf65",
+      "file": "articles/aks/azure-linux-aks-partner-solutions.md",
+      "summary": "The documentation now includes a new section for TrendAI, detailing its capabilities in providing proactive security for cloud-native and containerized workloads on Azure Kubernetes Service. Users can benefit from a unified view of risk across container and runtime activities, enabling better prioritization and actionable insights for managing security in dynamic Kubernetes environments. Additionally, the partner solutions list has been updated to reflect the inclusion of TrendAI under the Security category.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8558461+00:00"
+    },
+    {
+      "cache_key": "20348696b8373f0d790a136cee616181b0d3d6562d170fb173fa055fad793585",
+      "file": "articles/application-network/overview.md",
+      "summary": "Learn about Azure Kubernetes Application Network, a fully managed, ambient-based service network solution for Azure Kubernetes Service (AKS) that enables secure, policy-driven communication between services without sidecars or changes to your applications.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8558007+00:00"
+    },
+    {
+      "cache_key": "9ba96fa7c17c7928a6295d7a37f46db691002d7b40e8530beb30460d08a95256",
+      "file": "articles/aks/kafka-overview.md",
+      "summary": "The documentation now specifies that for Kafka deployments on AKS, the Azure Disk CSI driver provides persistent volumes backed by Azure Managed Disks, enhancing clarity on storage options. Additionally, the reference to \"Premium SSD v2 disk configurations\" has been updated to \"Premium SSD v2 configurations,\" which may affect how users interpret the available disk options for different Kafka cluster sizes.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8557811+00:00"
+    },
+    {
+      "cache_key": "566a5d753c7060766c5d0eeabc4a2a511ef83a633725075c13f0f69fabfca861",
+      "file": "articles/aks/gpu-health-monitoring.md",
+      "summary": "The documentation now includes detailed information about the new **GPUClockThrottling** feature, which allows users to monitor GPU clock throttling conditions that may indicate performance issues due to thermal, power, or hardware constraints. Additionally, the **UnhealthyNvidiaDevicePlugin** section has been added, informing users that the health of the NVIDIA device plugin service is monitored for GPU node pools using the AKS managed GPU experience, ensuring that GPU resources are available for scheduling workloads.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8557593+00:00"
+    },
+    {
+      "cache_key": "d78f68b10ebc139386611b8ff3356876802ab1935d1ac6f8c10fd3a21cdf7915",
+      "file": "articles/aks/csi-disk-move-subscriptions.md",
+      "summary": "The documentation now specifies the correct terminology for Azure Managed Disks, ensuring consistency in the language used throughout the article. This change improves clarity for users following the instructions.",
+      "category": "Storage",
+      "score": 0.8,
+      "cached_at": "2026-03-30T18:25:13.8557382+00:00"
+    },
+    {
+      "cache_key": "ec4ad6c08a2877e56871f642778445ca6dddf5ef31c319b5976bdbb8b99d5fbf",
+      "file": "articles/aks/istio-upgrade.md",
+      "summary": "The documentation for horizontal pod autoscaling customization in Istio has been updated to reflect a change in the section title, now referred to as \"horizontal pod autoscaling HPA customization.\" This change clarifies the focus of the content, helping users better understand the specific customization options available for HPA in Istio.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8557186+00:00"
+    },
+    {
+      "cache_key": "417853a3949be8779b1d4f28b3ee388493f8e11dbf8a60f283fe9f6b8c099cda",
+      "file": "articles/aks/delete-node-pool.md",
+      "summary": "The documentation for deleting a node pool in Azure Kubernetes Service (AKS) has been updated to reflect a change in the command parameter. Users can now use the `--ignore-pdb` flag instead of `--ignore-pod-disruption-budget` when executing the `az aks nodepool delete` command to bypass PodDisruptionBudgets. This change simplifies the command syntax for users managing node pool deletions.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8556983+00:00"
+    },
+    {
+      "cache_key": "5bba5b604e9fd279d911aebadfdda6b3855d40eed77f10123862592566362cea",
+      "file": "articles/aks/how-to-apply-l7-policies.md",
+      "summary": "The documentation now includes updated instructions for installing and updating the `aks-preview` Azure CLI extension, specifying that the minimum version required is `14.0.0b6`. Additionally, users can register the `AdvancedNetworkingL7PolicyPreview` feature flag and verify its registration status using the `az feature show` command, enhancing their ability to manage advanced networking policies in Azure Kubernetes Service.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8556786+00:00"
+    },
+    {
+      "cache_key": "04febe7d761b4222c96857d27904244d563e38f8b9790aa3f968d2948eb076a0",
+      "file": "articles/aks/app-routing-migration.md",
+      "summary": "This article has been updated to reflect the migration process from the deprecated HTTP application routing feature to the application routing add-on in Azure Kubernetes Service (AKS). It emphasizes the importance of migrating to maintain a supported configuration and includes prerequisites and steps for enabling the new add-on.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8556584+00:00"
+    },
+    {
+      "cache_key": "fc390e96005f3f2f118172e392ee962242a121f497cbd8c536ee725395cb9c82",
+      "file": "articles/aks/use-network-policies.md",
+      "summary": "The documentation now includes a new section on identifying impacted AKS clusters using an Azure Resource Graph query, allowing users to easily find clusters with Linux node pools that utilize Azure Network Policy Manager. Additionally, the recommendation for using Cilium has been expanded to highlight its advantages, including support for Kubernetes-native policies and better performance through an eBPF-based dataplane. A cautionary note has also been added regarding the retirement of Azure Network Policy Manager for Linux nodes, advising users to transition to Azure CNI Powered by Cilium for new deployments.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8556377+00:00"
+    },
+    {
+      "cache_key": "872a80e0ae105774e2c17fdd1d5a063a946a9f97961cd606e60dc5c67ac9f181",
+      "file": "articles/aks/private-apiserver-vnet-integration-cluster.md",
+      "summary": "The documentation has been updated to clarify that the article applies specifically to private AKS clusters created with API Server VNet Integration using a bring-your-own VNet configuration. Users can now follow detailed steps to expose the API server through a Private Link Service and connect from a separate virtual network, including creating necessary subnets, configuring private DNS, and managing permissions. Additionally, the instructions for deploying a private AKS cluster have been enhanced to include specific commands and requirements for setting up the network infrastructure.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8556145+00:00"
+    },
+    {
+      "cache_key": "4dbfd1c1e4bad6a66ae199805fd34579b7405ac70f638e6b68b5c817ad584766",
+      "file": "articles/aks/use-ultra-disks.md",
+      "summary": "The documentation for using Azure Ultra Disks on AKS has been updated to ensure consistent capitalization throughout the article, enhancing clarity for users. Users can now easily identify commands and parameters related to Ultra Disks, such as `--enable-ultra-ssd`, which is crucial for configuring both new and existing AKS clusters to utilize these high-performance disks. Additionally, the article emphasizes the limitations and requirements for deploying Ultra Disks, ensuring users are well-informed about compatibility with node pools and specific VM series.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8555946+00:00"
+    },
+    {
+      "cache_key": "a3d27695b139691a68797bf4c768ac7eb3452eaf6e43ebf86d21ba11541c30e3",
+      "file": "articles/aks/vertical-pod-autoscaler.md",
+      "summary": "The documentation for the Vertical Pod Autoscaler (VPA) has been updated to reflect the deprecation of the `Auto` update mode, which is now an alias for `Recreate` mode, effective from VPA version 1.4.0 (AKS 1.34+). Additionally, a new `InPlaceOrRecreate` mode has been introduced, allowing VPA to update pod resource requests without restarting the pod when possible, enhancing operational efficiency. Users are now advised to set the `updateMode` to either `Recreate`, `InPlaceOrRecreate`, or `Initial` based on their requirements.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8555704+00:00"
+    },
+    {
+      "cache_key": "f2685255413e2de779deff7e857a112715e376113c3e1be9f805c5d89476457f",
+      "file": "articles/kubernetes-fleet/intelligent-resource-placement.md",
+      "summary": "Updates content with clarifications and improvements.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8555334+00:00"
+    },
+    {
+      "cache_key": "7078fd0bfe85eacafeb21cdce032c0745164dabc709d8a75b32804076451d112",
+      "file": "articles/aks/upgrade-conceptual.md",
+      "summary": "The documentation has been updated with new diagrams that illustrate the upgrade process for Azure Kubernetes Service (AKS), specifically focusing on rolling upgrades and Blue-Green deployments. Users can now refer to clearer visual representations of the upgrade steps, including the management of surge nodes, Pod Disruption Budgets, and the transition between blue and green node pools, enhancing their understanding of the upgrade mechanics.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8555034+00:00"
+    },
+    {
+      "cache_key": "c73186ee1f35f9c8961667478b1447f9f8bab5a962a3500fd6ed916a0e854cd8",
+      "file": "articles/aks/localdns-custom.md",
+      "summary": "The documentation now clarifies that when using the `Preferred` mode for LocalDNS in AKS, applying this mode will trigger a node reimage operation, allowing users to test their configuration for errors without impacting DNS resolution. Additionally, a new section has been added regarding DNS resolution issues when using Azure CNI Powered by Cilium, detailing the need for explicit permissions in network policies to allow pod egress to LocalDNS IP addresses, along with example CiliumNetworkPolicy YAML configurations for different versions.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8554694+00:00"
+    },
+    {
+      "cache_key": "3421242ba3a86558323912793e165a83a6445475f4a61822733314cd64250302",
+      "file": "articles/aks/aks-model-context-protocol-server.md",
+      "summary": "Learn how to install and use the Model Context Protocol (MCP) server to intelligently troubleshoot and manage your Azure Kubernetes Service (AKS) clusters.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8554215+00:00"
+    },
+    {
+      "cache_key": "6902540b2eb45de766a9f567bf21bb3285b4113d9fcc700e219130c1955453b7",
+      "file": "articles/aks/includes/aks-automatic/aks-automatic-limitations.md",
+      "summary": "The limitations section has been expanded to clarify the implications of node resource group lockdown in AKS Automatic clusters, guiding users on how to manage their network configurations.",
+      "category": "Networking",
+      "score": 0.75,
+      "cached_at": "2026-03-30T18:25:13.8553838+00:00"
+    },
+    {
+      "cache_key": "032d4f8939208c11511f49f5f38260314bbff781b88d458d3b3ec3c997c48e35",
+      "file": "AKS-Arc/supported-kubernetes-versions.md",
+      "summary": "The documentation has been updated to reflect the addition of Kubernetes version 2603 to the supported versions for AKS on Azure Arc. Users can now see that versions 1.31, 1.32, and 1.33 include 2603 in their respective supported version lists, enhancing clarity on compatibility for deployments.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8553627+00:00"
+    },
+    {
+      "cache_key": "7da93857f04440be5ec6b7be8ffbf8a43d80bab13646cb87473a05aa2c7a36ec",
+      "file": "articles/application-network/supported-versions.md",
+      "summary": "Learn about the supported versions of Azure Kubernetes Application Network, their compatible AKS versions, and how to check available versions in your region.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8553396+00:00"
+    },
+    {
+      "cache_key": "b4b3f011322584ac9cfae1fa6aff11b0ed18310794462cf34a204ff9a9db82f7",
+      "file": "articles/aks/agentic-cli-for-aks-overview.md",
+      "summary": "The documentation for the Agentic CLI for Azure Kubernetes Service (AKS) has been updated to clarify that it is currently in preview. A new table has been added to summarize the ideal use cases and characteristics of the two deployment modes: **client mode** and **cluster mode**, helping users choose the best option for their environment. Additionally, best practices for using the Agentic CLI have been expanded to include guidance on starting with broad diagnostic queries and using descriptive problem statements for better AI analysis.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8553190+00:00"
+    },
+    {
+      "cache_key": "0c6e8350fcf1da818c9f53ad11326c86ae40d7d8a602873f7a10fb4f8c43c072",
+      "file": "articles/aks/use-vertical-pod-autoscaler.md",
+      "summary": "The documentation for the Vertical Pod Autoscaler (VPA) in AKS has been updated to reflect that the `Auto` update mode is deprecated as of VPA version 1.4.0, and users should now use `Recreate` mode by default. Additionally, the section on high availability now specifies that VPA components will run with two replicas each by default starting from AKS 1.34, enhancing resilience during autoscaling operations. Users can also limit pod restarts by using the `InPlaceOrRecreate` update mode, which is now available on AKS 1.34 and later.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8552991+00:00"
+    },
+    {
+      "cache_key": "4799cabc6f24dda856077c7282ea9fb49b6c6afd1a08417c24550b3874d47e1a",
+      "file": "articles/aks/dapr.md",
+      "summary": "The Dapr installation guide has been updated with new information on prerequisites and installation steps, enhancing the clarity and usability of the documentation.",
+      "category": "General",
+      "score": 0.8,
+      "cached_at": "2026-03-30T18:25:13.8552787+00:00"
+    },
+    {
+      "cache_key": "bf4de4b04a2afd3220a5bb6da7338a9bb4f9c01bc8b76ba3f4910b79171a695e",
+      "file": "articles/aks/tutorial-kubernetes-deploy-cluster.md",
+      "summary": "The tutorial now clarifies that users can create a cluster with fewer than three nodes, in addition to the previous requirement of a three-node cluster for optimal operation. This change allows for more flexibility in cluster creation, enabling users to omit the node VM size parameter to use the default VM size if needed.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8552583+00:00"
+    },
+    {
+      "cache_key": "ada489d90ddbdcf24a439e4d37bd20d4e2265204869cc2bb33df12b96f64967a",
+      "file": "articles/aks/flatcar-container-linux-for-aks.md",
+      "summary": "The documentation now includes a note regarding the retirement of Flatcar Container Linux for AKS, emphasizing that there is no in-place migration path to another operating system. Users must create new node pools with a supported Linux OS, migrate their workloads, and then delete the old Flatcar Container Linux node pools. For further details on supported node OS options, users can refer to the AKS node OS documentation.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8552366+00:00"
+    },
+    {
+      "cache_key": "7bd3df22de1de1f773ddf2bf8830e624716b348d69ddd9a1aa3a6a56a065dcd5",
+      "file": "articles/aks/migrate-key-management-service-platform-managed-key-customer-managed-key.md",
+      "summary": "The documentation now specifies that any policy blocking the updating of secrets must be disabled prior to initiating the migration process, as this process involves updating secrets. This clarification helps users ensure a smooth migration of key management services without encountering issues related to secret updates.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8552167+00:00"
+    },
+    {
+      "cache_key": "02cd5b5b90bfb1fafa188df7bb7c1ff769f07f4a14f0f01fd2458ee109394225",
+      "file": "articles/aks/start-stop-cluster.md",
+      "summary": "The documentation now includes important cautionary notes regarding the potential rejection of the stop operation for AKS clusters that have `ValidatingWebhookConfiguration` or `MutatingWebhookConfiguration` affecting cluster-scoped resources. Users are advised to adjust their webhook configurations to avoid validation errors during stop/start operations, with specific recommendations on narrowing rules, scoping to namespaced resources, or modifying the failure policy.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8551963+00:00"
+    },
+    {
+      "cache_key": "9e6a3ab8ab90f3e3ce93353f4b0e942d227a78511b41b9f532fc32a5f13734f1",
+      "file": "articles/aks/external-identity-provider-authentication-configure.md",
+      "summary": "The documentation now specifies that users can configure both GitHub and Google Identity external identity providers for Azure Kubernetes Service (AKS) control plane authentication using structured authentication. Additionally, it includes detailed instructions for setting up JWT authenticator configurations for both identity providers, enhancing the clarity on how to validate and process tokens from these external sources. Users are also guided on creating necessary repository secrets and environment variables for GitHub Actions OIDC authentication, improving the overall setup process.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8551756+00:00"
+    },
+    {
+      "cache_key": "f204fdf165aa6d8a9803c59f1127d2468dcd7bd816b98fd1f3ea30ef0086e5cf",
+      "file": "articles/container-registry/container-registry-soft-delete-policy.md",
+      "summary": "The documentation now clarifies that the soft delete policy does not support registries configured for geo-replication or artifact cache, removing the previous mention of zone redundancy. This change helps users understand the limitations of the soft delete feature when using specific configurations in Azure Container Registry.",
+      "category": "Compliance",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8551537+00:00"
+    },
+    {
+      "cache_key": "8069cf72331cfec2122aee75f37fd6dadfbb7a2a8044d59d1f1ee3b3d6e0cbae",
+      "file": "articles/aks/howto-deploy-java-wls-app.md",
+      "summary": "The date metadata has been updated to reflect the latest information. This ensures that users are aware of the most current version of the documentation.",
+      "category": "General",
+      "score": 0.5,
+      "cached_at": "2026-03-30T18:25:13.8551322+00:00"
+    },
+    {
+      "cache_key": "c076b9efbfd880c6b502728a7943adaafc421742266d39a405e06808df3e9da8",
+      "file": "articles/kubernetes-fleet/concepts-multi-cluster-networking-overview.md",
+      "summary": "This article provides a conceptual overview of Azure Kubernetes Fleet Manager multi-cluster networking.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "2026-03-30T18:25:13.8551100+00:00"
+    },
+    {
+      "cache_key": "ed9c9fe7348f996698a8001305dd3e32b9d6a853fda5d7b852629676fe595232",
+      "file": "articles/aks/update-azure-cni.md",
+      "summary": "The documentation now includes a new section on the supported migration path for Azure Kubernetes Service (AKS), detailing that migration to Azure CNI Overlay is a one-way operation from both Azure CNI (Node Subnet) and Kubenet. Users must detach any associated route tables when updating from Kubenet, and a user-assigned managed identity is required for this process. Additionally, it clarifies that updating to Azure CNI Powered by Cilium is not supported for clusters with Windows node pools and provides specific steps for migrating to this configuration.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8550851+00:00"
+    },
+    {
+      "cache_key": "3a35b6541f0b7bb40a40e7bef189ba5cfc2eb89cef3e885e607298cd1ff6cb2b",
+      "file": "articles/aks/agentic-cli-for-aks-install.md",
+      "summary": "The article has been significantly modified to clarify the installation and configuration of the agentic CLI for AKS, including detailed instructions for both client and cluster modes.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-03-30T18:25:13.8550454+00:00"
     }
   ]
 }
