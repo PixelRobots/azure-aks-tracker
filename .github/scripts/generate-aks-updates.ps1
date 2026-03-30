@@ -2544,6 +2544,7 @@ if ($forcedModified.Count -gt 0) {
 }
 
 # Apply final filtering to remove trivial changes and duplicates
+Log "Starting final filtering and cache update..."
 $finalResults = Apply-FinalTrivialFiltering -aiVerdicts $aiVerdicts -filteredGroups $filteredGroups
 
 foreach ($item in @($finalResults.ordered)) {
@@ -2561,8 +2562,10 @@ foreach ($item in @($finalResults.ordered)) {
 }
 
 Save-DocsSummaryCache -Cache $docsSummaryCache
+Log "Docs summary cache update complete."
 
 # Render DOCS sections — ONLY what passed final filtering, preserving order
+Log "Rendering docs cards for tracker page..."
 $sections = New-Object System.Collections.Generic.List[string]
 foreach ($row in @($finalResults.ordered)) {
   $file = $row.file
@@ -2625,6 +2628,7 @@ foreach ($row in @($finalResults.ordered)) {
 "@
   $sections.Add($section.Trim())
 }
+Log "Rendered $($sections.Count) docs cards."
 
 # =========================
 # RELEASES HANDLING (unchanged from original)
@@ -2765,7 +2769,9 @@ function ToListHtml($arr) {
   return "<ul class=""aks-rel-list"">$lis</ul>"
 }
 
+Log "Fetching AKS releases..."
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
+Log "Fetched $($releases.Count) AKS releases."
 
 # Build releases JSON for AI
 $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
@@ -2786,7 +2792,9 @@ $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding U
 
 $releaseSummaries = @{}
 if ($PreferProvider -and $releases.Count -gt 0) {
+  Log "Building AI summaries for AKS releases..."
   $releaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
+  Log "Release summary generation complete."
 }
 else {
   Log "AI disabled or no releases."
@@ -2862,12 +2870,14 @@ foreach ($r in $releases) {
 }
 
 $releasesHtml = if ($releaseCards.Count -gt 0) { $releaseCards -join "`n" } else { '<p class="aks-rel-empty">No releases found (yet).</p>' }
+Log "Rendered $($releaseCards.Count) release cards."
 
 # =========================
 # CVE DATA (fetched once, rendered for both page tab and email digest)
 # =========================
 Log "Fetching AKS CVE vulnerability data..."
 $cveTabHtml = Get-AksCveTabHtml
+Log "CVE HTML generation complete."
 $cveSectionHtml = @"
     <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
@@ -3393,10 +3403,12 @@ $digestDocsHtml = @"
   </div>
 </div>
 "@.Trim()
+Log "Docs digest HTML built with $($digestItems.Count) items."
 
 # ── Releases digest ───────────────────────────────────────────────────────────
 Log "Building releases digest block..."
 $digestReleasesHtml = Get-ReleasesDigestHtml -relList $releases -relSummaries $releaseSummaries -postTitle $digestReleasesTitle
+Log "Releases digest block complete."
 
 # ── CVE digest ────────────────────────────────────────────────────────────────
 Log "Building CVE digest block..."
@@ -3419,10 +3431,12 @@ $digestCveHtml = if ($cveDigestBlock) {
 </div>
 "@.Trim()
 } else { '' }
+Log "CVE digest block complete."
 
 # =========================
 # OUTPUT (JSON with html + hash)
 # =========================
+Log "Serializing final JSON output..."
 $sha256 = [System.Security.Cryptography.SHA256]::Create()
 $bytes = [Text.Encoding]::UTF8.GetBytes($html)
 $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -join ""
