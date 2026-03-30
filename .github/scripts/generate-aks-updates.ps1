@@ -2366,8 +2366,16 @@ if ($forced.Count -gt 0) {
 
 # ---- Post-AI safety: also keep meaningful MODIFIED files the AI skipped
 $forcedModified = New-Object System.Collections.Generic.List[object]
+$forcedModifiedScanTotal = @($filteredGroups.Keys).Count
+$forcedModifiedScanIndex = 0
+Log "Scanning AI-skipped modified files for forced keep candidates..."
 
 foreach ($k in $filteredGroups.Keys) {
+  $forcedModifiedScanIndex++
+  if (($forcedModifiedScanIndex -eq 1) -or (($forcedModifiedScanIndex % 25) -eq 0) -or ($forcedModifiedScanIndex -eq $forcedModifiedScanTotal)) {
+    Log "Forced-modified scan progress: $forcedModifiedScanIndex / $forcedModifiedScanTotal"
+  }
+
   if ($aiKeptSet.Contains($k)) { continue }
   $items = $filteredGroups[$k]
   $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
@@ -2376,14 +2384,20 @@ foreach ($k in $filteredGroups.Keys) {
   $adds = ($items | Measure-Object -Sum -Property additions).Sum
   $dels = ($items | Measure-Object -Sum -Property deletions).Sum
 
+  Log "Evaluating modified candidate: $k (+$adds/-$dels)"
+
   $lines = @()
   foreach ($it in $items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
   $patchSample = ($lines | Select-Object -First 1200) -join "`n"
 
   $signals = Get-MeaningfulSignals -PatchSample $patchSample
-  if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects ($items.pr_title | Select-Object -Unique))) { continue }
+  if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects ($items.pr_title | Select-Object -Unique))) {
+    Log "Skipping modified candidate after heuristic check: $k"
+    continue
+  }
 
   $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
+  Log "Summarizing forced modified candidate: $k"
   $summary = Summarize-ModifiedPatch -FilePath $k -Subjects $subjects -PatchSample $patchSample -Signals $signals
 
   $forcedModified.Add([pscustomobject]@{
@@ -2392,7 +2406,10 @@ foreach ($k in $filteredGroups.Keys) {
       category = Compute-Category $k
       score    = 0.9
     }) | Out-Null
+  Log "Force-keep candidate accepted: $k"
 }
+
+Log "Forced-modified scan complete. Accepted $($forcedModified.Count) modified page(s)."
 
 function Apply-FinalTrivialFiltering {
   param([object]$aiVerdicts, [hashtable]$filteredGroups)
