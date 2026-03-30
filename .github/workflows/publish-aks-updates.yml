@@ -72,13 +72,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          TMP_CACHE_DIR="$(mktemp -d)"
           FILES_TO_ADD=""
           if [ -f vhd-cache.json ]; then
+            cp vhd-cache.json "$TMP_CACHE_DIR/vhd-cache.json"
             FILES_TO_ADD="$FILES_TO_ADD vhd-cache.json"
           else
             echo "No vhd-cache.json produced."
           fi
           if [ -f docs-summary-cache.json ]; then
+            cp docs-summary-cache.json "$TMP_CACHE_DIR/docs-summary-cache.json"
             FILES_TO_ADD="$FILES_TO_ADD docs-summary-cache.json"
           else
             echo "No docs-summary-cache.json produced."
@@ -89,12 +92,20 @@ jobs:
             exit 0
           fi
 
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+          if [ -f "$TMP_CACHE_DIR/vhd-cache.json" ]; then
+            cp "$TMP_CACHE_DIR/vhd-cache.json" vhd-cache.json
+          fi
+          if [ -f "$TMP_CACHE_DIR/docs-summary-cache.json" ]; then
+            cp "$TMP_CACHE_DIR/docs-summary-cache.json" docs-summary-cache.json
+          fi
+
           git add $FILES_TO_ADD
           if git diff --staged --quiet; then
             echo "Cache files unchanged — nothing to commit."
           else
             git commit -m "chore: update generated caches [skip ci]"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
             git push
             echo "Generated caches committed and pushed."
           fi
@@ -103,8 +114,12 @@ jobs:
         if: steps.gen.conclusion == 'success'
         run: |
           if [ -f wordpress-cve-section.html ]; then
+            TMP_CVE_SOURCE="$(mktemp)"
+            cp wordpress-cve-section.html "$TMP_CVE_SOURCE"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git reset --hard "origin/${GITHUB_REF_NAME}"
             mkdir -p wordpress
-            cp wordpress-cve-section.html wordpress/aks-cve-section.html
+            cp "$TMP_CVE_SOURCE" wordpress/aks-cve-section.html
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add wordpress/aks-cve-section.html
@@ -112,7 +127,6 @@ jobs:
               echo "WordPress CVE source unchanged — nothing to commit."
             else
               git commit -m "chore: update WordPress CVE source [skip ci]"
-              git pull --rebase origin "${GITHUB_REF_NAME}"
               git push
               echo "WordPress CVE source committed and pushed."
             fi
@@ -201,6 +215,11 @@ jobs:
       - name: Archive weekly docs digest
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
+          TMP_WEEKLY_DIGEST="$(mktemp)"
+          cp digest-docs.html "$TMP_WEEKLY_DIGEST"
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+
           # Create archive directory
           mkdir -p archive
     
@@ -208,8 +227,8 @@ jobs:
           ARCHIVE_DATE=$(date +%Y-%m-%d)
           SRC="digest-docs.html"
           DST="archive/weekly-digest-docs-${ARCHIVE_DATE}.html"
-          cp "$SRC" "$DST"
-          echo "Saved $SRC to $DST"
+          cp "$TMP_WEEKLY_DIGEST" "$DST"
+          echo "Saved digest-docs.html to $DST"
     
           # Commit and push archive
           git config user.name "github-actions[bot]"
@@ -219,7 +238,6 @@ jobs:
             echo "No archive changes to commit"
           else
             git commit -m "Archive weekly docs digest for $ARCHIVE_DATE"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
             git push
           fi
     
