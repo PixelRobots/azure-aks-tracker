@@ -178,6 +178,8 @@ jobs:
         if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.hash != steps.get.outputs.current
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
+          WP_GET_URL="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
+          DESIRED_HASH="${{ steps.gen.outputs.hash }}"
 
           # Build payload — send raw HTML without block wrappers to avoid WordPress
           # block-parser errors that can cause 500 responses on large HTML content.
@@ -193,6 +195,38 @@ jobs:
             echo "ERROR: wp-payload.json is not valid JSON — aborting"
             exit 1
           fi
+
+          verify_page_update() {
+            VERIFY_RESPONSE=$(mktemp)
+            VERIFY_CODE=$(curl -s -w "%{http_code}" \
+              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              "$WP_GET_URL" -o "$VERIFY_RESPONSE")
+
+            if [ "$VERIFY_CODE" -ge 200 ] && [ "$VERIFY_CODE" -lt 300 ]; then
+              REMOTE_HASH=$(jq -r .content.rendered "$VERIFY_RESPONSE" | sha256sum | cut -d' ' -f1)
+              REMOTE_MODIFIED=$(jq -r '.modified_gmt // empty' "$VERIFY_RESPONSE")
+              echo "Verification GET succeeded (HTTP $VERIFY_CODE)"
+              echo "Desired hash: $DESIRED_HASH"
+              echo "Remote  hash: $REMOTE_HASH"
+              if [ -n "$REMOTE_MODIFIED" ] && [ "$REMOTE_MODIFIED" != "null" ]; then
+                echo "Remote modified_gmt: $REMOTE_MODIFIED"
+              fi
+              rm -f "$VERIFY_RESPONSE"
+
+              if [ "$REMOTE_HASH" = "$DESIRED_HASH" ]; then
+                echo "WordPress page content matches the desired hash after the failed POST."
+                return 0
+              fi
+            else
+              echo "Verification GET failed with HTTP $VERIFY_CODE"
+              echo "--- Verification response ---"
+              head -c 2000 "$VERIFY_RESPONSE"
+              echo ""
+              rm -f "$VERIFY_RESPONSE"
+            fi
+
+            return 1
+          }
 
           WP_RESPONSE=$(mktemp)
           attempt=1
@@ -212,6 +246,10 @@ jobs:
             echo "--- WordPress error response ---"
             head -c 2000 "$WP_RESPONSE"
             echo ""
+            if verify_page_update; then
+              echo "Treating HTTP $HTTP_CODE as success because the page update was persisted."
+              break
+            fi
             if [ $attempt -lt $max_retries ]; then
               echo "Retrying in $retry_delay seconds..."
               sleep $retry_delay
