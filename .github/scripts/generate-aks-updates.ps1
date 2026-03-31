@@ -74,6 +74,7 @@ $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 $DocsSummaryCachePath = 'docs-summary-cache.json'
 $DocsSummaryCacheMaxEntries = 2000
+$MaxCveSectionBytes = 1048576
 
 function Get-PullRequestFiles {
   param([int]$prNumber, [string]$Owner, [string]$Repo)
@@ -102,6 +103,21 @@ function Get-CommitFiles {
 }
 
 function Log($msg) { Write-Host "[$(Get-Date -Format HH:mm:ss)] $msg" }
+
+function Assert-MaxContentBytes {
+  param(
+    [Parameter(Mandatory = $true)][string]$Name,
+    [Parameter(Mandatory = $true)][string]$Content,
+    [Parameter(Mandatory = $true)][int]$MaxBytes
+  )
+
+  $sizeBytes = [Text.Encoding]::UTF8.GetByteCount(($Content ?? ''))
+  if ($sizeBytes -gt $MaxBytes) {
+    throw "$Name is $sizeBytes bytes, which exceeds the safety limit of $MaxBytes bytes."
+  }
+
+  Log "$Name size check passed ($sizeBytes bytes; limit $MaxBytes)."
+}
 
 function Get-TextSha256([string]$Text) {
   $sha256 = [System.Security.Cryptography.SHA256]::Create()
@@ -2066,6 +2082,7 @@ if ($script:CveOnly) {
     </div>
     <!-- CVE_SECTION_END -->
 "@
+  Assert-MaxContentBytes -Name 'CVE section HTML' -Content $cveSectionHtml -MaxBytes $MaxCveSectionBytes
   [pscustomobject]@{
     cve_only         = $true
     cve_section_html = $cveSectionHtml
@@ -2904,6 +2921,7 @@ $cveSectionHtml = @"
     </div>
     <!-- CVE_SECTION_END -->
 "@
+Assert-MaxContentBytes -Name 'CVE section HTML' -Content $cveSectionHtml -MaxBytes $MaxCveSectionBytes
 $cvePlaceholderSectionHtml = @"
     <!-- CVE_SECTION_START -->
     <div class="aks-tab-panel" id="aks-tab-cve">
