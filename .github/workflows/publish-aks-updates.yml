@@ -138,33 +138,36 @@ jobs:
         id: get
         if: steps.gen.conclusion == 'success'
         run: |
-          # Function to retry curl commands with exponential backoff
-          retry_curl() {
-            local max_retries=3
-            local retry_delay=5
-            local attempt=1
-            while [ $attempt -le $max_retries ]; do
-              if "$@"; then
-                echo "Successfully executed command on attempt $attempt"
-                return 0
-              else
-                local exit_code=$?
-                echo "Attempt $attempt failed with exit code $exit_code"
-                if [ $attempt -lt $max_retries ]; then
-                  echo "Retrying in $retry_delay seconds..."
-                  sleep $retry_delay
-                  retry_delay=$((retry_delay * 2))
-                else
-                  echo "Failed after $max_retries attempts"
-                  return $exit_code
-                fi
-                attempt=$((attempt + 1))
-              fi
-            done
-          }
-
-          retry_curl curl -sSf -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-            "${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}" -o page.json
+          WP_GET_URL="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
+          WP_RESPONSE=$(mktemp)
+          attempt=1
+          max_retries=3
+          retry_delay=5
+          while [ $attempt -le $max_retries ]; do
+            HTTP_CODE=$(curl -s -w "%{http_code}" \
+              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              "$WP_GET_URL" -o "$WP_RESPONSE")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "Successfully fetched WP page (HTTP $HTTP_CODE) on attempt $attempt"
+              break
+            fi
+            echo "Attempt $attempt failed with HTTP $HTTP_CODE"
+            echo "--- WordPress error response ---"
+            head -c 2000 "$WP_RESPONSE"
+            echo ""
+            if [ $attempt -lt $max_retries ]; then
+              echo "Retrying in $retry_delay seconds..."
+              sleep $retry_delay
+              retry_delay=$((retry_delay * 2))
+            else
+              echo "Failed after $max_retries attempts"
+              rm -f "$WP_RESPONSE"
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+          done
+          cp "$WP_RESPONSE" page.json
+          rm -f "$WP_RESPONSE"
           echo "current=$(jq -r .content.rendered page.json | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
       - name: Skip if no changes
@@ -174,43 +177,53 @@ jobs:
       - name: Update WordPress page
         if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.hash != steps.get.outputs.current
         run: |
-          # Function to retry curl commands with exponential backoff
-          retry_curl() {
-            local max_retries=3
-            local retry_delay=5
-            local attempt=1
-            while [ $attempt -le $max_retries ]; do
-              if "$@"; then
-                echo "Successfully executed command on attempt $attempt"
-                return 0
-              else
-                local exit_code=$?
-                echo "Attempt $attempt failed with exit code $exit_code"
-                if [ $attempt -lt $max_retries ]; then
-                  echo "Retrying in $retry_delay seconds..."
-                  sleep $retry_delay
-                  retry_delay=$((retry_delay * 2))
-                else
-                  echo "Failed after $max_retries attempts"
-                  return $exit_code
-                fi
-                attempt=$((attempt + 1))
-              fi
-            done
-          }
-
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
+
+          # Build payload — send raw HTML without block wrappers to avoid WordPress
+          # block-parser errors that can cause 500 responses on large HTML content.
           jq -n --rawfile content content.html \
-            '{content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->", status: "publish"}' \
+            '{content: $content, status: "publish"}' \
             > "$RUNNER_TEMP/wp-payload.json"
 
           echo "content.html size: $(wc -c < content.html) bytes"
           echo "wp-payload.json size: $(wc -c < "$RUNNER_TEMP/wp-payload.json") bytes"
 
-          retry_curl curl -sSf -X POST "$WP_API" \
-            -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-            -H "Content-Type: application/json" \
-            --data-binary @"$RUNNER_TEMP/wp-payload.json"
+          # Validate JSON before sending
+          if ! jq empty "$RUNNER_TEMP/wp-payload.json"; then
+            echo "ERROR: wp-payload.json is not valid JSON — aborting"
+            exit 1
+          fi
+
+          WP_RESPONSE=$(mktemp)
+          attempt=1
+          max_retries=3
+          retry_delay=5
+          while [ $attempt -le $max_retries ]; do
+            HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$WP_API" \
+              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              -H "Content-Type: application/json" \
+              --data-binary @"$RUNNER_TEMP/wp-payload.json" \
+              -o "$WP_RESPONSE")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "WordPress page updated successfully (HTTP $HTTP_CODE) on attempt $attempt"
+              break
+            fi
+            echo "Attempt $attempt failed with HTTP $HTTP_CODE"
+            echo "--- WordPress error response ---"
+            head -c 2000 "$WP_RESPONSE"
+            echo ""
+            if [ $attempt -lt $max_retries ]; then
+              echo "Retrying in $retry_delay seconds..."
+              sleep $retry_delay
+              retry_delay=$((retry_delay * 2))
+            else
+              echo "Failed after $max_retries attempts"
+              rm -f "$WP_RESPONSE"
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+          done
+          rm -f "$WP_RESPONSE"
 
       - name: Archive weekly docs digest
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
@@ -244,31 +257,6 @@ jobs:
       - name: Create weekly WP docs post
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
-          # Function to retry curl commands with exponential backoff
-          retry_curl() {
-            local max_retries=3
-            local retry_delay=5
-            local attempt=1
-            while [ $attempt -le $max_retries ]; do
-              if "$@"; then
-                echo "Successfully executed command on attempt $attempt"
-                return 0
-              else
-                local exit_code=$?
-                echo "Attempt $attempt failed with exit code $exit_code"
-                if [ $attempt -lt $max_retries ]; then
-                  echo "Retrying in $retry_delay seconds..."
-                  sleep $retry_delay
-                  retry_delay=$((retry_delay * 2))
-                else
-                  echo "Failed after $max_retries attempts"
-                  return $exit_code
-                fi
-                attempt=$((attempt + 1))
-              fi
-            done
-          }
-
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/posts"
           if [ ! -s "digest-docs.html" ]; then
             echo "docs: no content — skipping."
@@ -276,16 +264,53 @@ jobs:
           fi
 
           TITLE=$(cat "digest-docs.title")
+          # Build payload — send raw HTML without block wrappers to avoid WordPress
+          # block-parser errors that can cause 500 responses on large HTML content.
           jq -n --rawfile content "digest-docs.html" --arg title "$TITLE" \
             '{title: $title,
               status: "publish",
               categories: [261],
-              content: "<!-- wp:html -->\n\($content)\n<!-- /wp:html -->",
+              content: $content,
               comment_status: "closed"}' \
             > "$RUNNER_TEMP/wp-docs.json"
 
+          # Validate JSON before sending
+          if ! jq empty "$RUNNER_TEMP/wp-docs.json"; then
+            echo "ERROR: wp-docs.json is not valid JSON — aborting"
+            exit 1
+          fi
+
           echo "Posting docs digest to WordPress..."
-          retry_curl curl -sSf -X POST "$WP_API" \
-            -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-            -H "Content-Type: application/json" \
-            --data-binary @"$RUNNER_TEMP/wp-docs.json"
+          echo "digest-docs.html size: $(wc -c < digest-docs.html) bytes"
+          echo "wp-docs.json size: $(wc -c < "$RUNNER_TEMP/wp-docs.json") bytes"
+
+          WP_RESPONSE=$(mktemp)
+          attempt=1
+          max_retries=3
+          retry_delay=5
+          while [ $attempt -le $max_retries ]; do
+            HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$WP_API" \
+              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              -H "Content-Type: application/json" \
+              --data-binary @"$RUNNER_TEMP/wp-docs.json" \
+              -o "$WP_RESPONSE")
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "WordPress post created successfully (HTTP $HTTP_CODE) on attempt $attempt"
+              break
+            fi
+            echo "Attempt $attempt failed with HTTP $HTTP_CODE"
+            echo "--- WordPress error response ---"
+            head -c 2000 "$WP_RESPONSE"
+            echo ""
+            if [ $attempt -lt $max_retries ]; then
+              echo "Retrying in $retry_delay seconds..."
+              sleep $retry_delay
+              retry_delay=$((retry_delay * 2))
+            else
+              echo "Failed after $max_retries attempts"
+              rm -f "$WP_RESPONSE"
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+          done
+          rm -f "$WP_RESPONSE"
