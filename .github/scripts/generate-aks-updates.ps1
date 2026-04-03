@@ -2307,8 +2307,9 @@ foreach ($k in $filteredGroups.Keys) {
 
 Log "Docs summary cache: $($filteredGroups.Keys.Count - $uncachedGroups.Keys.Count) hits, $($uncachedGroups.Keys.Count) misses"
 
+$TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
+
 if ($uncachedGroups.Keys.Count -gt 0) {
-  $TmpRoot = $env:RUNNER_TEMP; if (-not $TmpRoot) { $TmpRoot = [System.IO.Path]::GetTempPath() }
   $aiJsonPath = Join-Path $TmpRoot ("aks-doc-pr-groups-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
   $aiInput = [pscustomobject]@{
     since  = $SINCE_ISO
