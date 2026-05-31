@@ -1,0 +1,876 @@
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+  <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
+    <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">Azure Container Services Docs - Weekly Update (2026-05-24 to 2026-05-31)</h2>
+    <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#4b5563;">
+      The most meaningful Azure Kubernetes Service, AKS Arc, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. AKS everywhere! Summaries are AI-filtered to skip trivial edits.
+    </p>
+    <p style="margin:0;font-size:13px;color:#059669;font-weight:600;">
+      &#128202; Updates this week: AGC (10), AKS (9), Fleet (3)
+    </p>
+  </div>
+  <div>
+    <div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/how-to-enable-ebpf-host-routing" style="text-decoration: none; color: #1e40af;">AKS - How to Enable Ebpf Host Routing</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-29 19:14</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document has been revised to provide clearer instructions on enabling eBPF Host Routing with Advanced Container Networking Services. It emphasizes the importance of registering the feature flag and includes updated commands for better clarity.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/how-to-enable-ebpf-host-routing" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/bfa57bbe604b7133a55bed7bff49af0362d8398d" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes" style="text-decoration: none; color: #1e40af;">AGC - Alb Controller Release Notes</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 19:39</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The release notes for the ALB Controller have been updated to include new security updates and hotfixes. This ensures users are informed about the latest improvements and fixes, enhancing the reliability of the Application Gateway for Containers.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a966da39a6f775263a1805bb6686c0338b3f55f1" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/container-network-performance-ebpf-host-routing" style="text-decoration: none; color: #1e40af;">AKS - Container Network Performance Ebpf Host Routing</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-29 19:14</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation for eBPF Host Routing has been updated to clarify that it is incompatible with nodes running operating systems other than Ubuntu 24.04 or Azure Linux 3.0, and it is not supported with Confidential VMs and Pod Sandboxing. Additionally, users should note that eBPF Host Routing cannot be used with the Static Egress Gateway, and Istio Ambient through a self-managed installation with ACNS Performance mode is also not supported.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/container-network-performance-ebpf-host-routing" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/bfa57bbe604b7133a55bed7bff49af0362d8398d" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm" style="text-decoration: none; color: #1e40af;">AGC - Quickstart Deploy Application Gateway for Containers Alb Controller Helm</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 19:39</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation has been updated to reflect the new Helm chart version 1.10.28, replacing the previous version 1.10.27 in multiple command examples. Additionally, the instructions for overriding namespaces during the `helm install` command have been clarified, emphasizing that users can now specify the `--namespace` parameter and the `--set albController.namespace` property more clearly. The section numbering for uninstalling the ALB Controller has also been corrected, improving the overall clarity of the instructions.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a966da39a6f775263a1805bb6686c0338b3f55f1" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon" style="text-decoration: none; color: #1e40af;">AGC - Quickstart Deploy Application Gateway for Containers Alb Controller Addon</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 17:32</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The quickstart guide for deploying the Application Gateway for Containers AKS add-on has been updated to clarify that the add-on is not supported on AKS Automatic clusters. It also includes details on validating the GatewayClass condition.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/7a3814b37293e70fa8ce350a734693c3427414a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/app-routing-nginx-to-gateway-api-migration" style="text-decoration: none; color: #1e40af;">AKS - App Routing Nginx to Gateway API Migration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 22:09</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Step-by-step guide to migrate ingress traffic from the application routing add-on with ingress-nginx to the application routing Gateway API (Istio) implementation on Azure Kubernetes Service with zero downtime.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/app-routing-nginx-to-gateway-api-migration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/a4109ba82dbf8ac99f382f3d8c80f805c5010757" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/service-mesh-integration" style="text-decoration: none; color: #1e40af;">AGC - Service Mesh Integration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 19:39</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes updated version information for the ALB Controller Service Mesh Extension, reflecting the new version 1.10.28. Additionally, it clarifies that the integration assumes an Istio sidecar-based service mesh, as ambient mode is not supported, and provides specific instructions for configuring sidecar injection based on the Istio version installed. Users can now also see examples updated to use the namespace &quot;test-infra&quot; instead of &quot;istio-example-namespace,&quot; ensuring consistency in the provided commands and configurations.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/service-mesh-integration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a966da39a6f775263a1805bb6686c0338b3f55f1" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/overview" style="text-decoration: none; color: #1e40af;">AGC - Overview</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 17:32</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes details about new flexible load balancing strategies available with Application Gateway for Containers, such as Least Request, Load Aware Routing, Ring Hash, Round Robin, and Weighted Round Robin. Users can leverage these strategies to optimize traffic management and improve application performance. Additionally, the section on traffic splitting has been updated to reflect the inclusion of weighted round robin capabilities.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/overview" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/7a3814b37293e70fa8ce350a734693c3427414a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/app-routing-gateway-api" style="text-decoration: none; color: #1e40af;">AKS - App Routing Gateway API</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The application routing add-on documentation has been updated to reflect the latest changes in the Kubernetes Gateway API. This includes removing preview tags and updating the installation instructions, ensuring users have access to the most current information.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/app-routing-gateway-api" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/f488064098767fa7fbab96a5dab56b6895a76dd0" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/concepts-rbac" style="text-decoration: none; color: #1e40af;">Fleet - Concepts RBAC</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-25 11:05</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This update adds a note regarding Azure Portal permissions for adding member clusters, emphasizing that users need Contributor permissions for the resource group where Fleet Manager is deployed. It also clarifies that certain RBAC roles are not supported for Arc-enabled member clusters and specific Kubernetes Custom Resources.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/concepts-rbac" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/1ffb85092e1631024d6ed393d0eb1823a5848722" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://github.com///blob/main/AKS-Arc/gpu-enabled-cluster-issue.md" style="text-decoration: none; color: #1e40af;">AKS - Gpu Enabled Cluster Issue</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-28 22:04</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document has been updated with new metadata and author information, reflecting recent changes and ensuring that the documentation is current and accurate.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://github.com///blob/main/AKS-Arc/gpu-enabled-cluster-issue.md" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-stack-docs/pull/4316" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/api-specification-kubernetes" style="text-decoration: none; color: #1e40af;">AGC - API Specification Kubernetes</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 17:32</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The API specification for Kubernetes has been updated to include the LoadAwareConfig, which defines configurations for load-aware routing, enhancing the management of traffic distribution based on backend server utilization.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/api-specification-kubernetes" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/7a3814b37293e70fa8ce350a734693c3427414a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/migrate-from-agic-to-agc" style="text-decoration: none; color: #1e40af;">AGC - Migrate From Agic to Agc</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 17:32</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now emphasizes that Application Gateway for Containers has a migration utility to assist users in automatically translating AGIC Ingress to Gateway API, providing a more streamlined migration process. Additionally, the language has been updated for clarity, indicating that users can retire the Application Gateway Ingress Controller configuration after validating the Application Gateway for Containers functionality. Users should also be aware that certain dependencies on the Ingress Controller may not be available in the new service, which could affect their migration strategy.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/migrate-from-agic-to-agc" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/7a3814b37293e70fa8ce350a734693c3427414a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/istio-gateway-api" style="text-decoration: none; color: #1e40af;">AKS - Istio Gateway API</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 17:09</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The Istio Gateway API documentation has been updated to remove preview tags, indicating that the feature is now generally available. This change reflects the maturity of the feature and provides users with the latest configuration instructions.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/istio-gateway-api" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/1e04543706bb2dcbf06e099a07e416c558cf304b" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/application-gateway-for-containers-components" style="text-decoration: none; color: #1e40af;">AGC - Application Gateway for Containers Components</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 19:39</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes detailed guidance on using User Defined Routes (UDRs) for the Application Gateway for Containers, allowing users to manage routing more effectively between the gateway and AKS clusters. Users can disable Border Gateway Protocol (BGP) route propagation and create UDRs to direct traffic to the internet, which helps prevent issues with client return traffic. Additionally, Network Security Groups (NSGs) are fully supported for associations created on or after April 23, 2026, enabling more granular control over inbound and outbound traffic rules.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/application-gateway-for-containers-components" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a966da39a6f775263a1805bb6686c0338b3f55f1" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/quickstart-create-fleet-and-members-portal" style="text-decoration: none; color: #1e40af;">Fleet - Quickstart Create Fleet and Members Portal</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-25 11:05</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Updated the quickstart guide for creating a fleet and members portal in Azure Kubernetes Service. Added a permissions reference for Azure RBAC Contributor, enhancing clarity on required roles for users.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/quickstart-create-fleet-and-members-portal" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/1ffb85092e1631024d6ed393d0eb1823a5848722" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/upgrade-aks-node-pools-rolling" style="text-decoration: none; color: #1e40af;">AKS - Upgrade AKS Node Pools Rolling</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 06:01</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation has been updated to clarify the behavior of the maxSurge and maxUnavailable settings during upgrades. It introduces a fallback strategy for upgrades, ensuring that even under capacity constraints, upgrades can proceed smoothly. This includes new commands and explanations for setting these parameters.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/upgrade-aks-node-pools-rolling" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/d68e86beb8d52b9b1b2497a8711bf3d79940f1e9" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/siem-integration-with-sentinel" style="text-decoration: none; color: #1e40af;">AGC - Siem Integration with Sentinel</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 17:32</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The integration guide for SIEM with Microsoft Sentinel has been updated to reflect the latest steps for enabling the Microsoft Sentinel workspace, enhancing security monitoring capabilities for Application Gateway for Containers.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/siem-integration-with-sentinel" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/7a3814b37293e70fa8ce350a734693c3427414a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/best-practices-cost" style="text-decoration: none; color: #1e40af;">AKS - Best Practices Cost</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The cost optimization best practices article has been significantly updated to provide new recommendations and best practices for optimizing costs in Azure Kubernetes Service (AKS), including the use of AKS Automatic.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/best-practices-cost" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/f488064098767fa7fbab96a5dab56b6895a76dd0" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/managed-gateway-api" style="text-decoration: none; color: #1e40af;">AKS - Managed Gateway API</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-29 19:14</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now specifies that users must use Azure CLI version 2.86.0 or higher to install and manage the Managed Gateway API on Azure Kubernetes Service (AKS). Additionally, the installation instructions have been updated to remove references to the preview status of the Managed Gateway API, indicating that it is now generally available. Users can also find updated commands for installing and updating the `aks-preview` extension.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/managed-gateway-api" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/bfa57bbe604b7133a55bed7bff49af0362d8398d" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/load-balancing-strategies" style="text-decoration: none; color: #1e40af;">AGC - Load Balancing Strategies</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-26 17:32</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document introduces various load balancing strategies available in Application Gateway for Containers, emphasizing their importance in optimizing performance and enhancing reliability in dynamic environments. It details algorithms like Round Robin, Weighted Round Robin, and Slow Start, along with their configurations and scenarios.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/load-balancing-strategies" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/7a3814b37293e70fa8ce350a734693c3427414a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/howto-configure-use-cross-cluster-networking" style="text-decoration: none; color: #1e40af;">Fleet - Howto Configure Use Cross Cluster Networking</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-05-27 11:06</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document provides detailed instructions on configuring cross-cluster networking for Azure Kubernetes Fleet Manager, including the use of managed Cilium multi-cluster networking. It includes a new section on cleaning up resources and troubleshooting, enhancing the overall usability and clarity of the documentation.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/howto-configure-use-cross-cluster-networking" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/3539865ceb765bb8d483dcc4fe52aa81f1321ed6" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+  </div>
+  <div style="margin-top:20px;padding:16px;background-color:#ffffff;border-radius:6px;border:1px solid #e5e7eb;text-align:center;">
+    <p style="margin:0;font-size:13px;color:#6b7280;">
+      Full tracker with filters: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb;text-decoration:none;font-weight:600;">Azure Container Services Docs Tracker</a>
+    </p>
+  </div>
+</div>
