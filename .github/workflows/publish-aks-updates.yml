@@ -26,6 +26,11 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      WP_USER_AGENT: azure-aks-tracker-action/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)
+      WP_CONNECT_TIMEOUT_SECONDS: "30"
+      WP_VERIFY_MAX_TIME_SECONDS: "120"
+      WP_POST_MAX_TIME_SECONDS: "180"
     steps:
       - uses: actions/checkout@v4
 
@@ -139,7 +144,6 @@ jobs:
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
           DESIRED_HASH="${{ steps.gen.outputs.hash }}"
-          WP_USER_AGENT="azure-aks-tracker-action/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)"
 
           # Build payload — send raw HTML without block wrappers to avoid WordPress
           # block-parser errors that can cause 500 responses on large HTML content.
@@ -161,8 +165,8 @@ jobs:
             VERIFY_HEADERS=$(mktemp)
             VERIFY_CODE=$(curl -s -w "%{http_code}" \
               --http1.1 \
-              --connect-timeout 30 \
-              --max-time 120 \
+              --connect-timeout "$WP_CONNECT_TIMEOUT_SECONDS" \
+              --max-time "$WP_VERIFY_MAX_TIME_SECONDS" \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
               -H "Accept: application/json" \
               -H "User-Agent: $WP_USER_AGENT" \
@@ -208,8 +212,8 @@ jobs:
           while [ $attempt -le $max_retries ]; do
             HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$WP_API" \
               --http1.1 \
-              --connect-timeout 30 \
-              --max-time 180 \
+              --connect-timeout "$WP_CONNECT_TIMEOUT_SECONDS" \
+              --max-time "$WP_POST_MAX_TIME_SECONDS" \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
               -H "Accept: application/json" \
               -H "Content-Type: application/json; charset=utf-8" \
@@ -281,7 +285,6 @@ jobs:
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/posts"
-          WP_USER_AGENT="azure-aks-tracker-action/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)"
           if [ ! -s "digest-docs.html" ]; then
             echo "docs: no content — skipping."
             exit 0
@@ -316,8 +319,8 @@ jobs:
           while [ $attempt -le $max_retries ]; do
             HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$WP_API" \
               --http1.1 \
-              --connect-timeout 30 \
-              --max-time 180 \
+              --connect-timeout "$WP_CONNECT_TIMEOUT_SECONDS" \
+              --max-time "$WP_POST_MAX_TIME_SECONDS" \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
               -H "Accept: application/json" \
               -H "Content-Type: application/json; charset=utf-8" \
