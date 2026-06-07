@@ -27,7 +27,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      WP_USER_AGENT: azure-aks-tracker-action/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)
+      WP_USER_AGENT: azure-aks-tracker-action/1.0 (https://github.com/PixelRobots/azure-aks-tracker)
       WP_CONNECT_TIMEOUT_SECONDS: "30"
       WP_VERIFY_MAX_TIME_SECONDS: "120"
       WP_POST_MAX_TIME_SECONDS: "180"
@@ -216,7 +216,7 @@ jobs:
               --max-time "$WP_POST_MAX_TIME_SECONDS" \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
               -H "Accept: application/json" \
-              -H "Content-Type: application/json; charset=utf-8" \
+              -H "Content-Type: application/json" \
               -H "User-Agent: $WP_USER_AGENT" \
               -H "Expect:" \
               -D "$WP_RESPONSE_HEADERS" \
@@ -323,7 +323,7 @@ jobs:
               --max-time "$WP_POST_MAX_TIME_SECONDS" \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
               -H "Accept: application/json" \
-              -H "Content-Type: application/json; charset=utf-8" \
+              -H "Content-Type: application/json" \
               -H "User-Agent: $WP_USER_AGENT" \
               -H "Expect:" \
               -D "$WP_RESPONSE_HEADERS" \
