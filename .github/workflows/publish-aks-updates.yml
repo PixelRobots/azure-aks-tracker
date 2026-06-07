@@ -139,6 +139,7 @@ jobs:
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
           DESIRED_HASH="${{ steps.gen.outputs.hash }}"
+          WP_USER_AGENT="azure-aks-tracker-action/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)"
 
           # Build payload — send raw HTML without block wrappers to avoid WordPress
           # block-parser errors that can cause 500 responses on large HTML content.
@@ -157,8 +158,15 @@ jobs:
 
           verify_page_update() {
             VERIFY_RESPONSE=$(mktemp)
+            VERIFY_HEADERS=$(mktemp)
             VERIFY_CODE=$(curl -s -w "%{http_code}" \
+              --http1.1 \
+              --connect-timeout 30 \
+              --max-time 120 \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              -H "Accept: application/json" \
+              -H "User-Agent: $WP_USER_AGENT" \
+              -D "$VERIFY_HEADERS" \
               "$WP_API" -o "$VERIFY_RESPONSE")
 
             if [ "$VERIFY_CODE" -ge 200 ] && [ "$VERIFY_CODE" -lt 300 ]; then
@@ -171,6 +179,7 @@ jobs:
                 echo "Remote modified_gmt: $REMOTE_MODIFIED"
               fi
               rm -f "$VERIFY_RESPONSE"
+              rm -f "$VERIFY_HEADERS"
 
               if [ "$REMOTE_HASH" = "$DESIRED_HASH" ]; then
                 echo "WordPress page content matches the desired hash after the failed POST."
@@ -181,20 +190,32 @@ jobs:
               echo "--- Verification response ---"
               head -c 2000 "$VERIFY_RESPONSE"
               echo ""
+              echo "--- Verification headers ---"
+              head -n 50 "$VERIFY_HEADERS"
+              echo ""
               rm -f "$VERIFY_RESPONSE"
+              rm -f "$VERIFY_HEADERS"
             fi
 
             return 1
           }
 
           WP_RESPONSE=$(mktemp)
+          WP_RESPONSE_HEADERS=$(mktemp)
           attempt=1
           max_retries=3
           retry_delay=5
           while [ $attempt -le $max_retries ]; do
             HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$WP_API" \
+              --http1.1 \
+              --connect-timeout 30 \
+              --max-time 180 \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              -H "Content-Type: application/json; charset=utf-8" \
+              -H "User-Agent: $WP_USER_AGENT" \
+              -H "Expect:" \
+              -D "$WP_RESPONSE_HEADERS" \
               --data-binary @"$RUNNER_TEMP/wp-payload.json" \
               -o "$WP_RESPONSE")
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
@@ -204,6 +225,9 @@ jobs:
             echo "Attempt $attempt failed with HTTP $HTTP_CODE"
             echo "--- WordPress error response ---"
             head -c 2000 "$WP_RESPONSE"
+            echo ""
+            echo "--- WordPress response headers ---"
+            head -n 50 "$WP_RESPONSE_HEADERS"
             echo ""
             if verify_page_update; then
               echo "Treating HTTP $HTTP_CODE as success because the page update was persisted."
@@ -216,11 +240,13 @@ jobs:
             else
               echo "Failed after $max_retries attempts"
               rm -f "$WP_RESPONSE"
+              rm -f "$WP_RESPONSE_HEADERS"
               exit 1
             fi
             attempt=$((attempt + 1))
           done
           rm -f "$WP_RESPONSE"
+          rm -f "$WP_RESPONSE_HEADERS"
 
       - name: Archive weekly docs digest
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
@@ -255,6 +281,7 @@ jobs:
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/posts"
+          WP_USER_AGENT="azure-aks-tracker-action/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)"
           if [ ! -s "digest-docs.html" ]; then
             echo "docs: no content — skipping."
             exit 0
@@ -282,13 +309,21 @@ jobs:
           echo "wp-docs.json size: $(wc -c < "$RUNNER_TEMP/wp-docs.json") bytes"
 
           WP_RESPONSE=$(mktemp)
+          WP_RESPONSE_HEADERS=$(mktemp)
           attempt=1
           max_retries=3
           retry_delay=5
           while [ $attempt -le $max_retries ]; do
             HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$WP_API" \
+              --http1.1 \
+              --connect-timeout 30 \
+              --max-time 180 \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-              -H "Content-Type: application/json" \
+              -H "Accept: application/json" \
+              -H "Content-Type: application/json; charset=utf-8" \
+              -H "User-Agent: $WP_USER_AGENT" \
+              -H "Expect:" \
+              -D "$WP_RESPONSE_HEADERS" \
               --data-binary @"$RUNNER_TEMP/wp-docs.json" \
               -o "$WP_RESPONSE")
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
@@ -299,6 +334,9 @@ jobs:
             echo "--- WordPress error response ---"
             head -c 2000 "$WP_RESPONSE"
             echo ""
+            echo "--- WordPress response headers ---"
+            head -n 50 "$WP_RESPONSE_HEADERS"
+            echo ""
             if [ $attempt -lt $max_retries ]; then
               echo "Retrying in $retry_delay seconds..."
               sleep $retry_delay
@@ -306,8 +344,10 @@ jobs:
             else
               echo "Failed after $max_retries attempts"
               rm -f "$WP_RESPONSE"
+              rm -f "$WP_RESPONSE_HEADERS"
               exit 1
             fi
             attempt=$((attempt + 1))
           done
           rm -f "$WP_RESPONSE"
+          rm -f "$WP_RESPONSE_HEADERS"
