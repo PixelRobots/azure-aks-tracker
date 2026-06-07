@@ -138,7 +138,6 @@ jobs:
         if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true'
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          WP_GET_URL="$WP_API"
           DESIRED_HASH="${{ steps.gen.outputs.hash }}"
 
           # Build payload — send raw HTML without block wrappers to avoid WordPress
@@ -160,7 +159,7 @@ jobs:
             VERIFY_RESPONSE=$(mktemp)
             VERIFY_CODE=$(curl -s -w "%{http_code}" \
               -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-              "$WP_GET_URL" -o "$VERIFY_RESPONSE")
+              "$WP_API" -o "$VERIFY_RESPONSE")
 
             if [ "$VERIFY_CODE" -ge 200 ] && [ "$VERIFY_CODE" -lt 300 ]; then
               REMOTE_HASH=$(jq -r .content.rendered "$VERIFY_RESPONSE" | sha256sum | cut -d' ' -f1)
