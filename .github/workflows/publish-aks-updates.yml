@@ -134,51 +134,11 @@ jobs:
             echo "No wordpress-cve-section.html produced — skipping CVE source commit."
           fi
 
-      - name: Get current WP page
-        id: get
-        if: steps.gen.conclusion == 'success'
-        run: |
-          WP_GET_URL="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          WP_RESPONSE=$(mktemp)
-          attempt=1
-          max_retries=3
-          retry_delay=5
-          while [ $attempt -le $max_retries ]; do
-            HTTP_CODE=$(curl -s -w "%{http_code}" \
-              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
-              "$WP_GET_URL" -o "$WP_RESPONSE")
-            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-              echo "Successfully fetched WP page (HTTP $HTTP_CODE) on attempt $attempt"
-              break
-            fi
-            echo "Attempt $attempt failed with HTTP $HTTP_CODE"
-            echo "--- WordPress error response ---"
-            head -c 2000 "$WP_RESPONSE"
-            echo ""
-            if [ $attempt -lt $max_retries ]; then
-              echo "Retrying in $retry_delay seconds..."
-              sleep $retry_delay
-              retry_delay=$((retry_delay * 2))
-            else
-              echo "Failed after $max_retries attempts"
-              rm -f "$WP_RESPONSE"
-              exit 1
-            fi
-            attempt=$((attempt + 1))
-          done
-          cp "$WP_RESPONSE" page.json
-          rm -f "$WP_RESPONSE"
-          echo "current=$(jq -r .content.rendered page.json | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-
-      - name: Skip if no changes
-        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.hash == steps.get.outputs.current
-        run: echo "No content changes — skipping WordPress update."
-
       - name: Update WordPress page
-        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.hash != steps.get.outputs.current
+        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true'
         run: |
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
-          WP_GET_URL="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
+          WP_GET_URL="$WP_API"
           DESIRED_HASH="${{ steps.gen.outputs.hash }}"
 
           # Build payload — send raw HTML without block wrappers to avoid WordPress
