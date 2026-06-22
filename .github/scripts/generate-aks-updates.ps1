@@ -801,7 +801,8 @@ $(if ($runUrl) { "**Workflow run:** $runUrl" })
 Please check your OpenAI quota/billing or consider switching to the Azure OpenAI provider.
 "@
 
-    # Avoid flooding — skip if an open issue with this title already exists (search up to 100 open issues)
+    # Avoid flooding — skip if an open issue with this title already exists.
+    # per_page=100 is the GitHub API maximum; enough for this low-volume repository.
     $searchUri = "https://api.github.com/repos/$ghRepo/issues?state=open&per_page=100"
     $existing = Invoke-RestMethod -Uri $searchUri -Headers $issueHeaders -Method GET -ErrorAction SilentlyContinue
     if ($existing | Where-Object { $_.title -eq $title }) {
@@ -964,7 +965,7 @@ function Get-PerFileSummariesViaAssistant {
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
-    Log "Vector store processing finished (status: $($vs.status), iterations: $vsWaitCount)"
+    Log "Docs vector store processing finished (status: $($vs.status), iterations: $vsWaitCount)"
     if ($vs.status -ne 'completed') {
       Write-Warning "Vector store processing did not complete (status: $($vs.status)) — falling back to GitHub Models"
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
