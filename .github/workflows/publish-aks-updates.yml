@@ -22,6 +22,7 @@ on:
 permissions:
   contents: write  # Allow pushing archive files back to repository
   models: read     # Allow calling GitHub Models inference API
+  issues: write    # Allow creating issues for rate-limit alerts
 
 jobs:
   publish:
@@ -91,6 +92,12 @@ jobs:
           else
             echo "No docs-summary-cache.json produced."
           fi
+          if [ -f releases-summary-cache.json ]; then
+            cp releases-summary-cache.json "$TMP_CACHE_DIR/releases-summary-cache.json"
+            FILES_TO_ADD="$FILES_TO_ADD releases-summary-cache.json"
+          else
+            echo "No releases-summary-cache.json produced."
+          fi
 
           if [ -z "$FILES_TO_ADD" ]; then
             echo "No cache files produced — skipping cache commit."
@@ -104,6 +111,9 @@ jobs:
           fi
           if [ -f "$TMP_CACHE_DIR/docs-summary-cache.json" ]; then
             cp "$TMP_CACHE_DIR/docs-summary-cache.json" docs-summary-cache.json
+          fi
+          if [ -f "$TMP_CACHE_DIR/releases-summary-cache.json" ]; then
+            cp "$TMP_CACHE_DIR/releases-summary-cache.json" releases-summary-cache.json
           fi
 
           git add $FILES_TO_ADD
