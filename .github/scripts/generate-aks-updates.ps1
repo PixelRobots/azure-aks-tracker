@@ -776,6 +776,15 @@ function New-GitHubIssueOnRateLimit {
     $ghRepo = $env:GITHUB_REPOSITORY  # owner/repo
     if (-not $ghRepo) { return }
 
+    $token = $env:GITHUB_TOKEN
+    if (-not $token) { return }
+    $bearer = "Bearer " + $token
+    $issueHeaders = @{
+      "Authorization" = $bearer
+      "Accept"        = "application/vnd.github+json"
+      "User-Agent"    = "pixelrobots-aks-updates-pwsh"
+    }
+
     $title = "⚠️ OpenAI rate limit reached ($Context)"
     $runUrl = if ($env:GITHUB_SERVER_URL -and $env:GITHUB_REPOSITORY -and $env:GITHUB_RUN_ID) {
       "$($env:GITHUB_SERVER_URL)/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)"
@@ -792,9 +801,9 @@ $(if ($runUrl) { "**Workflow run:** $runUrl" })
 Please check your OpenAI quota/billing or consider switching to the Azure OpenAI provider.
 "@
 
-    # Avoid flooding — skip if an open issue with this title already exists
-    $searchUri = "https://api.github.com/repos/$ghRepo/issues?state=open&per_page=20"
-    $existing = Invoke-RestMethod -Uri $searchUri -Headers $ghHeaders -Method GET -ErrorAction SilentlyContinue
+    # Avoid flooding — skip if an open issue with this title already exists (search up to 100 open issues)
+    $searchUri = "https://api.github.com/repos/$ghRepo/issues?state=open&per_page=100"
+    $existing = Invoke-RestMethod -Uri $searchUri -Headers $issueHeaders -Method GET -ErrorAction SilentlyContinue
     if ($existing | Where-Object { $_.title -eq $title }) {
       Log "Rate-limit issue already open — skipping duplicate creation."
       return
@@ -802,7 +811,7 @@ Please check your OpenAI quota/billing or consider switching to the Azure OpenAI
 
     $issueBody = @{ title = $title; body = $body } | ConvertTo-Json -Compress
     Invoke-RestMethod -Uri "https://api.github.com/repos/$ghRepo/issues" `
-      -Headers $ghHeaders -Method POST `
+      -Headers $issueHeaders -Method POST `
       -Body $issueBody -ContentType 'application/json' -ErrorAction Stop | Out-Null
     Log "Created GitHub issue: $title"
   }
