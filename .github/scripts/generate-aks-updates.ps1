@@ -74,6 +74,8 @@ $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 $DocsSummaryCachePath = 'docs-summary-cache.json'
 $DocsSummaryCacheMaxEntries = 2000
+$ReleasesSummaryCachePath = 'releases-summary-cache.json'
+$ReleasesSummaryCacheMaxEntries = 100
 $MaxCveSectionBytes = 1048576
 
 function Get-PullRequestFiles {
@@ -211,6 +213,66 @@ function Save-DocsSummaryCache([hashtable]$Cache) {
   }
   catch {
     Write-Warning "Failed to save docs summary cache: $_"
+  }
+}
+
+function Get-ReleaseCacheKey([long]$ReleaseId, [string]$Body) {
+  return (Get-TextSha256 "$ReleaseId|$Body")
+}
+
+function Load-ReleasesSummaryCache {
+  if (-not (Test-Path -LiteralPath $ReleasesSummaryCachePath)) { return @{} }
+  try {
+    $raw = Get-Content -LiteralPath $ReleasesSummaryCachePath -Raw
+    if (-not $raw) { return @{} }
+    $parsed = $raw | ConvertFrom-Json -ErrorAction Stop
+    $cache = @{}
+    foreach ($entry in @($parsed.entries)) {
+      if (-not $entry.cache_key) { continue }
+      $cache[[string]$entry.cache_key] = @{
+        release_id       = $entry.release_id
+        summary          = [string]$entry.summary
+        breaking_changes = @($entry.breaking_changes)
+        key_features     = @($entry.key_features)
+        good_to_know     = @($entry.good_to_know)
+        cached_at        = if ($entry.cached_at) { [string]$entry.cached_at } else { '' }
+      }
+    }
+    Log "Loaded releases summary cache with $($cache.Count) entries."
+    return $cache
+  }
+  catch {
+    Write-Warning "Failed to load releases summary cache: $_"
+    return @{}
+  }
+}
+
+function Save-ReleasesSummaryCache([hashtable]$Cache) {
+  try {
+    $entries = @(
+      foreach ($key in $Cache.Keys) {
+        $entry = $Cache[$key]
+        [pscustomobject]@{
+          cache_key        = $key
+          release_id       = $entry.release_id
+          summary          = $entry.summary
+          breaking_changes = $entry.breaking_changes
+          key_features     = $entry.key_features
+          good_to_know     = $entry.good_to_know
+          cached_at        = if ($entry.cached_at) { $entry.cached_at } else { (Get-Date -Format 'o') }
+        }
+      }
+    ) | Sort-Object cached_at -Descending | Select-Object -First $ReleasesSummaryCacheMaxEntries
+
+    [pscustomobject]@{
+      generated_at = (Get-Date -Format 'o')
+      entries      = $entries
+    } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $ReleasesSummaryCachePath -Encoding UTF8
+
+    Log "Saved releases summary cache to $ReleasesSummaryCachePath ($($entries.Count) entries)."
+  }
+  catch {
+    Write-Warning "Failed to save releases summary cache: $_"
   }
 }
 
@@ -702,6 +764,63 @@ function Test-IsRateLimitError($_err) {
   return $msg -match $RateLimitPattern
 }
 
+# Creates a GitHub issue to alert on OpenAI rate-limit events so they don't go unnoticed.
+# Silently skips if GITHUB_REPOSITORY is unset or if an open issue with the same title
+# was created within the last 24 hours (to avoid flooding).
+function New-GitHubIssueOnRateLimit {
+  param(
+    [string]$Context,   # e.g. "docs" or "releases"
+    [string]$Details    # error message to include in the body
+  )
+  try {
+    $ghRepo = $env:GITHUB_REPOSITORY  # owner/repo
+    if (-not $ghRepo) { return }
+
+    $token = $env:GITHUB_TOKEN
+    if (-not $token) { return }
+    $bearer = "Bearer " + $token
+    $issueHeaders = @{
+      "Authorization" = $bearer
+      "Accept"        = "application/vnd.github+json"
+      "User-Agent"    = "pixelrobots-aks-updates-pwsh"
+    }
+
+    $title = "⚠️ OpenAI rate limit reached ($Context)"
+    $runUrl = if ($env:GITHUB_SERVER_URL -and $env:GITHUB_REPOSITORY -and $env:GITHUB_RUN_ID) {
+      "$($env:GITHUB_SERVER_URL)/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)"
+    } else { '' }
+    $body = @"
+The workflow hit an OpenAI rate limit while processing **$Context** and fell back to GitHub Models.
+
+**Error:**
+``````
+$Details
+``````
+$(if ($runUrl) { "**Workflow run:** $runUrl" })
+
+Please check your OpenAI quota/billing or consider switching to the Azure OpenAI provider.
+"@
+
+    # Avoid flooding — skip if an open issue with this title already exists.
+    # per_page=100 is the GitHub API maximum; enough for this low-volume repository.
+    $searchUri = "https://api.github.com/repos/$ghRepo/issues?state=open&per_page=100"
+    $existing = Invoke-RestMethod -Uri $searchUri -Headers $issueHeaders -Method GET -ErrorAction SilentlyContinue
+    if ($existing | Where-Object { $_.title -eq $title }) {
+      Log "Rate-limit issue already open — skipping duplicate creation."
+      return
+    }
+
+    $issueBody = @{ title = $title; body = $body } | ConvertTo-Json -Compress
+    Invoke-RestMethod -Uri "https://api.github.com/repos/$ghRepo/issues" `
+      -Headers $issueHeaders -Method POST `
+      -Body $issueBody -ContentType 'application/json' -ErrorAction Stop | Out-Null
+    Log "Created GitHub issue: $title"
+  }
+  catch {
+    Write-Warning "Failed to create rate-limit GitHub issue: $_"
+  }
+}
+
 # =========================
 # GITHUB MODELS FALLBACK (used when OpenAI/AzureOpenAI rate limits are hit)
 # Uses the GitHub Models inference API authenticated with GITHUB_TOKEN.
@@ -845,8 +964,8 @@ function Get-PerFileSummariesViaAssistant {
       $vsWaitCount++
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
-      Log "Vector store status: $($vs.status)"
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
+    Log "Docs vector store processing finished (status: $($vs.status), iterations: $vsWaitCount)"
     if ($vs.status -ne 'completed') {
       Write-Warning "Vector store processing did not complete (status: $($vs.status)) — falling back to GitHub Models"
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
@@ -944,6 +1063,7 @@ OUTPUT: JSON array of kept items:
   catch {
     if (Test-IsRateLimitError $_) {
       Write-Warning "OpenAI rate limit reached for docs — falling back to GitHub Models. Error: $($_.Exception.Message)"
+      New-GitHubIssueOnRateLimit -Context 'docs' -Details $_.Exception.Message
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
     Write-Warning "AI summaries (docs) failed: $_"
@@ -2227,12 +2347,9 @@ foreach ($k in $groups.Keys) {
   $items = $groups[$k]
   $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
   
-  Log "Processing file: $k, statuses: $($statuses -join ', ')"
-  
   # Always keep newly added files
   if ($statuses -contains 'added') {
     $filteredGroups[$k] = $items
-    Log "Kept new file: $k"
     continue
   }
   
@@ -2241,8 +2358,6 @@ foreach ($k in $groups.Keys) {
     $adds = ($items | Measure-Object -Sum -Property additions).Sum
     $dels = ($items | Measure-Object -Sum -Property deletions).Sum
     $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
-    
-    Log "Modified file $k - +$adds -$dels lines, subjects: $($subjects -join ', ')"
     
     # Build combined patch sample
     $lines = @()
@@ -2256,19 +2371,16 @@ foreach ($k in $groups.Keys) {
     # Apply minimal trivial change detection (single lines and pure metadata only)
     if (Is-TrivialChange -PatchSample $patchSample -Subjects $subjects -TotalLines ($adds + $dels)) {
       $skippedCount++
-      Log "Skipped obvious trivial change: $k (subjects: $($subjects -join ', '))"
       continue
     }
 
     # Apply very permissive filtering - let AI handle nuanced decisions
     if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $null -PatchSample $patchSample -Subjects $subjects)) {
       $skippedCount++
-      Log "Skipped empty change: $k"
       continue
     }
     
     $filteredGroups[$k] = $items
-    Log "Kept modified file: $k"
   } else {
     Log "Unknown status for file $k - $($statuses -join ', ') - keeping"
     $filteredGroups[$k] = $items
@@ -2384,16 +2496,9 @@ if ($forced.Count -gt 0) {
 
 # ---- Post-AI safety: also keep meaningful MODIFIED files the AI skipped
 $forcedModified = New-Object System.Collections.Generic.List[object]
-$forcedModifiedScanTotal = @($filteredGroups.Keys).Count
-$forcedModifiedScanIndex = 0
 Log "Scanning AI-skipped modified files for forced keep candidates..."
 
 foreach ($k in $filteredGroups.Keys) {
-  $forcedModifiedScanIndex++
-  if (($forcedModifiedScanIndex -eq 1) -or (($forcedModifiedScanIndex % 25) -eq 0) -or ($forcedModifiedScanIndex -eq $forcedModifiedScanTotal)) {
-    Log "Forced-modified scan progress: $forcedModifiedScanIndex / $forcedModifiedScanTotal"
-  }
-
   if ($aiKeptSet.Contains($k)) { continue }
   $items = $filteredGroups[$k]
   $statuses = ($items.status | Where-Object { $_ } | Select-Object -Unique)
@@ -2402,20 +2507,16 @@ foreach ($k in $filteredGroups.Keys) {
   $adds = ($items | Measure-Object -Sum -Property additions).Sum
   $dels = ($items | Measure-Object -Sum -Property deletions).Sum
 
-  Log "Evaluating modified candidate: $k (+$adds/-$dels)"
-
   $lines = @()
   foreach ($it in $items) { if ($it.patch) { $lines += (($it.patch -split "`n") | Where-Object { $_ -match '^[\+\-]' }) } }
   $patchSample = ($lines | Select-Object -First 1200) -join "`n"
 
   $signals = Get-MeaningfulSignals -PatchSample $patchSample
   if (-not (Should-ForceKeepModified -Adds $adds -Dels $dels -Signals $signals -PatchSample $patchSample -Subjects ($items.pr_title | Select-Object -Unique))) {
-    Log "Skipping modified candidate after heuristic check: $k"
     continue
   }
 
   $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
-  Log "Summarizing forced modified candidate: $k"
   $summary = Summarize-ModifiedPatch -FilePath $k -Subjects $subjects -PatchSample $patchSample -Signals $signals
 
   $forcedModified.Add([pscustomobject]@{
@@ -2424,7 +2525,6 @@ foreach ($k in $filteredGroups.Keys) {
       category = Compute-Category $k
       score    = 0.9
     }) | Out-Null
-  Log "Force-keep candidate accepted: $k"
 }
 
 Log "Forced-modified scan complete. Accepted $($forcedModified.Count) modified page(s)."
@@ -2465,7 +2565,6 @@ function Apply-FinalTrivialFiltering {
     if ($totalLines -le 5 -and $patchSample -match '(ms\.author|ms\.date|author:|date:)' -and 
         ($patchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch '(ms\.author|ms\.date|author:|date:)|^\s*[\+\-]\s*$' }).Count -eq 0) {
       $isTrivial = $true
-      Log "  Final filter: Removed pure metadata change: $file"
     }
     
     # "Deploy and Explore" noise - check both patch and summary
@@ -2473,26 +2572,22 @@ function Apply-FinalTrivialFiltering {
             $summary -match '(?i)deploy.*explore|call-to-action') -and 
             $summary -notmatch '(?i)(new feature|security|performance|configuration|technical|command|procedure)') {
       $isTrivial = $true
-      Log "  Final filter: Removed Deploy and Explore callout noise: $file"
     }
     
     # "Minor documentation maintenance updates" - this is clearly noise
     elseif ($summary -match '(?i)minor.*documentation.*maintenance|maintenance.*update') {
       $isTrivial = $true
-      Log "  Final filter: Removed minor maintenance update: $file"
     }
     
     # Author changes 
     elseif ($summary -match '(?i)author.*metadata.*updated|author.*assignment|updating.*author') {
       $isTrivial = $true
-      Log "  Final filter: Removed author assignment change: $file"
     }
     
     # Navigation/formatting only changes
     elseif ($summary -match '(?i)enhance.*navigation|improve.*navigation|direct.*link|guide.*user.*navigation' -and
            $summary -notmatch '(?i)(new|feature|security|technical|command|procedure|configuration)') {
       $isTrivial = $true
-      Log "  Final filter: Removed navigation-only change: $file"
     }
     
     # Generic "enhancement" without substance
@@ -2500,7 +2595,6 @@ function Apply-FinalTrivialFiltering {
            $summary -match '(?i)enhancement.*aim.*improve|addition.*enhance|improve.*user.*experience' -and
            $summary -notmatch '(?i)(new feature|security|performance|technical|command|procedure|configuration)') {
       $isTrivial = $true
-      Log "  Final filter: Removed generic enhancement: $file"
     }
     
     if ($isTrivial) { continue }
@@ -2524,11 +2618,9 @@ function Apply-FinalTrivialFiltering {
         
         if ($existing.summary.Length -gt $summary.Length -or [DateTime]::Parse($existingDate) -gt [DateTime]::Parse($currentDate)) {
           $isDuplicate = $true
-          Log "  Final filter: Removed duplicate (keeping better version): $file vs $($existing.file)"
           break
         } else {
           $bestExisting = $existing
-          Log "  Final filter: Replacing inferior duplicate: $($existing.file) with $file"
           break
         }
       }
@@ -2549,8 +2641,6 @@ function Apply-FinalTrivialFiltering {
       category = $category
       score = $item.score
     }
-    
-    Log "  Final filter: Kept meaningful update: $file"
   }
   
   Log "Final filtering complete: kept $($finalKept.Count) of $($aiVerdicts.ordered.Count) items"
@@ -2563,17 +2653,6 @@ function Apply-FinalTrivialFiltering {
 
 if ($forcedModified.Count -gt 0) {
   Log "Force-keeping $($forcedModified.Count) modified page(s) the AI skipped."
-  foreach ($f in $forcedModified) {
-    $items = $filteredGroups[$f.file]
-    $adds = ($items | Measure-Object -Sum -Property additions).Sum
-    $dels = ($items | Measure-Object -Sum -Property deletions).Sum
-    $subjects = ($items.pr_title | Where-Object { $_ } | Select-Object -Unique)
-    
-    Log "  Force-kept: $($f.file)"
-    Log "    Reason: +$adds -$dels lines, subjects: $($subjects -join ', ')"
-    Log "    Category: $($f.category), Summary: $($f.summary)"
-  }
-  
   $aiVerdicts.ordered += $forcedModified
   foreach ($f in $forcedModified) { $aiVerdicts.byFile[$f.file] = @{ summary = $f.summary; category = $f.category; score = $f.score } }
 }
@@ -2694,8 +2773,8 @@ function Get-ReleaseSummariesViaAssistant {
       $vsWaitCount++
       $current = Get-OAIVectorStore -limit 100 -order desc | Where-Object { $_.id -eq $vs.id }
       if ($current) { $vs = $current }
-      Log "Releases VS status: $($vs.status)"
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
+    Log "Releases vector store processing finished (status: $($vs.status), iterations: $vsWaitCount)"
     if ($vs.status -ne 'completed') {
       Write-Warning "Releases vector store did not complete (status: $($vs.status)) — falling back to GitHub Models"
       return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
@@ -2785,6 +2864,7 @@ Output format requirements:
   catch {
     if (Test-IsRateLimitError $_) {
       Write-Warning "OpenAI rate limit reached for releases — falling back to GitHub Models. Error: $($_.Exception.Message)"
+      New-GitHubIssueOnRateLimit -Context 'releases' -Details $_.Exception.Message
       return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
     Write-Warning "AI summaries (releases) failed: $_"
@@ -2808,30 +2888,63 @@ Log "Fetching AKS releases..."
 $releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
 Log "Fetched $($releases.Count) AKS releases."
 
-# Build releases JSON for AI
-$relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
-$relInput = @(
-  foreach ($r in $releases) {
-    [pscustomobject]@{
-      id           = $r.id
-      title        = ($r.name ?? $r.tag_name)
-      tag_name     = $r.tag_name
-      published_at = $r.published_at
-      body         = $r.body
-      html_url     = $r.html_url
-      prerelease   = [bool]$r.prerelease
+# Load releases summary cache and determine which releases need fresh AI summaries
+$releasesSummaryCache = Load-ReleasesSummaryCache
+$releaseSummaries = @{}
+$uncachedReleases = @()
+
+foreach ($r in $releases) {
+  $cacheKey = Get-ReleaseCacheKey -ReleaseId $r.id -Body ($r.body ?? '')
+  if ($releasesSummaryCache.ContainsKey($cacheKey)) {
+    $releaseSummaries[$r.id] = $releasesSummaryCache[$cacheKey]
+  } else {
+    $uncachedReleases += $r
+  }
+}
+Log "Releases summary cache: $($releases.Count - $uncachedReleases.Count) hits, $($uncachedReleases.Count) misses."
+
+# Build releases JSON for AI — only uncached releases
+if ($PreferProvider -and $uncachedReleases.Count -gt 0) {
+  $relJsonPath = Join-Path $TmpRoot ("aks-releases-{0}.json" -f (Get-Date -Format 'yyyyMMddHHmmss'))
+  $relInput = @(
+    foreach ($r in $uncachedReleases) {
+      [pscustomobject]@{
+        id           = $r.id
+        title        = ($r.name ?? $r.tag_name)
+        tag_name     = $r.tag_name
+        published_at = $r.published_at
+        body         = $r.body
+        html_url     = $r.html_url
+        prerelease   = [bool]$r.prerelease
+      }
+    }
+  )
+  $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding UTF8
+
+  Log "Building AI summaries for $($uncachedReleases.Count) uncached AKS release(s)..."
+  $freshReleaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
+  Log "Release summary generation complete."
+
+  # Merge fresh results into the combined map and update the cache
+  foreach ($r in $uncachedReleases) {
+    if ($freshReleaseSummaries.ContainsKey($r.id)) {
+      $fresh = $freshReleaseSummaries[$r.id]
+      $releaseSummaries[$r.id] = $fresh
+      $cacheKey = Get-ReleaseCacheKey -ReleaseId $r.id -Body ($r.body ?? '')
+      $releasesSummaryCache[$cacheKey] = @{
+        release_id       = $r.id
+        summary          = $fresh.summary
+        breaking_changes = $fresh.breaking_changes
+        key_features     = $fresh.key_features
+        good_to_know     = $fresh.good_to_know
+        cached_at        = (Get-Date -Format 'o')
+      }
     }
   }
-)
-$relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding UTF8
-
-$releaseSummaries = @{}
-if ($PreferProvider -and $releases.Count -gt 0) {
-  Log "Building AI summaries for AKS releases..."
-  $releaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
-  Log "Release summary generation complete."
-}
-else {
+  Save-ReleasesSummaryCache -Cache $releasesSummaryCache
+} elseif ($uncachedReleases.Count -eq 0) {
+  Log "All releases served from cache — skipping AI call."
+} else {
   Log "AI disabled or no releases."
 }
 
