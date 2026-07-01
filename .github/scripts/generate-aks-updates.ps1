@@ -545,6 +545,14 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [
       return "https://learn.microsoft.com/$p"
     }
   }
+
+  if ($RepoName -eq 'azure-stack-docs' -and $FilePath -match '^AKS-Arc/(.+?)\.md$') {
+    $slug = $Matches[1] -replace '\\', '/'
+    $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
+    $baseUrl = if ($repoConfig -and $repoConfig.DocsBaseUrl) { $repoConfig.DocsBaseUrl } else { 'https://learn.microsoft.com/en-us/azure/aks/aksarc/' }
+    return "$($baseUrl.TrimEnd('/'))/$slug"
+  }
+
   return "https://github.com/$Owner/$Repo/blob/main/$FilePath"
 }
 function Truncate([string]$text, [int]$max = 400) {
@@ -3463,15 +3471,17 @@ foreach ($row in $sortedDocs) {
   $file = $row.file
   if (-not $filteredGroups.ContainsKey($file)) { continue }
   $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
-  $fileUrl = Get-LiveDocsUrl -FilePath $file
+  $repoOwner = $arr[0].repo_owner
+  $repoName = $arr[0].repo_name
+  $fileUrl = Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
   $summary = $finalResults.byFile[$file].summary
   $category = if ($finalResults.byFile[$file].category) { $finalResults.byFile[$file].category } else { Compute-Category $file }
   
   # Handle both PR merged_at and commit date
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
   $lastUpdated = [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm')
-  $product = (Get-ProductIconMeta $file).label
-  $productMeta = Get-ProductIconMeta -FilePath $file
+  $product = (Get-ProductIconMeta -FilePath $file -RepoName $repoName).label
+  $productMeta = Get-ProductIconMeta -FilePath $file -RepoName $repoName
   $iconUrl = $productMeta.url
   $iconAlt = $productMeta.alt
   $display = Get-DocDisplayName $file
