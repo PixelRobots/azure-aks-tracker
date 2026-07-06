@@ -320,6 +320,79 @@ jobs:
           echo "Posting docs digest to WordPress..."
           echo "digest-docs.html size: $(wc -c < digest-docs.html) bytes"
           echo "wp-docs.json size: $(wc -c < "$RUNNER_TEMP/wp-docs.json") bytes"
+          LOCAL_DIGEST_HASH=$(sha256sum digest-docs.html | cut -d' ' -f1)
+
+          verify_created_post() {
+            POST_ID=$(jq -r '.id // empty' "$WP_RESPONSE")
+            POST_STATUS=$(jq -r '.status // empty' "$WP_RESPONSE")
+            POST_TYPE=$(jq -r '.type // empty' "$WP_RESPONSE")
+            POST_LINK=$(jq -r '.link // empty' "$WP_RESPONSE")
+
+            if [ -z "$POST_ID" ] || [ "$POST_STATUS" != "publish" ] || [ "$POST_TYPE" != "post" ] || [ -z "$POST_LINK" ]; then
+              echo "ERROR: WordPress response did not describe a published post."
+              echo "Post id: ${POST_ID:-<missing>}"
+              echo "Post status: ${POST_STATUS:-<missing>}"
+              echo "Post type: ${POST_TYPE:-<missing>}"
+              echo "Post link: ${POST_LINK:-<missing>}"
+              return 1
+            fi
+
+            VERIFY_RESPONSE=$(mktemp)
+            VERIFY_HEADERS=$(mktemp)
+            VERIFY_CODE=$(curl -s -w "%{http_code}" \
+              --http1.1 \
+              --connect-timeout "$WP_CONNECT_TIMEOUT_SECONDS" \
+              --max-time "$WP_VERIFY_MAX_TIME_SECONDS" \
+              -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+              -H "Accept: application/json" \
+              -H "User-Agent: $WP_USER_AGENT" \
+              -D "$VERIFY_HEADERS" \
+              "$WP_API/$POST_ID?context=edit" -o "$VERIFY_RESPONSE")
+
+            if [ "$VERIFY_CODE" -lt 200 ] || [ "$VERIFY_CODE" -ge 300 ]; then
+              echo "ERROR: Verification GET for WordPress post $POST_ID failed with HTTP $VERIFY_CODE"
+              echo "--- Verification response ---"
+              head -c 2000 "$VERIFY_RESPONSE"
+              echo ""
+              echo "--- Verification headers ---"
+              head -n 50 "$VERIFY_HEADERS"
+              echo ""
+              rm -f "$VERIFY_RESPONSE"
+              rm -f "$VERIFY_HEADERS"
+              return 1
+            fi
+
+            VERIFY_ID=$(jq -r '.id // empty' "$VERIFY_RESPONSE")
+            VERIFY_STATUS=$(jq -r '.status // empty' "$VERIFY_RESPONSE")
+            VERIFY_TYPE=$(jq -r '.type // empty' "$VERIFY_RESPONSE")
+            VERIFY_LINK=$(jq -r '.link // empty' "$VERIFY_RESPONSE")
+            VERIFY_RAW_HASH=$(jq -j '.content.raw // empty' "$VERIFY_RESPONSE" | sha256sum | cut -d' ' -f1)
+
+            echo "Verification GET succeeded (HTTP $VERIFY_CODE)"
+            echo "WordPress post id: $POST_ID"
+            echo "WordPress post status: $VERIFY_STATUS"
+            echo "WordPress post link: $VERIFY_LINK"
+
+            if [ "$VERIFY_ID" != "$POST_ID" ] || [ "$VERIFY_STATUS" != "publish" ] || [ "$VERIFY_TYPE" != "post" ]; then
+              echo "ERROR: Verification GET did not return the expected published post."
+              rm -f "$VERIFY_RESPONSE"
+              rm -f "$VERIFY_HEADERS"
+              return 1
+            fi
+
+            if [ "$VERIFY_RAW_HASH" != "$LOCAL_DIGEST_HASH" ]; then
+              echo "ERROR: Verified WordPress post content does not match digest-docs.html."
+              echo "Local digest hash: $LOCAL_DIGEST_HASH"
+              echo "Remote raw hash:   $VERIFY_RAW_HASH"
+              rm -f "$VERIFY_RESPONSE"
+              rm -f "$VERIFY_HEADERS"
+              return 1
+            fi
+
+            rm -f "$VERIFY_RESPONSE"
+            rm -f "$VERIFY_HEADERS"
+            return 0
+          }
 
           WP_RESPONSE=$(mktemp)
           WP_RESPONSE_HEADERS=$(mktemp)
@@ -339,17 +412,48 @@ jobs:
               -D "$WP_RESPONSE_HEADERS" \
               --data-binary @"$RUNNER_TEMP/wp-docs.json" \
               -o "$WP_RESPONSE")
+
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-              echo "WordPress post created successfully (HTTP $HTTP_CODE) on attempt $attempt"
-              break
+              if [ "$HTTP_CODE" != "201" ]; then
+                echo "WordPress returned HTTP $HTTP_CODE for post creation; validating response before treating it as success."
+              fi
+
+              if ! jq empty "$WP_RESPONSE"; then
+                echo "ERROR: WordPress returned HTTP $HTTP_CODE but the response was not valid JSON."
+                echo "--- WordPress response ---"
+                head -c 2000 "$WP_RESPONSE"
+                echo ""
+                echo "--- WordPress response headers ---"
+                head -n 50 "$WP_RESPONSE_HEADERS"
+                echo ""
+                rm -f "$WP_RESPONSE"
+                rm -f "$WP_RESPONSE_HEADERS"
+                exit 1
+              elif verify_created_post; then
+                echo "WordPress post created and verified successfully (HTTP $HTTP_CODE) on attempt $attempt"
+                break
+              else
+                echo "ERROR: WordPress returned HTTP $HTTP_CODE but post verification failed."
+                echo "--- WordPress response ---"
+                head -c 2000 "$WP_RESPONSE"
+                echo ""
+                echo "--- WordPress response headers ---"
+                head -n 50 "$WP_RESPONSE_HEADERS"
+                echo ""
+                rm -f "$WP_RESPONSE"
+                rm -f "$WP_RESPONSE_HEADERS"
+                exit 1
+              fi
+            else
+              echo "Attempt $attempt failed with HTTP $HTTP_CODE"
+              echo "--- WordPress error response ---"
+              head -c 2000 "$WP_RESPONSE"
+              echo ""
+              echo "--- WordPress response headers ---"
+              head -n 50 "$WP_RESPONSE_HEADERS"
+              echo ""
             fi
-            echo "Attempt $attempt failed with HTTP $HTTP_CODE"
-            echo "--- WordPress error response ---"
-            head -c 2000 "$WP_RESPONSE"
-            echo ""
-            echo "--- WordPress response headers ---"
-            head -n 50 "$WP_RESPONSE_HEADERS"
-            echo ""
+
             if [ $attempt -lt $max_retries ]; then
               echo "Retrying in $retry_delay seconds..."
               sleep $retry_delay
