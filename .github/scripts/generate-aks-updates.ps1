@@ -330,6 +330,23 @@ function Is-TrivialChange {
         ($PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch 'ms\.author|^\s*[\+\-]\s*$' }).Count -eq 0) {
         return $true
     }
+
+    # Filter YAML/front-matter metadata-only changes (author/topic/service/custom tags, etc.)
+    $changedLines = @(
+      $PatchSample -split "`n" |
+      Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch '^\+\+\+|^---\s+[ab]/' }
+    )
+    if ($changedLines.Count -gt 0) {
+      $metadataOnlyLines = @(
+        $changedLines | Where-Object {
+          $line = $_ -replace '^[\+\-]\s*', ''
+          $line -match '^---\s*$|^\.{3}\s*$|^\s*$|^(ms\.(author|date|topic|service|subservice|reviewer|custom|assetid|devlang|technology|workload|prod|manager|openlocfilehash)|author|date|description|title|manager|ms\.locfileid|ms\.collection|ms\.product|ms\.openlocfilehash)\s*:\s*.*$'
+        }
+      )
+      if ($metadataOnlyLines.Count -eq $changedLines.Count -and $metadataOnlyLines.Count -gt 0) {
+        return $true
+      }
+    }
     
     # Everything else goes to AI - be very permissive
     return $false
@@ -2569,9 +2586,8 @@ function Apply-FinalTrivialFiltering {
     # Final trivial check - be more aggressive than pre-filtering
     $isTrivial = $false
     
-    # Pure metadata changes
-    if ($totalLines -le 5 -and $patchSample -match '(ms\.author|ms\.date|author:|date:)' -and 
-        ($patchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch '(ms\.author|ms\.date|author:|date:)|^\s*[\+\-]\s*$' }).Count -eq 0) {
+    # Pure metadata/front-matter changes
+    if (Is-TrivialChange -PatchSample $patchSample -Subjects @() -TotalLines $totalLines) {
       $isTrivial = $true
     }
     
