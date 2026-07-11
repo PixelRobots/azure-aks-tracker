@@ -1,6 +1,26 @@
 {
-  "generated_at": "2026-06-26T00:49:21.9239144+00:00",
+  "generated_at": "2026-07-11T00:31:16.0220317+00:00",
   "entries": [
+    {
+      "cache_key": "85fa54ea516f87f8f2c50861cb50dd5d811e15fd54bb41bc8aa881cc31a5f303",
+      "release_id": 344935277,
+      "summary": "The AKS release on June 19, 2026, introduces several important updates including the extension of Windows Server 2022 retirement to June 30, 2028, and the general availability of Kubernetes version 1.36. Key features include support for FIPS on Ubuntu 22.04 node pools and the introduction of NVIDIA RTX PRO 6000 GPU VM sizes.",
+      "breaking_changes": [
+        "Windows Server 2022 will no longer receive new node images or security patches after June 30, 2028.",
+        "AKS will reject enabling FIPS on Pod Sandboxing (Kata) workload runtime node pools."
+      ],
+      "key_features": [
+        "FIPS support on Ubuntu 22.04 node pools.",
+        "General availability of Kubernetes version 1.36.",
+        "Support for NVIDIA RTX PRO 6000 GPU VM sizes."
+      ],
+      "good_to_know": [
+        "The default proxy redirection mechanism for new installations will change to Istio CNI.",
+        "You can now configure custom Prometheus metric scraping on AKS Automatic clusters.",
+        "AKS now automatically derives the IPv6 pod CIDR from the pod subnet for dual-stack clusters."
+      ],
+      "cached_at": "2026-07-11T00:31:16.0197361+00:00"
+    },
     {
       "cache_key": "2bb1097081f7c5997e86570e40c7286d12aacbb934282c65a341c03d64de65c6",
       "release_id": 344935277,
@@ -19,7 +39,7 @@
         "Azure Service Mesh add-on revision `asm-1-30` introduces behavior changes",
         "Azure File CSI Driver upgraded to v1.35.4"
       ],
-      "cached_at": "2026-06-26T00:49:21.9219844+00:00"
+      "cached_at": "06/26/2026 00:49:21"
     },
     {
       "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
@@ -41,23 +61,6 @@
       "cached_at": "06/23/2026 18:53:38"
     },
     {
-      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
-      "release_id": 306868985,
-      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
-      "breaking_changes": [
-        "Ubuntu 22.04 support ends on June 30, 2027"
-      ],
-      "key_features": [
-        "New Kubernetes patch versions available",
-        "Updated Azure Monitor Metrics"
-      ],
-      "good_to_know": [
-        "Transition to Ubuntu 24.04 or later by deadline",
-        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
       "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
       "release_id": 316503076,
       "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
@@ -71,6 +74,23 @@
       "good_to_know": [
         "Existing nodes not patched in place, upgrade required",
         "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
+      "release_id": 306868985,
+      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
+      "breaking_changes": [
+        "Ubuntu 22.04 support ends on June 30, 2027"
+      ],
+      "key_features": [
+        "New Kubernetes patch versions available",
+        "Updated Azure Monitor Metrics"
+      ],
+      "good_to_know": [
+        "Transition to Ubuntu 24.04 or later by deadline",
+        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
       ],
       "cached_at": "06/23/2026 18:53:38"
     },
