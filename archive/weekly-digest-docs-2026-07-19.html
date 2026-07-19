@@ -1,0 +1,1773 @@
+<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+  <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
+    <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">Azure Container Services Docs - Weekly Update (2026-07-12 to 2026-07-19)</h2>
+    <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#4b5563;">
+      The most meaningful Azure Kubernetes Service, AKS Arc, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. AKS everywhere! Summaries are AI-filtered to skip trivial edits.
+    </p>
+    <p style="margin:0;font-size:13px;color:#059669;font-weight:600;">
+      &#128202; Updates this week: AGC (3), AKS (36), Fleet (6)
+    </p>
+  </div>
+  <div>
+    <div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/create-volume-azure-files" style="text-decoration: none; color: #1e40af;">AKS - Create Volume Azure Files</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Storage</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 17:09</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation for creating Azure file shares has been updated to include new parameters such as `enableLargeFileShares`, which allows users to specify if large file shares should be enabled for Standard accounts, and `provisionedBandwidth` and `provisionedIOPS`, which define throughput and IOPS for the Azure Files provisioned v2 model. Additionally, the `folderName` parameter now supports placeholders for dynamic naming, and the `useDataPlaneAPI` parameter has been enhanced to include an `oauth` option for authentication. Users can also now control shared key access and encryption in transit for NFS shares.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/create-volume-azure-files" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/bc3bb8872ea19edc5d156901325e09afe8cf7b7f" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/inspektor-gadget-troubleshoot" style="text-decoration: none; color: #1e40af;">AKS - Inspektor Gadget Troubleshoot</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 13:04</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This update adds troubleshooting steps for the Inspektor Gadget extension in Azure Kubernetes Service (AKS), specifically addressing installation failures related to the PodMonitor custom resource. It includes symptoms, causes, and resolutions for common issues, enhancing the documentation's usability for users facing these problems.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/inspektor-gadget-troubleshoot" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/1fd6fe5aa6c0e73161e420f747c9291a14e35df7" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/howto-move-workloads-between-clusters" style="text-decoration: none; color: #1e40af;">Fleet - Howto Move Workloads Between Clusters</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 06:03</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This article provides a comprehensive guide on how to move a Kubernetes workload from one cluster to another using Azure Kubernetes Fleet Manager resource placement. It includes prerequisites, sample workloads, and detailed steps for managing workloads across clusters, enhancing operational efficiency.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/howto-move-workloads-between-clusters" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/180ee08dcd670106bf9319336549fdf35b591cf8" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/rotate-certificates" style="text-decoration: none; color: #1e40af;">AKS - Rotate Certificates</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:15</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This article explains how to manage and rotate certificates in Azure Kubernetes Service (AKS) clusters to maintain secure communication between components and ensure compliance. It includes prerequisites, commands for checking certificate expiration dates, and instructions for managing certificates effectively.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/rotate-certificates" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/c95d932dd1d38590ae20ea2590545e5b85ef5481" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/create-node-pools" style="text-decoration: none; color: #1e40af;">AKS - Create Node Pools</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Compute</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now clarifies that when creating a Windows Server 2025 node pool using the `az aks nodepool add` command, users must include the `--enable-fips-image` parameter to ensure the use of a FIPS-enabled image. This change is crucial for users deploying Windows Server 2025 node pools, as it specifies a requirement that was previously not highlighted.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/create-node-pools" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/node-disruption-policy" style="text-decoration: none; color: #1e40af;">AKS - Node Disruption Policy</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:15</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document introduces the Node Disruption Policy in Azure Kubernetes Service (AKS), detailing how to control when operations that require node reimage are allowed. It provides insights into policy configurations, prerequisites, and the impact of these policies on workload stability.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/node-disruption-policy" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/c95d932dd1d38590ae20ea2590545e5b85ef5481" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/vertical-pod-autoscaler" style="text-decoration: none; color: #1e40af;">AKS - Vertical Pod Autoscaler</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-17 22:07</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Revised the limitations section for the Vertical Pod Autoscaler (VPA), emphasizing that VPA guarantees optimal support for up to 1,000 pods per cluster. This update provides clearer guidance on scalability and resource management.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/vertical-pod-autoscaler" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/2d8b22ca941ac5b91c799a3608d77eca57b85421" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/node-auto-provisioning-aksnodeclass" style="text-decoration: none; color: #1e40af;">AKS - Node Auto Provisioning Aksnodeclass</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-17 22:07</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Updated the AKSNodeClass documentation to clarify the options available for node provisioning, including the removal of outdated references. This change ensures users have accurate and relevant information for configuring node classes.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/node-auto-provisioning-aksnodeclass" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/2d8b22ca941ac5b91c799a3608d77eca57b85421" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/artifact-streaming-overview" style="text-decoration: none; color: #1e40af;">AKS - Artifact Streaming Overview</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This newly added article introduces Artifact Streaming on AKS, explaining how it works with Azure Container Registry (ACR) to optimize container image pulls. It highlights the benefits of reduced deployment times and improved efficiency, making it a significant addition for users managing containerized applications.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/artifact-streaming-overview" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/kubernetes-migration-rollback-strategies" style="text-decoration: none; color: #1e40af;">AKS - Kubernetes Migration Rollback Strategies</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 22:10</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Guidance on rollback strategies for Kubernetes migration on Azure Kubernetes Service (AKS)</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/kubernetes-migration-rollback-strategies" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ccb9be11994a9d173c1e447dc7a589307dbeb227" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/learn/quick-windows-container-deploy-powershell" style="text-decoration: none; color: #1e40af;">AKS - Quick Windows Container Deploy Powershell</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now clarifies that Windows Server 2025 is the default operating system for Kubernetes version 1.36 and later, and users must include the `-EnableFIPS` parameter when creating Windows Server 2025 node pools. Additionally, Windows Server 2019 has been removed as an option in the quickstart, and the ASP.NET sample application now requires Windows Server containers to be based on images of Windows Server 2022 or greater. Users should also note that Windows Server 2022 will retire in June 2028.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/learn/quick-windows-container-deploy-powershell" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm" style="text-decoration: none; color: #1e40af;">AGC - Quickstart Deploy Application Gateway for Containers Alb Controller Helm</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 17:16</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The quickstart guide for deploying the application gateway for containers has been updated to version 1.11.3. This includes changes in the versioning details, which are essential for users to follow the latest deployment practices.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a901216c68554b74cdd7e927999a33b861b46df4" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/upgrade-windows-os" style="text-decoration: none; color: #1e40af;">AKS - Upgrade Windows Os</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now specifies that Windows Server 2025 node pools require a FIPS-enabled image, and users must include `--enable-fips-image` in Azure CLI or `-EnableFIPS` in Azure PowerShell when adding these node pools. Additionally, the sample output for Windows Server 2025 node pools has been updated to reflect the correct version and configuration details.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/upgrade-windows-os" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/migrate-from-autoscaler-to-node-auto-provisioning" style="text-decoration: none; color: #1e40af;">AKS - Migrate From Autoscaler to Node Auto Provisioning</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Compute</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 22:10</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes detailed instructions for migrating from the cluster autoscaler to node auto-provisioning (NAP), outlining two distinct paths: disabling the cluster autoscaler first or allowing both to coexist. Users can register the `AllowClusterAutoscalerAndNAP` feature flag to enable both systems in the same cluster, but they must implement taints and tolerations to prevent double provisioning of nodes. Additionally, users are guided on how to manage workloads during the migration process, including adding specific tolerations to workloads and taints to node pools to control scheduling behavior.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/migrate-from-autoscaler-to-node-auto-provisioning" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ccb9be11994a9d173c1e447dc7a589307dbeb227" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/aks-legacy-migration" style="text-decoration: none; color: #1e40af;">AKS - AKS Legacy Migration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 22:08</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This guide provides a four-phase framework for assessing and migrating legacy applications to Azure Kubernetes Service (AKS), including practical migration pathways, Windows and .NET Framework specifics, operational checks, and a FAQ. It emphasizes the importance of a disciplined assessment before migration.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/aks-legacy-migration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/26a3ea8748b6d1bf67881475b68a33b0fc5428a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes" style="text-decoration: none; color: #1e40af;">AGC - Alb Controller Release Notes</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 17:16</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The release notes for the ALB Controller have been updated to reflect version 1.11.3, which includes security patches, WAF fixes, and Istio service mesh integration improvements. This update is crucial for users to stay informed about the latest enhancements and fixes.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a901216c68554b74cdd7e927999a33b861b46df4" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/concepts-network-cni-overview" style="text-decoration: none; color: #1e40af;">AKS - Concepts Network Cni Overview</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 06:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Updated the address range restrictions for AKS clusters, clarifying that they cannot use specific CIDR ranges for Kubernetes services, pods, or cluster virtual networks. This change enhances the documentation's accuracy regarding network configurations.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/concepts-network-cni-overview" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/95bb0d9568378c0f17cdf5a4ef1f52c1d026713b" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg" alt="AKS Arc" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/aksarc/aks-bare-metal-system-requirements" style="text-decoration: none; color: #1e40af;">AKS Arc - AKS Bare Metal System Requirements</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS Arc</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:09</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes a new section on checking directory and subscription settings, guiding users to navigate to the Azure portal and ensure their default subscription filter includes the relevant subscription for deployment. Additionally, users are provided with commands to register the hidden preview feature using the Azure CLI, enhancing their ability to manage subscriptions effectively.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/aksarc/aks-bare-metal-system-requirements" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-stack-docs/pull/4377" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/update-strategies-gates-scheduled-start" style="text-decoration: none; color: #1e40af;">Fleet - Update Strategies Gates Scheduled Start</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-17 11:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This new document provides a comprehensive guide on using scheduled start gates in Azure Kubernetes Fleet Manager update run strategies. It explains how to schedule updates for clusters, including prerequisites, configuration steps, and examples of JSON files for defining stages and groups with scheduled start gates.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/update-strategies-gates-scheduled-start" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/7cb53219927254e97ad51294c815c9bd9e07e176" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/howto-dns-load-balancing" style="text-decoration: none; color: #1e40af;">Fleet - Howto Dns Load Balancing</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 06:03</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document has been updated to reflect changes in image references for the kuard demo application, ensuring users have the correct and up-to-date information for DNS load balancing in Kubernetes environments.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/howto-dns-load-balancing" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/180ee08dcd670106bf9319336549fdf35b591cf8" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/concepts-update-orchestration" style="text-decoration: none; color: #1e40af;">Fleet - Concepts Update Orchestration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-17 11:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes a new section on &quot;Scheduled start gates,&quot; which allows users to pause the update run until a specified day and time, providing more control over deployment timing. Additionally, the existing &quot;Approval gates&quot; section has been clarified to emphasize that approvals can be configured before or after each stage or group, enhancing the understanding of how to manage update approvals effectively. The mention of disabling Linux unmanaged upgrades has been removed, indicating a shift in how users may manage their upgrade settings.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/concepts-update-orchestration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/7cb53219927254e97ad51294c815c9bd9e07e176" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/tutorial-kubernetes-prepare-app" style="text-decoration: none; color: #1e40af;">AKS - Tutorial Kubernetes Prepare App</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-17 22:07</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The tutorial on preparing a multi-container application for Kubernetes has been updated to include new tools and methods for converting Docker Compose files to Kubernetes manifests. Users can now utilize tools like Kompose, Move2Kube, Docker Compose Bridge, and Podman for this conversion, along with AI-assisted options for drafting manifests. Additionally, the tutorial emphasizes the importance of reviewing and adjusting generated manifests for Azure Kubernetes Service (AKS) deployment, including updates to image references and handling of storage and secrets.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/tutorial-kubernetes-prepare-app" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/2d8b22ca941ac5b91c799a3608d77eca57b85421" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/supported-kubernetes-versions" style="text-decoration: none; color: #1e40af;">AKS - Supported Kubernetes Versions</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 17:04</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The document has been updated to clarify upgrade paths for Kubernetes versions in Azure AKS. It includes new examples and explanations regarding supported and unsupported versions, as well as the implications of skipping minor versions during upgrades. Additionally, it emphasizes the importance of following version skew policies when upgrading control planes and node pools.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/supported-kubernetes-versions" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/e99894c59f777445311706a321362f6772ac6d40" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/node-auto-provisioning" style="text-decoration: none; color: #1e40af;">AKS - Node Auto Provisioning</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Compute</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 22:10</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes a clarification regarding the compatibility of the Node Auto Provisioning (NAP) feature with clusters that have the cluster autoscaler enabled. Users will be informed that enabling NAP on such clusters is not possible, ensuring they understand the limitations when configuring their AKS environments.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/node-auto-provisioning" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ccb9be11994a9d173c1e447dc7a589307dbeb227" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/use-premium-v2-disks" style="text-decoration: none; color: #1e40af;">AKS - Use Premium V2 Disks</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Storage</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 06:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Updates have been made to clarify the performance management of Azure Premium SSD v2 disks in AKS. Users are informed that post-provisioning changes to IOPS and throughput cannot be configured through AKS node pool settings and must be done via the Kubernetes CSI driver or directly on the managed disk using Azure CLI.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/use-premium-v2-disks" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/95bb0d9568378c0f17cdf5a4ef1f52c1d026713b" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/node-images" style="text-decoration: none; color: #1e40af;">AKS - Node Images</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 17:09</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation for AKS node images has been updated to include new variants of the ACL node image that support Federal Information Processing Standards (FIPS) and Trusted Launch for both AMD64 and ARM64 architectures. This change improves clarity on compliance and security options available for users.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/node-images" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/bc3bb8872ea19edc5d156901325e09afe8cf7b7f" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/includes/kubelet-serving-cert-retirement" style="text-decoration: none; color: #1e40af;">AKS - Kubelet Serving Cert Retirement</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:15</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The document outlines the retirement of the `aks-disable-kubelet-serving-certificate-rotation=true` node pool tag, effective from April 1, 2027. It explains the implications for existing node pools and provides guidance on updating workloads accordingly.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/includes/kubelet-serving-cert-retirement" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/c95d932dd1d38590ae20ea2590545e5b85ef5481" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/aks-managed-gpu-nodes" style="text-decoration: none; color: #1e40af;">AKS - AKS Managed Gpu Nodes</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 06:03</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The document has been updated to fix formatting issues in the AKS managed GPU node class YAML example, ensuring clarity and correctness in the configuration details for users implementing GPU nodes in Azure Kubernetes Service.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/aks-managed-gpu-nodes" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/180ee08dcd670106bf9319336549fdf35b591cf8" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/windows-best-practices" style="text-decoration: none; color: #1e40af;">AKS - Windows Best Practices</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Cost</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now specifies that Windows Server 2022 is the default OS for Kubernetes versions 1.25 to 1.35, while Windows Server 2025 is the default OS for Kubernetes version 1.36 and later. This change clarifies the host OS version compatibility for users deploying AKS with different Kubernetes versions, ensuring they are aware of the correct default OS to use.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/windows-best-practices" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/azure-disk-customer-managed-keys" style="text-decoration: none; color: #1e40af;">AKS - Azure Disk Customer Managed Keys</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 06:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation for customer-managed keys has been enhanced to include RBAC role assignments for Key Vaults and clarify that the Disk Encryption Set (DES) only requires Reader role access, not Contributor. Additionally, the commands for setting up access have been updated for clarity.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/azure-disk-customer-managed-keys" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/95bb0d9568378c0f17cdf5a4ef1f52c1d026713b" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/update-orchestration" style="text-decoration: none; color: #1e40af;">Fleet - Update Orchestration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 11:03</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The update includes clarifications on generating update runs from auto-upgrade profiles, emphasizing that existing update runs may not be modified if they share the same upgrade specification. This change improves the documentation's accuracy and helps users understand the behavior of update runs in AKS.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/update-orchestration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/fbf5c2329ed7b2a7df9deb8447c87d9b31bac07d" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/use-node-disruption-policy" style="text-decoration: none; color: #1e40af;">AKS - Use Node Disruption Policy</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Compliance</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:15</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Learn how to configure and manage Node Disruption Policy to control when operations that require node reimage are allowed in Azure Kubernetes Service (AKS).</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/use-node-disruption-policy" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/c95d932dd1d38590ae20ea2590545e5b85ef5481" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/private-clusters" style="text-decoration: none; color: #1e40af;">AKS - Private Clusters</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Networking</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 11:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation has been updated to clarify the behavior of private AKS clusters regarding public DNS names. It specifies that using the `--disable-public-fqdn` option removes the public DNS name and restricts cluster management access to private connectivity methods. This change enhances the understanding of how to manage access to private clusters effectively.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/private-clusters" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/73b5c6224d1572bc4f94abc076336d4d3804d5f0" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/zero-downtime-migration" style="text-decoration: none; color: #1e40af;">AKS - Zero Downtime Migration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 22:08</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This article describes practical, production-focused approaches for migrating existing workloads to Azure Kubernetes Service (AKS) with minimal or zero downtime. It includes a quick runbook for provisioning AKS, deploying applications, syncing data, and shifting traffic progressively, along with a comparison of migration strategies.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/zero-downtime-migration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/26a3ea8748b6d1bf67881475b68a33b0fc5428a2" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/learn/quick-windows-container-deploy-portal" style="text-decoration: none; color: #1e40af;">AKS - Quick Windows Container Deploy Portal</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now specifies that users should select **Windows Server 2025** for node pools, which requires enabling a FIPS-enabled image. Additionally, the output examples for the `kubectl get nodes -o wide` command have been updated to reflect the new node pool configurations, including details such as internal and external IP addresses, OS image, and container runtime for Windows Server 2025. Windows Server 2019 has been removed as an option from the quickstart guide.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/learn/quick-windows-container-deploy-portal" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/service-mesh-integration" style="text-decoration: none; color: #1e40af;">AGC - Service Mesh Integration</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AGC</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-16 17:16</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The service mesh integration documentation has been updated to reflect the new version 1.11.3. This includes important changes that enhance the integration capabilities of the service mesh with AKS, ensuring users have the latest information.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/service-mesh-integration" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-docs/commit/a901216c68554b74cdd7e927999a33b861b46df4" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/app-routing-gateway-api-tls" style="text-decoration: none; color: #1e40af;">AKS - App Routing Gateway API Tls</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 11:03</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">Revised the TLS certificate supply options for Azure Key Vault, providing clearer instructions on how to manage certificates and keys. This change enhances the usability of the documentation for users implementing TLS in AKS.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/app-routing-gateway-api-tls" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/fbf5c2329ed7b2a7df9deb8447c87d9b31bac07d" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/aks-production-upgrade-strategies" style="text-decoration: none; color: #1e40af;">AKS - AKS Production Upgrade Strategies</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-15 22:10</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now includes a new section on &quot;Migration cutover rollback,&quot; which provides users with a strategy for instant rollback to the source environment during workload migrations to AKS. Users can implement a blue-green dual-cluster approach or use node pools within the new AKS cluster, allowing for a seamless cutover and immediate traffic reversal if issues arise. Additionally, detailed implementation steps and rollback triggers have been added to enhance user guidance during the migration process.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/aks-production-upgrade-strategies" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ccb9be11994a9d173c1e447dc7a589307dbeb227" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/certificate-rotation" style="text-decoration: none; color: #1e40af;">AKS - Certificate Rotation</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Security</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:15</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The updated article provides an overview of certificate management and rotation in Azure Kubernetes Service (AKS), including how to manually rotate certificates and enable autorotation for enhanced security. It emphasizes the importance of certificate expiration management.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/certificate-rotation" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/c95d932dd1d38590ae20ea2590545e5b85ef5481" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/upgrade-os-version" style="text-decoration: none; color: #1e40af;">AKS - Upgrade Os Version</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now specifies that when creating Windows node pools, users should use `--os-sku Windows2025` along with `--enable-fips-image`, as Windows Server 2025 requires a FIPS-enabled image. Additionally, the default Kubernetes versions for Windows OS types have been updated, with Windows2025 now being the default for Kubernetes version 1.36 and later.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/upgrade-os-version" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/workload-identity-overview" style="text-decoration: none; color: #1e40af;">AKS - Workload Identity Overview</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 22:15</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The document has been updated to reflect changes in certificate rotation procedures, specifically the auto-rotation feature. The updates include a refresh of the documentation to clarify the process and provide better guidance for users managing certificate rotation in Azure Kubernetes Service (AKS).</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/workload-identity-overview" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/c95d932dd1d38590ae20ea2590545e5b85ef5481" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg" alt="Kubernetes Fleet Manager" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/kubernetes-fleet/update-strategies-gates-approvals" style="text-decoration: none; color: #1e40af;">Fleet - Update Strategies Gates Approvals</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">Fleet</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-17 11:02</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">This document has been updated to include new information about filtering gates by type in Azure CLI commands, specifically for approval gates. The date has also been updated to reflect the latest changes.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/kubernetes-fleet/update-strategies-gates-approvals" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/7cb53219927254e97ad51294c815c9bd9e07e176" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/learn/quick-windows-container-deploy-cli" style="text-decoration: none; color: #1e40af;">AKS - Quick Windows Container Deploy CLI</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation now specifies that Windows Server 2025 is the default operating system for Kubernetes version 1.36 and later, while Windows Server 2022 remains the default for versions 1.25-1.35. Users must include the `--enable-fips-image` parameter when creating Windows Server 2025 node pools using the `az aks nodepool add` command, as FIPS-enabled images are required. Additionally, Windows Server 2019 has been removed as an option in the quickstart guides, reflecting its retirement timeline.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/learn/quick-windows-container-deploy-cli" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/artifact-streaming" style="text-decoration: none; color: #1e40af;">AKS - Artifact Streaming</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">General</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-13 22:13</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">The documentation for Artifact Streaming on Azure Kubernetes Service (AKS) has been updated to clarify that users can now enable and disable the Artifact Streaming feature on their AKS node pools, which helps reduce deployment times. Additionally, the article emphasizes that Artifact Streaming is only supported on Premium SKU Azure Container Registries and provides specific commands for creating and updating node pools with this feature enabled. Users are also informed about the limitations regarding supported architectures and the requirement for Kubernetes version 1.25 or later.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/artifact-streaming" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/ae68b61012893df7de43ebcad19b11532e2c7bfd" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+<div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td>
+        <h3 style="margin: 0 0 10px 0; font-size: 17px; font-weight: 600; line-height: 1.4; color: #1e40af;">
+          <img src="https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg" alt="AKS Arc" style="height: 18px; width: auto; vertical-align: middle; margin-right: 6px;" />
+          <a href="https://learn.microsoft.com/azure/aks/aksarc/aks-arc-image-not-ready" style="text-decoration: none; color: #1e40af;">AKS Arc - AKS Arc Image Not Ready</a>
+        </h3>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">Operations</span>
+        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">AKS Arc</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: 2026-07-14 17:05</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px 0;">
+        <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #111827;">Summary</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">A new document has been added to guide users on troubleshooting issues related to Kubernetes version image readiness in AKS on Azure Local. It outlines symptoms, causes, and steps to resolve common problems, providing valuable support for administrators managing AKS Arc clusters.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-top: 12px;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding-right: 10px;">
+              <a href="https://learn.microsoft.com/azure/aks/aksarc/aks-arc-image-not-ready" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+            </td>
+            <td>
+              <a href="https://github.com/MicrosoftDocs/azure-stack-docs/pull/4376" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+  </div>
+  <div style="margin-top:20px;padding:16px;background-color:#ffffff;border-radius:6px;border:1px solid #e5e7eb;text-align:center;">
+    <p style="margin:0;font-size:13px;color:#6b7280;">
+      Full tracker with filters: <a href="https://pixelrobots.co.uk/aks-docs-tracker/" style="color:#2563eb;text-decoration:none;font-weight:600;">Azure Container Services Docs Tracker</a>
+    </p>
+  </div>
+</div>
