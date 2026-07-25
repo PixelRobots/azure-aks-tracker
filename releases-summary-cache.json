@@ -1,6 +1,27 @@
 {
-  "generated_at": "2026-07-11T00:31:16.0220317+00:00",
+  "generated_at": "2026-07-25T00:32:17.9094803+00:00",
   "entries": [
+    {
+      "cache_key": "1bff64f5ca6c5ca0a5fa715bb163e9a2803217af365b3681edbf718eacc752df",
+      "release_id": 359480682,
+      "summary": "The release on July 17, 2026, introduces several updates and deprecations in AKS. Key features include the general availability of Artifact Streaming and Secure TLS bootstrapping.",
+      "breaking_changes": [
+        "enableCustomCATrust preview property will retire on September 14, 2026",
+        "Creating node pools with Windows Server Annual Channel is no longer supported",
+        "Creating node pools with Flatcar Container Linux is no longer supported"
+      ],
+      "key_features": [
+        "Artifact Streaming is now generally available",
+        "Secure TLS bootstrapping is enabled by default in specific regions",
+        "Node Disruption Policy is now in public preview"
+      ],
+      "good_to_know": [
+        "Kubernetes version 1.30 is deprecated",
+        "Kubernetes version 1.33 is only available under long-term support",
+        "Upgrade guidance is available for NVIDIA driver compatibility"
+      ],
+      "cached_at": "2026-07-25T00:32:17.9074034+00:00"
+    },
     {
       "cache_key": "85fa54ea516f87f8f2c50861cb50dd5d811e15fd54bb41bc8aa881cc31a5f303",
       "release_id": 344935277,
@@ -19,7 +40,7 @@
         "You can now configure custom Prometheus metric scraping on AKS Automatic clusters.",
         "AKS now automatically derives the IPv6 pod CIDR from the pod subnet for dual-stack clusters."
       ],
-      "cached_at": "2026-07-11T00:31:16.0197361+00:00"
+      "cached_at": "07/11/2026 00:31:16"
     },
     {
       "cache_key": "2bb1097081f7c5997e86570e40c7286d12aacbb934282c65a341c03d64de65c6",
@@ -42,25 +63,6 @@
       "cached_at": "06/26/2026 00:49:21"
     },
     {
-      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
-      "release_id": 334647399,
-      "summary": "This release includes deprecations and updates for various components in AKS.",
-      "breaking_changes": [
-        "Istio-based service mesh add-on revision asm-1-27 deprecated",
-        "Windows Server Annual Channel for Containers retired",
-        "Windows Server 2019 retired and no longer supported"
-      ],
-      "key_features": [
-        "Managed system node pools are now generally available",
-        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
-      ],
-      "good_to_know": [
-        "Migrate Windows Server Annual Channel node pools to LTSC",
-        "Transition from Flatcar Container Linux for AKS by June 2026"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
       "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
       "release_id": 316503076,
       "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
@@ -78,19 +80,38 @@
       "cached_at": "06/23/2026 18:53:38"
     },
     {
-      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
-      "release_id": 306868985,
-      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
+      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
+      "release_id": 295914225,
+      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
       "breaking_changes": [
-        "Ubuntu 22.04 support ends on June 30, 2027"
+        "Flatcar Container Linux support ends on June 8, 2026"
       ],
       "key_features": [
-        "New Kubernetes patch versions available",
-        "Updated Azure Monitor Metrics"
+        "Expanded GPU support for Azure Linux",
+        "New Kubernetes version 1.35 now available"
       ],
       "good_to_know": [
-        "Transition to Ubuntu 24.04 or later by deadline",
-        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
+        "Transition to a supported alternative for Flatcar",
+        "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
+      "release_id": 334647399,
+      "summary": "This release includes deprecations and updates for various components in AKS.",
+      "breaking_changes": [
+        "Istio-based service mesh add-on revision asm-1-27 deprecated",
+        "Windows Server Annual Channel for Containers retired",
+        "Windows Server 2019 retired and no longer supported"
+      ],
+      "key_features": [
+        "Managed system node pools are now generally available",
+        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
+      ],
+      "good_to_know": [
+        "Migrate Windows Server Annual Channel node pools to LTSC",
+        "Transition from Flatcar Container Linux for AKS by June 2026"
       ],
       "cached_at": "06/23/2026 18:53:38"
     },
@@ -112,19 +133,19 @@
       "cached_at": "06/23/2026 18:53:38"
     },
     {
-      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
-      "release_id": 295914225,
-      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
+      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
+      "release_id": 306868985,
+      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
       "breaking_changes": [
-        "Flatcar Container Linux support ends on June 8, 2026"
+        "Ubuntu 22.04 support ends on June 30, 2027"
       ],
       "key_features": [
-        "Expanded GPU support for Azure Linux",
-        "New Kubernetes version 1.35 now available"
+        "New Kubernetes patch versions available",
+        "Updated Azure Monitor Metrics"
       ],
       "good_to_know": [
-        "Transition to a supported alternative for Flatcar",
-        "Monitor release status by regions"
+        "Transition to Ubuntu 24.04 or later by deadline",
+        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
       ],
       "cached_at": "06/23/2026 18:53:38"
     }
