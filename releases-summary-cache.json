@@ -1,6 +1,27 @@
 {
-  "generated_at": "2026-07-25T00:32:17.9094803+00:00",
+  "generated_at": "2026-07-27T18:35:25.5951915+00:00",
   "entries": [
+    {
+      "cache_key": "a09401e5d04b281e92219ed1c7ab1efb1ca5f75cea3958258d250d7769ccbf70",
+      "release_id": 359480682,
+      "summary": "The 2026-07-17 release introduces several updates and deprecations. Key features include general availability of Artifact Streaming and secure TLS bootstrapping.",
+      "breaking_changes": [
+        "enableCustomCATrust preview property will retire on September 14, 2026",
+        "Windows Server Annual Channel for Containers is no longer supported",
+        "Flatcar Container Linux for AKS is no longer supported"
+      ],
+      "key_features": [
+        "Artifact Streaming is now generally available",
+        "Secure TLS bootstrapping is enabled by default in specific regions",
+        "Node Disruption Policy is now in public preview"
+      ],
+      "good_to_know": [
+        "Kubernetes version 1.30 is deprecated",
+        "Verify NVadsA10v5 or NCadsA10v4 node pools for compatibility",
+        "Upgrade guidance available for node image updates"
+      ],
+      "cached_at": "2026-07-27T18:35:25.5932926+00:00"
+    },
     {
       "cache_key": "1bff64f5ca6c5ca0a5fa715bb163e9a2803217af365b3681edbf718eacc752df",
       "release_id": 359480682,
@@ -20,7 +41,7 @@
         "Kubernetes version 1.33 is only available under long-term support",
         "Upgrade guidance is available for NVIDIA driver compatibility"
       ],
-      "cached_at": "2026-07-25T00:32:17.9074034+00:00"
+      "cached_at": "07/25/2026 00:32:17"
     },
     {
       "cache_key": "85fa54ea516f87f8f2c50861cb50dd5d811e15fd54bb41bc8aa881cc31a5f303",
@@ -63,23 +84,6 @@
       "cached_at": "06/26/2026 00:49:21"
     },
     {
-      "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
-      "release_id": 316503076,
-      "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
-      "breaking_changes": [
-        "Mitigation for CVE-2026-31431 requires node image upgrade"
-      ],
-      "key_features": [
-        "Updated Microsoft Defender for Containers sensor",
-        "New node image versions provide security patches"
-      ],
-      "good_to_know": [
-        "Existing nodes not patched in place, upgrade required",
-        "Monitor release status by regions"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
       "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
       "release_id": 295914225,
       "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
@@ -93,25 +97,6 @@
       "good_to_know": [
         "Transition to a supported alternative for Flatcar",
         "Monitor release status by regions"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
-      "release_id": 334647399,
-      "summary": "This release includes deprecations and updates for various components in AKS.",
-      "breaking_changes": [
-        "Istio-based service mesh add-on revision asm-1-27 deprecated",
-        "Windows Server Annual Channel for Containers retired",
-        "Windows Server 2019 retired and no longer supported"
-      ],
-      "key_features": [
-        "Managed system node pools are now generally available",
-        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
-      ],
-      "good_to_know": [
-        "Migrate Windows Server Annual Channel node pools to LTSC",
-        "Transition from Flatcar Container Linux for AKS by June 2026"
       ],
       "cached_at": "06/23/2026 18:53:38"
     },
@@ -146,6 +131,42 @@
       "good_to_know": [
         "Transition to Ubuntu 24.04 or later by deadline",
         "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
+      "release_id": 334647399,
+      "summary": "This release includes deprecations and updates for various components in AKS.",
+      "breaking_changes": [
+        "Istio-based service mesh add-on revision asm-1-27 deprecated",
+        "Windows Server Annual Channel for Containers retired",
+        "Windows Server 2019 retired and no longer supported"
+      ],
+      "key_features": [
+        "Managed system node pools are now generally available",
+        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
+      ],
+      "good_to_know": [
+        "Migrate Windows Server Annual Channel node pools to LTSC",
+        "Transition from Flatcar Container Linux for AKS by June 2026"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
+      "release_id": 316503076,
+      "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
+      "breaking_changes": [
+        "Mitigation for CVE-2026-31431 requires node image upgrade"
+      ],
+      "key_features": [
+        "Updated Microsoft Defender for Containers sensor",
+        "New node image versions provide security patches"
+      ],
+      "good_to_know": [
+        "Existing nodes not patched in place, upgrade required",
+        "Monitor release status by regions"
       ],
       "cached_at": "06/23/2026 18:53:38"
     }
