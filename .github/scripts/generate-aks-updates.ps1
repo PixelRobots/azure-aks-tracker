@@ -76,7 +76,9 @@ $DocsSummaryCachePath = 'docs-summary-cache.json'
 $DocsSummaryCacheMaxEntries = 2000
 $ReleasesSummaryCachePath = 'releases-summary-cache.json'
 $ReleasesSummaryCacheMaxEntries = 100
-$MaxCveSectionBytes = 1048576
+# The CVE section is served as remote HTML by the WordPress plugin. Keep a guardrail,
+# but allow the intended 5-build VHD history to fit as CVE volume changes.
+$MaxCveSectionBytes = 2097152
 
 function Get-PullRequestFiles {
   param([int]$prNumber, [string]$Owner, [string]$Repo)
@@ -1326,6 +1328,7 @@ function Get-AksCveTabHtml {
     $vhdInitActive   = 0; $vhdInitMitigated = 0; $vhdInitAffected = 0; $vhdInitTotal = 0
     $vhdInitDate     = "N/A"; $vhdInitImage = "N/A"; $vhdInitTopRowsHtml = ""
     $vhdImageOptions = ""
+    $VHD_HISTORY_PER_OS = 5
 
     if ($script:RefreshVhdCve) {
     try {
@@ -1346,9 +1349,6 @@ function Get-AksCveTabHtml {
       )
       Log "  VHD raw entries from index: $($rawEntries.Count) total"
 
-      # The plugin-backed CVE source can carry deeper VHD history because it is no longer embedded
-      # directly in the WordPress page content.
-      $VHD_HISTORY_PER_OS = 5
       $typeVersionsMap = [ordered]@{}   # OS -> [all versions found]
       $bareNames     = [System.Collections.Generic.List[string]]::new()
       foreach ($entry in $rawEntries) {
@@ -1659,7 +1659,7 @@ function Get-AksCveTabHtml {
     <div style="max-width:680px;margin:0 auto 32px;">
       <div style="text-align:center;margin-bottom:24px;">
         <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#e2e8f0;">&#128269; CVE Lookup</h2>
-        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across the $versionCount most recent AKS releases and the last 3 VHD builds per node OS type.</p>
+        <p style="margin:0;font-size:13px;color:#94a3b8;">Instantly check any CVE across the $versionCount most recent AKS releases and the last $VHD_HISTORY_PER_OS VHD builds per node OS type.</p>
       </div>
       <div style="display:flex;gap:8px;height:48px;margin-bottom:10px;">
         <input id="aks-cve-search-input" type="text" placeholder="Enter a CVE ID, e.g. CVE-2025-23266" spellcheck="false" autofocus
