@@ -282,38 +282,127 @@ function Save-ReleasesSummaryCache([hashtable]$Cache) {
 # ENHANCED FILTERING LOGIC
 # =========================
 
-# Expanded trivial patterns that should be skipped
-$TrivialPatterns = @(
-    # Author/metadata changes
-    'ms\.author:\s*\w+',
-    'author:\s*\w+',
-    'ms\.date:\s*\d{2}\/\d{2}\/\d{4}',
-    'ms\.topic:\s*\w+',
-    'ms\.service:\s*\w+',
-    'ms\.subservice:\s*\w+',
-    'ms\.reviewer:\s*\w+',
-    'ms\.custom:\s*\w+',
-    
-    # Navigation/callout additions that don't add content value
-    'nextstepaction.*Deploy and Explore',
-    'nextstepaction.*Learn more',
-    'nextstepaction.*Get started',
-    'callout.*Deploy and Explore',
-    
-    # Pure formatting/whitespace
-    '^\+\s*$',
-    '^\-\s*$',
-    '^\+\s+\[.*\]\(.*\)\s*$',  # Just link changes
-    '^\-\s+\[.*\]\(.*\)\s*$',
-    
-    # TOC/navigation only changes
-    '^\+.*\[toc\]',
-    '^\-.*\[toc\]',
-    
-    # Minor URL/link updates without content change
-    '^\+.*https?://.*$',
-    '^\-.*https?://.*$'
+$MetadataFrontMatterKeys = @(
+  'author',
+  'contributors_to_exclude',
+  'date',
+  'description',
+  'manager',
+  'ms.assetid',
+  'ms.author',
+  'ms.collection',
+  'ms.custom',
+  'ms.date',
+  'ms.devlang',
+  'ms.locfileid',
+  'ms.manager',
+  'ms.openlocfilehash',
+  'ms.prod',
+  'ms.product',
+  'ms.reviewer',
+  'ms.service',
+  'ms.subservice',
+  'ms.technology',
+  'ms.topic',
+  'ms.workload',
+  'openlocfilehash',
+  'title'
 )
+
+$MetadataFrontMatterKeyPattern = '^(?:' + (($MetadataFrontMatterKeys | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\s*:'
+
+function Get-ChangedPatchLines {
+  param([string]$PatchSample)
+
+  return @(
+    ($PatchSample ?? '') -split "`n" |
+    Where-Object {
+      $_ -match '^[\+\-]' -and
+      $_ -notmatch '^\+\+\+\s+[ab]/' -and
+      $_ -notmatch '^---\s+[ab]/'
+    }
+  )
+}
+
+function Test-MetadataFrontMatterLine {
+  param([string]$ChangedLine)
+
+  $line = ($ChangedLine ?? '') -replace '^[\+\-]\s*', ''
+  return (
+    $line -match '^---\s*$|^\.{3}\s*$|^\s*$' -or
+    $line -match $MetadataFrontMatterKeyPattern
+  )
+}
+
+function Test-MetadataOnlyPatch {
+  param([string]$PatchSample)
+
+  $changedLines = Get-ChangedPatchLines -PatchSample $PatchSample
+  if ($changedLines.Count -eq 0) { return $false }
+
+  $metadataOnlyLines = @(
+    $changedLines | Where-Object { Test-MetadataFrontMatterLine -ChangedLine $_ }
+  )
+
+  return ($metadataOnlyLines.Count -eq $changedLines.Count)
+}
+
+function Get-ArticleBodyChangedLines {
+  param([string]$PatchSample)
+
+  return @(
+    Get-ChangedPatchLines -PatchSample $PatchSample |
+    Where-Object { -not (Test-MetadataFrontMatterLine -ChangedLine $_) }
+  )
+}
+
+function Test-ActionablePatchSignal {
+  param([string]$PatchSample)
+
+  $content = ((Get-ArticleBodyChangedLines -PatchSample $PatchSample) -join "`n")
+  if (-not $content) { return $false }
+
+  $actionablePatterns = @(
+    '(?i)\b(az|kubectl|helm|docker|terraform|bicep)\s+',
+    '(?i)--[a-z0-9][a-z0-9-]+',
+    '(?i)\b(apiVersion|kind|sku|vmSize|nodepool|node pool|gatewayclass|crd|yaml|json)\b',
+    '(?i)\b(version|kubernetes\s+1\.\d+|cilium\s+1\.\d+|istio\s+1\.\d+|v\d+\.\d+|\d+\.\d+\.\d+)\b',
+    '(?i)\b(support|supported|unsupported|require|required|prerequisite|limitation|limit|default|enable|disable|configure|migrate|upgrade|retire|retirement|deprecat|preview|GA|generally available)\b',
+    '(?i)\b(note|warning|important|caution|removed?|no longer|cannot|can''t|must|should|recommend|avoid)\b',
+    '(?i)\b(security|policy|compliance|vulnerab|CVE|identity|rbac|encryption|certificate|firewall|private endpoint)\b',
+    '(?i)\b(performance|scal|availability|zone|capacity|quota|cost|outage|failure|known issue)\b'
+  )
+
+  foreach ($pattern in $actionablePatterns) {
+    if ($content -match $pattern) { return $true }
+  }
+
+  return $false
+}
+
+function Test-SmallNonActionablePatch {
+  param([string]$PatchSample)
+
+  $bodyLines = Get-ArticleBodyChangedLines -PatchSample $PatchSample
+  if ($bodyLines.Count -eq 0) { return $false }
+  if ($bodyLines.Count -gt 4) { return $false }
+  if (Test-ActionablePatchSignal -PatchSample $PatchSample) { return $false }
+
+  $body = ($bodyLines -join "`n")
+  $cleanupPatterns = @(
+    '(?i)\b(typo|grammar|wording|terminology|capitali[sz]ation|punctuation|formatting|spelling)\b',
+    '(?i)\badd-?on\b|\baddon\b',
+    '(?i)^\s*[\+\-]\s*\[.+\]\(.+\)\s*$',
+    '(?i)^\s*[\+\-]\s*https?://\S+\s*$',
+    '(?i)#[a-z0-9-]+\b'
+  )
+
+  foreach ($pattern in $cleanupPatterns) {
+    if ($body -match $pattern) { return $true }
+  }
+
+  return $false
+}
 
 function Is-TrivialChange {
     param([string]$PatchSample, [string[]]$Subjects, [int]$TotalLines)
@@ -326,28 +415,15 @@ function Is-TrivialChange {
         return $true 
     }
     
-    # Only filter pure ms.author changes with no other content
-    if ($TotalLines -le 2 -and 
-        $PatchSample -match 'ms\.author' -and 
-        ($PatchSample -split "`n" | Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch 'ms\.author|^\s*[\+\-]\s*$' }).Count -eq 0) {
+    # Filter YAML/front-matter metadata-only changes (author, reviewer, date, title, etc.).
+    if (Test-MetadataOnlyPatch -PatchSample $PatchSample) {
         return $true
     }
 
-    # Filter YAML/front-matter metadata-only changes (author/topic/service/custom tags, etc.)
-    $changedLines = @(
-      $PatchSample -split "`n" |
-      Where-Object { $_ -match '^[\+\-]' -and $_ -notmatch '^\+\+\+|^---\s+[ab]/' }
-    )
-    if ($changedLines.Count -gt 0) {
-      $metadataOnlyLines = @(
-        $changedLines | Where-Object {
-          $line = $_ -replace '^[\+\-]\s*', ''
-          $line -match '^---\s*$|^\.{3}\s*$|^\s*$|^(ms\.(author|date|topic|service|subservice|reviewer|custom|assetid|devlang|technology|workload|prod|manager|openlocfilehash)|author|date|description|title|manager|ms\.locfileid|ms\.collection|ms\.product|ms\.openlocfilehash)\s*:\s*.*$'
-        }
-      )
-      if ($metadataOnlyLines.Count -eq $changedLines.Count -and $metadataOnlyLines.Count -gt 0) {
+    # Tiny body edits without user-impacting signals are usually wording, anchor,
+    # terminology, or punctuation cleanup. Do not turn those into tracker cards.
+    if (Test-SmallNonActionablePatch -PatchSample $PatchSample) {
         return $true
-      }
     }
     
     # Everything else goes to AI - be very permissive
@@ -905,7 +981,7 @@ function Get-PerFileSummariesViaGitHubModels {
 
     $systemMsg = @"
 You are filtering Azure AKS documentation updates. Be INCLUSIVE - when in doubt, KEEP IT.
-ONLY EXCLUDE: pure ms.author/metadata-only changes, single-word typo fixes, pure whitespace changes.
+ONLY EXCLUDE: pure YAML/front-matter metadata changes (author, reviewer, ms.date, title, description, service tags, etc.), tiny wording/terminology/link-anchor edits with no user-impacting signal, single-word typo fixes, pure whitespace changes.
 ALWAYS KEEP: new features, commands, security, policy, version updates, tutorial improvements, technical corrections, new content, new files.
 Return a JSON object with a single key "results" containing an array of kept items:
 {"results": [{"file": "<path>", "summary": "2-3 factual sentences", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0}]}
@@ -1004,9 +1080,10 @@ You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE a
 **CRITICAL: Be very permissive. When in doubt, KEEP IT.**
 
 **ONLY EXCLUDE these very specific cases:**
-1. Pure ms.author metadata changes with zero content changes
-2. Single-word typo fixes with no other changes  
-3. Pure whitespace/formatting changes with no content impact
+1. Pure YAML/front-matter metadata changes with zero article-body changes, including author, reviewer, ms.date, title, description, service tags, and custom tags
+2. Tiny wording, grammar, terminology, capitalization, punctuation, or link-anchor edits with no user-impacting signal
+3. Single-word typo fixes with no other changes
+4. Pure whitespace/formatting changes with no content impact
 
 **ALWAYS KEEP (even if small):**
 - Learn Editor updates with ANY content changes
@@ -1025,6 +1102,7 @@ You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE a
 - Bot/automated commits often contain valuable updates
 - Small changes can still be meaningful
 - Size doesn't determine value
+- Tiny edits are meaningful when they add or remove notes, warnings, limitations, commands, versions, support/default behavior, prerequisites, limits, retirement/deprecation, security, compatibility, or feature behavior
 
 **ALWAYS KEEP:** New files (status "added") regardless of content.
 
@@ -1125,10 +1203,10 @@ function Summarize-ModifiedPatch {
 Summarize documentation changes for a CHANGELOG card. Focus ONLY on user-impacting changes.
 
 IGNORE and don't mention:
-- Author/metadata changes (ms.author, ms.date, etc.)
+- YAML/front-matter metadata changes (author, reviewer, ms.date, title, description, service tags, custom tags, etc.)
 - "Deploy and Explore" or navigation callouts
 - Pure formatting/whitespace
-- Link updates without content changes
+- Tiny wording, terminology, typo, capitalization, punctuation, or link-anchor updates without user-impacting changes
 
 Rules:
 - 2–3 sentences, plain text, no bullets
@@ -2603,8 +2681,9 @@ function Apply-FinalTrivialFiltering {
       $isTrivial = $true
     }
     
-    # Author changes 
-    elseif ($summary -match '(?i)author.*metadata.*updated|author.*assignment|updating.*author') {
+    # Metadata/front-matter only changes
+    elseif ($summary -match '(?i)(author|reviewer|ms\.date|metadata|front.?matter|service tags?|custom tags?|title|description).*(updated|changed|assignment|maintenance)' -and
+           $summary -notmatch '(?i)(new|feature|security|technical|command|procedure|configuration|support|version|retirement|deprecation)') {
       $isTrivial = $true
     }
     
