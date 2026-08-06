@@ -415,7 +415,10 @@ function Get-ComparableDocTokens {
 function Test-TinyEquivalentRewritePatch {
   param([string]$PatchSample)
 
-  $bodyLines = Get-ArticleBodyChangedLines -PatchSample $PatchSample
+  $bodyLines = @(
+    Get-ArticleBodyChangedLines -PatchSample $PatchSample |
+    Select-Object -Unique
+  )
   if ($bodyLines.Count -eq 0 -or $bodyLines.Count -gt 4) { return $false }
 
   $removedLines = @($bodyLines | Where-Object { $_ -match '^\-' })
@@ -447,7 +450,10 @@ function Test-TinyEquivalentRewritePatch {
 function Test-SmallNonActionablePatch {
   param([string]$PatchSample)
 
-  $bodyLines = Get-ArticleBodyChangedLines -PatchSample $PatchSample
+  $bodyLines = @(
+    Get-ArticleBodyChangedLines -PatchSample $PatchSample |
+    Select-Object -Unique
+  )
   if ($bodyLines.Count -eq 0) { return $false }
   if ($bodyLines.Count -gt 4) { return $false }
   if (Test-TinyEquivalentRewritePatch -PatchSample $PatchSample) { return $true }
