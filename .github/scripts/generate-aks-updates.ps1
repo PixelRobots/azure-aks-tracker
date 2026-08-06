@@ -380,12 +380,77 @@ function Test-ActionablePatchSignal {
   return $false
 }
 
+function ConvertTo-ComparableDocText {
+  param([string]$Text)
+
+  $normalized = ($Text ?? '') -replace '^[\+\-]\s*', ''
+  $normalized = $normalized -replace '\[([^\]]+)\]\([^)]+\)', '$1'
+  $normalized = $normalized -replace '`([^`]+)`', '$1'
+  $normalized = $normalized.ToLowerInvariant()
+  $normalized = $normalized -replace '\b(may|might|can|could|please)\b', ''
+  $normalized = $normalized -replace '\b(has|have|be|being|been|you|can|now)\b', ''
+  $normalized = $normalized -replace '[^a-z0-9\.\-]+', ' '
+  $normalized = $normalized -replace '\s+', ' '
+  return $normalized.Trim()
+}
+
+function Get-ComparableDocTokens {
+  param([string]$Text)
+
+  $stopWords = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  foreach ($word in @('a','an','and','are','as','at','by','for','from','if','in','into','is','it','of','on','or','the','this','to','with','your')) {
+    [void]$stopWords.Add($word)
+  }
+
+  $tokens = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  foreach ($token in ((ConvertTo-ComparableDocText -Text $Text) -split '\s+')) {
+    if (-not $token) { continue }
+    if ($stopWords.Contains($token)) { continue }
+    [void]$tokens.Add($token)
+  }
+
+  return $tokens
+}
+
+function Test-TinyEquivalentRewritePatch {
+  param([string]$PatchSample)
+
+  $bodyLines = Get-ArticleBodyChangedLines -PatchSample $PatchSample
+  if ($bodyLines.Count -eq 0 -or $bodyLines.Count -gt 4) { return $false }
+
+  $removedLines = @($bodyLines | Where-Object { $_ -match '^\-' })
+  $addedLines = @($bodyLines | Where-Object { $_ -match '^\+' })
+  if ($removedLines.Count -eq 0 -or $addedLines.Count -eq 0) { return $false }
+
+  $removed = ($removedLines -join ' ')
+  $added = ($addedLines -join ' ')
+
+  $removedCode = @([regex]::Matches($removed, '`[^`]+`|--[a-z0-9][a-z0-9-]+|\b\d+(?:\.\d+){1,3}\b', 'IgnoreCase') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+  $addedCode = @([regex]::Matches($added, '`[^`]+`|--[a-z0-9][a-z0-9-]+|\b\d+(?:\.\d+){1,3}\b', 'IgnoreCase') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+  if (($removedCode -join '|') -ne ($addedCode -join '|')) { return $false }
+
+  $removedTokens = Get-ComparableDocTokens -Text $removed
+  $addedTokens = Get-ComparableDocTokens -Text $added
+  if ($removedTokens.Count -eq 0 -or $addedTokens.Count -eq 0) { return $false }
+
+  $intersection = 0
+  foreach ($token in $removedTokens) {
+    if ($addedTokens.Contains($token)) { $intersection++ }
+  }
+
+  $union = $removedTokens.Count + $addedTokens.Count - $intersection
+  if ($union -eq 0) { return $false }
+
+  return (($intersection / $union) -ge 0.85)
+}
+
 function Test-SmallNonActionablePatch {
   param([string]$PatchSample)
 
   $bodyLines = Get-ArticleBodyChangedLines -PatchSample $PatchSample
   if ($bodyLines.Count -eq 0) { return $false }
   if ($bodyLines.Count -gt 4) { return $false }
+  if (Test-TinyEquivalentRewritePatch -PatchSample $PatchSample) { return $true }
   if (Test-ActionablePatchSignal -PatchSample $PatchSample) { return $false }
 
   $body = ($bodyLines -join "`n")
