@@ -45,6 +45,63 @@ $Repositories = @(
   }
 )
 
+# Equivalent terms are normalized before semantic no-op comparison. Keep this
+# list broad and product-oriented; add future repo/product renames here instead
+# of changing filter logic.
+$EquivalentTermGroups = @(
+  @(
+    'Azure Kubernetes Service',
+    'AKS',
+    'AKS enabled by Azure Arc',
+    'Azure Kubernetes Service enabled by Azure Arc',
+    'AKS Hybrid and Edge',
+    'AKS Arc',
+    'AKS on Azure Local',
+    'enabled by Azure Arc',
+    'enabled by Arc',
+    'Arc-enabled',
+    'Hybrid and Edge'
+  ),
+  @(
+    'Azure Container Registry',
+    'Container Registry',
+    'ACR'
+  ),
+  @(
+    'Application Gateway for Containers',
+    'App Gateway for Containers',
+    'Azure Application Gateway for Containers',
+    'AGC'
+  ),
+  @(
+    'Application Load Balancer Controller',
+    'Azure Application Load Balancer Controller',
+    'ALB Controller'
+  )
+)
+
+foreach ($repoConfig in $Repositories) {
+  $repoTerms = @(
+    [string]$repoConfig.DisplayName
+    [string]$repoConfig.IconAlt
+  ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+
+  $alreadyCovered = $false
+  foreach ($term in $repoTerms) {
+    foreach ($group in $EquivalentTermGroups) {
+      if (@($group) -contains $term) {
+        $alreadyCovered = $true
+        break
+      }
+    }
+    if ($alreadyCovered) { break }
+  }
+
+  if ($repoTerms.Count -gt 1 -and -not $alreadyCovered) {
+    $EquivalentTermGroups += ,@($repoTerms)
+  }
+}
+
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
@@ -380,6 +437,38 @@ function Test-ActionablePatchSignal {
   return $false
 }
 
+function ConvertTo-EquivalentTermToken {
+  param([int]$GroupIndex)
+
+  return ("productterm{0}" -f $GroupIndex)
+}
+
+function Normalize-EquivalentTerms {
+  param([string]$Text)
+
+  $normalized = ($Text ?? '')
+  $rules = New-Object System.Collections.Generic.List[object]
+
+  for ($i = 0; $i -lt $EquivalentTermGroups.Count; $i++) {
+    $replacement = ConvertTo-EquivalentTermToken -GroupIndex $i
+
+    foreach ($term in @($EquivalentTermGroups[$i])) {
+      if ([string]::IsNullOrWhiteSpace($term)) { continue }
+      $rules.Add([pscustomobject]@{
+          Term        = $term.ToLowerInvariant()
+          Replacement = $replacement
+        }) | Out-Null
+    }
+  }
+
+  foreach ($rule in ($rules | Sort-Object { $_.Term.Length } -Descending)) {
+    $pattern = '(?i)(?<![a-z0-9])' + [regex]::Escape($rule.Term) + '(?![a-z0-9])'
+    $normalized = [regex]::Replace($normalized, $pattern, $rule.Replacement)
+  }
+
+  return $normalized
+}
+
 function ConvertTo-ComparableDocText {
   param([string]$Text)
 
@@ -387,11 +476,42 @@ function ConvertTo-ComparableDocText {
   $normalized = $normalized -replace '\[([^\]]+)\]\([^)]+\)', '$1'
   $normalized = $normalized -replace '`([^`]+)`', '$1'
   $normalized = $normalized.ToLowerInvariant()
+  $normalized = Normalize-EquivalentTerms -Text $normalized
   $normalized = $normalized -replace '\b(may|might|can|could|please)\b', ''
   $normalized = $normalized -replace '\b(has|have|be|being|been|you|can|now)\b', ''
   $normalized = $normalized -replace '[^a-z0-9\.\-]+', ' '
   $normalized = $normalized -replace '\s+', ' '
   return $normalized.Trim()
+}
+
+function Get-ProtectedDocTokens {
+  param([string]$Text)
+
+  return @(
+    [regex]::Matches(
+      ($Text ?? ''),
+      '`[^`]+`|--[a-z0-9][a-z0-9-]+|\b\d+(?:[\/\.-]\d+){1,3}\b|\b\d+(?:\.\d+){1,3}\b|\b\d+\s*(?:gb|tb|mb|gib|tib|mib|%)\b|\b(?:New|Get|Set|Update|Remove|Enable|Disable|Install|Uninstall|Invoke|Start|Stop|Restart|Add)-[A-Za-z][A-Za-z0-9]*\b',
+      'IgnoreCase'
+    ) | ForEach-Object { $_.Value.ToLowerInvariant() } | Sort-Object -Unique
+  )
+}
+
+function Get-CanonicalDiffSides {
+  param([string]$PatchSample)
+
+  $bodyLines = @(
+    Get-ArticleBodyChangedLines -PatchSample $PatchSample |
+    Select-Object -Unique
+  )
+
+  $removedLines = @($bodyLines | Where-Object { $_ -match '^\-' })
+  $addedLines = @($bodyLines | Where-Object { $_ -match '^\+' })
+
+  return [pscustomobject]@{
+    BodyLines = $bodyLines
+    Removed   = (($removedLines | ForEach-Object { $_ -replace '^[\-\+]\s*', '' }) -join ' ')
+    Added     = (($addedLines | ForEach-Object { $_ -replace '^[\-\+]\s*', '' }) -join ' ')
+  }
 }
 
 function Get-ComparableDocTokens {
@@ -405,6 +525,7 @@ function Get-ComparableDocTokens {
   $tokens = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
   foreach ($token in ((ConvertTo-ComparableDocText -Text $Text) -split '\s+')) {
     if (-not $token) { continue }
+    if ($token -match '^-+$') { continue }
     if ($stopWords.Contains($token)) { continue }
     [void]$tokens.Add($token)
   }
@@ -412,39 +533,42 @@ function Get-ComparableDocTokens {
   return $tokens
 }
 
-function Test-TinyEquivalentRewritePatch {
-  param([string]$PatchSample)
+function Get-TokenSetSimilarity {
+  param($LeftTokens, $RightTokens)
 
-  $bodyLines = @(
-    Get-ArticleBodyChangedLines -PatchSample $PatchSample |
-    Select-Object -Unique
-  )
-  if ($bodyLines.Count -eq 0 -or $bodyLines.Count -gt 4) { return $false }
-
-  $removedLines = @($bodyLines | Where-Object { $_ -match '^\-' })
-  $addedLines = @($bodyLines | Where-Object { $_ -match '^\+' })
-  if ($removedLines.Count -eq 0 -or $addedLines.Count -eq 0) { return $false }
-
-  $removed = ($removedLines -join ' ')
-  $added = ($addedLines -join ' ')
-
-  $removedCode = @([regex]::Matches($removed, '`[^`]+`|--[a-z0-9][a-z0-9-]+|\b\d+(?:\.\d+){1,3}\b', 'IgnoreCase') | ForEach-Object { $_.Value } | Sort-Object -Unique)
-  $addedCode = @([regex]::Matches($added, '`[^`]+`|--[a-z0-9][a-z0-9-]+|\b\d+(?:\.\d+){1,3}\b', 'IgnoreCase') | ForEach-Object { $_.Value } | Sort-Object -Unique)
-  if (($removedCode -join '|') -ne ($addedCode -join '|')) { return $false }
-
-  $removedTokens = Get-ComparableDocTokens -Text $removed
-  $addedTokens = Get-ComparableDocTokens -Text $added
-  if ($removedTokens.Count -eq 0 -or $addedTokens.Count -eq 0) { return $false }
+  if ($LeftTokens.Count -eq 0 -or $RightTokens.Count -eq 0) { return 0.0 }
 
   $intersection = 0
-  foreach ($token in $removedTokens) {
-    if ($addedTokens.Contains($token)) { $intersection++ }
+  foreach ($token in $LeftTokens) {
+    if ($RightTokens.Contains($token)) { $intersection++ }
   }
 
-  $union = $removedTokens.Count + $addedTokens.Count - $intersection
-  if ($union -eq 0) { return $false }
+  $union = $LeftTokens.Count + $RightTokens.Count - $intersection
+  if ($union -eq 0) { return 0.0 }
 
-  return (($intersection / $union) -ge 0.85)
+  return ($intersection / $union)
+}
+
+function Test-EquivalentRewritePatch {
+  param(
+    [string]$PatchSample,
+    [int]$MaxChangedBodyLines = 120,
+    [double]$SimilarityThreshold = 0.88
+  )
+
+  $sides = Get-CanonicalDiffSides -PatchSample $PatchSample
+  if ($sides.BodyLines.Count -eq 0 -or $sides.BodyLines.Count -gt $MaxChangedBodyLines) { return $false }
+  if (-not $sides.Removed -or -not $sides.Added) { return $false }
+
+  $removedProtected = Get-ProtectedDocTokens -Text $sides.Removed
+  $addedProtected = Get-ProtectedDocTokens -Text $sides.Added
+  if (($removedProtected -join '|') -ne ($addedProtected -join '|')) { return $false }
+
+  $removedTokens = Get-ComparableDocTokens -Text $sides.Removed
+  $addedTokens = Get-ComparableDocTokens -Text $sides.Added
+  $similarity = Get-TokenSetSimilarity -LeftTokens $removedTokens -RightTokens $addedTokens
+
+  return ($similarity -ge $SimilarityThreshold)
 }
 
 function Test-SmallNonActionablePatch {
@@ -456,7 +580,7 @@ function Test-SmallNonActionablePatch {
   )
   if ($bodyLines.Count -eq 0) { return $false }
   if ($bodyLines.Count -gt 4) { return $false }
-  if (Test-TinyEquivalentRewritePatch -PatchSample $PatchSample) { return $true }
+  if (Test-EquivalentRewritePatch -PatchSample $PatchSample -MaxChangedBodyLines 4 -SimilarityThreshold 0.85) { return $true }
   if (Test-ActionablePatchSignal -PatchSample $PatchSample) { return $false }
 
   $body = ($bodyLines -join "`n")
@@ -494,6 +618,12 @@ function Is-TrivialChange {
     # Tiny body edits without user-impacting signals are usually wording, anchor,
     # terminology, or punctuation cleanup. Do not turn those into tracker cards.
     if (Test-SmallNonActionablePatch -PatchSample $PatchSample) {
+        return $true
+    }
+
+    # Larger semantically equivalent rewrites should not create cards unless
+    # protected technical tokens changed.
+    if (Test-EquivalentRewritePatch -PatchSample $PatchSample) {
         return $true
     }
     
@@ -1052,7 +1182,7 @@ function Get-PerFileSummariesViaGitHubModels {
 
     $systemMsg = @"
 You are filtering Azure AKS documentation updates. Be INCLUSIVE - when in doubt, KEEP IT.
-ONLY EXCLUDE: pure YAML/front-matter metadata changes (author, reviewer, ms.date, title, description, service tags, etc.), tiny wording/terminology/link-anchor edits with no user-impacting signal, single-word typo fixes, pure whitespace changes.
+ONLY EXCLUDE: pure YAML/front-matter metadata changes (author, reviewer, ms.date, title, description, service tags, etc.), tiny wording/terminology/link-anchor edits with no user-impacting signal, product rename/rebrand-only terminology sweeps, single-word typo fixes, pure whitespace changes.
 ALWAYS KEEP: new features, commands, security, policy, version updates, tutorial improvements, technical corrections, new content, new files.
 Return a JSON object with a single key "results" containing an array of kept items:
 {"results": [{"file": "<path>", "summary": "2-3 factual sentences", "category": "Networking|Security|Compute|Storage|Operations|Compliance|General", "score": 0.0-1.0}]}
@@ -1153,8 +1283,9 @@ You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE a
 **ONLY EXCLUDE these very specific cases:**
 1. Pure YAML/front-matter metadata changes with zero article-body changes, including author, reviewer, ms.date, title, description, service tags, and custom tags
 2. Tiny wording, grammar, terminology, capitalization, punctuation, or link-anchor edits with no user-impacting signal
-3. Single-word typo fixes with no other changes
-4. Pure whitespace/formatting changes with no content impact
+3. Product rename/rebrand-only terminology sweeps, unless commands, versions, limits, dates, defaults, support behavior, or procedures changed
+4. Single-word typo fixes with no other changes
+5. Pure whitespace/formatting changes with no content impact
 
 **ALWAYS KEEP (even if small):**
 - Learn Editor updates with ANY content changes
@@ -1174,6 +1305,7 @@ You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE a
 - Small changes can still be meaningful
 - Size doesn't determine value
 - Tiny edits are meaningful when they add or remove notes, warnings, limitations, commands, versions, support/default behavior, prerequisites, limits, retirement/deprecation, security, compatibility, or feature behavior
+- Product rebranding or terminology normalization alone is not meaningful
 
 **ALWAYS KEEP:** New files (status "added") regardless of content.
 
@@ -1278,6 +1410,7 @@ IGNORE and don't mention:
 - "Deploy and Explore" or navigation callouts
 - Pure formatting/whitespace
 - Tiny wording, terminology, typo, capitalization, punctuation, or link-anchor updates without user-impacting changes
+- Product rename/rebrand-only terminology sweeps
 
 Rules:
 - 2–3 sentences, plain text, no bullets
@@ -2755,6 +2888,12 @@ function Apply-FinalTrivialFiltering {
     # Metadata/front-matter only changes
     elseif ($summary -match '(?i)(author|reviewer|ms\.date|metadata|front.?matter|service tags?|custom tags?|title|description).*(updated|changed|assignment|maintenance)' -and
            $summary -notmatch '(?i)(new|feature|security|technical|command|procedure|configuration|support|version|retirement|deprecation)') {
+      $isTrivial = $true
+    }
+
+    # Rebrand-only terminology normalization, commonly AKS Arc -> AKS Hybrid and Edge.
+    elseif ($summary -match '(?i)\b(rebrand(?:ing)?|terminology|service designation|naming|normalized?|renam(?:e|ed|ing)).*\b(AKS Arc|AKS Hybrid and Edge|AKS enabled by Azure Arc|AKS)\b' -and
+           $summary -notmatch '(?i)(new|feature|security|technical|command|procedure|configuration|version|retirement|deprecation|default|limit|support policy|unsupported|prerequisite|preview|GA|\b\d+\s*(GB|TB|MB|%)\b)') {
       $isTrivial = $true
     }
     
