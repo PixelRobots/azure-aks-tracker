@@ -18,6 +18,11 @@ on:
         required: false
         type: boolean
         default: false
+      update_wordpress_page_via_rest:
+        description: 'Update tracker WordPress Page via REST API instead of plugin cache'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # Allow pushing archive files back to repository
@@ -179,8 +184,9 @@ jobs:
         if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true'
         env:
           WP_REST_PAGE_UPDATE: ${{ secrets.WP_REST_PAGE_UPDATE }}
+          WP_REST_PAGE_UPDATE_INPUT: ${{ github.event.inputs.update_wordpress_page_via_rest == 'true' && 'true' || '' }}
         run: |
-          if [ "${WP_REST_PAGE_UPDATE:-}" != "true" ]; then
+          if [ "${WP_REST_PAGE_UPDATE:-}" != "true" ] && [ "${WP_REST_PAGE_UPDATE_INPUT:-}" != "true" ]; then
             echo "Skipping WordPress REST page update. The AKS CVE Tracker plugin renders the page from wordpress/aks-tracker-page.html."
             exit 0
           fi

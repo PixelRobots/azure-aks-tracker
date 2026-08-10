@@ -71,7 +71,7 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 | `WP_APP_PASSWORD`          | WordPress Application Password                   |
 | `WP_PAGE_ID`               | Numeric ID of the tracker page                   |
 | `WP_WEEKLY_CATEGORY_ID`    | Numeric ID for hidden digest category (optional) |
-| `WP_REST_PAGE_UPDATE`      | Optional: set to `true` to update the tracker page via REST instead of plugin cache |
+| `WP_REST_PAGE_UPDATE`      | Optional: set to `true` to always update the tracker page via REST instead of plugin cache |
 | `OPENAI_API_KEY`           | Only if using OpenAI summaries (optional)        |
 | `AZURE_OPENAI_APIURI`      | Only if using Azure OpenAI (optional)            |
 | `AZURE_OPENAI_KEY`         | Only if using Azure OpenAI (optional)            |
@@ -96,6 +96,8 @@ For the weekly digest, the post is created with `status: "publish"` and the opti
 
 If you need the old behavior, set `WP_REST_PAGE_UPDATE` to `true`. Leaving it unset avoids bot-protection failures on `/wp-json/wp/v2/pages/...`.
 The plugin can also trigger the workflow manually from `Settings > AKS CVE Tracker` when you add a GitHub token with Actions write access.
+
+Manual workflow runs also have an `update_wordpress_page_via_rest` checkbox. Leave it unchecked for the plugin-cache path.
 
 If you are using Icegram Express:
 
