@@ -125,33 +125,66 @@ jobs:
             echo "Generated caches committed and pushed."
           fi
 
-      - name: Commit WordPress CVE source
+      - name: Commit WordPress sources
         if: steps.gen.conclusion == 'success'
         run: |
+          TMP_PAGE_SOURCE=""
+          if [ -f content.html ]; then
+            TMP_PAGE_SOURCE="$(mktemp)"
+            cp content.html "$TMP_PAGE_SOURCE"
+          fi
+
+          TMP_CVE_SOURCE=""
           if [ -f wordpress-cve-section.html ]; then
             TMP_CVE_SOURCE="$(mktemp)"
             cp wordpress-cve-section.html "$TMP_CVE_SOURCE"
-            git fetch origin "${GITHUB_REF_NAME}"
-            git reset --hard "origin/${GITHUB_REF_NAME}"
-            mkdir -p wordpress
+          fi
+
+          if [ -z "$TMP_PAGE_SOURCE" ] && [ -z "$TMP_CVE_SOURCE" ]; then
+            echo "No WordPress source HTML produced — skipping source commit."
+            exit 0
+          fi
+
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+          mkdir -p wordpress
+
+          FILES_TO_ADD=""
+          if [ -n "$TMP_PAGE_SOURCE" ]; then
+            cp "$TMP_PAGE_SOURCE" wordpress/aks-tracker-page.html
+            FILES_TO_ADD="$FILES_TO_ADD wordpress/aks-tracker-page.html"
+          else
+            echo "No content.html produced — skipping tracker page source."
+          fi
+
+          if [ -n "$TMP_CVE_SOURCE" ]; then
             cp "$TMP_CVE_SOURCE" wordpress/aks-cve-section.html
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add wordpress/aks-cve-section.html
-            if git diff --staged --quiet; then
-              echo "WordPress CVE source unchanged — nothing to commit."
-            else
-              git commit -m "chore: update WordPress CVE source [skip ci]"
-              git push
-              echo "WordPress CVE source committed and pushed."
-            fi
+            FILES_TO_ADD="$FILES_TO_ADD wordpress/aks-cve-section.html"
           else
             echo "No wordpress-cve-section.html produced — skipping CVE source commit."
           fi
 
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add $FILES_TO_ADD
+          if git diff --staged --quiet; then
+            echo "WordPress source HTML unchanged — nothing to commit."
+          else
+            git commit -m "chore: update WordPress source HTML [skip ci]"
+            git push
+            echo "WordPress source HTML committed and pushed."
+          fi
+
       - name: Update WordPress page
         if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true'
+        env:
+          WP_REST_PAGE_UPDATE: ${{ secrets.WP_REST_PAGE_UPDATE }}
         run: |
+          if [ "${WP_REST_PAGE_UPDATE:-}" != "true" ]; then
+            echo "Skipping WordPress REST page update. The AKS CVE Tracker plugin renders the page from wordpress/aks-tracker-page.html."
+            exit 0
+          fi
+
           WP_API="${{ secrets.WP_URL }}/wp-json/wp/v2/pages/${{ secrets.WP_PAGE_ID }}"
           DESIRED_HASH="${{ steps.gen.outputs.hash }}"
 

@@ -71,6 +71,7 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 | `WP_APP_PASSWORD`          | WordPress Application Password                   |
 | `WP_PAGE_ID`               | Numeric ID of the tracker page                   |
 | `WP_WEEKLY_CATEGORY_ID`    | Numeric ID for hidden digest category (optional) |
+| `WP_REST_PAGE_UPDATE`      | Optional: set to `true` to update the tracker page via REST instead of plugin cache |
 | `OPENAI_API_KEY`           | Only if using OpenAI summaries (optional)        |
 | `AZURE_OPENAI_APIURI`      | Only if using Azure OpenAI (optional)            |
 | `AZURE_OPENAI_KEY`         | Only if using Azure OpenAI (optional)            |
@@ -90,8 +91,11 @@ You can change these in `.github/workflows/publish-aks-updates.yml`.
 
 ## WordPress rendering
 
-The Action wraps generated HTML in a `wp:html` block so the content is inserted as-is.
+The Action commits generated tracker HTML to `wordpress/aks-tracker-page.html`, and the AKS CVE Tracker plugin renders that cached file on the WordPress page. The plugin caches tracker page HTML for 5 minutes by default, while the CVE section stays cached for 6 hours. After using the plugin's **Run GitHub Action** button, the tracker page refreshes every 60 seconds for 15 minutes.
 For the weekly digest, the post is created with `status: "publish"` and the optional `categories: [<WP_WEEKLY_CATEGORY_ID>]`.
+
+If you need the old behavior, set `WP_REST_PAGE_UPDATE` to `true`. Leaving it unset avoids bot-protection failures on `/wp-json/wp/v2/pages/...`.
+The plugin can also trigger the workflow manually from `Settings > AKS CVE Tracker` when you add a GitHub token with Actions write access.
 
 If you are using Icegram Express:
 
