@@ -72,6 +72,8 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 | `WP_PAGE_ID`               | Numeric ID of the tracker page                   |
 | `WP_WEEKLY_CATEGORY_ID`    | Numeric ID for hidden digest category (optional) |
 | `WP_REST_PAGE_UPDATE`      | Optional: set to `true` to always update the tracker page via REST instead of plugin cache |
+| `WP_CACHE_PURGE_TOKEN`     | Shared secret used to purge/warm the plugin cache after committing generated HTML |
+| `WP_CACHE_PURGE_URL`       | Optional override for the plugin purge endpoint; defaults to `${WP_URL}/wp-json/aks-cve-tracker/v1/purge-cache` |
 | `OPENAI_API_KEY`           | Only if using OpenAI summaries (optional)        |
 | `AZURE_OPENAI_APIURI`      | Only if using Azure OpenAI (optional)            |
 | `AZURE_OPENAI_KEY`         | Only if using Azure OpenAI (optional)            |
@@ -91,7 +93,9 @@ You can change these in `.github/workflows/publish-aks-updates.yml`.
 
 ## WordPress rendering
 
-The Action commits generated tracker HTML to `wordpress/aks-tracker-page.html`, and the AKS CVE Tracker plugin renders that cached file on the WordPress page. The plugin caches tracker page HTML for 5 minutes by default, while the CVE section stays cached for 6 hours. After using the plugin's **Run GitHub Action** button, the tracker page refreshes every 60 seconds for 15 minutes.
+The Action commits generated tracker HTML to `wordpress/aks-tracker-page.html`, and the AKS CVE Tracker plugin renders that cached file on the WordPress page. After each source HTML commit, the workflow calls the plugin's lightweight purge endpoint and asks it to warm the latest GitHub Raw files. This avoids sending the full tracker page through WordPress REST while still keeping the live page fresh.
+
+The plugin caches tracker page HTML for 5 minutes by default, while the CVE section stays cached for 6 hours. After using the plugin's **Run GitHub Action** button, the tracker page refreshes every 60 seconds for 15 minutes. Set the plugin's **Cache purge token** setting to the same random value stored in the GitHub Actions `WP_CACHE_PURGE_TOKEN` secret.
 For the weekly digest, the post is created with `status: "publish"` and the optional `categories: [<WP_WEEKLY_CATEGORY_ID>]`.
 
 If you need the old behavior, set `WP_REST_PAGE_UPDATE` to `true`. Leaving it unset avoids bot-protection failures on `/wp-json/wp/v2/pages/...`.
