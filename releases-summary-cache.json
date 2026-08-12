@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-12T06:35:35.8734069+00:00",
+  "generated_at": "2026-08-12T06:35:57.4910881+00:00",
   "entries": [
     {
       "cache_key": "5c4b239db173e6e4fda2843265aa42b0e33e4c6456da4d8dfcf3b5896b534cd5",
@@ -105,6 +105,57 @@
       "cached_at": "06/26/2026 00:49:21"
     },
     {
+      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
+      "release_id": 306868985,
+      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
+      "breaking_changes": [
+        "Ubuntu 22.04 support ends on June 30, 2027"
+      ],
+      "key_features": [
+        "New Kubernetes patch versions available",
+        "Updated Azure Monitor Metrics"
+      ],
+      "good_to_know": [
+        "Transition to Ubuntu 24.04 or later by deadline",
+        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "c68afb7e09294bbb8c45604e93f545d82446a9a0b3c1a9541d8d5402af9e7ccb",
+      "release_id": 287428722,
+      "summary": "This release includes announcements regarding the retirement of Windows Server 2019 and updates to Kubernetes versions.",
+      "breaking_changes": [
+        "Windows Server 2019 support ends on March 1, 2026"
+      ],
+      "key_features": [
+        "New Kubernetes patch versions available",
+        "Windows Server Annual Channel retirement announced"
+      ],
+      "good_to_know": [
+        "Transition to Windows Server 2022+ by retirement date",
+        "Kubernetes version 1.35 is rolling out"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
+      "release_id": 295914225,
+      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
+      "breaking_changes": [
+        "Flatcar Container Linux support ends on June 8, 2026"
+      ],
+      "key_features": [
+        "Expanded GPU support for Azure Linux",
+        "New Kubernetes version 1.35 now available"
+      ],
+      "good_to_know": [
+        "Transition to a supported alternative for Flatcar",
+        "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
       "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
       "release_id": 316503076,
       "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
@@ -137,57 +188,6 @@
       "good_to_know": [
         "Migrate Windows Server Annual Channel node pools to LTSC",
         "Transition from Flatcar Container Linux for AKS by June 2026"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
-      "release_id": 306868985,
-      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
-      "breaking_changes": [
-        "Ubuntu 22.04 support ends on June 30, 2027"
-      ],
-      "key_features": [
-        "New Kubernetes patch versions available",
-        "Updated Azure Monitor Metrics"
-      ],
-      "good_to_know": [
-        "Transition to Ubuntu 24.04 or later by deadline",
-        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
-      "release_id": 295914225,
-      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
-      "breaking_changes": [
-        "Flatcar Container Linux support ends on June 8, 2026"
-      ],
-      "key_features": [
-        "Expanded GPU support for Azure Linux",
-        "New Kubernetes version 1.35 now available"
-      ],
-      "good_to_know": [
-        "Transition to a supported alternative for Flatcar",
-        "Monitor release status by regions"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "c68afb7e09294bbb8c45604e93f545d82446a9a0b3c1a9541d8d5402af9e7ccb",
-      "release_id": 287428722,
-      "summary": "This release includes announcements regarding the retirement of Windows Server 2019 and updates to Kubernetes versions.",
-      "breaking_changes": [
-        "Windows Server 2019 support ends on March 1, 2026"
-      ],
-      "key_features": [
-        "New Kubernetes patch versions available",
-        "Windows Server Annual Channel retirement announced"
-      ],
-      "good_to_know": [
-        "Transition to Windows Server 2022+ by retirement date",
-        "Kubernetes version 1.35 is rolling out"
       ],
       "cached_at": "06/23/2026 18:53:38"
     }
