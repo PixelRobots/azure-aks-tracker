@@ -1,6 +1,29 @@
 {
-  "generated_at": "2026-08-12T07:17:50.8896397+00:00",
+  "generated_at": "2026-08-12T18:25:21.6839307+00:00",
   "entries": [
+    {
+      "cache_key": "5dff5934eecdbec7f728bff359874b03430e950902d482bf10381359a6e27f5c",
+      "release_id": 368882164,
+      "summary": "The release introduces several new features and improvements for AKS. Key updates include Node Auto Provisioning for restricted networks and general availability of AKS Node pool Rollback.",
+      "breaking_changes": [
+        "SSH node access configuration changes trigger immediate node reimage for Kubernetes 1.37+",
+        "Changes to IMDS restriction or cluster outbound type trigger immediate node reimage for Kubernetes 1.37+",
+        "Updating from service principal to managed identity triggers node reimages across node pools"
+      ],
+      "key_features": [
+        "Node Auto Provisioning can be enabled on clusters with restricted publicNetworkAccess",
+        "Automatic availability zone placement is now enabled globally",
+        "AKS Node pool Rollback is now generally available",
+        "Encryption in Transit is now generally available for Azure File CSI driver",
+        "Prepared Image Specification is now available in public preview"
+      ],
+      "good_to_know": [
+        "Use Node Disruption Policy to control node reimages",
+        "VMSS rolling upgrade concurrency is now capped to remaining VMs",
+        "AKS upgrade validation rejects node pool upgrades exceeding VMSS 1,000-instance limit"
+      ],
+      "cached_at": "2026-08-12T18:25:21.6822721+00:00"
+    },
     {
       "cache_key": "f381dc961821e5b3ecf2bb936998737dc491126cd9ae79e75be22224cf48024c",
       "release_id": 368882164,
@@ -22,7 +45,7 @@
         "AKS upgrade validation prevents exceeding VMSS instance limits",
         "Istio Gateway API deployments now disable service account token auto-mounting"
       ],
-      "cached_at": "2026-08-12T07:17:50.8878018+00:00"
+      "cached_at": "08/12/2026 07:17:50"
     },
     {
       "cache_key": "5c4b239db173e6e4fda2843265aa42b0e33e4c6456da4d8dfcf3b5896b534cd5",
@@ -145,6 +168,42 @@
       "cached_at": "06/23/2026 18:53:38"
     },
     {
+      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
+      "release_id": 306868985,
+      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
+      "breaking_changes": [
+        "Ubuntu 22.04 support ends on June 30, 2027"
+      ],
+      "key_features": [
+        "New Kubernetes patch versions available",
+        "Updated Azure Monitor Metrics"
+      ],
+      "good_to_know": [
+        "Transition to Ubuntu 24.04 or later by deadline",
+        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
+      "release_id": 334647399,
+      "summary": "This release includes deprecations and updates for various components in AKS.",
+      "breaking_changes": [
+        "Istio-based service mesh add-on revision asm-1-27 deprecated",
+        "Windows Server Annual Channel for Containers retired",
+        "Windows Server 2019 retired and no longer supported"
+      ],
+      "key_features": [
+        "Managed system node pools are now generally available",
+        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
+      ],
+      "good_to_know": [
+        "Migrate Windows Server Annual Channel node pools to LTSC",
+        "Transition from Flatcar Container Linux for AKS by June 2026"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
       "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
       "release_id": 316503076,
       "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
@@ -175,42 +234,6 @@
       "good_to_know": [
         "Transition to Windows Server 2022+ by retirement date",
         "Kubernetes version 1.35 is rolling out"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
-      "release_id": 334647399,
-      "summary": "This release includes deprecations and updates for various components in AKS.",
-      "breaking_changes": [
-        "Istio-based service mesh add-on revision asm-1-27 deprecated",
-        "Windows Server Annual Channel for Containers retired",
-        "Windows Server 2019 retired and no longer supported"
-      ],
-      "key_features": [
-        "Managed system node pools are now generally available",
-        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
-      ],
-      "good_to_know": [
-        "Migrate Windows Server Annual Channel node pools to LTSC",
-        "Transition from Flatcar Container Linux for AKS by June 2026"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
-      "release_id": 306868985,
-      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
-      "breaking_changes": [
-        "Ubuntu 22.04 support ends on June 30, 2027"
-      ],
-      "key_features": [
-        "New Kubernetes patch versions available",
-        "Updated Azure Monitor Metrics"
-      ],
-      "good_to_know": [
-        "Transition to Ubuntu 24.04 or later by deadline",
-        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
       ],
       "cached_at": "06/23/2026 18:53:38"
     }
