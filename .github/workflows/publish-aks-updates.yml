@@ -131,6 +131,7 @@ jobs:
           fi
 
       - name: Commit WordPress sources
+        id: commit_wp_sources
         if: steps.gen.conclusion == 'success'
         run: |
           TMP_PAGE_SOURCE=""
@@ -180,6 +181,15 @@ jobs:
             echo "WordPress source HTML committed and pushed."
           fi
 
+          SOURCE_REF="$(git rev-parse HEAD)"
+          echo "source_ref=$SOURCE_REF" >> "$GITHUB_OUTPUT"
+          if [ -f wordpress/aks-tracker-page.html ]; then
+            echo "page_sha256=$(sha256sum wordpress/aks-tracker-page.html | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f wordpress/aks-cve-section.html ]; then
+            echo "section_sha256=$(sha256sum wordpress/aks-cve-section.html | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Purge WordPress plugin cache
         if: steps.gen.conclusion == 'success'
         env:
@@ -208,6 +218,27 @@ jobs:
           echo "Purging WordPress plugin cache..."
           PURGE_RESPONSE=$(mktemp)
           PURGE_HEADERS=$(mktemp)
+          PURGE_PAYLOAD="$RUNNER_TEMP/wp-cache-purge-payload.json"
+          SOURCE_REF="${{ steps.commit_wp_sources.outputs.source_ref }}"
+          if [ -n "$SOURCE_REF" ]; then
+            PAGE_SOURCE_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${SOURCE_REF}/wordpress/aks-tracker-page.html"
+            SECTION_SOURCE_URL="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${SOURCE_REF}/wordpress/aks-cve-section.html"
+          else
+            PAGE_SOURCE_URL=""
+            SECTION_SOURCE_URL=""
+          fi
+          jq -n \
+            --arg page_source_url "$PAGE_SOURCE_URL" \
+            --arg section_source_url "$SECTION_SOURCE_URL" \
+            --arg expected_page_sha256 "${{ steps.commit_wp_sources.outputs.page_sha256 }}" \
+            --arg expected_section_sha256 "${{ steps.commit_wp_sources.outputs.section_sha256 }}" \
+            '{
+              warm: true,
+              page_source_url: $page_source_url,
+              section_source_url: $section_source_url,
+              expected_page_sha256: $expected_page_sha256,
+              expected_section_sha256: $expected_section_sha256
+            }' > "$PURGE_PAYLOAD"
           HTTP_CODE=$(curl -s -w "%{http_code}" -X POST "$PURGE_URL" \
             --http1.1 \
             --connect-timeout "$WP_CONNECT_TIMEOUT_SECONDS" \
@@ -217,7 +248,7 @@ jobs:
             -H "User-Agent: $WP_USER_AGENT" \
             -H "X-AKS-Cache-Purge-Token: $WP_CACHE_PURGE_TOKEN" \
             -D "$PURGE_HEADERS" \
-            --data '{"warm":true}' \
+            --data-binary @"$PURGE_PAYLOAD" \
             -o "$PURGE_RESPONSE")
 
           if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
