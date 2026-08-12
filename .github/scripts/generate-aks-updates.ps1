@@ -1055,6 +1055,20 @@ function Remove-AIResponseArtifacts([string]$Text) {
   return $Text -replace '(?m)^\s*```(?:json)?\s*$', '' -replace '(?m)^\s*```\s*$', '' -replace '【[^】]*】', ''
 }
 
+function Test-BadDocsSummary([string]$Summary) {
+  if ([string]::IsNullOrWhiteSpace($Summary)) { return $true }
+
+  $s = ($Summary -replace '\s+', ' ').Trim()
+  if ($s.Length -gt 700) { return $true }
+  if ($s -match '(?i)\b(File|Subjects|Patch excerpt)\s*:') { return $true }
+  if ($s -match '(?i)\bMerge (branch|pull request|upstream/main)\b') { return $true }
+  if ($s -match '(?i)(^\s*[-+]\s*ms\.|`?\+ms\.|`?-ms\.)') { return $true }
+  if ($s -match '(?i)\b(PR branch|github-actions|load-balancer-f[0-9]+|patch-[0-9]+)\b') { return $true }
+  if ($s -match 'articles/[a-z0-9/_\.-]+\.md') { return $true }
+
+  return $false
+}
+
 # Returns true if the error record indicates an API rate limit was reached.
 # Checks the full exception chain so inner exceptions from PSAI wrappers are not missed.
 function Test-IsRateLimitError($_err) {
@@ -1432,7 +1446,11 @@ $PatchSample
       $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $content }) } -MaxCompletionTokens 220 -Temperature 0.1
       $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
       $text = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
-      return (($text -replace '\s+', ' ').Trim())
+      $summary = (($text -replace '\s+', ' ').Trim())
+      if (-not (Test-BadDocsSummary $summary)) {
+        return $summary
+      }
+      Log "AI modified-file summary rejected for $FilePath; using heuristic summary."
     }
     catch { }
   }
