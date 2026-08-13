@@ -405,6 +405,37 @@ jobs:
           rm -f "$WP_RESPONSE"
           rm -f "$WP_RESPONSE_HEADERS"
 
+      - name: Purge Cloudflare edge cache
+        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true'
+        env:
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CF_PURGE_TOKEN: ${{ secrets.CF_PURGE_TOKEN }}
+          WP_URL: ${{ secrets.WP_URL }}
+        run: |
+          if [ -z "${CF_ZONE_ID:-}" ] || [ -z "${CF_PURGE_TOKEN:-}" ]; then
+            echo "CF_ZONE_ID or CF_PURGE_TOKEN not set — skipping Cloudflare cache purge."
+            exit 0
+          fi
+          if [ -z "${WP_URL:-}" ]; then
+            echo "WP_URL not set — skipping Cloudflare cache purge."
+            exit 0
+          fi
+          PAGE_URL="${WP_URL%/}/aks-docs-tracker/"
+          echo "Purging Cloudflare edge cache for $PAGE_URL ..."
+          CF_RESPONSE=$(curl -s -w "\n%{http_code}" -X DELETE \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_PURGE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"files\":[\"${PAGE_URL}\"]}")
+          CF_HTTP_CODE=$(echo "$CF_RESPONSE" | tail -n1)
+          CF_BODY=$(echo "$CF_RESPONSE" | head -n -1)
+          echo "Cloudflare purge response (HTTP $CF_HTTP_CODE): $CF_BODY"
+          if [ "$CF_HTTP_CODE" -ge 200 ] && [ "$CF_HTTP_CODE" -lt 300 ]; then
+            echo "Cloudflare edge cache purged successfully."
+          else
+            echo "Cloudflare cache purge returned HTTP $CF_HTTP_CODE — continuing anyway."
+          fi
+
       - name: Archive weekly docs digest
         if: (github.event.schedule == '0 9 * * 0' || github.event.inputs.post_weekly_digest == 'true') && steps.gen.outputs.cve_only != 'true' && steps.gen.outputs.digest_docs_count != '0'
         run: |
