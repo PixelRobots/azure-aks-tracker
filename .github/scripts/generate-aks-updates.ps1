@@ -77,6 +77,12 @@ $EquivalentTermGroups = @(
     'Application Load Balancer Controller',
     'Azure Application Load Balancer Controller',
     'ALB Controller'
+  ),
+  @(
+    'AKS Application Network',
+    'Application Network',
+    'AKS App Net',
+    'App Net'
   )
 )
 
@@ -835,6 +841,9 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [
     elseif ($p -match '^kubernetes-fleet/(.+)') {
       return "https://learn.microsoft.com/azure/kubernetes-fleet/$($Matches[1])"
     }
+    elseif ($p -match '^application-network/(.+)') {
+      return "https://learn.microsoft.com/azure/aks/application-network/$($Matches[1])"
+    }
     else {
       # Generic fallback
       if ($p -notmatch '^azure/') { $p = "azure/$p" }
@@ -1136,6 +1145,88 @@ Please check your OpenAI quota/billing or consider switching to the Azure OpenAI
   }
   catch {
     Write-Warning "Failed to create rate-limit GitHub issue: $_"
+  }
+}
+
+function Get-ErrorDetailsText {
+  param([object]$ErrorRecord)
+
+  $parts = @()
+  if ($ErrorRecord.Exception -and $ErrorRecord.Exception.Message) {
+    $parts += $ErrorRecord.Exception.Message
+  }
+  if ($ErrorRecord.ErrorDetails -and $ErrorRecord.ErrorDetails.Message) {
+    $parts += $ErrorRecord.ErrorDetails.Message
+  }
+  if ($ErrorRecord.Exception -and $ErrorRecord.Exception.Response -and $ErrorRecord.Exception.Response.StatusCode) {
+    $parts += "HTTP status: $([int]$ErrorRecord.Exception.Response.StatusCode) $($ErrorRecord.Exception.Response.StatusCode)"
+  }
+
+  $details = ($parts | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique) -join "`n"
+  if ([string]::IsNullOrWhiteSpace($details)) { return "$ErrorRecord" }
+  return $details
+}
+
+# Creates a GitHub issue when a configured docs repository cannot be queried.
+# The workflow skips that repository and continues with the remaining sources.
+function New-GitHubIssueOnDocsRepositoryFailure {
+  param(
+    [hashtable]$RepoConfig,
+    [string]$Stage,
+    [string]$Uri,
+    [object]$ErrorRecord
+  )
+
+  try {
+    $ghRepo = $env:GITHUB_REPOSITORY
+    if (-not $ghRepo) { return }
+
+    $token = $env:GITHUB_TOKEN
+    if (-not $token) { return }
+    $issueHeaders = @{
+      "Authorization" = "Bearer $token"
+      "Accept"        = "application/vnd.github+json"
+      "User-Agent"    = "pixelrobots-aks-updates-pwsh"
+    }
+
+    $targetRepo = "$($RepoConfig.Owner)/$($RepoConfig.Repo)"
+    $title = "Docs repository unavailable: $targetRepo"
+    $details = Get-ErrorDetailsText -ErrorRecord $ErrorRecord
+    $runUrl = if ($env:GITHUB_SERVER_URL -and $env:GITHUB_REPOSITORY -and $env:GITHUB_RUN_ID) {
+      "$($env:GITHUB_SERVER_URL)/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)"
+    } else { '' }
+    $body = @"
+The docs update workflow could not read **$targetRepo** while processing **$($RepoConfig.DisplayName)**.
+
+**Stage:** $Stage
+**Path filter:** `$($RepoConfig.PathFilter)`
+**API:** `$Uri`
+
+**Error:**
+``````
+$details
+``````
+
+$(if ($runUrl) { "**Workflow run:** $runUrl" })
+
+The workflow skipped this repository and continued with the remaining sources.
+"@
+
+    $searchUri = "https://api.github.com/repos/$ghRepo/issues?state=open&per_page=100"
+    $existing = Invoke-RestMethod -Uri $searchUri -Headers $issueHeaders -Method GET -ErrorAction SilentlyContinue
+    if ($existing | Where-Object { $_.title -eq $title }) {
+      Log "Docs repository issue already open for $targetRepo - skipping duplicate creation."
+      return
+    }
+
+    $issueBody = @{ title = $title; body = $body } | ConvertTo-Json -Compress
+    Invoke-RestMethod -Uri "https://api.github.com/repos/$ghRepo/issues" `
+      -Headers $issueHeaders -Method POST `
+      -Body $issueBody -ContentType 'application/json' -ErrorAction Stop | Out-Null
+    Log "Created GitHub issue: $title"
+  }
+  catch {
+    Write-Warning "Failed to create docs repository GitHub issue: $_"
   }
 }
 
@@ -2548,27 +2639,43 @@ foreach ($repoConfig in $Repositories) {
   # Get recent pull requests for this repository
   $prs = @()
   $page = 1
-  do {
-    $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
-    $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
-    $relevantPRs = $response | Where-Object { 
-      $_.updated_at -gt $SINCE_ISO -and $_.merged_at 
-    }
-    $prs += $relevantPRs
-    $page++
-  } while ($response.Count -eq 100 -and $relevantPRs.Count -gt 0)
+  try {
+    do {
+      $uri = "https://api.github.com/repos/$Owner/$Repo/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=$page"
+      $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET -ErrorAction Stop
+      $relevantPRs = $response | Where-Object { 
+        $_.updated_at -gt $SINCE_ISO -and $_.merged_at 
+      }
+      $prs += $relevantPRs
+      $page++
+    } while ($response.Count -eq 100 -and $relevantPRs.Count -gt 0)
+  }
+  catch {
+    Write-Warning "Failed to list recent PRs for $Owner/$Repo`: $_"
+    New-GitHubIssueOnDocsRepositoryFailure -RepoConfig $repoConfig -Stage 'List recent pull requests' -Uri $uri -ErrorRecord $_
+    Log "  Skipping $DisplayName repository because recent PRs could not be listed."
+    continue
+  }
 
   Log "  Found $($prs.Count) recently updated PRs"
 
   # Get recent commits directly from main branch for this repository
   $commits = @()
   $page = 1
-  do {
-    $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=main&since=$SINCE_ISO&per_page=100&page=$page"
-    $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET
-    $commits += $response
-    $page++
-  } while ($response.Count -eq 100)
+  try {
+    do {
+      $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=main&since=$SINCE_ISO&per_page=100&page=$page"
+      $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET -ErrorAction Stop
+      $commits += $response
+      $page++
+    } while ($response.Count -eq 100)
+  }
+  catch {
+    Write-Warning "Failed to list recent commits for $Owner/$Repo`: $_"
+    New-GitHubIssueOnDocsRepositoryFailure -RepoConfig $repoConfig -Stage 'List recent commits' -Uri $uri -ErrorRecord $_
+    Log "  Continuing with PR data only for $DisplayName repository because recent commits could not be listed."
+    $commits = @()
+  }
 
   Log "  Found $($commits.Count) recent commits"
 
