@@ -27,6 +27,15 @@ $Repositories = @(
   },
   @{
     Owner = "MicrosoftDocs"
+    Repo = "azure-management-docs"
+    PathFilter = "^articles/azure-arc/kubernetes/"  # Only Azure Arc-enabled Kubernetes docs
+    DisplayName = "Arc K8s"
+    IconUrl = "https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg"
+    IconAlt = "Azure Arc-enabled Kubernetes"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/azure-arc/kubernetes/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
     Repo = "azure-docs"
     PathFilter = "^articles/application-gateway/for-containers/"  # Only App Gateway for Containers docs
     DisplayName = "AGC"
@@ -83,6 +92,12 @@ $EquivalentTermGroups = @(
     'Application Network',
     'AKS App Net',
     'App Net'
+  ),
+  @(
+    'Azure Arc-enabled Kubernetes',
+    'Azure Arc Kubernetes',
+    'Arc-enabled Kubernetes',
+    'Arc K8s'
   )
 )
 
@@ -720,11 +735,25 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
       label = 'Fleet'
     }
   }
+  elseif ($FilePath -match 'application-network') {
+    return @{
+      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
+      alt   = 'AKS Application Network'
+      label = 'App Net'
+    }
+  }
   elseif ($FilePath -match 'container-registry') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg'
       alt   = 'Azure Container Registry'
       label = 'ACR'
+    }
+  }
+  elseif ($FilePath -match 'azure-arc/kubernetes') {
+    return @{
+      url   = 'https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg'
+      alt   = 'Azure Arc-enabled Kubernetes'
+      label = 'Arc K8s'
     }
   }
   elseif ($FilePath -match 'application-gateway/for-containers') {
@@ -834,6 +863,9 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [
     # Different URL patterns for different repositories
     if ($RepoName -eq 'azure-management-docs' -and $p -match '^container-registry/(.+)') {
       return "https://learn.microsoft.com/azure/container-registry/$($Matches[1])"
+    }
+    elseif ($RepoName -eq 'azure-management-docs' -and $p -match '^azure-arc/kubernetes/(.+)') {
+      return "https://learn.microsoft.com/azure/azure-arc/kubernetes/$($Matches[1])"
     }
     elseif ($p -match '^aks/(.+)') {
       return "https://learn.microsoft.com/azure/aks/$($Matches[1])"
@@ -3808,14 +3840,14 @@ $html = @"
 
   <div class="aks-intro">
     <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Arc, Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). AKS everywhere! It also shows the last 5 release notes from AKS.</p>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). AKS everywhere! It also shows the last 5 release notes from AKS.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
 
     <p><strong>With this tracker, you can:</strong></p>
     <ul>
-      <li>Quickly scan meaningful AKS, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
+      <li>Quickly scan meaningful AKS, App Net, Arc K8s, AKS Arc, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
       <li>Search and browse CVE security data across AKS releases and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
     </ul>
@@ -3852,7 +3884,7 @@ $html = @"
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to AKS, ACR, AGC, and Fleet docs from the last 7 days.</div>
+      <div class="aks-docs-desc">Meaningful updates to AKS, App Net, Arc K8s, AKS Arc, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>
@@ -3976,7 +4008,7 @@ $digestDocsHtml = @"
   <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
     <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$digestDocsTitle</h2>
     <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#4b5563;">
-      The most meaningful Azure Kubernetes Service, AKS Arc, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. AKS everywhere! Summaries are AI-filtered to skip trivial edits.
+      The most meaningful Azure Kubernetes Service, AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Container Registry, Application Gateway for Containers, and Fleet Manager documentation changes from the last 7 days. AKS everywhere! Summaries are AI-filtered to skip trivial edits.
     </p>
     <p style="margin:0;font-size:13px;color:#059669;font-weight:600;">
       &#128202; Updates this week: $digestCountBreakdown
