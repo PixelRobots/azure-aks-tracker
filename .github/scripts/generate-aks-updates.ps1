@@ -3585,7 +3585,7 @@ function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
   }
 
   return @"
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+<div class="aks-weekly-digest" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
   <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
     <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$postTitle</h2>
     <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
@@ -3949,6 +3949,20 @@ foreach ($row in $sortedDocs) {
   $display = Get-DocDisplayName $file
   $title = "$(Escape-Html ($product + ' - ' + $display))"
   $prLink = $arr[0].pr_url
+  $kind = Get-SessionKind -items $arr -summary $summary
+  $kindEmoji = switch ($kind) {
+    "New" { "&#127381;" }
+    "Rework" { "&#9851;&#65039;" }
+    "Removal" { "&#128465;&#65039;" }
+    default { "&#10024;" }
+  }
+  $kindClass = switch ($kind) {
+    "New" { "aks-pill-kind aks-pill-new" }
+    "Rework" { "aks-pill-kind aks-pill-rework" }
+    "Removal" { "aks-pill-kind aks-pill-removal" }
+    default { "aks-pill-kind aks-pill-update" }
+  }
+  $kindPill = "<span class=""$kindClass"" style=""display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #3b0764; color: #f9fafb; border: 1px solid #2f3540; border-radius: 4px; font-size: 12px; font-weight: 500;"">$kindEmoji $(Escape-Html $kind)</span>"
 
   $li = @"
 <div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
@@ -3964,7 +3978,7 @@ foreach ($row in $sortedDocs) {
     <tr>
       <td style="padding: 8px 0;">
         <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">$category</span>
-        <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px; font-weight: 500;">$product</span>
+        $kindPill
         <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: $lastUpdated</span>
       </td>
     </tr>
@@ -3979,10 +3993,10 @@ foreach ($row in $sortedDocs) {
         <table cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td style="padding-right: 10px;">
-              <a href="$fileUrl" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
+              <a href="$fileUrl" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
             </td>
             <td>
-              <a href="$prLink" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+              <a href="$prLink" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
             </td>
           </tr>
         </table>
@@ -4004,7 +4018,7 @@ $digestCveTitle      = "AKS CVE Security Snapshot - Weekly Update ($weekRange)"
 
 # ── Docs-only digest ─────────────────────────────────────────────────────────
 $digestDocsHtml = @"
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+<div class="aks-weekly-digest" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
   <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
     <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$digestDocsTitle</h2>
     <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#4b5563;">
@@ -4036,7 +4050,7 @@ Log "Building CVE digest block..."
 $cveDigestBlock = Get-AksCveDigestHtml
 $digestCveHtml = if ($cveDigestBlock) {
   @"
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
+<div class="aks-weekly-digest" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;background-color:#f9fafb;">
   <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
     <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$digestCveTitle</h2>
     <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
