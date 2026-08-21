@@ -51,6 +51,15 @@ $Repositories = @(
     IconUrl = "https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg"
     IconAlt = "AKS Arc"
     DocsBaseUrl = "https://learn.microsoft.com/azure/aks/aksarc/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
+    Repo = "SupportArticles-docs"
+    PathFilter = "^support/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/.*\.md$"  # Only AKS support articles, excluding toc/media
+    DisplayName = "AKS Support"
+    IconUrl = "https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg"
+    IconAlt = "AKS Support Articles"
+    DocsBaseUrl = "https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/"
   }
 )
 
@@ -728,7 +737,14 @@ function Get-MeaningfulSignals {
 
 function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
   # Check file path first to distinguish between products in the same repo
-  if ($FilePath -match '/kubernetes-fleet/' -or $FilePath -match 'fleet') {
+  if ($RepoName -eq 'SupportArticles-docs' -and $FilePath -match '^support/azure/azure-kubernetes/') {
+    return @{
+      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
+      alt   = 'AKS Support Articles'
+      label = 'AKS Support'
+    }
+  }
+  elseif ($FilePath -match '/kubernetes-fleet/' -or $FilePath -match 'fleet') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-fleet-manager.svg'
       alt   = 'Kubernetes Fleet Manager'
@@ -857,6 +873,13 @@ function Escape-Html([string]$s) {
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [string]$Repo) {
+  if ($RepoName -eq 'SupportArticles-docs' -and $FilePath -match '^support/azure/azure-kubernetes/(.+?)\.md$') {
+    $slug = $Matches[1] -replace '\\', '/'
+    $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
+    $baseUrl = if ($repoConfig -and $repoConfig.DocsBaseUrl) { $repoConfig.DocsBaseUrl } else { 'https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/' }
+    return "$($baseUrl.TrimEnd('/'))/$slug"
+  }
+
   if ($FilePath -match '^articles/(.+?)\.md$') {
     $p = $Matches[1] -replace '\\', '/'
     

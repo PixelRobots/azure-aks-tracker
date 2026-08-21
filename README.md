@@ -12,7 +12,10 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
   Pulls the last 7 days of activity from multiple Microsoft documentation repositories:
   - `MicrosoftDocs/azure-aks-docs` (AKS and Fleet Manager)
   - `MicrosoftDocs/azure-management-docs` (Azure Container Registry)
+  - `MicrosoftDocs/azure-management-docs` (Azure Arc-enabled Kubernetes)
   - `MicrosoftDocs/azure-docs` (Application Gateway for Containers)
+  - `MicrosoftDocs/azure-stack-docs` (AKS Arc)
+  - `MicrosoftDocs/SupportArticles-docs` (AKS support and troubleshooting articles)
   
   Groups changes by page, filters trivial edits, and writes AI summaries with intelligent product categorization.
 
