@@ -105,6 +105,8 @@ The Action commits generated tracker HTML to `wordpress/aks-tracker-page.html`, 
 
 The workflow can still call the plugin's lightweight purge endpoint after each source HTML commit, but this is optional. If Krystal/Imunify360 blocks `/wp-json/...` automation, leave the purge token unset and rely on the direct SSH upload plus Cloudflare purge step.
 
+Manual workflow runs include an `ssh_upload_only` checkbox. Use it to upload the already-committed `wordpress/aks-tracker-page.html` and `wordpress/aks-cve-section.html` files to Krystal without regenerating content, committing changes, calling WordPress REST, or creating weekly posts.
+
 The plugin caches tracker page HTML for 5 minutes by default, while the CVE section stays cached for 6 hours. After using the plugin's **Run GitHub Action** button, the tracker page refreshes every 60 seconds for 15 minutes. Set the plugin's **Cache purge token** setting to the same random value stored in the GitHub Actions `WP_CACHE_PURGE_TOKEN` secret.
 For the weekly digest, the post is created with `status: "publish"` and the optional `categories: [<WP_WEEKLY_CATEGORY_ID>]`.
 
