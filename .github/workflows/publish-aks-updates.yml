@@ -190,6 +190,56 @@ jobs:
             echo "section_sha256=$(sha256sum wordpress/aks-cve-section.html | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Upload WordPress sources to Krystal over SSH
+        if: steps.gen.conclusion == 'success'
+        env:
+          KRYSTAL_HOST: ${{ secrets.KRYSTAL_HOST }}
+          KRYSTAL_PORT: ${{ secrets.KRYSTAL_PORT }}
+          KRYSTAL_USER: ${{ secrets.KRYSTAL_USER }}
+          KRYSTAL_SSH_KEY: ${{ secrets.KRYSTAL_SSH_KEY }}
+          KRYSTAL_REMOTE_DIR: ${{ secrets.KRYSTAL_REMOTE_DIR }}
+        run: |
+          if [ -z "${KRYSTAL_HOST:-}" ] || [ -z "${KRYSTAL_USER:-}" ] || [ -z "${KRYSTAL_SSH_KEY:-}" ] || [ -z "${KRYSTAL_REMOTE_DIR:-}" ]; then
+            echo "Krystal SSH secrets are incomplete - skipping SSH upload."
+            exit 0
+          fi
+
+          KRYSTAL_PORT="${KRYSTAL_PORT:-722}"
+
+          FILES_TO_UPLOAD=""
+          if [ -f wordpress/aks-tracker-page.html ]; then
+            FILES_TO_UPLOAD="$FILES_TO_UPLOAD wordpress/aks-tracker-page.html"
+          fi
+          if [ -f wordpress/aks-cve-section.html ]; then
+            FILES_TO_UPLOAD="$FILES_TO_UPLOAD wordpress/aks-cve-section.html"
+          fi
+
+          if [ -z "$FILES_TO_UPLOAD" ]; then
+            echo "No WordPress source files found - skipping SSH upload."
+            exit 0
+          fi
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KRYSTAL_SSH_KEY" > ~/.ssh/krystal_deploy_key
+          chmod 600 ~/.ssh/krystal_deploy_key
+
+          SSH_OPTS=(
+            -i ~/.ssh/krystal_deploy_key
+            -p "$KRYSTAL_PORT"
+            -o BatchMode=yes
+            -o StrictHostKeyChecking=accept-new
+          )
+          SCP_OPTS=(
+            -i ~/.ssh/krystal_deploy_key
+            -P "$KRYSTAL_PORT"
+            -o BatchMode=yes
+            -o StrictHostKeyChecking=accept-new
+          )
+
+          ssh "${SSH_OPTS[@]}" "$KRYSTAL_USER@$KRYSTAL_HOST" "mkdir -p '$KRYSTAL_REMOTE_DIR'"
+          scp "${SCP_OPTS[@]}" $FILES_TO_UPLOAD "$KRYSTAL_USER@$KRYSTAL_HOST:$KRYSTAL_REMOTE_DIR/"
+          echo "Uploaded WordPress source HTML to $KRYSTAL_HOST:$KRYSTAL_REMOTE_DIR"
+
       - name: Update WordPress page
         if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true'
         env:

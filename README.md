@@ -77,6 +77,11 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 | `WP_REST_PAGE_UPDATE`      | Optional: set to `true` to always update the tracker page via REST instead of plugin cache |
 | `WP_CACHE_PURGE_TOKEN`     | Shared secret used to purge/warm the plugin cache after committing generated HTML |
 | `WP_CACHE_PURGE_URL`       | Optional override for the plugin purge endpoint; defaults to `${WP_URL}/wp-json/aks-cve-tracker/v1/purge-cache` |
+| `KRYSTAL_HOST`             | Optional SSH host for uploading generated WordPress HTML directly to Krystal |
+| `KRYSTAL_PORT`             | Optional SSH port; defaults to `722` when unset |
+| `KRYSTAL_USER`             | Optional Krystal/cPanel SSH username |
+| `KRYSTAL_SSH_KEY`          | Optional private SSH key for the Krystal/cPanel account |
+| `KRYSTAL_REMOTE_DIR`       | Optional remote directory for uploaded HTML files, e.g. `/home/user/public_html/wp-content/uploads/aks-tracker` |
 | `OPENAI_API_KEY`           | Only if using OpenAI summaries (optional)        |
 | `AZURE_OPENAI_APIURI`      | Only if using Azure OpenAI (optional)            |
 | `AZURE_OPENAI_KEY`         | Only if using Azure OpenAI (optional)            |
@@ -96,7 +101,9 @@ You can change these in `.github/workflows/publish-aks-updates.yml`.
 
 ## WordPress rendering
 
-The Action commits generated tracker HTML to `wordpress/aks-tracker-page.html`, and the AKS CVE Tracker plugin renders that cached file on the WordPress page. After each source HTML commit, the workflow calls the plugin's lightweight purge endpoint and asks it to warm the latest GitHub Raw files. This avoids sending the full tracker page through WordPress REST while still keeping the live page fresh.
+The Action commits generated tracker HTML to `wordpress/aks-tracker-page.html`, and the AKS CVE Tracker plugin renders that cached file on the WordPress page. When the `KRYSTAL_*` SSH secrets are set, the workflow also uploads `aks-tracker-page.html` and `aks-cve-section.html` directly to the configured Krystal directory. Configure the plugin's local file path settings to those uploaded files so WordPress reads them from disk before falling back to GitHub Raw.
+
+The workflow can still call the plugin's lightweight purge endpoint after each source HTML commit, but this is optional. If Krystal/Imunify360 blocks `/wp-json/...` automation, leave the purge token unset and rely on the direct SSH upload plus Cloudflare purge step.
 
 The plugin caches tracker page HTML for 5 minutes by default, while the CVE section stays cached for 6 hours. After using the plugin's **Run GitHub Action** button, the tracker page refreshes every 60 seconds for 15 minutes. Set the plugin's **Cache purge token** setting to the same random value stored in the GitHub Actions `WP_CACHE_PURGE_TOKEN` secret.
 For the weekly digest, the post is created with `status: "publish"` and the optional `categories: [<WP_WEEKLY_CATEGORY_ID>]`.
