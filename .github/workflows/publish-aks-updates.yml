@@ -249,12 +249,11 @@ jobs:
           echo "Uploaded WordPress source HTML to $KRYSTAL_HOST:$KRYSTAL_REMOTE_DIR"
 
       - name: Update WordPress page
-        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && github.event.inputs.ssh_upload_only != 'true'
+        if: steps.gen.conclusion == 'success' && steps.gen.outputs.cve_only != 'true' && github.event.inputs.ssh_upload_only != 'true' && github.event.inputs.update_wordpress_page_via_rest == 'true'
         env:
-          WP_REST_PAGE_UPDATE: ${{ secrets.WP_REST_PAGE_UPDATE }}
           WP_REST_PAGE_UPDATE_INPUT: ${{ github.event.inputs.update_wordpress_page_via_rest == 'true' && 'true' || '' }}
         run: |
-          if [ "${WP_REST_PAGE_UPDATE:-}" != "true" ] && [ "${WP_REST_PAGE_UPDATE_INPUT:-}" != "true" ]; then
+          if [ "${WP_REST_PAGE_UPDATE_INPUT:-}" != "true" ]; then
             echo "Skipping WordPress REST page update. The AKS CVE Tracker plugin renders the page from wordpress/aks-tracker-page.html."
             exit 0
           fi
