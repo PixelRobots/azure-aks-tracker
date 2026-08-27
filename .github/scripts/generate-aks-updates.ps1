@@ -1075,6 +1075,108 @@ function Get-CommitFiles {
 # AI INIT (optional via PSAI)
 # =========================
 $PSAIReady = $false
+
+# PSAI's private Invoke-OAIBeta (as of 0.5.3) reads failed-response bodies via
+# $_.Exception.Response.GetResponseStream(), which only exists on the Windows
+# PowerShell HttpWebResponse type. On PS7/pwsh, Invoke-RestMethod's exception
+# carries a System.Net.Http.HttpResponseMessage instead, which has no such method,
+# so PSAI's own error handler throws "...does not contain a method named
+# 'GetResponseStream'" and swallows the real OpenAI error. Patch it in-place inside
+# the module's session state so the real API error surfaces instead.
+function Repair-PSAIResponseStreamBug {
+  $module = Get-Module PSAI
+  if (-not $module) { return }
+  # Must dot-source (not invoke with '&') so the redefinition persists in the
+  # module's session state for other PSAI functions to pick up.
+  . $module {
+    if (-not (Get-Command Invoke-OAIBeta -ErrorAction SilentlyContinue)) { return }
+    function Invoke-OAIBeta {
+      [CmdletBinding()]
+      param($Uri, $Method, $Body, $ContentType = 'application/json', $OutFile, [Switch]$NotOpenAIBeta)
+
+      $headers = @{ 'OpenAI-Beta' = 'assistants=v2'; 'Content-Type' = $ContentType }
+      if ($NotOpenAIBeta) { $headers.Remove('OpenAI-Beta') }
+
+      $Provider = Get-OAIProvider
+      $AzOAISecrets = Get-AzOAISecrets
+      switch ($Provider) {
+        'OpenAI' { $headers['Authorization'] = "Bearer $env:OpenAIKey" }
+        'AzureOpenAI' {
+          $headers['api-key'] = "$($AzOAISecrets.apiKEY)"
+          if (-not [string]::IsNullOrEmpty($AzOAISecrets.organizationId)) {
+            $headers['OpenAI-Organization'] = "$($AzOAISecrets.organizationId)"
+          }
+          else { $headers.Remove('OpenAI-Organization') }
+          if ($Body -isnot [System.IO.Stream]) {
+            if ($null -ne $Body -and $Body.Contains("model")) { $Body.model = $AzOAISecrets.deploymentName }
+          }
+          $Uri = $Uri -replace $baseUrl, ''
+          if ($Uri.EndsWith('/')) { $Uri = $Uri.Substring(0, $Uri.Length - 1) }
+          $separator = if ($Uri.Contains('?')) { '&' } else { '?' }
+          $Uri = "{0}/openai{1}{2}api-version={3}" -f $AzOAISecrets.apiURI, $Uri, $separator, $AzOAISecrets.apiVersion
+        }
+      }
+
+      $params = @{ Uri = $Uri; Method = $Method; Headers = $headers }
+      if ($Body) { $params['Body'] = if ($Body -is [System.IO.Stream]) { $Body } else { $Body | ConvertTo-Json -Depth 10 } }
+      if ($OutFile) { $params['OutFile'] = $OutFile }
+      Write-Verbose ($params | ConvertTo-Json -Depth 5)
+
+      if (Test-IsUnitTestingEnabled) {
+        Write-Host "Data saved. Use Get-UnitTestingData to retrieve the data."
+        $script:InvokeOAIUnitTestingData = @{
+          Uri = $Uri; Method = $Method; Headers = $headers.Clone(); Body = $Body
+          OAIProvider = Get-OAIProvider; ContentType = $ContentType; OutFile = $OutFile; NotOpenAIBeta = $NotOpenAIBeta
+        }
+        return
+      }
+
+      try {
+        Invoke-RestMethod @params
+      }
+      catch {
+        $targetError = $null
+        $message = $null
+        if ($Provider -eq 'OpenAI') {
+          if ($null -ne $_.ErrorDetails) { $message = $_.ErrorDetails.Message }
+          if ($null -ne $message -and (Test-JsonReplacement $message -ErrorAction SilentlyContinue)) {
+            try { $targetError = ($message | ConvertFrom-Json).error.message }
+            catch { $targetError = "Failed to parse OpenAI error JSON: $message" }
+          }
+          elseif ($null -ne $_.Exception.Response) {
+            try {
+              # Fixed: read via HttpResponseMessage.Content (PS7) with a fallback
+              # to the legacy HttpWebResponse.GetResponseStream() (Windows PowerShell).
+              $resp = $_.Exception.Response
+              $responseBody = if ($resp -is [System.Net.Http.HttpResponseMessage]) {
+                $resp.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+              }
+              else {
+                $reader = New-Object System.IO.StreamReader($resp.GetResponseStream())
+                $reader.ReadToEnd()
+              }
+              if ($responseBody | Test-JsonReplacement -ErrorAction SilentlyContinue) {
+                $targetError = ($responseBody | ConvertFrom-Json).error.message
+              }
+              else { $targetError = "Raw OpenAI response: $responseBody" }
+            }
+            catch { $targetError = "Unable to read HTTP error response: $_" }
+          }
+          else {
+            $fallbackMessage = if ($null -ne $message) { $message } else { $_.Exception.Message }
+            $targetError = "[{0}] - {1}" -f $Uri, $fallbackMessage
+          }
+        }
+        elseif ($Provider -eq 'AzureOpenAI') { $targetError = $_.Exception.Message }
+        else { $targetError = "Unhandled provider or unknown error: $($_.Exception.Message)" }
+
+        Write-Error "OpenAI API call failed: $targetError"
+        throw $targetError
+      }
+    }
+  }
+}
+
 function Initialize-AIProvider {
   param([ValidateSet('OpenAI', 'AzureOpenAI')][string]$Provider)
   try {
@@ -1082,6 +1184,7 @@ function Initialize-AIProvider {
       Install-Module PSAI -Scope CurrentUser -Force -ErrorAction Stop
     }
     Import-Module PSAI -ErrorAction Stop
+    Repair-PSAIResponseStreamBug
   }
   catch { Write-Warning "PSAI not available; skipping AI. $_"; return $false }
   switch ($Provider) {
