@@ -1203,6 +1203,62 @@ Please check your OpenAI quota/billing or consider switching to the Azure OpenAI
   }
 }
 
+# Creates a GitHub issue to alert on non-rate-limit AI failures (e.g. PSAI/provider errors)
+# so they don't silently fall back to an empty result set unnoticed.
+# Silently skips if GITHUB_REPOSITORY is unset or if an open issue with the same title
+# was created within the last 24 hours (to avoid flooding).
+function New-GitHubIssueOnAIFailure {
+  param(
+    [string]$Context,   # e.g. "docs" or "releases"
+    [string]$Details    # error message to include in the body
+  )
+  try {
+    $ghRepo = $env:GITHUB_REPOSITORY  # owner/repo
+    if (-not $ghRepo) { return }
+
+    $token = $env:GITHUB_TOKEN
+    if (-not $token) { return }
+    $issueHeaders = @{
+      "Authorization" = "Bearer $token"
+      "Accept"        = "application/vnd.github+json"
+      "User-Agent"    = "pixelrobots-aks-updates-pwsh"
+    }
+
+    $title = "⚠️ AI summaries ($Context) failed"
+    $runUrl = if ($env:GITHUB_SERVER_URL -and $env:GITHUB_REPOSITORY -and $env:GITHUB_RUN_ID) {
+      "$($env:GITHUB_SERVER_URL)/$($env:GITHUB_REPOSITORY)/actions/runs/$($env:GITHUB_RUN_ID)"
+    } else { '' }
+    $body = @"
+The workflow's AI summarization step failed while processing **$Context** (not a rate limit).
+
+**Error:**
+``````
+$Details
+``````
+$(if ($runUrl) { "**Workflow run:** $runUrl" })
+
+The workflow continued without AI-generated summaries for this section.
+"@
+
+    # Avoid flooding — skip if an open issue with this title already exists.
+    $searchUri = "https://api.github.com/repos/$ghRepo/issues?state=open&per_page=100"
+    $existing = Invoke-RestMethod -Uri $searchUri -Headers $issueHeaders -Method GET -ErrorAction SilentlyContinue
+    if ($existing | Where-Object { $_.title -eq $title }) {
+      Log "AI failure issue already open for $Context — skipping duplicate creation."
+      return
+    }
+
+    $issueBody = @{ title = $title; body = $body } | ConvertTo-Json -Compress
+    Invoke-RestMethod -Uri "https://api.github.com/repos/$ghRepo/issues" `
+      -Headers $issueHeaders -Method POST `
+      -Body $issueBody -ContentType 'application/json' -ErrorAction Stop | Out-Null
+    Log "Created GitHub issue: $title"
+  }
+  catch {
+    Write-Warning "Failed to create AI-failure GitHub issue: $_"
+  }
+}
+
 function Get-ErrorDetailsText {
   param([object]$ErrorRecord)
 
@@ -1535,6 +1591,7 @@ OUTPUT: JSON array of kept items:
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
     Write-Warning "AI summaries (docs) failed: $_"
+    New-GitHubIssueOnAIFailure -Context 'docs' -Details (Get-ErrorDetailsText -ErrorRecord $_)
     return @{ ordered = @(); byFile = @{} }
   }
   finally {
@@ -3361,6 +3418,7 @@ Output format requirements:
       return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
     Write-Warning "AI summaries (releases) failed: $_"
+    New-GitHubIssueOnAIFailure -Context 'releases' -Details (Get-ErrorDetailsText -ErrorRecord $_)
     return @{}
   }
   finally {

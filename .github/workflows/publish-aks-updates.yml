@@ -4,7 +4,7 @@ name: Publish AKS updates to WordPress (PowerShell)
 on:
   schedule:
     - cron: '0 */6 * * *'   # Every 6 hours for page updates
-    - cron: '0 6 * * *'     # Daily 06:00 UTC — includes VHD CVE refresh
+    - cron: '30 6 * * *'    # Daily 06:30 UTC — includes VHD CVE refresh (offset from the 6-hourly slot)
     - cron: '0 9 * * 0'     # Sunday 09:00 UTC for weekly digest
   workflow_dispatch:
     inputs:
@@ -64,8 +64,8 @@ jobs:
           CVE_ONLY: ${{ github.event.inputs.refresh_cve_data == 'true' && 'true' || '' }}
           # CVE_REFRESH_VHD=true fetches VHD node-image CVE data (26 OS types) in addition to
           # the standard container-image CVE data. When unset, only container-image CVEs are fetched.
-          # Enabled automatically on the daily 06:00 UTC schedule or when the checkbox is ticked.
-          CVE_REFRESH_VHD: ${{ (github.event.schedule == '0 6 * * *' || github.event.inputs.refresh_cve_data == 'true') && 'true' || '' }}
+          # Enabled automatically on the daily 06:30 UTC schedule or when the checkbox is ticked.
+          CVE_REFRESH_VHD: ${{ (github.event.schedule == '30 6 * * *' || github.event.inputs.refresh_cve_data == 'true') && 'true' || '' }}
         run: |
           ./.github/scripts/generate-aks-updates.ps1 1> out.json
           Write-Host "Generated out.json ($((Get-Item out.json).Length) bytes)"
