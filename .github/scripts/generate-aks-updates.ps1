@@ -161,8 +161,10 @@ $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 $DocsSummaryCachePath = 'docs-summary-cache.json'
 $DocsSummaryCacheMaxEntries = 2000
+$DocsSummaryCacheVersion = 'openai-responses-v1'
 $ReleasesSummaryCachePath = 'releases-summary-cache.json'
 $ReleasesSummaryCacheMaxEntries = 100
+$ReleasesSummaryCacheVersion = 'openai-responses-v1'
 # The CVE section is served as remote HTML by the WordPress plugin. Keep a guardrail,
 # but allow the intended 5-build VHD history to fit as CVE volume changes.
 $MaxCveSectionBytes = 2097152
@@ -238,6 +240,7 @@ function Get-DocsSummaryCacheKey([string]$FilePath, $Items) {
   $statuses = (($Items.status | Where-Object { $_ } | Select-Object -Unique | Sort-Object) -join '|')
   $patchSample = Get-GroupPatchSample -items $Items
   $payload = @(
+    $DocsSummaryCacheVersion
     $FilePath
     [string]$adds
     [string]$dels
@@ -261,11 +264,12 @@ function Load-DocsSummaryCache {
     foreach ($entry in @($parsed.entries)) {
       if (-not $entry.cache_key) { continue }
       $cache[[string]$entry.cache_key] = @{
-        file       = [string]$entry.file
-        summary    = [string]$entry.summary
-        category   = [string]$entry.category
-        score      = [double]$entry.score
-        cached_at  = if ($entry.cached_at) { [string]$entry.cached_at } else { '' }
+        cache_version = if ($entry.cache_version) { [string]$entry.cache_version } else { '' }
+        file          = [string]$entry.file
+        summary       = [string]$entry.summary
+        category      = [string]$entry.category
+        score         = [double]$entry.score
+        cached_at     = if ($entry.cached_at) { [string]$entry.cached_at } else { '' }
       }
     }
     Log "Loaded docs summary cache with $($cache.Count) entries."
@@ -283,12 +287,13 @@ function Save-DocsSummaryCache([hashtable]$Cache) {
       foreach ($key in $Cache.Keys) {
         $entry = $Cache[$key]
         [pscustomobject]@{
-          cache_key = $key
-          file      = $entry.file
-          summary   = $entry.summary
-          category  = $entry.category
-          score     = [double]$entry.score
-          cached_at = if ($entry.cached_at) { $entry.cached_at } else { (Get-Date -Format 'o') }
+          cache_key     = $key
+          cache_version = if ($entry.cache_version) { $entry.cache_version } else { $DocsSummaryCacheVersion }
+          file          = $entry.file
+          summary       = $entry.summary
+          category      = $entry.category
+          score         = [double]$entry.score
+          cached_at     = if ($entry.cached_at) { $entry.cached_at } else { (Get-Date -Format 'o') }
         }
       }
     ) | Sort-Object cached_at -Descending | Select-Object -First $DocsSummaryCacheMaxEntries
@@ -306,7 +311,7 @@ function Save-DocsSummaryCache([hashtable]$Cache) {
 }
 
 function Get-ReleaseCacheKey([long]$ReleaseId, [string]$Body) {
-  return (Get-TextSha256 "$ReleaseId|$Body")
+  return (Get-TextSha256 "$ReleasesSummaryCacheVersion|$ReleaseId|$Body")
 }
 
 function Load-ReleasesSummaryCache {
@@ -319,6 +324,7 @@ function Load-ReleasesSummaryCache {
     foreach ($entry in @($parsed.entries)) {
       if (-not $entry.cache_key) { continue }
       $cache[[string]$entry.cache_key] = @{
+        cache_version    = if ($entry.cache_version) { [string]$entry.cache_version } else { '' }
         release_id       = $entry.release_id
         summary          = [string]$entry.summary
         breaking_changes = @($entry.breaking_changes)
@@ -343,6 +349,7 @@ function Save-ReleasesSummaryCache([hashtable]$Cache) {
         $entry = $Cache[$key]
         [pscustomobject]@{
           cache_key        = $key
+          cache_version    = if ($entry.cache_version) { $entry.cache_version } else { $ReleasesSummaryCacheVersion }
           release_id       = $entry.release_id
           summary          = $entry.summary
           breaking_changes = $entry.breaking_changes
@@ -3419,11 +3426,12 @@ foreach ($item in @($finalResults.ordered)) {
   if (-not $finalResults.byFile.ContainsKey($file)) { continue }
   $entry = $finalResults.byFile[$file]
   $docsSummaryCache[$groupCacheKeys[$file]] = @{
-    file      = $file
-    summary   = $entry.summary
-    category  = $entry.category
-    score     = [double]$entry.score
-    cached_at = (Get-Date -Format 'o')
+    cache_version = $DocsSummaryCacheVersion
+    file          = $file
+    summary       = $entry.summary
+    category      = $entry.category
+    score         = [double]$entry.score
+    cached_at     = (Get-Date -Format 'o')
   }
 }
 
@@ -3672,6 +3680,7 @@ if ($PreferProvider -and $uncachedReleases.Count -gt 0) {
       $releaseSummaries[$r.id] = $fresh
       $cacheKey = Get-ReleaseCacheKey -ReleaseId $r.id -Body ($r.body ?? '')
       $releasesSummaryCache[$cacheKey] = @{
+        cache_version    = $ReleasesSummaryCacheVersion
         release_id       = $r.id
         summary          = $fresh.summary
         breaking_changes = $fresh.breaking_changes
