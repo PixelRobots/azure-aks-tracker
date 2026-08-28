@@ -1381,6 +1381,116 @@ function Get-ErrorDetailsText {
   return $details
 }
 
+function Get-OpenAIErrorText {
+  param([object]$ErrorRecord)
+
+  $message = $null
+  if ($ErrorRecord.ErrorDetails -and $ErrorRecord.ErrorDetails.Message) {
+    $message = $ErrorRecord.ErrorDetails.Message
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($message)) {
+    try {
+      $parsed = $message | ConvertFrom-Json -ErrorAction Stop
+      if ($parsed.error -and $parsed.error.message) { return $parsed.error.message }
+    }
+    catch { }
+  }
+
+  $parts = @()
+  if (-not [string]::IsNullOrWhiteSpace($message)) { $parts += $message }
+  if ($ErrorRecord.Exception -and $ErrorRecord.Exception.Message) { $parts += $ErrorRecord.Exception.Message }
+  if ($ErrorRecord.Exception -and $ErrorRecord.Exception.Response -and $ErrorRecord.Exception.Response.StatusCode) {
+    $parts += "HTTP status: $([int]$ErrorRecord.Exception.Response.StatusCode) $($ErrorRecord.Exception.Response.StatusCode)"
+  }
+
+  $details = ($parts | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique) -join "`n"
+  if ([string]::IsNullOrWhiteSpace($details)) { return "$ErrorRecord" }
+  return $details
+}
+
+function Get-OpenAIResponseText {
+  param([object]$Response)
+
+  if ($Response.PSObject.Properties['output_text'] -and -not [string]::IsNullOrWhiteSpace($Response.output_text)) {
+    return [string]$Response.output_text
+  }
+
+  $parts = @()
+  foreach ($item in @($Response.output)) {
+    foreach ($content in @($item.content)) {
+      if ($content.type -eq 'output_text' -and $content.text) {
+        if ($content.text -is [string]) { $parts += $content.text }
+        elseif ($content.text.value) { $parts += $content.text.value }
+      }
+      elseif ($content.text -is [string]) {
+        $parts += $content.text
+      }
+      elseif ($content.text -and $content.text.value) {
+        $parts += $content.text.value
+      }
+    }
+  }
+
+  return (($parts | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) -join "`n")
+}
+
+function Invoke-OpenAIResponsesText {
+  param(
+    [string]$Instructions,
+    [string]$InputText,
+    [string]$Model = "gpt-4o-mini",
+    [int]$MaxOutputTokens = 4096,
+    [double]$Temperature = 0.05,
+    [string]$VectorStoreId
+  )
+
+  if (-not $env:OpenAIKey) { throw "OpenAIKey not set" }
+
+  $body = @{
+    model             = $Model
+    instructions      = $Instructions
+    input             = $InputText
+    max_output_tokens = $MaxOutputTokens
+    temperature       = $Temperature
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($VectorStoreId)) {
+    $body['tools'] = @(
+      @{
+        type             = 'file_search'
+        vector_store_ids = @($VectorStoreId)
+        max_num_results  = 20
+      }
+    )
+  }
+
+  $headers = @{
+    "Authorization" = "Bearer $env:OpenAIKey"
+    "Content-Type"  = "application/json"
+  }
+
+  try {
+    $response = Invoke-RestMethod -Uri "https://api.openai.com/v1/responses" `
+      -Method POST -Headers $headers `
+      -Body ($body | ConvertTo-Json -Depth 12 -Compress) `
+      -TimeoutSec 180 -ErrorAction Stop
+
+    if ($response.status -and $response.status -notin @('completed', 'incomplete')) {
+      $err = if ($response.error -and $response.error.message) { $response.error.message } else { "Responses API status: $($response.status)" }
+      throw $err
+    }
+
+    $text = Get-OpenAIResponseText -Response $response
+    if ([string]::IsNullOrWhiteSpace($text)) { throw "Responses API returned no output text" }
+    return $text
+  }
+  catch {
+    $details = Get-OpenAIErrorText -ErrorRecord $_
+    throw "OpenAI Responses API call failed: $details"
+  }
+}
+
 # Creates a GitHub issue when a configured docs repository cannot be queried.
 # The workflow skips that repository and continues with the remaining sources.
 function New-GitHubIssueOnDocsRepositoryFailure {
@@ -1570,9 +1680,13 @@ Rules: plain strings only, 2-5 items per list, never fabricate content not in th
 }
 
 # ===== Enhanced Docs AI with SELECTIVE FILTERING =====
-function Get-PerFileSummariesViaAssistant {
+function Get-PerFileSummariesViaOpenAIResponses {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{ ordered = @(); byFile = @{} } }
+  if ((Get-OAIProvider) -ne 'OpenAI') {
+    Write-Warning "Responses API migration currently supports the OpenAI provider only; falling back to GitHub Models for docs."
+    return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+  }
   try {
     Log "Uploading JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
@@ -1636,31 +1750,14 @@ OUTPUT: JSON array of kept items:
 ]
 "@
 
-    $assistant = New-OAIAssistant `
-      -Name "AKS-Docs-SelectiveFilter" `
+    $userMsg = "Use the attached file_search vector store containing the uploaded JSON input. Apply selective filtering using the guidelines provided. Be inclusive rather than exclusive - keep changes that have technical value or substance. Return ONLY the JSON array."
+    $last = Invoke-OpenAIResponsesText `
       -Instructions $instructions `
-      -Tools @{ type = 'file_search' } `
-      -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
-      -Model $Model
-
-    $userMsg = "Apply selective filtering using the guidelines provided. Be inclusive rather than exclusive - keep changes that have technical value or substance. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 4096 -Temperature 0.05
-    $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
-
-    if ($run.status -ne 'completed') {
-      $errCode = if ($run.last_error -and $run.last_error.code -and $run.last_error.message) { " ($($run.last_error.code): $($run.last_error.message))" } else { '' }
-      throw "Docs assistant run did not complete (status: $($run.status))$errCode"
-    }
-
-    # Filter to assistant messages only — a failed run leaves only the user message in the thread,
-    # which would cause the JSON regex to match against the prompt instead of a real response.
-    $messages = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 10).data
-    $assistantMsg = $messages | Where-Object { $_.role -eq 'assistant' } | Select-Object -First 1
-    if (-not $assistantMsg) {
-      Log "AI: No assistant reply found in thread — falling back to GitHub Models."
-      return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
-    }
-    $last = $assistantMsg.content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
+      -InputText $userMsg `
+      -Model $Model `
+      -MaxOutputTokens 4096 `
+      -Temperature 0.05 `
+      -VectorStoreId $vs.id
 
     # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
     $clean = Remove-AIResponseArtifacts $last
@@ -1720,7 +1817,7 @@ function Summarize-ModifiedPatch {
   }
 
   # If AI available, do a tiny targeted run
-  if ($PSAIReady -and $PatchSample) {
+  if ($PSAIReady -and ((Get-OAIProvider) -eq 'OpenAI') -and $PatchSample) {
     try {
       $instructions = @"
 Summarize documentation changes for a CHANGELOG card. Focus ONLY on user-impacting changes.
@@ -1739,7 +1836,6 @@ Rules:
 - If only trivial changes detected, say "Minor documentation maintenance updates"
 "@
 
-      $assistant = New-OAIAssistant -Name "AKS-Doc-SelectiveSummarizer" -Instructions $instructions -Model $Model
       $content = @"
 File: $FilePath
 
@@ -1749,9 +1845,12 @@ Subjects:
 Patch excerpt:
 $PatchSample
 "@
-      $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $content }) } -MaxCompletionTokens 220 -Temperature 0.1
-      $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
-      $text = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 1).data[0].content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
+      $text = Invoke-OpenAIResponsesText `
+        -Instructions $instructions `
+        -InputText $content `
+        -Model $Model `
+        -MaxOutputTokens 220 `
+        -Temperature 0.1
       $summary = (($text -replace '\s+', ' ').Trim())
       if (-not (Test-BadDocsSummary $summary)) {
         return $summary
@@ -3098,7 +3197,7 @@ if ($uncachedGroups.Keys.Count -gt 0) {
 
   $freshVerdicts = @{ ordered = @(); byFile = @{} }
   if ($PreferProvider) {
-    $freshVerdicts = Get-PerFileSummariesViaAssistant -JsonPath $aiJsonPath
+    $freshVerdicts = Get-PerFileSummariesViaOpenAIResponses -JsonPath $aiJsonPath
   }
   else {
     Log "AI disabled (no provider env configured)."
@@ -3409,9 +3508,13 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   }
 }
 
-function Get-ReleaseSummariesViaAssistant {
+function Get-ReleaseSummariesViaOpenAIResponses {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{} }
+  if ((Get-OAIProvider) -ne 'OpenAI') {
+    Write-Warning "Responses API migration currently supports the OpenAI provider only; falling back to GitHub Models for releases."
+    return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
+  }
   try {
     Log "Uploading Releases JSON to AI provider..."
     $file = Invoke-OAIUploadFile -Path $JsonPath -Purpose assistants -ErrorAction Stop
@@ -3466,31 +3569,14 @@ Output format requirements:
 - Ensure JSON is valid and contains all three arrays.
 "@
 
-    $assistant = New-OAIAssistant `
-      -Name "AKS-Releases-Summarizer" `
+    $userMsg = "Use the attached file_search vector store containing the uploaded release JSON input. Summarize each release by ID. Return ONLY the JSON array."
+    $last = Invoke-OpenAIResponsesText `
       -Instructions $instructions `
-      -Tools @{ type = 'file_search' } `
-      -ToolResources @{ file_search = @{ vector_store_ids = @($vs.id) } } `
-      -Model $Model
-
-    $userMsg = "Summarize each release by ID. Return ONLY the JSON array."
-    $run = New-OAIThreadAndRun -AssistantId $assistant.id -Thread @{ messages = @(@{ role = 'user'; content = $userMsg }) } -MaxCompletionTokens 3000 -Temperature 0.2
-    $run = Wait-OAIOnRun -Run $run -Thread @{ id = $run.thread_id }
-
-    if ($run.status -ne 'completed') {
-      $errCode = if ($run.last_error -and $run.last_error.code -and $run.last_error.message) { " ($($run.last_error.code): $($run.last_error.message))" } else { '' }
-      throw "Releases assistant run did not complete (status: $($run.status))$errCode"
-    }
-
-    # Filter to assistant messages only — a failed run leaves only the user message in the thread,
-    # which would cause the JSON regex to match against the prompt instead of a real response.
-    $messages = (Get-OAIMessage -ThreadId $run.thread_id -Order desc -Limit 10).data
-    $assistantMsg = $messages | Where-Object { $_.role -eq 'assistant' } | Select-Object -First 1
-    if (-not $assistantMsg) {
-      Log "AI (releases): No assistant reply found in thread — falling back to GitHub Models."
-      return Get-ReleaseSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
-    }
-    $last = $assistantMsg.content | Where-Object { $_.type -eq 'text' } | ForEach-Object { $_.text.value } | Out-String
+      -InputText $userMsg `
+      -Model $Model `
+      -MaxOutputTokens 3000 `
+      -Temperature 0.2 `
+      -VectorStoreId $vs.id
 
     # Strip markdown code fences and OpenAI citation annotations (e.g. 【4:0†source.json】)
     $clean = Remove-AIResponseArtifacts $last
@@ -3576,7 +3662,7 @@ if ($PreferProvider -and $uncachedReleases.Count -gt 0) {
   $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding UTF8
 
   Log "Building AI summaries for $($uncachedReleases.Count) uncached AKS release(s)..."
-  $freshReleaseSummaries = Get-ReleaseSummariesViaAssistant -JsonPath $relJsonPath
+  $freshReleaseSummaries = Get-ReleaseSummariesViaOpenAIResponses -JsonPath $relJsonPath
   Log "Release summary generation complete."
 
   # Merge fresh results into the combined map and update the cache
