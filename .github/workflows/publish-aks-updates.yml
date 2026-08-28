@@ -28,6 +28,11 @@ on:
         required: false
         type: boolean
         default: false
+      refresh_ai_cache_days:
+        description: 'Force-refresh AI cache entries newer than this many days (0 disables)'
+        required: false
+        type: string
+        default: '0'
 
 permissions:
   contents: write  # Allow pushing archive files back to repository
@@ -59,6 +64,7 @@ jobs:
           AZURE_OPENAI_KEY:          ${{ secrets.AZURE_OPENAI_KEY }}
           AZURE_OPENAI_API_VERSION:  ${{ secrets.AZURE_OPENAI_API_VERSION }}
           AZURE_OPENAI_DEPLOYMENT:   ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          AI_REFRESH_CACHE_DAYS: ${{ github.event.inputs.refresh_ai_cache_days || '0' }}
           # CVE_ONLY=true skips GitHub/docs/AI fetch and regenerates only the CVE section.
           # Enabled when the refresh_cve_data checkbox is ticked manually.
           CVE_ONLY: ${{ github.event.inputs.refresh_cve_data == 'true' && 'true' || '' }}

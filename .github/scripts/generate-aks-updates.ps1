@@ -169,6 +169,16 @@ $ReleasesSummaryCacheVersion = 'openai-responses-v1'
 # but allow the intended 5-build VHD history to fit as CVE volume changes.
 $MaxCveSectionBytes = 2097152
 
+$AIRefreshCacheDays = 0
+if (-not [string]::IsNullOrWhiteSpace($env:AI_REFRESH_CACHE_DAYS)) {
+  try { $AIRefreshCacheDays = [Math]::Max(0, [int]$env:AI_REFRESH_CACHE_DAYS) }
+  catch { Write-Warning "Invalid AI_REFRESH_CACHE_DAYS '$($env:AI_REFRESH_CACHE_DAYS)' - using 0." }
+}
+$AIRefreshCacheCutoff = if ($AIRefreshCacheDays -gt 0) { [DateTime]::UtcNow.AddDays(-$AIRefreshCacheDays) } else { $null }
+if ($AIRefreshCacheCutoff) {
+  Write-Host "[$(Get-Date -Format HH:mm:ss)] AI cache refresh requested for entries cached since $($AIRefreshCacheCutoff.ToString('o'))."
+}
+
 function Get-PullRequestFiles {
   param([int]$prNumber, [string]$Owner, [string]$Repo)
   $uri = "https://api.github.com/repos/$Owner/$Repo/pulls/$prNumber/files"
@@ -312,6 +322,21 @@ function Save-DocsSummaryCache([hashtable]$Cache) {
 
 function Get-ReleaseCacheKey([long]$ReleaseId, [string]$Body) {
   return (Get-TextSha256 "$ReleasesSummaryCacheVersion|$ReleaseId|$Body")
+}
+
+function Test-ShouldRefreshAIEntry {
+  param([hashtable]$Entry)
+
+  if (-not $AIRefreshCacheCutoff) { return $false }
+  if (-not $Entry -or [string]::IsNullOrWhiteSpace($Entry.cached_at)) { return $false }
+
+  try {
+    $cachedAt = [DateTime]::Parse($Entry.cached_at).ToUniversalTime()
+    return ($cachedAt -ge $AIRefreshCacheCutoff)
+  }
+  catch {
+    return $false
+  }
 }
 
 function Load-ReleasesSummaryCache {
@@ -3152,6 +3177,11 @@ foreach ($k in $filteredGroups.Keys) {
   $groupCacheKeys[$k] = $cacheKey
   if ($docsSummaryCache.ContainsKey($cacheKey)) {
     $entry = $docsSummaryCache[$cacheKey]
+    if (Test-ShouldRefreshAIEntry -Entry $entry) {
+      Log "Docs summary cache refresh requested for $k (cached_at: $($entry.cached_at))."
+      $uncachedGroups[$k] = $filteredGroups[$k]
+      continue
+    }
     $cachedItem = [pscustomobject]@{
       file     = $k
       summary  = $entry.summary
@@ -3644,7 +3674,14 @@ $uncachedReleases = @()
 foreach ($r in $releases) {
   $cacheKey = Get-ReleaseCacheKey -ReleaseId $r.id -Body ($r.body ?? '')
   if ($releasesSummaryCache.ContainsKey($cacheKey)) {
-    $releaseSummaries[$r.id] = $releasesSummaryCache[$cacheKey]
+    $entry = $releasesSummaryCache[$cacheKey]
+    if (Test-ShouldRefreshAIEntry -Entry $entry) {
+      Log "Releases summary cache refresh requested for release $($r.id) (cached_at: $($entry.cached_at))."
+      $uncachedReleases += $r
+    }
+    else {
+      $releaseSummaries[$r.id] = $entry
+    }
   } else {
     $uncachedReleases += $r
   }
