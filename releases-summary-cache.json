@@ -1,41 +1,24 @@
 {
-  "generated_at": "2026-08-28T09:04:33.0412457+00:00",
+  "generated_at": "2026-09-01T00:24:22.1071375+00:00",
   "entries": [
     {
-      "cache_key": "537e41c5049cf0f54cedb08117c302ef088a2b87d416c7cabb4bb4cf7d55730d",
+      "cache_key": "b0dd9813fed0af7bab4949bccb614e965fb03750959db1524d759699813ebebf",
       "cache_version": "openai-responses-v1",
-      "release_id": 316503076,
-      "summary": "This release addresses a critical vulnerability and includes several announcements.",
-      "breaking_changes": [],
-      "key_features": [],
+      "release_id": 380035841,
+      "summary": "AppNet is now in public preview with several updates and bug fixes.",
+      "breaking_changes": [
+        "AppNet 1.0, 1.1, and 1.2 versions retired.",
+        "Moving AppNet resources across resource groups is now blocked."
+      ],
+      "key_features": [
+        "AppNet available in more Azure regions.",
+        "AppNet 1.5 updated to Istio 1.30.3."
+      ],
       "good_to_know": [
-        "Mitigation for CVE-2026-31431 is globally deployed in specific node image versions"
+        "Cluster prerequisites validated at member-join time.",
+        "Fixed issues with member updates and version upgrades."
       ],
-      "cached_at": "2026-08-28T09:04:33.0394059+00:00"
-    },
-    {
-      "cache_key": "28203efa4112a13cb4b4ea2aa845f7f85db5082f1da9f66798b578527a81e6b1",
-      "cache_version": "openai-responses-v1",
-      "release_id": 334647399,
-      "summary": "This release includes updates on vulnerabilities and the retirement of certain features.",
-      "breaking_changes": [
-        "Windows Server Annual Channel for Containers retired on May 15, 2026"
-      ],
-      "key_features": [],
-      "good_to_know": [],
-      "cached_at": "2026-08-28T09:04:33.0392621+00:00"
-    },
-    {
-      "cache_key": "4228c5a0590fbb4e50ff735a5bfcacf1fbffccb6a912118b82a902cd0a343f30",
-      "cache_version": "openai-responses-v1",
-      "release_id": 344935277,
-      "summary": "This release extends the retirement of Windows Server 2022 and introduces several component updates.",
-      "breaking_changes": [
-        "Windows Server 2022 will no longer receive new node images after June 30, 2028"
-      ],
-      "key_features": [],
-      "good_to_know": [],
-      "cached_at": "2026-08-28T09:04:33.0391088+00:00"
+      "cached_at": "2026-09-01T00:24:22.1050500+00:00"
     },
     {
       "cache_key": "548e2bff9b4f07a22d3821be4ecc5db188ac1e76f3477bacd7decbc7ea4efefe",
@@ -52,7 +35,31 @@
         "Kubernetes patch versions 1.36.2, 1.35.6, 1.34.9, and 1.33.13 are available"
       ],
       "good_to_know": [],
-      "cached_at": "2026-08-28T09:04:33.0389526+00:00"
+      "cached_at": "08/28/2026 09:04:33"
+    },
+    {
+      "cache_key": "537e41c5049cf0f54cedb08117c302ef088a2b87d416c7cabb4bb4cf7d55730d",
+      "cache_version": "openai-responses-v1",
+      "release_id": 316503076,
+      "summary": "This release addresses a critical vulnerability and includes several announcements.",
+      "breaking_changes": [],
+      "key_features": [],
+      "good_to_know": [
+        "Mitigation for CVE-2026-31431 is globally deployed in specific node image versions"
+      ],
+      "cached_at": "08/28/2026 09:04:33"
+    },
+    {
+      "cache_key": "28203efa4112a13cb4b4ea2aa845f7f85db5082f1da9f66798b578527a81e6b1",
+      "cache_version": "openai-responses-v1",
+      "release_id": 334647399,
+      "summary": "This release includes updates on vulnerabilities and the retirement of certain features.",
+      "breaking_changes": [
+        "Windows Server Annual Channel for Containers retired on May 15, 2026"
+      ],
+      "key_features": [],
+      "good_to_know": [],
+      "cached_at": "08/28/2026 09:04:33"
     },
     {
       "cache_key": "c4ca2216fba15c88e45f4a0077364388b9c9d9edf0c51b814267ac078ec98f64",
@@ -68,7 +75,19 @@
         "Encryption in Transit for Azure File CSI driver is now available"
       ],
       "good_to_know": [],
-      "cached_at": "2026-08-28T09:04:33.0387383+00:00"
+      "cached_at": "08/28/2026 09:04:33"
+    },
+    {
+      "cache_key": "4228c5a0590fbb4e50ff735a5bfcacf1fbffccb6a912118b82a902cd0a343f30",
+      "cache_version": "openai-responses-v1",
+      "release_id": 344935277,
+      "summary": "This release extends the retirement of Windows Server 2022 and introduces several component updates.",
+      "breaking_changes": [
+        "Windows Server 2022 will no longer receive new node images after June 30, 2028"
+      ],
+      "key_features": [],
+      "good_to_know": [],
+      "cached_at": "08/28/2026 09:04:33"
     },
     {
       "cache_key": "5dff5934eecdbec7f728bff359874b03430e950902d482bf10381359a6e27f5c",
@@ -227,6 +246,26 @@
       "cached_at": "06/26/2026 00:49:21"
     },
     {
+      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
+      "cache_version": "openai-responses-v1",
+      "release_id": 334647399,
+      "summary": "This release includes deprecations and updates for various components in AKS.",
+      "breaking_changes": [
+        "Istio-based service mesh add-on revision asm-1-27 deprecated",
+        "Windows Server Annual Channel for Containers retired",
+        "Windows Server 2019 retired and no longer supported"
+      ],
+      "key_features": [
+        "Managed system node pools are now generally available",
+        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
+      ],
+      "good_to_know": [
+        "Migrate Windows Server Annual Channel node pools to LTSC",
+        "Transition from Flatcar Container Linux for AKS by June 2026"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
       "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
       "cache_version": "openai-responses-v1",
       "release_id": 316503076,
@@ -240,6 +279,24 @@
       ],
       "good_to_know": [
         "Existing nodes not patched in place, upgrade required",
+        "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
+      "cache_version": "openai-responses-v1",
+      "release_id": 295914225,
+      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
+      "breaking_changes": [
+        "Flatcar Container Linux support ends on June 8, 2026"
+      ],
+      "key_features": [
+        "Expanded GPU support for Azure Linux",
+        "New Kubernetes version 1.35 now available"
+      ],
+      "good_to_know": [
+        "Transition to a supported alternative for Flatcar",
         "Monitor release status by regions"
       ],
       "cached_at": "06/23/2026 18:53:38"
@@ -277,44 +334,6 @@
       "good_to_know": [
         "Transition to Windows Server 2022+ by retirement date",
         "Kubernetes version 1.35 is rolling out"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
-      "cache_version": "openai-responses-v1",
-      "release_id": 334647399,
-      "summary": "This release includes deprecations and updates for various components in AKS.",
-      "breaking_changes": [
-        "Istio-based service mesh add-on revision asm-1-27 deprecated",
-        "Windows Server Annual Channel for Containers retired",
-        "Windows Server 2019 retired and no longer supported"
-      ],
-      "key_features": [
-        "Managed system node pools are now generally available",
-        "New Kubernetes patch versions available: 1.35.2, 1.35.3"
-      ],
-      "good_to_know": [
-        "Migrate Windows Server Annual Channel node pools to LTSC",
-        "Transition from Flatcar Container Linux for AKS by June 2026"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
-      "cache_version": "openai-responses-v1",
-      "release_id": 295914225,
-      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
-      "breaking_changes": [
-        "Flatcar Container Linux support ends on June 8, 2026"
-      ],
-      "key_features": [
-        "Expanded GPU support for Azure Linux",
-        "New Kubernetes version 1.35 now available"
-      ],
-      "good_to_know": [
-        "Transition to a supported alternative for Flatcar",
-        "Monitor release status by regions"
       ],
       "cached_at": "06/23/2026 18:53:38"
     }
