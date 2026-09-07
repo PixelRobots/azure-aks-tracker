@@ -6,6 +6,8 @@
 # =========================
 
 # Repository configuration - easily extensible for more MS Docs sites
+$ArcHybridAksIconUrl = "https://az-icons.com/images/arc-kubernetes/icon.svg"
+
 $Repositories = @(
   @{
     Owner = "MicrosoftDocs"
@@ -30,7 +32,7 @@ $Repositories = @(
     Repo = "azure-management-docs"
     PathFilter = "^articles/azure-arc/kubernetes/"  # Only Azure Arc-enabled Kubernetes docs
     DisplayName = "Arc K8s"
-    IconUrl = "https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg"
+    IconUrl = $ArcHybridAksIconUrl
     IconAlt = "Azure Arc-enabled Kubernetes"
     DocsBaseUrl = "https://learn.microsoft.com/azure/azure-arc/kubernetes/"
   },
@@ -45,10 +47,10 @@ $Repositories = @(
   },
   @{
     Owner = "MicrosoftDocs"
-    Repo = "azure-stack-docs"
-    PathFilter = "^AKS-Arc/"  # Only AKS Arc docs
+    Repo = "azure-aks-docs"
+    PathFilter = "^articles/aks-hybrid-edge/"  # Only AKS Hybrid and Edge docs
     DisplayName = "AKS Arc"
-    IconUrl = "https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg"
+    IconUrl = $ArcHybridAksIconUrl
     IconAlt = "AKS Arc"
     DocsBaseUrl = "https://learn.microsoft.com/azure/aks/aksarc/"
   },
@@ -320,7 +322,7 @@ function Save-DocsSummaryCache([hashtable]$Cache) {
   }
 }
 
-function Get-ReleaseCacheKey([long]$ReleaseId, [string]$Body) {
+function Get-ReleaseCacheKey([string]$ReleaseId, [string]$Body) {
   return (Get-TextSha256 "$ReleasesSummaryCacheVersion|$ReleaseId|$Body")
 }
 
@@ -769,7 +771,14 @@ function Get-MeaningfulSignals {
 
 function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
   # Check file path first to distinguish between products in the same repo
-  if ($RepoName -eq 'SupportArticles-docs' -and $FilePath -match '^support/azure/azure-kubernetes/') {
+  if ($RepoName -eq 'AKS' -and $FilePath -match '^appnet-notes/') {
+    return @{
+      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
+      alt   = 'AKS Application Network'
+      label = 'App Net'
+    }
+  }
+  elseif ($RepoName -eq 'SupportArticles-docs' -and $FilePath -match '^support/azure/azure-kubernetes/') {
     return @{
       url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
       alt   = 'AKS Support Articles'
@@ -799,9 +808,16 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
   }
   elseif ($FilePath -match 'azure-arc/kubernetes') {
     return @{
-      url   = 'https://www.azureicons.com/static/images/icons/Other/svg/Arc-Kubernetes.svg'
+      url   = $ArcHybridAksIconUrl
       alt   = 'Azure Arc-enabled Kubernetes'
       label = 'Arc K8s'
+    }
+  }
+  elseif ($FilePath -match '^articles/aks-hybrid-edge/') {
+    return @{
+      url   = $ArcHybridAksIconUrl
+      alt   = 'AKS Hybrid and Edge'
+      label = 'AKS Arc'
     }
   }
   elseif ($FilePath -match 'application-gateway/for-containers') {
@@ -889,8 +905,8 @@ function Get-MarkdownLead([string]$md) {
   return ""
 }
 
-function Summarize-NewMarkdown([string]$path, [string]$Owner, [string]$Repo) {
-  $raw = Get-GitHubContentBase64 -path $path -Owner $Owner -Repo $Repo
+function Summarize-NewMarkdown([string]$path, [string]$Owner, [string]$Repo, [string]$Ref = "main") {
+  $raw = Get-GitHubContentBase64 -path $path -Owner $Owner -Repo $Repo -ref $Ref
   if (-not $raw) { return "New page added." }
   $fm = Parse-YamlFrontMatter $raw
   if ($fm.description) { return ($fm.description -replace '\s+', ' ').Trim() }
@@ -905,6 +921,10 @@ function Escape-Html([string]$s) {
 }
 function ShortTitle([string]$path) { ($path -split '/')[ -1 ] }
 function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [string]$Repo) {
+  if ($RepoName -eq 'AKS' -and $FilePath -match '^appnet-notes/') {
+    return "https://github.com/$Owner/$Repo/blob/master/$FilePath"
+  }
+
   if ($RepoName -eq 'SupportArticles-docs' -and $FilePath -match '^support/azure/azure-kubernetes/(.+?)\.md$') {
     $slug = $Matches[1] -replace '\\', '/'
     $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
@@ -916,7 +936,10 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [
     $p = $Matches[1] -replace '\\', '/'
     
     # Different URL patterns for different repositories
-    if ($RepoName -eq 'azure-management-docs' -and $p -match '^container-registry/(.+)') {
+    if ($RepoName -eq 'azure-aks-docs' -and $p -match '^aks-hybrid-edge/(.+)') {
+      return "https://learn.microsoft.com/azure/aks/aksarc/$($Matches[1])"
+    }
+    elseif ($RepoName -eq 'azure-management-docs' -and $p -match '^container-registry/(.+)') {
       return "https://learn.microsoft.com/azure/container-registry/$($Matches[1])"
     }
     elseif ($RepoName -eq 'azure-management-docs' -and $p -match '^azure-arc/kubernetes/(.+)') {
@@ -936,13 +959,6 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [
       if ($p -notmatch '^azure/') { $p = "azure/$p" }
       return "https://learn.microsoft.com/$p"
     }
-  }
-
-  if ($RepoName -eq 'azure-stack-docs' -and $FilePath -match '^AKS-Arc/(.+?)\.md$') {
-    $slug = $Matches[1] -replace '\\', '/'
-    $repoConfig = $Repositories | Where-Object { $_.Repo -eq $RepoName } | Select-Object -First 1
-    $baseUrl = if ($repoConfig -and $repoConfig.DocsBaseUrl) { $repoConfig.DocsBaseUrl } else { 'https://learn.microsoft.com/en-us/azure/aks/aksarc/' }
-    return "$($baseUrl.TrimEnd('/'))/$slug"
   }
 
   return "https://github.com/$Owner/$Repo/blob/main/$FilePath"
@@ -1682,7 +1698,7 @@ function Get-ReleaseSummariesViaGitHubModels {
     $relJson = Get-Content -Path $JsonPath -Raw
 
     $systemMsg = @"
-You are summarizing AKS GitHub Releases. The JSON array contains: id, title, tag_name, published_at, body (markdown).
+You are summarizing AKS and AKS Application Network release notes. The JSON array contains: id, title, tag_name, published_at, body (markdown).
 Return a JSON object with a single key "results" containing an array:
 {"results": [{"id": <same numeric id>, "summary": "2-3 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."]}]}
 Rules: plain strings only, 2-5 items per list, never fabricate content not in the text.
@@ -2976,6 +2992,7 @@ if ($script:CveOnly) {
 foreach ($repoConfig in $Repositories) {
   $Owner = $repoConfig.Owner
   $Repo = $repoConfig.Repo
+  $Branch = if ($repoConfig.Branch) { $repoConfig.Branch } else { "main" }
   $PathFilter = $repoConfig.PathFilter
   $DisplayName = $repoConfig.DisplayName
   
@@ -3005,12 +3022,12 @@ foreach ($repoConfig in $Repositories) {
 
   Log "  Found $($prs.Count) recently updated PRs"
 
-  # Get recent commits directly from main branch for this repository
+  # Get recent commits directly from the configured branch for this repository
   $commits = @()
   $page = 1
   try {
     do {
-      $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=main&since=$SINCE_ISO&per_page=100&page=$page"
+      $uri = "https://api.github.com/repos/$Owner/$Repo/commits?sha=$([uri]::EscapeDataString($Branch))&since=$SINCE_ISO&per_page=100&page=$page"
       $response = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET -ErrorAction Stop
       $commits += $response
       $page++
@@ -3050,6 +3067,7 @@ foreach ($repoConfig in $Repositories) {
           repo_owner = $Owner
           repo_name = $Repo
           repo_display = $DisplayName
+          repo_branch = $Branch
         }
       }
     }
@@ -3087,6 +3105,7 @@ foreach ($repoConfig in $Repositories) {
           repo_owner = $Owner
           repo_name = $Repo
           repo_display = $DisplayName
+          repo_branch = $Branch
         }
       }
     }
@@ -3258,8 +3277,9 @@ foreach ($k in $filteredGroups.Keys) {
     $firstItem = $filteredGroups[$k][0]
     $repoOwner = $firstItem.repo_owner
     $repoName = $firstItem.repo_name
+    $repoBranch = if ($firstItem.repo_branch) { $firstItem.repo_branch } else { "main" }
     
-    $forcedSummary = Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName
+    $forcedSummary = Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName -Ref $repoBranch
     $forced.Add([pscustomobject]@{
         file     = $k
         summary  = $forcedSummary
@@ -3535,13 +3555,51 @@ foreach ($row in @($finalResults.ordered)) {
 Log "Rendered $($sections.Count) docs cards."
 
 # =========================
-# RELEASES HANDLING (unchanged from original)
+# RELEASES HANDLING
 # =========================
 function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   $uri = "https://api.github.com/repos/$owner/$repo/releases?per_page=$count"
   try { Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET }
   catch {
     Write-Warning ("Failed to fetch releases from {0}/{1}: {2}" -f $owner, $repo, $_.Exception.Message)
+    return @()
+  }
+}
+
+function Get-AppNetReleaseNotes([int]$count = 5) {
+  $owner = "Azure"
+  $repo = "AKS"
+  $branch = "master"
+  $uri = "https://api.github.com/repos/$owner/$repo/contents/appnet-notes?ref=$branch"
+
+  try {
+    $files = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET -ErrorAction Stop
+    $notes = @(
+      foreach ($file in @($files)) {
+        if ($file.type -ne 'file' -or $file.name -notmatch '^(\d{4}-\d{2}-\d{2})\.md$') { continue }
+
+        $noteDate = $Matches[1]
+        $body = Get-GitHubContentBase64 -path $file.path -Owner $owner -Repo $repo -ref $branch
+        if ([string]::IsNullOrWhiteSpace($body)) { continue }
+
+        $noteId = [Convert]::ToInt64(([string]$file.sha).Substring(0, 15), 16)
+        [pscustomobject]@{
+          id           = $noteId
+          name         = "App Net Release Notes - $noteDate"
+          tag_name     = "appnet-$noteDate"
+          published_at = "$noteDate`T00:00:00Z"
+          body         = $body
+          html_url     = $file.html_url
+          prerelease   = $false
+          source       = "AppNet"
+        }
+      }
+    )
+
+    return @($notes | Sort-Object { [DateTime]::Parse($_.published_at) } -Descending | Select-Object -First $count)
+  }
+  catch {
+    Write-Warning ("Failed to fetch App Net release notes from {0}/{1}: {2}" -f $owner, $repo, $_.Exception.Message)
     return @()
   }
 }
@@ -3575,8 +3633,8 @@ function Get-ReleaseSummariesViaOpenAIResponses {
     }
 
 $instructions = @"
-You are summarizing AKS GitHub Releases.
-The uploaded JSON contains: id, title, tag_name, published_at, body (markdown).
+You are summarizing AKS and AKS Application Network release notes.
+The uploaded JSON contains: id, title, tag_name, published_at, body (markdown), html_url, prerelease.
 
 Return ONLY JSON:
 [
@@ -3663,8 +3721,17 @@ function ToListHtml($arr) {
 }
 
 Log "Fetching AKS releases..."
-$releases = Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount
-Log "Fetched $($releases.Count) AKS releases."
+$aksReleases = @(Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount)
+Log "Fetched $($aksReleases.Count) AKS releases."
+
+Log "Fetching App Net release notes..."
+$appNetReleases = @(Get-AppNetReleaseNotes -count $ReleasesCount)
+Log "Fetched $($appNetReleases.Count) App Net release note(s)."
+
+$releases = @($aksReleases + $appNetReleases) |
+  Sort-Object { if ($_.published_at) { [DateTime]::Parse($_.published_at) } else { Get-Date 0 } } -Descending |
+  Select-Object -First $ReleasesCount
+Log "Merged release feed contains $($releases.Count) item(s)."
 
 # Load releases summary cache and determine which releases need fresh AI summaries
 $releasesSummaryCache = Load-ReleasesSummaryCache
@@ -3706,7 +3773,7 @@ if ($PreferProvider -and $uncachedReleases.Count -gt 0) {
   )
   $relInput | ConvertTo-Json -Depth 6 | Set-Content -Path $relJsonPath -Encoding UTF8
 
-  Log "Building AI summaries for $($uncachedReleases.Count) uncached AKS release(s)..."
+  Log "Building AI summaries for $($uncachedReleases.Count) uncached release note item(s)..."
   $freshReleaseSummaries = Get-ReleaseSummariesViaOpenAIResponses -JsonPath $relJsonPath
   Log "Release summary generation complete."
 
@@ -3905,7 +3972,7 @@ function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
   <div style="background-color:#ffffff;padding:20px;border-radius:6px;margin-bottom:20px;border:1px solid #e5e7eb;">
     <h2 style="margin:0 0 10px 0;font-size:22px;font-weight:700;color:#111827;">$postTitle</h2>
     <p style="margin:0;font-size:14px;line-height:1.6;color:#4b5563;">
-      The latest AKS release notes with AI-generated summaries of breaking changes, key features, and good-to-know information.
+      The latest AKS and App Net release notes with AI-generated summaries of breaking changes, key features, and good-to-know information.
     </p>
   </div>
   <div>
@@ -4156,7 +4223,7 @@ $html = @"
 
   <div class="aks-intro">
     <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). AKS everywhere! It also shows the last 5 release notes from AKS.</p>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). AKS everywhere! It also shows the last 5 AKS and App Net release notes.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
@@ -4164,7 +4231,7 @@ $html = @"
     <p><strong>With this tracker, you can:</strong></p>
     <ul>
       <li>Quickly scan meaningful AKS, App Net, Arc K8s, AKS Arc, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
-      <li>Stay up to date with the latest AKS release notes without digging through every doc page</li>
+      <li>Stay up to date with the latest AKS and App Net release notes without digging through every doc page</li>
       <li>Search and browse CVE security data across AKS releases and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
     </ul>
 
@@ -4188,7 +4255,7 @@ $html = @"
     <div class="aks-tab-panel" id="aks-tab-releases">
       <div class="aks-releases">
       <h2>AKS Releases</h2>
-      <p>Latest 5 AKS releases with AI-generated summaries, breaking changes, and Good to Know information.</p>
+      <p>Latest 5 AKS and App Net release notes with AI-generated summaries, breaking changes, and Good to Know information.</p>
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
               <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
@@ -4329,7 +4396,7 @@ $weekEnd = (Get-Date).ToUniversalTime()
 $weekRange = $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd')
 
 $digestDocsTitle     = "Azure Container Services Docs - Weekly Update ($weekRange)"
-$digestReleasesTitle = "AKS Releases - Weekly Update ($weekRange)"
+$digestReleasesTitle = "AKS and App Net Releases - Weekly Update ($weekRange)"
 $digestCveTitle      = "AKS CVE Security Snapshot - Weekly Update ($weekRange)"
 
 # ── Docs-only digest ─────────────────────────────────────────────────────────

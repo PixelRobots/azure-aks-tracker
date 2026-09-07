@@ -14,13 +14,13 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
   - `MicrosoftDocs/azure-management-docs` (Azure Container Registry)
   - `MicrosoftDocs/azure-management-docs` (Azure Arc-enabled Kubernetes)
   - `MicrosoftDocs/azure-docs` (Application Gateway for Containers)
-  - `MicrosoftDocs/azure-stack-docs` (AKS Arc)
+  - `MicrosoftDocs/azure-aks-docs/articles/aks-hybrid-edge` (AKS Hybrid and Edge / AKS Arc)
   - `MicrosoftDocs/SupportArticles-docs` (AKS support and troubleshooting articles)
   
   Groups changes by page, filters trivial edits, and writes AI summaries with intelligent product categorization.
 
-* **AKS releases**
-  Fetches the latest releases from `Azure/AKS` and generates short summaries with highlights.
+* **AKS and App Net releases**
+  Fetches the latest AKS releases from `Azure/AKS`, merges in dated App Net release notes from `Azure/AKS/appnet-notes`, and generates short summaries with highlights.
 
 * **Publishes to WordPress**
   Updates a single WordPress Page every 6 hours via REST API.
