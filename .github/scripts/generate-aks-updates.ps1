@@ -1698,7 +1698,7 @@ function Get-ReleaseSummariesViaGitHubModels {
     $relJson = Get-Content -Path $JsonPath -Raw
 
     $systemMsg = @"
-You are summarizing AKS and AKS Application Network release notes. The JSON array contains: id, title, tag_name, published_at, body (markdown).
+You are summarizing AKS and AKS Application Network release notes. The JSON array contains: id, title, tag_name, published_at, body (markdown), source.
 Return a JSON object with a single key "results" containing an array:
 {"results": [{"id": <same numeric id>, "summary": "2-3 sentences", "breaking_changes": ["..."], "key_features": ["..."], "good_to_know": ["..."]}]}
 Rules: plain strings only, 2-5 items per list, never fabricate content not in the text.
@@ -3566,42 +3566,39 @@ function Get-GitHubReleases([string]$owner, [string]$repo, [int]$count = 5) {
   }
 }
 
-function Get-AppNetReleaseNotes([int]$count = 5) {
-  $owner = "Azure"
-  $repo = "AKS"
-  $branch = "master"
-  $uri = "https://api.github.com/repos/$owner/$repo/contents/appnet-notes?ref=$branch"
+function Get-ReleasePublishedDate($Value) {
+  if ($null -eq $Value) { return (Get-Date 0) }
 
-  try {
-    $files = Invoke-RestMethod -Uri $uri -Headers $ghHeaders -Method GET -ErrorAction Stop
-    $notes = @(
-      foreach ($file in @($files)) {
-        if ($file.type -ne 'file' -or $file.name -notmatch '^(\d{4}-\d{2}-\d{2})\.md$') { continue }
+  foreach ($candidate in @($Value)) {
+    if ($null -eq $candidate) { continue }
+    if ($candidate -is [DateTime]) { return $candidate }
+    if ($candidate -is [DateTimeOffset]) { return $candidate.UtcDateTime }
 
-        $noteDate = $Matches[1]
-        $body = Get-GitHubContentBase64 -path $file.path -Owner $owner -Repo $repo -ref $branch
-        if ([string]::IsNullOrWhiteSpace($body)) { continue }
+    $text = ([string]$candidate).Trim()
+    if ([string]::IsNullOrWhiteSpace($text)) { continue }
 
-        $noteId = [Convert]::ToInt64(([string]$file.sha).Substring(0, 15), 16)
-        [pscustomobject]@{
-          id           = $noteId
-          name         = "App Net Release Notes - $noteDate"
-          tag_name     = "appnet-$noteDate"
-          published_at = "$noteDate`T00:00:00Z"
-          body         = $body
-          html_url     = $file.html_url
-          prerelease   = $false
-          source       = "AppNet"
-        }
-      }
-    )
-
-    return @($notes | Sort-Object { [DateTime]::Parse($_.published_at) } -Descending | Select-Object -First $count)
+    $parsedOffset = [DateTimeOffset]::MinValue
+    if ([DateTimeOffset]::TryParse(
+        $text,
+        [Globalization.CultureInfo]::InvariantCulture,
+        [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal,
+        [ref]$parsedOffset
+      )) {
+      return $parsedOffset.UtcDateTime
+    }
   }
-  catch {
-    Write-Warning ("Failed to fetch App Net release notes from {0}/{1}: {2}" -f $owner, $repo, $_.Exception.Message)
-    return @()
+
+  return (Get-Date 0)
+}
+
+function Get-ReleaseProduct([object]$Release) {
+  $title = [string]($Release.name ?? '')
+  $tag = [string]($Release.tag_name ?? '')
+  if ($title -match '^(?i:AppNet)\b' -or $tag -match '^(?i:AppNet)[-_]') {
+    return 'App Net'
   }
+
+  return 'AKS'
 }
 
 function Get-ReleaseSummariesViaOpenAIResponses {
@@ -3634,7 +3631,7 @@ function Get-ReleaseSummariesViaOpenAIResponses {
 
 $instructions = @"
 You are summarizing AKS and AKS Application Network release notes.
-The uploaded JSON contains: id, title, tag_name, published_at, body (markdown), html_url, prerelease.
+The uploaded JSON contains: id, title, tag_name, published_at, body (markdown), html_url, prerelease, source.
 
 Return ONLY JSON:
 [
@@ -3724,12 +3721,8 @@ Log "Fetching AKS releases..."
 $aksReleases = @(Get-GitHubReleases -owner $ReleasesOwner -repo $ReleasesRepo -count $ReleasesCount)
 Log "Fetched $($aksReleases.Count) AKS releases."
 
-Log "Fetching App Net release notes..."
-$appNetReleases = @(Get-AppNetReleaseNotes -count $ReleasesCount)
-Log "Fetched $($appNetReleases.Count) App Net release note(s)."
-
-$releases = @($aksReleases + $appNetReleases) |
-  Sort-Object { if ($_.published_at) { [DateTime]::Parse($_.published_at) } else { Get-Date 0 } } -Descending |
+$releases = @($aksReleases) |
+  Sort-Object { Get-ReleasePublishedDate $_.published_at } -Descending |
   Select-Object -First $ReleasesCount
 Log "Merged release feed contains $($releases.Count) item(s)."
 
@@ -3768,6 +3761,7 @@ if ($PreferProvider -and $uncachedReleases.Count -gt 0) {
         body         = $r.body
         html_url     = $r.html_url
         prerelease   = [bool]$r.prerelease
+        source       = Get-ReleaseProduct $r
       }
     }
   )
@@ -3807,7 +3801,8 @@ foreach ($r in $releases) {
   $title = Escape-Html $titleRaw
   $url = $r.html_url
   $isPrerelease = [bool]$r.prerelease
-  $publishedAt = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+  $product = Get-ReleaseProduct $r
+  $publishedAt = if ($r.published_at) { (Get-ReleasePublishedDate $r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
   $ai = $releaseSummaries[$r.id]
   if (-not $ai) {
@@ -3848,13 +3843,14 @@ foreach ($r in $releases) {
 "@
   }
 
+  $productBadge = '<span class="aks-rel-badge">' + (Escape-Html $product) + '</span>'
   $badge = if ($isPrerelease) { '<span class="aks-rel-badge">Pre-release</span>' } else { '' }
 
   $card = @"
 <div class="aks-rel-card">
   <div class="aks-rel-head">
     <div class="aks-rel-title">
-      <h2>$title</h2>$badge
+      <h2>$title</h2>$productBadge$badge
     </div>
     <a class="aks-rel-link" href="$url" target="_blank" rel="noopener">View Release</a>
   </div>
@@ -3912,7 +3908,8 @@ function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
     $title     = Escape-Html $titleRaw
     $url       = $r.html_url
     $isPrerelease = [bool]$r.prerelease
-    $publishedAt  = if ($r.published_at) { [DateTime]::Parse($r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
+    $product   = Get-ReleaseProduct $r
+    $publishedAt  = if ($r.published_at) { (Get-ReleasePublishedDate $r.published_at).ToUniversalTime().ToString("yyyy-MM-dd") } else { "" }
 
     $ai = $relSummaries[$r.id]
     if (-not $ai) {
@@ -3941,6 +3938,7 @@ function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
       $sectionsHtml += "<div style='margin-top:10px;'><p style='margin:0 0 4px;font-size:13px;font-weight:700;color:#059669;'>&#128161; Good to Know</p><ul style='margin:0;padding-left:20px;'>$lis</ul></div>"
     }
 
+    $productBadgeHtml = "<span style='display:inline-block;padding:2px 8px;background:#e0f2fe;color:#075985;border-radius:4px;font-size:11px;font-weight:600;margin-left:8px;'>$(Escape-Html $product)</span>"
     $badgeHtml = if ($isPrerelease) { "<span style='display:inline-block;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:4px;font-size:11px;font-weight:600;margin-left:8px;'>Pre-release</span>" } else { '' }
 
     $card = @"
@@ -3948,7 +3946,7 @@ function Get-ReleasesDigestHtml($relList, $relSummaries, $postTitle) {
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
       <td>
-        <h3 style="margin:0 0 4px 0;font-size:17px;font-weight:600;color:#1e40af;">$title$badgeHtml</h3>
+        <h3 style="margin:0 0 4px 0;font-size:17px;font-weight:600;color:#1e40af;">$title$productBadgeHtml$badgeHtml</h3>
         <span style="font-size:12px;color:#6b7280;">&#128197; $publishedAt</span>
       </td>
       <td style="text-align:right;vertical-align:top;">
