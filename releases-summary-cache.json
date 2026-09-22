@@ -1,26 +1,26 @@
 {
-  "generated_at": "2026-09-22T00:21:21.0703476+00:00",
+  "generated_at": "2026-09-22T19:06:59.7075298+00:00",
   "entries": [
     {
       "cache_key": "31221c7ddf94586d8f2b26a9d64034ba7eeb1e3f028c3c6ca6f70a8c7faadf33",
       "cache_version": "openai-responses-v1",
       "release_id": 385243414,
-      "summary": "The release on September 4, 2026, introduces several key updates and deprecations. Notably, AKS will migrate deprecated Availability Sets to Virtual Machines node pools automatically.",
+      "summary": "This release introduces Kubernetes 1.37 and autoscaling for VM node pools. It also announces the retirement of Azure Linux with OS Guard.",
       "breaking_changes": [
-        "Azure Linux with OS Guard will be retired on December 10, 2026.",
+        "AKS will remove Azure Linux with OS Guard node images on March 10, 2027.",
         "AKS no longer produces VHDs for Windows Server 2019 and version 23H2."
       ],
       "key_features": [
         "Autoscaling for Virtual Machines node pools is now generally available.",
-        "Kubernetes Version 1.37 Preview is being rolled out.",
-        "On-Demand Monitor for node health checks is available in preview."
+        "Kubernetes patch versions 1.36.3, 1.35.7, and 1.34.10 are available.",
+        "On-Demand Monitor for node health checks is in preview."
       ],
       "good_to_know": [
-        "AKS will reject updates that remove IPv6 from dual-stack clusters.",
-        "Namespace creation now rejects names starting with reserved prefixes.",
-        "Azure Policy's validation path is enabled by default when the add-on is active."
+        "LocalDNS is enabled automatically for compatible cluster networking.",
+        "AKS rejects updates that remove IPv6 from dual-stack clusters.",
+        "Managed namespace creation rejects names starting with reserved prefixes."
       ],
-      "cached_at": "2026-09-22T00:21:21.0680971+00:00"
+      "cached_at": "2026-09-22T19:06:59.7047639+00:00"
     },
     {
       "cache_key": "e1e49523108c2877b032e2652006e3c147418ad1d5865bdc6bac18830da95332",
@@ -113,18 +113,17 @@
       "cached_at": "08/28/2026 09:04:33"
     },
     {
-      "cache_key": "548e2bff9b4f07a22d3821be4ecc5db188ac1e76f3477bacd7decbc7ea4efefe",
+      "cache_key": "c4ca2216fba15c88e45f4a0077364388b9c9d9edf0c51b814267ac078ec98f64",
       "cache_version": "openai-responses-v1",
-      "release_id": 359480682,
-      "summary": "This release includes announcements about upcoming changes and several Kubernetes version updates.",
-      "breaking_changes": [
-        "enableCustomCATrust preview property will retire on September 14, 2026",
-        "Creation of node pools with Windows Server Annual Channel is no longer supported",
-        "Creation of node pools with Flatcar Container Linux is no longer supported"
-      ],
+      "release_id": 368882164,
+      "summary": "This release introduces several enhancements including Node Auto Provisioning and automatic availability zone placement.",
+      "breaking_changes": [],
       "key_features": [
-        "Artifact Streaming is now generally available",
-        "Kubernetes patch versions 1.36.2, 1.35.6, 1.34.9, and 1.33.13 are available"
+        "Node Auto Provisioning now supports restricted public network access",
+        "Automatic availability zone placement is enabled globally",
+        "Control-plane only upgrades to AKS Long Term Support are allowed",
+        "Node pool rollback feature is now generally available",
+        "Encryption in Transit for Azure File CSI driver is now available"
       ],
       "good_to_know": [],
       "cached_at": "08/28/2026 09:04:33"
@@ -142,22 +141,6 @@
       "cached_at": "08/28/2026 09:04:33"
     },
     {
-      "cache_key": "c4ca2216fba15c88e45f4a0077364388b9c9d9edf0c51b814267ac078ec98f64",
-      "cache_version": "openai-responses-v1",
-      "release_id": 368882164,
-      "summary": "This release introduces several enhancements including Node Auto Provisioning and automatic availability zone placement.",
-      "breaking_changes": [],
-      "key_features": [
-        "Node Auto Provisioning now supports restricted public network access",
-        "Automatic availability zone placement is enabled globally",
-        "Control-plane only upgrades to AKS Long Term Support are allowed",
-        "Node pool rollback feature is now generally available",
-        "Encryption in Transit for Azure File CSI driver is now available"
-      ],
-      "good_to_know": [],
-      "cached_at": "08/28/2026 09:04:33"
-    },
-    {
       "cache_key": "537e41c5049cf0f54cedb08117c302ef088a2b87d416c7cabb4bb4cf7d55730d",
       "cache_version": "openai-responses-v1",
       "release_id": 316503076,
@@ -167,6 +150,23 @@
       "good_to_know": [
         "Mitigation for CVE-2026-31431 is globally deployed in specific node image versions"
       ],
+      "cached_at": "08/28/2026 09:04:33"
+    },
+    {
+      "cache_key": "548e2bff9b4f07a22d3821be4ecc5db188ac1e76f3477bacd7decbc7ea4efefe",
+      "cache_version": "openai-responses-v1",
+      "release_id": 359480682,
+      "summary": "This release includes announcements about upcoming changes and several Kubernetes version updates.",
+      "breaking_changes": [
+        "enableCustomCATrust preview property will retire on September 14, 2026",
+        "Creation of node pools with Windows Server Annual Channel is no longer supported",
+        "Creation of node pools with Flatcar Container Linux is no longer supported"
+      ],
+      "key_features": [
+        "Artifact Streaming is now generally available",
+        "Kubernetes patch versions 1.36.2, 1.35.6, 1.34.9, and 1.33.13 are available"
+      ],
+      "good_to_know": [],
       "cached_at": "08/28/2026 09:04:33"
     },
     {
@@ -344,24 +344,6 @@
       "cached_at": "06/23/2026 18:53:38"
     },
     {
-      "cache_key": "c68afb7e09294bbb8c45604e93f545d82446a9a0b3c1a9541d8d5402af9e7ccb",
-      "cache_version": "openai-responses-v1",
-      "release_id": 287428722,
-      "summary": "This release includes announcements regarding the retirement of Windows Server 2019 and updates to Kubernetes versions.",
-      "breaking_changes": [
-        "Windows Server 2019 support ends on March 1, 2026"
-      ],
-      "key_features": [
-        "New Kubernetes patch versions available",
-        "Windows Server Annual Channel retirement announced"
-      ],
-      "good_to_know": [
-        "Transition to Windows Server 2022+ by retirement date",
-        "Kubernetes version 1.35 is rolling out"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
       "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
       "cache_version": "openai-responses-v1",
       "release_id": 295914225,
@@ -376,6 +358,24 @@
       "good_to_know": [
         "Transition to a supported alternative for Flatcar",
         "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "c68afb7e09294bbb8c45604e93f545d82446a9a0b3c1a9541d8d5402af9e7ccb",
+      "cache_version": "openai-responses-v1",
+      "release_id": 287428722,
+      "summary": "This release includes announcements regarding the retirement of Windows Server 2019 and updates to Kubernetes versions.",
+      "breaking_changes": [
+        "Windows Server 2019 support ends on March 1, 2026"
+      ],
+      "key_features": [
+        "New Kubernetes patch versions available",
+        "Windows Server Annual Channel retirement announced"
+      ],
+      "good_to_know": [
+        "Transition to Windows Server 2022+ by retirement date",
+        "Kubernetes version 1.35 is rolling out"
       ],
       "cached_at": "06/23/2026 18:53:38"
     },
