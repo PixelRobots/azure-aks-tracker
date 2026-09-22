@@ -52,7 +52,7 @@ $Repositories = @(
     DisplayName = "AKS Arc"
     IconUrl = $ArcHybridAksIconUrl
     IconAlt = "AKS Arc"
-    DocsBaseUrl = "https://learn.microsoft.com/azure/aks/aksarc/"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/aks-hybrid-edge/"
   },
   @{
     Owner = "MicrosoftDocs"
