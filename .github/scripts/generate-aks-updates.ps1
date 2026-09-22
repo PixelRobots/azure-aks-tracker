@@ -937,7 +937,7 @@ function Get-LiveDocsUrl([string]$FilePath, [string]$RepoName, [string]$Owner, [
     
     # Different URL patterns for different repositories
     if ($RepoName -eq 'azure-aks-docs' -and $p -match '^aks-hybrid-edge/(.+)') {
-      return "https://learn.microsoft.com/azure/aks/aksarc/$($Matches[1])"
+      return "https://learn.microsoft.com/azure/aks-hybrid-edge/$($Matches[1])"
     }
     elseif ($RepoName -eq 'azure-management-docs' -and $p -match '^container-registry/(.+)') {
       return "https://learn.microsoft.com/azure/container-registry/$($Matches[1])"
