@@ -1,6 +1,28 @@
 {
-  "generated_at": "2026-09-22T19:06:59.7075298+00:00",
+  "generated_at": "2026-10-01T18:12:56.8200316+00:00",
   "entries": [
+    {
+      "cache_key": "58cfd8e4ef038b693b788c70ed83780fe9369bb2e67975930a3d776ac06a1397",
+      "cache_version": "openai-responses-v1",
+      "release_id": 401208387,
+      "summary": "The 2026-09-25 release introduces significant updates and deprecations. Key features include the general availability of identity bindings and preview support for Ubuntu 26.04.",
+      "breaking_changes": [
+        "Windows Server 2022 is not supported in Kubernetes version 1.37 and above.",
+        "Flatcar Container Linux node images are removed, affecting scaling operations.",
+        "The annotation service.beta.kubernetes.io/azure-pip-tags no longer overrides public IP tags."
+      ],
+      "key_features": [
+        "Identity bindings are now generally available.",
+        "Ubuntu 26.04 is available in preview.",
+        "Windows Server OS SKU migration to 2025 is in preview."
+      ],
+      "good_to_know": [
+        "AKS will auto-migrate deprecated Availability Sets clusters after September 30, 2026.",
+        "AKS release order has been updated for Central US and East US.",
+        "Check AKS Release Tracker for detailed release timing."
+      ],
+      "cached_at": "2026-10-01T18:12:56.8178780+00:00"
+    },
     {
       "cache_key": "31221c7ddf94586d8f2b26a9d64034ba7eeb1e3f028c3c6ca6f70a8c7faadf33",
       "cache_version": "openai-responses-v1",
@@ -20,7 +42,7 @@
         "AKS rejects updates that remove IPv6 from dual-stack clusters.",
         "Managed namespace creation rejects names starting with reserved prefixes."
       ],
-      "cached_at": "2026-09-22T19:06:59.7047639+00:00"
+      "cached_at": "09/22/2026 19:06:59"
     },
     {
       "cache_key": "e1e49523108c2877b032e2652006e3c147418ad1d5865bdc6bac18830da95332",
@@ -113,6 +135,35 @@
       "cached_at": "08/28/2026 09:04:33"
     },
     {
+      "cache_key": "548e2bff9b4f07a22d3821be4ecc5db188ac1e76f3477bacd7decbc7ea4efefe",
+      "cache_version": "openai-responses-v1",
+      "release_id": 359480682,
+      "summary": "This release includes announcements about upcoming changes and several Kubernetes version updates.",
+      "breaking_changes": [
+        "enableCustomCATrust preview property will retire on September 14, 2026",
+        "Creation of node pools with Windows Server Annual Channel is no longer supported",
+        "Creation of node pools with Flatcar Container Linux is no longer supported"
+      ],
+      "key_features": [
+        "Artifact Streaming is now generally available",
+        "Kubernetes patch versions 1.36.2, 1.35.6, 1.34.9, and 1.33.13 are available"
+      ],
+      "good_to_know": [],
+      "cached_at": "08/28/2026 09:04:33"
+    },
+    {
+      "cache_key": "537e41c5049cf0f54cedb08117c302ef088a2b87d416c7cabb4bb4cf7d55730d",
+      "cache_version": "openai-responses-v1",
+      "release_id": 316503076,
+      "summary": "This release addresses a critical vulnerability and includes several announcements.",
+      "breaking_changes": [],
+      "key_features": [],
+      "good_to_know": [
+        "Mitigation for CVE-2026-31431 is globally deployed in specific node image versions"
+      ],
+      "cached_at": "08/28/2026 09:04:33"
+    },
+    {
       "cache_key": "c4ca2216fba15c88e45f4a0077364388b9c9d9edf0c51b814267ac078ec98f64",
       "cache_version": "openai-responses-v1",
       "release_id": 368882164,
@@ -137,35 +188,6 @@
         "Windows Server 2022 will no longer receive new node images after June 30, 2028"
       ],
       "key_features": [],
-      "good_to_know": [],
-      "cached_at": "08/28/2026 09:04:33"
-    },
-    {
-      "cache_key": "537e41c5049cf0f54cedb08117c302ef088a2b87d416c7cabb4bb4cf7d55730d",
-      "cache_version": "openai-responses-v1",
-      "release_id": 316503076,
-      "summary": "This release addresses a critical vulnerability and includes several announcements.",
-      "breaking_changes": [],
-      "key_features": [],
-      "good_to_know": [
-        "Mitigation for CVE-2026-31431 is globally deployed in specific node image versions"
-      ],
-      "cached_at": "08/28/2026 09:04:33"
-    },
-    {
-      "cache_key": "548e2bff9b4f07a22d3821be4ecc5db188ac1e76f3477bacd7decbc7ea4efefe",
-      "cache_version": "openai-responses-v1",
-      "release_id": 359480682,
-      "summary": "This release includes announcements about upcoming changes and several Kubernetes version updates.",
-      "breaking_changes": [
-        "enableCustomCATrust preview property will retire on September 14, 2026",
-        "Creation of node pools with Windows Server Annual Channel is no longer supported",
-        "Creation of node pools with Flatcar Container Linux is no longer supported"
-      ],
-      "key_features": [
-        "Artifact Streaming is now generally available",
-        "Kubernetes patch versions 1.36.2, 1.35.6, 1.34.9, and 1.33.13 are available"
-      ],
       "good_to_know": [],
       "cached_at": "08/28/2026 09:04:33"
     },
@@ -326,38 +348,20 @@
       "cached_at": "06/26/2026 00:49:21"
     },
     {
-      "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
+      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
       "cache_version": "openai-responses-v1",
-      "release_id": 316503076,
-      "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
+      "release_id": 306868985,
+      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
       "breaking_changes": [
-        "Mitigation for CVE-2026-31431 requires node image upgrade"
+        "Ubuntu 22.04 support ends on June 30, 2027"
       ],
       "key_features": [
-        "Updated Microsoft Defender for Containers sensor",
-        "New node image versions provide security patches"
+        "New Kubernetes patch versions available",
+        "Updated Azure Monitor Metrics"
       ],
       "good_to_know": [
-        "Existing nodes not patched in place, upgrade required",
-        "Monitor release status by regions"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
-      "cache_version": "openai-responses-v1",
-      "release_id": 295914225,
-      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
-      "breaking_changes": [
-        "Flatcar Container Linux support ends on June 8, 2026"
-      ],
-      "key_features": [
-        "Expanded GPU support for Azure Linux",
-        "New Kubernetes version 1.35 now available"
-      ],
-      "good_to_know": [
-        "Transition to a supported alternative for Flatcar",
-        "Monitor release status by regions"
+        "Transition to Ubuntu 24.04 or later by deadline",
+        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
       ],
       "cached_at": "06/23/2026 18:53:38"
     },
@@ -380,6 +384,42 @@
       "cached_at": "06/23/2026 18:53:38"
     },
     {
+      "cache_key": "f30555e6272229601d4846e6e6cc6f0dfa9d88098d47a1372991709f4a6446d9",
+      "cache_version": "openai-responses-v1",
+      "release_id": 295914225,
+      "summary": "This release announces the retirement of Flatcar Container Linux for AKS and expands GPU support.",
+      "breaking_changes": [
+        "Flatcar Container Linux support ends on June 8, 2026"
+      ],
+      "key_features": [
+        "Expanded GPU support for Azure Linux",
+        "New Kubernetes version 1.35 now available"
+      ],
+      "good_to_know": [
+        "Transition to a supported alternative for Flatcar",
+        "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
+      "cache_key": "9777e56a3844cf17c9b2697b4167475d832526d23162bdd9fa3264522935972a",
+      "cache_version": "openai-responses-v1",
+      "release_id": 316503076,
+      "summary": "This release addresses a critical Linux kernel vulnerability and updates various components.",
+      "breaking_changes": [
+        "Mitigation for CVE-2026-31431 requires node image upgrade"
+      ],
+      "key_features": [
+        "Updated Microsoft Defender for Containers sensor",
+        "New node image versions provide security patches"
+      ],
+      "good_to_know": [
+        "Existing nodes not patched in place, upgrade required",
+        "Monitor release status by regions"
+      ],
+      "cached_at": "06/23/2026 18:53:38"
+    },
+    {
       "cache_key": "0218bbaa954b716e915d0041801d0c34d46935ead7f7db2a3efb8f2ee2b37543",
       "cache_version": "openai-responses-v1",
       "release_id": 334647399,
@@ -396,24 +436,6 @@
       "good_to_know": [
         "Migrate Windows Server Annual Channel node pools to LTSC",
         "Transition from Flatcar Container Linux for AKS by June 2026"
-      ],
-      "cached_at": "06/23/2026 18:53:38"
-    },
-    {
-      "cache_key": "9ae34a983fbf87a0c9d9a82c6d527b24278358b4c8070c45c889ce27a72679f2",
-      "cache_version": "openai-responses-v1",
-      "release_id": 306868985,
-      "summary": "This release announces the end of support for Ubuntu 22.04 and updates several components.",
-      "breaking_changes": [
-        "Ubuntu 22.04 support ends on June 30, 2027"
-      ],
-      "key_features": [
-        "New Kubernetes patch versions available",
-        "Updated Azure Monitor Metrics"
-      ],
-      "good_to_know": [
-        "Transition to Ubuntu 24.04 or later by deadline",
-        "Node pool tag for Kubelet Serving Certificate Rotation will be ignored"
       ],
       "cached_at": "06/23/2026 18:53:38"
     }
