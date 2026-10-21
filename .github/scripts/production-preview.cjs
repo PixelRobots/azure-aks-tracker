@@ -9,7 +9,7 @@ function productionPreview(result, publicPage, demo) {
   if (typeof result.html !== 'string' || typeof result.digest_docs_html !== 'string') {
     throw new Error('Missing production generator HTML fields.');
   }
-  if (/View PR|View change/.test(result.html + result.digest_docs_html)) {
+  if (/<a\b[^>]*>[^<]*\bView (?:PR|change)\s*<\/a>/.test(result.html + result.digest_docs_html)) {
     throw new Error('Snapshot publication must show documentation buttons only.');
   }
   const styles = [...publicPage.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)]
@@ -24,7 +24,7 @@ function productionPreview(result, publicPage, demo) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Production-layout snapshot preview</title>
-${theme}${styles}</head><body>
+${theme}${styles}<style>.notice,.notice strong{color:var(--cp-text)!important}.notice{background:var(--cp-bg-elevated)!important}</style></head><body>
 <div class="notice"><strong>${escape(banner)}</strong><br>Existing production markup and live-site tracker CSS. Signup and publishing are disabled; WordPress plugin injection is not run here.</div>
 ${content}
 <script>

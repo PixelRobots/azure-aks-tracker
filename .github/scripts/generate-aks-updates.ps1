@@ -3640,6 +3640,7 @@ foreach ($row in @($finalResults.ordered)) {
   } else { [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm') }
   $prLink = $arr[0].pr_url
   $dateLabel = if ($SnapshotMode) { 'Detected' } else { 'Modified' }
+  $headerStyle = if ($SnapshotMode) { ' style="flex-wrap:wrap;"' } else { '' }
   $prButton = if (-not $SnapshotMode) {
     "<a class=""aks-doc-link aks-doc-link-pr"" href=""$prLink"" target=""_blank"" rel=""noopener"">View PR</a>"
   } else { '' }
@@ -3666,7 +3667,7 @@ foreach ($row in @($finalResults.ordered)) {
     <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
     <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
   </h2>
-  <div class="aks-doc-header">
+  <div class="aks-doc-header"$headerStyle>
     $categoryPill
     $kindPill
     <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">${dateLabel}: $lastUpdated</span>

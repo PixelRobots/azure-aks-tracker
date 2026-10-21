@@ -262,6 +262,7 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.equal((data.digest_docs_html.match(/View Documentation<\/a>/g) || []).length, 8);
   assert.equal(/View PR|View change|aks-doc-link-pr/.test(data.html + data.digest_docs_html), false);
   assert.equal((data.html.match(/Detected:/g) || []).length, 8);
+  assert.equal((data.html.match(/class="aks-doc-header" style="flex-wrap:wrap;"/g) || []).length, 8);
   assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 8);
   assert.ok(data.html.includes('class="aks-tabs"'));
   assert.ok(data.html.includes('id="aks-tab-releases"'));
