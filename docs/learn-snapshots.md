@@ -106,6 +106,13 @@ uses a normal push, not a force push, so a conflicting push fails visibly.
 Use the manual workflow's `full` option to ignore saved ETags when diagnosing
 missing/stale content.
 
+## Testing the replacement tracker
+
+For the isolated replacement-tracker experiment, see
+[the end-to-end preview guide](snapshot-preview.md) on
+`feature/snapshot-docs-tracker`. Collection and production publishing remain
+separate.
+
 ## Attribution
 
 The collector is MIT-licensed by [Merill Fernando](https://github.com/merill/learn-mirror).

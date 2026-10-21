@@ -24,10 +24,18 @@ product filter. It uses the same eligible articles in tracker and digest views.
 
 Open the **Preview snapshot documentation tracker** workflow's run on the
 development branch. Relevant code pushes to that branch automatically run it.
-The workflow also declares `workflow_dispatch`, but GitHub only exposes manual
-dispatch after the workflow exists on the default branch. Until that is merged,
-push a relevant change to the development branch to rerun the hosted preview.
-Do **not** run the production WordPress workflow against preview output.
+After its first push run registered the workflow, manual dispatch was verified
+using its numeric workflow ID (filename-based CLI lookup currently returns 404
+because the workflow is not on `main`):
+
+```powershell
+gh workflow run 391958843 --repo PixelRobots/azure-aks-tracker --ref feature/snapshot-docs-tracker -f enrich_with_ai=true
+```
+
+Use `-f enrich_with_ai=false` for the no-AI fallback. The numeric ID is specific
+to this repository and may change if the workflow is deleted/recreated. Check
+the Actions page for the new run. Do **not** run the production WordPress workflow
+against preview output.
 
 Each successful run produces two artifacts, retained for 30 days:
 
@@ -73,9 +81,8 @@ The runner installs PSAI only if it is missing, as in the existing generator.
 Missing credentials, provider initialization failures or failed AI calls fail
 the preview visibly rather than masquerade as successful AI enrichment.
 The current preview validates **OpenAI only**, not Azure OpenAI/GitHub Models
-fallbacks. The no-AI heuristic path is covered by deterministic integration tests.
-After manual dispatch is available, untick `enrich_with_ai` to exercise that
-path in hosted runs.
+fallbacks. The no-AI heuristic path is covered by deterministic integration tests and can
+also be exercised with the manual command above.
 
 Each matrix job has its own summary cache under `RUNNER_TEMP`; production caches
 are never loaded or overwritten. Cards label heuristic summaries explicitly.
@@ -95,6 +102,20 @@ one AI-generated final summary. The workflow summary reports actual counts.
 - **Comparison report:** explain differences from the current production page.
   It is expected that published-page changes differ from merged source PRs.
 - **Isolation:** no production page, digest, cache or CVE/release changes.
+
+### Initial verified runs (2026-10-21)
+
+- [AI-enabled run](https://github.com/PixelRobots/azure-aks-tracker/actions/runs/39639517056):
+  all 18 tests passed, no skipped tests; live baseline produced zero updates;
+  demo produced eight cards with eight AI summaries across all eight products.
+- [Explicit no-AI run](https://github.com/PixelRobots/azure-aks-tracker/actions/runs/39640020541):
+  manual branch dispatch succeeded; demo produced eight cards with zero AI
+  summaries and `ai_requested: false`.
+- Downloaded tracker and digest were opened in the browser. Product filtering
+  reduced eight cards to one, a nonmatching search reduced them to zero, and both
+  views had no horizontal page overflow at a 390px mobile width.
+- The default GitHub summary-cache key was compared with the `main` version and
+  remained identical. Production workflows and generated HTML were not changed.
 
 The adapter rejects shallow/missing history, an unrelated baseline, malformed
 canonical mappings and a snapshot HEAD older than 12 hours. This age check is
