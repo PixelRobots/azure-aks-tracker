@@ -1,0 +1,280 @@
+---
+layout: Conceptual
+title: Enable Certificate Management for edge workloads connected with Azure Arc - Azure Arc | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/cert-manager-deploy
+breadcrumb_path: ../../breadcrumb/azure-management/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/146/azure-arc/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/5c778dec-0625-ec11-b6e6-000d3a4f0858
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+author: davidsmatlak
+learn_banner_products:
+- azure
+ms.reviewer: davidsmatlak
+ms.author: davidsmatlak
+ms.service: azure-arc
+ms.subservice: azure-arc-kubernetes
+ms.date: 2026-08-28T00:00:00.0000000Z
+ms.topic: how-to
+description: Learn how to enable Certificate Management for edge workloads connected with Azure Arc or upgrade from open source cert-manager and trust-manager.
+locale: en-us
+document_id: e53f4720-df62-3ad9-4a8c-1458e41e3be8
+document_version_independent_id: 97e9377e-f3b7-5a0f-d08c-86dc30608d33
+original_content_git_url: https://github.com/MicrosoftDocs/azure-management-docs-pr/blob/live/articles/azure-arc/kubernetes/cert-manager-deploy.md
+site_name: Docs
+depot_name: Learn.azure-management
+page_type: conceptual
+toc_rel: toc.json
+asset_id: azure-arc/kubernetes/cert-manager-deploy
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/azure-arc/kubernetes/cert-manager-deploy.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+platformId: d70884ff-e813-e469-4626-2e6e0d0058a3
+---
+
+# Enable Certificate Management for edge workloads connected with Azure Arc - Azure Arc | Microsoft Learn
+
+This article shows how to deploy the Certificate Management extension in your Arc-connected clusters. It includes steps for a new deployment and requirements for migrating from a cluster that uses the open source cert-manager and trust-manager extensions.
+
+## Prerequisites
+
+Before installing the Certificate Management for Azure Arc extension, ensure you meet the following prerequisites:
+
+- An Azure account. If you don't have one, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn) before you begin.
+- An Arc-enabled Kubernetes cluster deployed in a [supported region](cert-manager-overview#regional-support). For best results, use a [Kubernetes distribution that's validated for use with Certificate Management for Azure Arc](cert-manager-overview#validated-arc-enabled-kubernetes-distributions). If you didn't already connect your cluster to Azure Arc, [follow our quickstart](quickstart-connect-cluster). Set environment variables for the cluster name and Azure resource group, as you need these to install the extension.
+
+    ```azurecli
+    export CLUSTER_NAME="AzureArcTest1"
+    export RESOURCE_GROUP="AzureArcTest"
+    ```
+- The **Azure Connected Machine Resource Administrator** or an equivalent role on the cluster resource that allows you to deploy extensions.
+- The latest version of Azure CLI.
+- The latest version of the `connectedk8s` and `k8s-extension` Azure CLI extensions. Run these commands to install or upgrade the extensions:
+
+    ```azurecli
+    az extension add --upgrade -n connectedk8s
+    az extension add --upgrade -n k8s-extension
+    ```
+- An installed version of kubectl for your cluster (admin privileges). While not strictly required to install the extension, kubectl is helpful to verify installation and manage certificate custom resources in later steps.
+- If you previously installed open source [cert-manager](https://cert-manager.io/) or [trust-manager](https://cert-manager.io/docs/trust/trust-manager/) manually, uninstall them before deploying the Arc extension to avoid conflicts. Existing custom resources (CRs) will be retained and recognized by the extension, as long as they adhere to the conventions of the open-source projects. For more information, see Migrate from open source cert-manager and trust-manager.
+
+General knowledge about [Arc-enabled Kubernetes](../overview), [cert-manager](https://cert-manager.io/), and [trust-manager](https://cert-manager.io/docs/trust/trust-manager/) can be helpful, but isn't required to deploy the extension.
+
+Important
+
+To protect sensitive data, encrypt your Kubernetes secret store in all environments. For Azure Local, encryption of the secret store is enabled by default. Follow the guidance to enable and manage secret encryption for [AKS Edge Essentials](/en-us/azure/aks/aksarc/aks-edge-howto-secret-encryption), [AKS enabled by Azure Arc](/en-us/azure/aks/aksarc/encrypt-etcd-secrets), and third-party Kubernetes distributions to ensure your cluster meets enterprise and compliance requirements for data protection.
+
+## Deploy Certificate Management for Azure Arc-enabled Kubernetes
+
+Use the following command to deploy Certificate Management for Azure Arc to an [Azure Arc-enabled cluster](/en-us/azure/azure-arc/kubernetes/) that doesn't already have cert-manager and trust-manager, and that meets the prerequisites:
+
+```azurecli
+az k8s-extension create \
+  --resource-group ${RESOURCE_GROUP} \
+  --cluster-name ${CLUSTER_NAME} \
+  --cluster-type connectedClusters \
+  --name "azure-cert-management" \
+  --extension-type "microsoft.certmanagement"
+```
+
+You automatically receive minor version updates, which include new features and non-breaking changes. If you prefer to [manually update the extension](extensions#upgrade-an-extension-instance) when needed to get the latest features and fixes, add `--auto-upgrade-mode none`.
+
+After the Azure CLI confirms that the installation was successful, [verify that the components are running in your cluster](cert-manager-monitor-troubleshoot#confirm-that-pods-and-components-are-running).
+
+Important
+
+Security note: To improve platform security and help reduce the deployment attack surface, Certificate Management for Azure Arc-enabled Kubernetes doesn't support the Helm extraObjects configuration option.
+
+### Restricted PSA environments
+
+Certificate Management for Azure Arc requires privileged access for log collection into Azure for support and troubleshooting purposes. For environments with restricted Pod Security Standards where privileged access isn't permitted by PSA, log collection into Azure can be disabled to comply with security requirements. Examples of such environments are:
+
+- Red Hat OpenShift
+- VMware Tanzu TKGm
+
+To disable log collection, use `--configuration-settings global.telemetry.logs.enabled=false`. This prevents log volumes from being set up and removes the need for privileged access, while metrics collection continues as normal.
+
+To disable metrics collection, use `--configuration-settings global.telemetry.metrics.enabled=false`.
+
+## Migrate from open source cert-manager and trust-manager
+
+The Certificate Management for Azure Arc extension replaces both open source [cert-manager](https://cert-manager.io/) and [trust-manager](https://cert-manager.io/docs/trust/trust-manager/). Before you install Certificate Management for Arc-enabled Kubernetes, uninstall the open source resources.
+
+Warning
+
+During the time between uninstalling the open source version and installing the Azure Arc extension, certificate rotation doesn't occur and trust bundles aren't distributed to new namespaces. To minimize potential security risks, ensure that this transition period is as short as possible.
+
+Uninstalling the open source cert-manager and trust-manager doesn't remove any existing certificates or related resources you created. These resources remain accessible and usable after the Certificate Management for Azure Arc extension is installed.
+
+Specific steps for uninstallation depend on your installation method. For instructions, see the documentation for [uninstalling cert-manager](https://cert-manager.io/docs/installation/uninstall/) and [uninstalling trust-manager](https://cert-manager.io/docs/trust/trust-manager/installation/#uninstalling). If you used Helm for installation, use this command to confirm which namespaces cert-manager and trust-manager are installed in:
+
+```bash
+helm list -A | grep -E 'trust-manager|cert-manager'
+```
+
+After that, use the following commands to uninstall:
+
+```bash
+helm uninstall cert-manager -n "your namespace" --ignore-not-found
+helm uninstall trust-manager -n "your namespace" --ignore-not-found
+```
+
+## Configure Certificate Management for Azure Arc-enabled Kubernetes
+
+After the Certificate Management for Azure Arc extension is deployed, configure how certificates should be issued, then request a certificate for a workload. At a high level, the steps are:
+
+1. Create an Issuer or ClusterIssuer resource to specify a Certificate Authority (CA) that will generate signed certificates. This could be a self-signed CA, an account registered with an Automated Certificate Management Environment (ACME) CA server such as Let's Encrypt (or others), or a CA whose certificate and private key are stored inside the cluster as a Kubernetes Secret.
+2. Create a Certificate resource that requests a TLS certificate request and includes the fields that are used to generate Certificate Signing Requests (CSRs), which are then fulfilled by the issuer type referenced on the resource for a specific domain or use.
+3. Let cert-manager fulfill the request, which results in a signed certificate and private key being stored in a Kubernetes secret that your application can use.
+4. Optionally, if your scenario requires custom trust roots across namespaces, use trust-manager to distribute the custom CA certificates cluster-wide.
+
+The following sections walk through an example scenario to issue a self-signed certificate for an in-cluster service.
+
+Important
+
+The following example is for demonstration purposes only. In production scenarios, use a secure CA such as an ACME provider or your enterprise PKI, rather than a self-signed issuer.
+
+### Create a self-signed ClusterIssuer
+
+Important
+
+Self-signed certificates aren't recommended for production use. For production environments with ingress and egress scenarios, use an existing organization CA that you control, or use type ACME or Vault depending on your needs. This example is intended only for evaluation purposes.
+
+#### Create a ClusterIssuer (self-signed CA)
+
+First, set up a ClusterIssuer that uses a self-signed certificate as its CA. This ClusterIssuer will act as an internal certificate authority for the cluster, signing certificates for your workloads. The CA should be backed by RSA-generated private keys with a minimum length of 4096 bits.
+
+This example uses a self-signed certificate to demonstrate the process, which is suitable for inter-cluster communication or testing, but is not recommended for production workloads.
+
+Apply the following YAML manifest to create a self-signed ClusterIssuer:
+
+```yml
+
+cat <<EOF | kubectl apply -f -
+  apiVersion: cert-manager.io/v1
+  kind: ClusterIssuer
+  metadata:
+    name: selfsigned-cluster-ca
+  spec:
+    selfSigned: {}
+EOF
+```
+
+This defines a ClusterIssuer named `selfsigned-cluster-ca` that issues self-signed certificates (meaning it effectively generates a root CA certificate for signing). After you define the ClusterIssuer, cert-manager automatically generates a root key and certificate for this issuer behind the scenes. It stores the generated CA certificate and key in a secret (by default named `selfsigned-cluster-ca-cert` in the same namespace as cert-manager, typically called `cert-manager`)
+
+#### Create a certificate signed by the ClusterIssuer
+
+Now request a certificate for a specific purpose (for example, workload authentication). Create a certificate resource that asks for a certificate for an internal name such as `domain my-service.mydomainlocal`, signed by the new self-signed cluster CA.
+
+```yaml
+cat <<EOF | kubectl apply -f -
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: my-service-cert
+    namespace: default  # or the namespace where your application resides
+  spec:
+    secretName: my-service-tls
+    duration: 2160h            # 90 days (default)
+    renewBefore: 360h          # renew 15 days before expiration
+    commonName: my-service.mydomain.local
+    dnsNames:
+    - my-service.mydomain.local
+    issuerRef:
+      name: selfsigned-cluster-ca
+      kind: ClusterIssuer
+    privateKey:
+      algorithm: RSA
+      encoding: PKCS1
+      size: 4096
+      rotationPolicy: Always
+EOF
+```
+
+This spec includes the following fields:
+
+- `secretName: my-service-tls` is where the resulting TLS certificate and key will be stored (as a secret in the same namespace). Applications will use this secret.
+- `commonName` and `dnsNames` specify the subject name(s) for the certificate. This example uses a fictitious service DNS name.
+- `issuerRef` points to the issuer that you created. Set `kind: ClusterIssuer` and `name` to reference your self-signed CA ClusterIssuer.
+
+Within a few seconds, cert-manager generates a private key and create a `CertificateSigningRequest` to the referenced issuer. Because this issuer is self-signed, cert-manager itself will act as the signer by using the CA key it generated earlier.
+
+#### Distribute trust bundle (optional)
+
+If you only use self-signed certificates within your cluster, you might want all workloads to trust the cluster's self-signed root CA across namespaces. Trust Manager can distribute the CA as a ConfigMap where needed.
+
+Create a `Certificate` resource to store the self-signed CA in the secret selfsigned-cluster-ca-cert:
+
+```yaml
+cat <<EOF | kubectl apply -f -
+  apiVersion: cert-manager.io/v1
+  kind: Certificate
+  metadata:
+    name: selfsigned-cluster-ca-cert
+    namespace: cert-manager
+  spec:
+    isCA: true
+    commonName: selfsigned-cluster-ca-cert
+    secretName: selfsigned-cluster-ca-cert
+    privateKey:
+      algorithm: ECDSA
+      size: 256
+      rotationPolicy: Always
+    issuerRef:
+      name: selfsigned-cluster-ca
+      kind: ClusterIssuer
+      group: cert-manager.io
+EOF
+```
+
+Create a `Bundle` resource to configure trust-manager to distribute the CA certificate:
+
+```yaml
+cat <<EOF | kubectl apply -f -
+  apiVersion: trust.cert-manager.io/v1alpha1
+  kind: Bundle
+  metadata:
+    name: cluster-ca-bundle
+    namespace: cert-manager
+  spec:
+    sources:
+    - secret:
+        name: selfsigned-cluster-ca-cert
+        key: tls.crt
+    target:
+      configMap:
+        key: ca.crt
+EOF
+```
+
+This configuration instructs trust-manager to take the certificate data from the specified secret (`selfsigned-cluster-ca-cert`) and publish it into a ConfigMap called `cluster-ca-bundle` in all namespaces. The ConfigMap has a data entry `ca.crt` containing the CA certificate. By applying this Bundle, trust-manager will create and update the ConfigMaps accordingly.
+
+Any pods can then mount the `cluster-ca-bundle` ConfigMap to trust the custom CA, or the ConfigMap can be referenced by other extensions. Using a trust bundle is especially useful if using a corporate CA; you would similarly distribute that CA to all pods needing to trust it.
+
+## Remove Certificate Management for Azure Arc-enabled Kubernetes
+
+To uninstall the Certificate Management for Azure Arc extension, use the following command:
+
+```azurecli
+az k8s-extension delete \
+  --resource-group ${RESOURCE_GROUP} \
+  --cluster-name ${CLUSTER_NAME} \
+  --cluster-type connectedClusters \
+  --name "azure-cert-management"
+```
+
+This command removes the cert-manager and trust-manager deployments. It doesn't remove secrets and configmaps for trust bundles, but it does remove the controllers that keep them updated. Any certificates or issuers that you created will remain, and any users of those certificates can continue to use them until they expire. To fully remove cert-manager from the cluster, remove the certificate and issuer resources that you created, and any secrets that were generated.

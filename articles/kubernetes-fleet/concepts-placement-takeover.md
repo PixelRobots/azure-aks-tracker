@@ -1,0 +1,305 @@
+---
+layout: Conceptual
+title: Taking over existing workloads with Azure Kubernetes Fleet Manager resource placement | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/kubernetes-fleet/concepts-placement-takeover
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+learn_banner_products:
+- azure
+description: This article describes how to use the whenToTakeOver property to control how Fleet Manager handles existing workloads when placing workloads using resource placement.
+ms.date: 2026-07-28T00:00:00.0000000Z
+author: sjwaight
+ms.author: simonwaight
+ms.service: azure-kubernetes-fleet-manager
+ms.topic: concept-article
+locale: en-us
+document_id: 4ddd64b0-21dc-8d59-2572-0bb14fc6c205
+document_version_independent_id: 7e867cfa-8f0a-2436-8d32-e1162c57ad26
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/kubernetes-fleet/concepts-placement-takeover.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+toc_rel: toc.json
+asset_id: kubernetes-fleet/concepts-placement-takeover
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/kubernetes-fleet/concepts-placement-takeover.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+platformId: bd0d0c6a-bb1b-c009-01cc-14c145924ee8
+---
+
+# Taking over existing workloads with Azure Kubernetes Fleet Manager resource placement | Microsoft Learn
+
+**Applies to**: ✔️ Fleet Manager with hub cluster
+
+When a multi-cluster environment matures, the presence of a specific workload on multiple clusters is a common situation. One reason to add clusters to a fleet is to centralize management of workloads to improve visibility and manageability of workloads across multiple clusters. However, adding clusters with existing workloads to a fleet can lead to placement conflicts when Fleet Manager attempts to place a managed workload onto an added member cluster.
+
+In this article, we look at how to use the `whenToTakeOver` property of an `applyStrategy` in a resource placement (cluster-scoped `ClusterResourcePlacement` or namespace-scoped `ResourcePlacement`) to explicitly control how Fleet Manager handles existing workloads when performing placements.
+
+Note
+
+If you aren't already familiar with Fleet Manager's resource placement concepts, read the [cluster-scoped resource placement overview](concepts-resource-placement) and the [namespace-scoped resource placement overview](concepts-namespace-scoped-resource-propagation) before reading this article.
+
+Important
+
+Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
+
+Our data plane previews are released via our v1beta1 API. If you don't see preview objects, check that you're requesting the v1beta1 API when you interact with the Fleet Manager hub cluster.
+
+## Workload takeover options
+
+The starting point for workload takeover is to deploy the workload manifests onto your Fleet Manager [hub cluster](access-fleet-hub-cluster-kubernetes-api). Once deployed you define a `ClusterResourcePlacement` or `ResourcePlacement` that specifies an explicit takeover behavior using the `whenToTakeOver` property.
+
+The `whenToTakeOver` property allows the following values:
+
+- `Always`: Fleet Manager applies the corresponding workload from the hub cluster immediately, and any value differences in managed fields are overwritten on the target cluster. This behavior is the default for both `ClusterResourcePlacement` and `ResourcePlacement` without an explicit `whenToTakeOver` setting.
+- `IfNoDiff`: Fleet Manager checks for configuration differences when it finds an existing workload and only applies the hub cluster workload if no configuration differences are found.
+- `Never`: Fleet Manager ignores existing workloads and doesn't apply the hub cluster workload. Fleet Manager still identifies matching workloads and raises an apply error, so you can safely check for the presence of existing workloads.
+
+### Define which fields are used for comparison
+
+You can use an optional `comparisonOptions` property to fine-tune how `whenToTakeOver` determines configuration differences.
+
+- `partialComparison`: only fields that are present on the hub cluster workload and on the target cluster workload are used for value comparison. Any extra unmanaged fields on the target cluster workload are ignored. This behavior is the default without an explicit `comparisonOptions` setting.
+- `fullComparison`: all fields on the workload definition on the Fleet hub cluster must be present on the selected member cluster. If the target cluster has any extra unmanaged fields, then it fails comparison.
+
+## Check for conflicting workloads
+
+In order to check for existing workloads, start by adding an `applyStrategy` with a `whenToTakeOver` value of `Never` as shown in the following examples.
+
+### ClusterResourcePlacement example
+
+```yml
+apiVersion: placement.kubernetes-fleet.io/v1beta1
+kind: ClusterResourcePlacement
+metadata:
+  name: web-2-crp
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: Namespace
+      version: v1
+      labelSelector:
+        matchLabels:
+          app: web-2
+  policy:
+    placementType: PickAll
+  strategy:
+    applyStrategy:
+      whenToTakeOver: Never
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      unavailablePeriodSeconds: 1
+```
+
+Apply the `ClusterResourcePlacement` to your Fleet Manager hub cluster.
+
+```bash
+kubectl apply -f web-2-crp.yaml
+```
+
+### ResourcePlacement example
+
+```yml
+apiVersion: placement.kubernetes-fleet.io/v1beta1
+kind: ResourcePlacement
+metadata:
+  name: web-2-rp
+  namespace: web-2
+spec:
+  resourceSelectors:
+    - group: "apps"
+      kind: Deployment
+      name: web-app
+      version: v1
+  policy:
+    placementType: PickAll
+  strategy:
+    applyStrategy:
+      whenToTakeOver: Never
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      unavailablePeriodSeconds: 1
+```
+
+Apply the `ResourcePlacement` to your Fleet Manager hub cluster.
+
+```bash
+kubectl apply -f web-2-rp.yaml
+```
+
+### Check placement status
+
+Fleet Manager attempts to place the workload and when it finds a matching workload on a target member cluster returns a `failedPlacement` response.
+
+You can determine which member clusters failed placement due to a clashing workload using the following commands. The [jq command](https://github.com/jqlang/jq) is used to format the output.
+
+**For ClusterResourcePlacement:**
+
+```bash
+kubectl get clusterresourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-crp -o jsonpath='{.status.placementStatuses}' \
+    | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
+```
+
+**For ResourcePlacement:**
+
+```bash
+kubectl get resourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-rp -n web-2 -o jsonpath='{.status.placementStatuses}' \
+    | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
+```
+
+Each cluster that fails placement due to an existing workload returns an entry similar to the following sample.
+
+```json
+{
+    "clusterName": "member-2",
+    "failedPlacements": [
+        {
+            "condition": {
+                "lastTransitionTime": "...",
+                "message": "Failed to apply the manifest (error: no ownership of the object in the member cluster; takeover is needed)",
+                "reason": "NotTakenOver",
+                "status": "False",
+                "type": "Applied"
+            },
+            "kind": "Namespace",
+            "name": "web-2",
+            "version": "v1"
+        }
+    ]
+}
+```
+
+## Safely take over matching workloads
+
+To proceed with the take over of an existing workload you can modify the existing `ClusterResourcePlacement` or `ResourcePlacement`, changing `whenToTakeOver` to `IfNoDiff`.
+
+Fleet Manager applies the hub cluster workload in place of the existing workload on the target cluster when there are no differences between managed fields on both workloads. Extra fields are ignored.
+
+### ClusterResourcePlacement example
+
+```yml
+apiVersion: placement.kubernetes-fleet.io/v1beta1
+kind: ClusterResourcePlacement
+metadata:
+  name: web-2-crp
+spec:
+  resourceSelectors:
+    - group: ""
+      kind: Namespace
+      version: v1
+      labelSelector:
+        matchLabels:
+          app: web-2
+  policy:
+    placementType: PickAll
+  strategy:
+    applyStrategy:
+      whenToTakeOver: IfNoDiff
+      comparisonOption: PartialComparison
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      unavailablePeriodSeconds: 1
+```
+
+Apply the `ClusterResourcePlacement` to your Fleet Manager hub cluster.
+
+```bash
+kubectl apply -f web-2-crp.yaml
+```
+
+### ResourcePlacement example
+
+```yml
+apiVersion: placement.kubernetes-fleet.io/v1beta1
+kind: ResourcePlacement
+metadata:
+  name: web-2-rp
+  namespace: web-2
+spec:
+  resourceSelectors:
+    - group: "apps"
+      kind: Deployment
+      name: web-app
+      version: v1
+  policy:
+    placementType: PickAll
+  strategy:
+    applyStrategy:
+      whenToTakeOver: IfNoDiff
+      comparisonOption: PartialComparison
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      unavailablePeriodSeconds: 1
+```
+
+Apply the `ResourcePlacement` to your Fleet Manager hub cluster.
+
+```bash
+kubectl apply -f web-2-rp.yaml
+```
+
+### Check for failed placements
+
+Fleet Manager attempts to place the workload, overwriting target member clusters that have matching fields.
+
+Placements can still fail, so check for extra `failedPlacement` messages. Determine which member clusters failed using the following commands. The [jq command](https://github.com/jqlang/jq) is used to format the output.
+
+**For ClusterResourcePlacement:**
+
+```bash
+kubectl get clusterresourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-crp -o jsonpath='{.status.placementStatuses}' \
+    | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
+```
+
+**For ResourcePlacement:**
+
+```bash
+kubectl get resourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-rp -n web-2 -o jsonpath='{.status.placementStatuses}' \
+    | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
+```
+
+Each cluster that failed placement due to a configuration difference returns an entry similar to the following sample.
+
+```json
+{
+    "clusterName": "member-2",
+    "failedPlacements": [
+        {
+            "condition": {
+                "lastTransitionTime": "...",
+                "message": "Failed to apply the manifest (error: cannot take over object: configuration differences are found between the manifest object and the corresponding object in the member cluster)",
+                "reason": "FailedToTakeOver",
+                "status": "False",
+                "type": "Applied"
+            },
+            "kind": "Namespace",
+            "name": "work-2",
+            "version": "v1"
+        }
+    ]
+}
+```
+
+Viewing drifted fields can be achieved by following the process detailed in the [report on drifted clusters](concepts-placement-drift#report-on-drifted-clusters) section of the drift detection documentation.
+
+At this point you must decide on how to handle the drift, by either including the member cluster changes into your hub cluster workload definition, or electing to overwrite the member cluster workload by setting the `whenToTakeOver` property to `Always`.

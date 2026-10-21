@@ -1,0 +1,230 @@
+---
+layout: Conceptual
+title: Center for Internet Security (CIS) Azure Linux 2.0 benchmark - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/cis-azure-linux
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: Learn how AKS applies the CIS benchmark with the Azure Linux 2.0 image
+author: schaffererin
+ms.author: schaffererin
+ms.subservice: aks-security
+ms.custom: linux-related-content
+ms.topic: concept-article
+ms.date: 2023-12-07T00:00:00.0000000Z
+locale: en-us
+document_id: 2c8b971f-16da-25b5-5a1e-8550de1fe800
+document_version_independent_id: 08c3ba13-18c9-eaf1-4f0f-e83c81ef1047
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/cis-azure-linux.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+toc_rel: toc.json
+asset_id: aks/cis-azure-linux
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/cis-azure-linux.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 61bf8b74-c21e-ba88-c687-42054b4fe934
+---
+
+# Center for Internet Security (CIS) Azure Linux 2.0 benchmark - Azure Kubernetes Service | Microsoft Learn
+
+Important
+
+This article and the recommendations below apply only to Azure Linux 2.0. The configuration statuses and guidance reflect the CIS Azure Linux 2.0 Benchmark v1.0 and the Azure Linux 2.0 Container Host image used by AKS. They may not apply to other Azure Linux releases, custom images, or third-party distributions.
+
+Important
+
+Starting on **November 30, 2025**, Azure Kubernetes Service (AKS) no longer supports or provides security updates for Azure Linux 2.0. The Azure Linux 2.0 node image is frozen at the `202512.06.0` release. Beginning on **October 31, 2026**, node images will be removed, and you'll be unable to scale your node pools. Migrate to a supported Azure Linux version by [upgrading your node pools](/en-us/azure/aks/upgrade-aks-cluster) to a supported Kubernetes version or migrating to [osSku AzureLinux3](/en-us/azure/aks/upgrade-os-version). For more information, see the [Retirement GitHub issue](https://github.com/Azure/AKS/issues/4988) and the [Azure Updates retirement announcement](https://azure.microsoft.com/updates?id=500645). To stay informed on announcements and updates, follow the [AKS release notes](https://github.com/Azure/AKS/releases).
+
+The security OS configuration applied to the Azure Linux 2.0 Container Host for AKS image is based on the Azure Linux security baseline, which aligns with the CIS benchmark. As a secure service, AKS complies with SOC, ISO, PCI DSS, and HIPAA standards. For more information about the Azure Linux Container Host security, see [Security concepts for clusters in AKS](concepts-security). To learn more about the CIS benchmark, see [Center for Internet Security (CIS) Benchmarks](/en-us/compliance/regulatory/offering-CIS-Benchmark). For more information on the Azure security baselines for Linux, see [Linux security baseline](/en-us/azure/governance/policy/samples/guest-configuration-baseline-linux).
+
+## Azure Linux 2.0 Overview
+
+This Azure Linux 2.0 Container Host operating system is based on the **Azure Linux 2.0** image with built-in security configurations applied.
+
+As part of the security-optimized operating system:
+
+- AKS and Azure Linux 2.0 provide a security-optimized host OS by default with no option to select an alternate operating system.
+- The security-optimized host OS is built and maintained specifically for AKS and is **not** supported outside of the AKS platform.
+- Unnecessary kernel module drivers have been disabled in the OS to reduce the attack surface.
+
+## Recommendations
+
+The below table has four sections:
+
+- **CIS ID:** The associated rule ID with each of the baseline rules.
+- **Recommendation description:** A description of the recommendation issued by the CIS benchmark.
+- **Level:** L1, or Level 1, recommends essential basic security requirements that can be configured on any system and should cause little or no interruption of service or reduced functionality.
+- **Status:**
+    - *Pass* - The recommendation has been applied.
+    - *Fail* - The recommendation hasn't been applied.
+    - *N/A* - The recommendation relates to manifest file permission requirements that aren't relevant to AKS.
+    - *Depends on Environment* - The recommendation is applied in the user's specific environment and isn't controlled by AKS.
+    - *Equivalent Control* - The recommendation has been implemented in a different equivalent manner.
+- **Reason:**
+    - *Potential Operation Impact* - The recommendation wasn't applied because it would have a negative effect on the service.
+    - *Covered Elsewhere* - The recommendation is covered by another control in Azure cloud compute.
+
+### Azure Linux 2.0 Benchmarks
+
+The following are the results from the [CIS Azure Linux 2.0 Benchmark v1.0](https://www.cisecurity.org/benchmark/azure_linux) recommendations based on the CIS rules:
+
+| CIS ID | Recommendation description | Status | Reason |
+| --- | --- | --- | --- |
+| 1.1.4 | Disable Automounting | Pass |  |
+| 1.1.1.1 | Ensure mounting of cramfs filesystems is disabled | Pass |  |
+| 1.1.2.1 | Ensure /tmp is a separate partition | Pass |  |
+| 1.1.2.2 | Ensure nodev option set on /tmp partition | Pass |  |
+| 1.1.2.3 | Ensure nosuid option set on /tmp partition | Pass |  |
+| 1.1.8.1 | Ensure nodev option set on /dev/shm partition | Pass |  |
+| 1.1.8.2 | Ensure nosuid option set on /dev/shm partition | Pass |  |
+| 1.2.1 | Ensure DNF gpgcheck is globally activated | Pass |  |
+| 1.2.2 | Ensure TDNF gpgcheck is globally activated | Pass |  |
+| 1.5.1 | Ensure core dump storage is disabled | Pass |  |
+| 1.5.2 | Ensure core dump backtraces are disabled | Pass |  |
+| 1.5.3 | Ensure address space layout randomization (ASLR) is enabled | Pass |  |
+| 1.7.1 | Ensure local login warning banner is configured properly | Pass |  |
+| 1.7.2 | Ensure remote login warning banner is configured properly | Pass |  |
+| 1.7.3 | Ensure permissions on /etc/motd are configured | Pass |  |
+| 1.7.4 | Ensure permissions on /etc/issue are configured | Pass |  |
+| 1.7.5 | Ensure permissions on /etc/issue.net are configured | Pass |  |
+| 2.1.1 | Ensure time synchronization is in use | Pass |  |
+| 2.1.2 | Ensure chrony is configured | Pass |  |
+| 2.2.1 | Ensure xinetd isn't installed | Pass |  |
+| 2.2.2 | Ensure xorg-x11-server-common isn't installed | Pass |  |
+| 2.2.3 | Ensure avahi isn't installed | Pass |  |
+| 2.2.4 | Ensure a print server isn't installed | Pass |  |
+| 2.2.5 | Ensure a dhcp server isn't installed | Pass |  |
+| 2.2.6 | Ensure a dns server isn't installed | Pass |  |
+| 2.2.7 | Ensure FTP client isn't installed | Pass |  |
+| 2.2.8 | Ensure an ftp server isn't installed | Pass |  |
+| 2.2.9 | Ensure a tftp server isn't installed | Pass |  |
+| 2.2.10 | Ensure a web server isn't installed | Pass |  |
+| 2.2.11 | Ensure IMAP and POP3 server isn't installed | Pass |  |
+| 2.2.12 | Ensure Samba isn't installed | Pass |  |
+| 2.2.13 | Ensure HTTP Proxy Server isn't installed | Pass |  |
+| 2.2.14 | Ensure net-snmp isn't installed or the snmpd service isn't enabled | Pass |  |
+| 2.2.15 | Ensure NIS server isn't installed | Pass |  |
+| 2.2.16 | Ensure telnet-server isn't installed | Pass |  |
+| 2.2.17 | Ensure mail transfer agent is configured for local-only mode | Pass |  |
+| 2.2.18 | Ensure nfs-utils isn't installed or the nfs-server service is masked | Pass |  |
+| 2.2.19 | Ensure rsync-daemon isn't installed or the rsyncd service is masked | Pass |  |
+| 2.3.1 | Ensure NIS Client isn't installed | Pass |  |
+| 2.3.2 | Ensure rsh client isn't installed | Pass |  |
+| 2.3.3 | Ensure talk client isn't installed | Pass |  |
+| 2.3.4 | Ensure telnet client isn't installed | Pass |  |
+| 2.3.5 | Ensure LDAP client isn't installed | Pass |  |
+| 2.3.6 | Ensure TFTP client isn't installed | Pass |  |
+| 3.1.1 | Ensure IPv6 is enabled | Pass |  |
+| 3.2.1 | Ensure packet redirect sending is disabled | Pass |  |
+| 3.3.1 | Ensure source routed packets aren't accepted | Pass |  |
+| 3.3.2 | Ensure ICMP redirects aren't accepted | Pass |  |
+| 3.3.3 | Ensure secure ICMP redirects aren't accepted | Pass |  |
+| 3.3.4 | Ensure suspicious packets are logged | Pass |  |
+| 3.3.5 | Ensure broadcast ICMP requests are ignored | Pass |  |
+| 3.3.6 | Ensure bogus ICMP responses are ignored | Pass |  |
+| 3.3.7 | Ensure Reverse Path Filtering is enabled | Pass |  |
+| 3.3.8 | Ensure TCP SYN Cookies is enabled | Pass |  |
+| 3.3.9 | Ensure IPv6 router advertisements aren't accepted | Pass |  |
+| 3.4.3.1.1 | Ensure iptables package is installed | Pass |  |
+| 3.4.3.1.2 | Ensure nftables isn't installed with iptables | Pass |  |
+| 3.4.3.1.3 | Ensure firewalld is either not installed or masked with iptables | Pass |  |
+| 4.2 | Ensure logrotate is configured | Pass |  |
+| 4.2.2 | Ensure all log files have appropriate access configured | Pass |  |
+| 4.2.1.1 | Ensure rsyslog is installed | Pass |  |
+| 4.2.1.2 | Ensure rsyslog service is enabled | Pass |  |
+| 4.2.1.3 | Ensure rsyslog default file permissions are configured | Pass |  |
+| 4.2.1.4 | Ensure logging is configured | Pass |  |
+| 4.2.1.5 | Ensure rsyslog isn't configured to receive logs from a remote client | Pass |  |
+| 5.1.1 | Ensure cron daemon is enabled | Pass |  |
+| 5.1.2 | Ensure permissions on /etc/crontab are configured | Pass |  |
+| 5.1.3 | Ensure permissions on /etc/cron.hourly are configured | Pass |  |
+| 5.1.4 | Ensure permissions on /etc/cron.daily are configured | Pass |  |
+| 5.1.5 | Ensure permissions on /etc/cron.weekly are configured | Pass |  |
+| 5.1.6 | Ensure permissions on /etc/cron.monthly are configured | Pass |  |
+| 5.1.7 | Ensure permissions on /etc/cron.d are configured | Pass |  |
+| 5.1.8 | Ensure cron is restricted to authorized users | Pass |  |
+| 5.1.9 | Ensure at is restricted to authorized users | Pass |  |
+| 5.2.1 | Ensure permissions on /etc/ssh/sshd\_config are configured | Pass |  |
+| 5.2.2 | Ensure permissions on SSH private host key files are configured | Pass |  |
+| 5.2.3 | Ensure permissions on SSH public host key files are configured | Pass |  |
+| 5.2.4 | Ensure SSH access is limited | Pass |  |
+| 5.2.5 | Ensure SSH LogLevel is appropriate | Pass |  |
+| 5.2.6 | Ensure SSH PAM is enabled | Pass |  |
+| 5.2.7 | Ensure SSH root login is disabled | Pass |  |
+| 5.2.8 | Ensure SSH HostbasedAuthentication is disabled | Pass |  |
+| 5.2.9 | Ensure SSH PermitEmptyPasswords is disabled | Pass |  |
+| 5.2.10 | Ensure SSH PermitUserEnvironment is disabled | Pass |  |
+| 5.2.11 | Ensure SSH IgnoreRhosts is enabled | Pass |  |
+| 5.2.12 | Ensure only strong Ciphers are used | Pass |  |
+| 5.2.13 | Ensure only strong MAC algorithms are used | Pass |  |
+| 5.2.14 | Ensure only strong Key Exchange algorithms are used | Pass |  |
+| 5.2.15 | Ensure SSH warning banner is configured | Pass |  |
+| 5.2.16 | Ensure SSH MaxAuthTries is set to 4 or less | Pass |  |
+| 5.2.17 | Ensure SSH MaxStartups is configured | Pass |  |
+| 5.2.18 | Ensure SSH LoginGraceTime is set to one minute or less | Pass |  |
+| 5.2.19 | Ensure SSH MaxSessions is set to 10 or less | Pass |  |
+| 5.2.20 | Ensure SSH Idle Timeout Interval is configured | Pass |  |
+| 5.3.1 | Ensure sudo is installed | Pass |  |
+| 5.3.2 | Ensure reauthentication for privilege escalation isn't disabled globally | Pass |  |
+| 5.3.3 | Ensure sudo authentication timeout is configured correctly | Pass |  |
+| 5.4.1 | Ensure password creation requirements are configured | Pass |  |
+| 5.4.2 | Ensure lockout for failed password attempts is configured | Pass |  |
+| 5.4.3 | Ensure password hashing algorithm is SHA-512 | Pass |  |
+| 5.4.4 | Ensure password reuse is limited | Pass |  |
+| 5.5.2 | Ensure system accounts are secured | Pass |  |
+| 5.5.3 | Ensure default group for the root account is GID 0 | Pass |  |
+| 5.5.4 | Ensure default user umask is 027 or more restrictive | Pass |  |
+| 5.5.1.1 | Ensure password expiration is 365 days or less | Pass |  |
+| 5.5.1.2 | Ensure minimum days between password changes are configured | Pass |  |
+| 5.5.1.3 | Ensure password expiration warning days are 7 or more | Pass |  |
+| 5.5.1.4 | Ensure inactive password lock is 30 days or less | Pass |  |
+| 5.5.1.5 | Ensure all users last password change date is in the past | Pass |  |
+| 6.1.1 | Ensure permissions on /etc/passwd are configured | Pass |  |
+| 6.1.2 | Ensure permissions on /etc/passwd- are configured | Pass |  |
+| 6.1.3 | Ensure permissions on /etc/group are configured | Pass |  |
+| 6.1.4 | Ensure permissions on /etc/group- are configured | Pass |  |
+| 6.1.5 | Ensure permissions on /etc/shadow are configured | Pass |  |
+| 6.1.6 | Ensure permissions on /etc/shadow- are configured | Pass |  |
+| 6.1.7 | Ensure permissions on /etc/gshadow are configured | Pass |  |
+| 6.1.8 | Ensure permissions on /etc/gshadow- are configured | Pass |  |
+| 6.1.9 | Ensure no unowned or ungrouped files or directories exist | Pass |  |
+| 6.1.10 | Ensure world writable files and directories are secured | Pass |  |
+| 6.2.1 | Ensure password fields aren't empty | Pass |  |
+| 6.2.2 | Ensure all groups in /etc/passwd exist in /etc/group | Pass |  |
+| 6.2.3 | Ensure no duplicate UIDs exist | Pass |  |
+| 6.2.4 | Ensure no duplicate GIDs exist | Pass |  |
+| 6.2.5 | Ensure no duplicate user names exist | Pass |  |
+| 6.2.6 | Ensure no duplicate group names exist | Pass |  |
+| 6.2.7 | Ensure root PATH Integrity | Pass |  |
+| 6.2.8 | Ensure root is the only UID 0 account | Pass |  |
+| 6.2.9 | Ensure all users' home directories exist | Pass |  |
+| 6.2.10 | Ensure users' own their home directories | Pass |  |
+| 6.2.11 | Ensure users' home directories permissions are 750 or more restrictive | Pass |  |
+| 6.2.12 | Ensure users' dot files aren't group or world writable | Pass |  |
+| 6.2.13 | Ensure users' .netrc files aren't group or world accessible | Pass |  |
+| 6.2.14 | Ensure no users have .forward files | Pass |  |
+| 6.2.15 | Ensure no users have .netrc files | Pass |  |
+| 6.2.16 | Ensure no users have .rhosts files | Pass |  |

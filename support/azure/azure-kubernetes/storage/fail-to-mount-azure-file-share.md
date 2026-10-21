@@ -1,0 +1,533 @@
+---
+layout: Conceptual
+title: Troubleshoot errors when mounting an Azure file share in AKS - Azure | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share
+breadcrumb_path: /support/breadcrumb/toc.json
+feedback_system: Standard
+recommendations: true
+uhfHeaderId: Azure
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+manager: dcscontentpm
+audience: itpro
+author: kaushika-msft
+ms.author: kaushika
+ms.topic: troubleshooting
+description: Troubleshoot Azure file share mount errors in AKS by identifying common causes, fixing connectivity and permission issues, and restoring pod startup. Start now.
+ms.date: 2026-06-10T00:00:00.0000000Z
+ms.reviewer: chiragpa, akscsscic, shoguo, v-weizhu, v-rekhanain
+ms.service: azure-kubernetes-service
+ms.custom: sap:Storage
+locale: en-us
+document_id: 77b1d9d1-ae1c-ce21-75b3-2a7e54d1be46
+document_version_independent_id: 77b1d9d1-ae1c-ce21-75b3-2a7e54d1be46
+original_content_git_url: https://github.com/MicrosoftDocs/SupportArticles-docs-pr/blob/live/support/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share.md
+site_name: Docs
+depot_name: MSDN.support1-docset
+page_type: conceptual
+toc_rel: ../toc.json
+pdf_url_template: https://learn.microsoft.com/pdfstore/en-us/MSDN.support1-docset/{branchName}{pdfName}
+feedback_help_link_type: ''
+feedback_help_link_url: ''
+asset_id: azure/azure-kubernetes/storage/fail-to-mount-azure-file-share
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: support/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/20ed8455-bc18-4537-87a4-83784e7b2a39
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
+platformId: 4b0d46b6-f642-4f7b-92a2-30569c8057ab
+---
+
+# Troubleshoot errors when mounting an Azure file share in AKS - Azure | Microsoft Learn
+
+## Summary
+
+This article provides possible causes and solutions for errors that cause the mounting of an Azure file share to fail.
+
+## Symptoms
+
+When you deploy a Kubernetes resource such as a Deployment or a StatefulSet in an Azure Kubernetes Service (AKS) environment, the deployment creates a pod that mounts a PersistentVolumeClaim (PVC) that references an Azure file share.
+
+However, the pod stays in the **ContainerCreating** status. When you run the `kubectl describe pods` command, you might see one of the following errors in the command output that causes the mounting operation to fail:
+
+- Mount error(2): No such file or directory
+- Mount error(13): Permission denied
+- Mount error(22): Invalid argument
+
+Refer to the following output as an example:
+
+```output
+MountVolume.MountDevice failed for volume "\<pv-fileshare-name>"
+rpc error: code = Internal desc =
+volume(\<storage-account's-resource-group>#\<storage-account-name>#\<pv/fileshare-name>#) > mount "//\<storage-account-name>.file.core.windows.net/\<pv-fileshare-name>" on "/var/lib/kubelet/plugins/kubernetes.io/csi/pv/\<pv-fileshare-name>/globalmount" failed with
+mount failed: exit status 32
+Mounting command: mount
+Mounting arguments: -t cifs -o dir_mode=0777,file_mode=0777,uid=0,gid=0,mfsymlinks,cache=strict,actimeo=30,\<masked> //\<storage-account-name>.file.core.windows.net/\<pv-name> /var/lib/kubelet/plugins/kubernetes.io/csi/pv/\<pv-name>/globalmount
+Output: mount error(\<error-id>): \<error-description>
+Refer to the mount.cifs(8) manual page (e.g. man mount.cifs) and kernel log messages (dmesg)
+```
+
+Note
+
+- If the storage account is publicly accessible, the hostname displayed in the output is *&lt;storage-account-name&gt;.file.core.windows.net*.
+- If the storage account is configured privately with a private link, endpoint, or DNS zone, the hostname is *&lt;storage-account-name&gt;.privatelink.file.core.windows.net*.
+
+## Prerequisites
+
+According to the message in the output, identify the storage account and file share as shown in the following example. Use these values in later troubleshooting steps.
+
+> 
+> mount "//&lt;storage-account-name&gt;.file.core.windows.net/&lt;pv-fileshare-name&gt;"
+
+See the following sections for possible causes and solutions.
+
+## Mount error(2): No such file or directory
+
+This error indicates that there's no connectivity between the AKS cluster and the storage account.
+
+### Initial troubleshooting
+
+[Azure Files relies on the SMB protocol (port 445)](/en-us/azure/storage/files/storage-files-networking-overview#accessing-your-azure-file-shares). Make sure that port 445 and the IP address of the storage account aren't blocked.
+
+To check the IP address of the storage account, run a Domain Name System (DNS) command such as `nslookup`, `dig`, or `host`. For example:
+
+```console
+nslookup <storage-account-name>.file.core.windows.net
+```
+
+To check whether there's connectivity between the AKS cluster and the storage account, get inside the [node](/en-us/azure/aks/ssh) or [pod](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#exec) and run the following `nc` or `telnet` command:
+
+```console
+nc -v -w 2 <storage-account-name>.file.core.windows.net 445
+```
+
+```console
+telnet <storage-account-name>.file.core.windows.net 445
+```
+
+### Possible causes for mount error(2)
+
+- Cause 1: File share doesn't exist
+- Cause 2: NSG blocks traffic between AKS and storage account
+- Cause 3: Virtual Appliance blocks traffic between AKS and storage account
+- Cause 4: FIPS enabled node pool is used
+
+Note
+
+- Causes 1, 2, and 4 apply to public and private storage account scenarios.
+- Cause 3 applies to the public scenario only.
+
+### Cause 1: File share doesn't exist
+
+To check whether the file share exists, follow these steps:
+
+1. Search **Storage accounts** in the Azure portal and access your storage account.
+
+    [![Screenshot of storage accounts list in Azure portal.](media/fail-to-mount-azure-file-share/storage-account-lists.png)](media/fail-to-mount-azure-file-share/storage-account-lists.png#lightbox)
+2. Select **File shares** under **Data storage** in the storage account and check whether the associated `PersistentVolumeClaim` (PVC) in the YAML file of the pod, deployment, or statefulset exists in **File shares**.
+
+    [![Screenshot of selecting file shares in the storage account.](media/fail-to-mount-azure-file-share/file-shares.png)](media/fail-to-mount-azure-file-share/file-shares.png#lightbox)
+
+#### Solution: Ensure file share exists
+
+To resolve this issue, make sure that the file share that's associated with the `PersistentVolume` (PV) or `PersistentVolumeClaim` (PVC) exists.
+
+### Cause 2: Network Security Group blocks traffic between AKS and storage account
+
+Check the output of the `nc` or `telnet` command mentioned in the Initial troubleshooting section. If a timeout is displayed, check the [network security group (NSG)](/en-us/azure/virtual-network/network-security-groups-overview) and make sure that the IP address of the storage account isn't blocked.
+
+To check whether the NSG blocks the IP address of the storage account, follow these steps:
+
+1. In the [Azure portal](https://portal.azure.com), go to [Network Watcher](/en-us/azure/network-watcher/network-watcher-monitoring-overview) and select **NSG diagnostic**.
+2. Fill the fields by using the following values:
+
+    - **Protocol**: Any
+    - **Direction**: Outbound
+    - **Source type**: IPv4 address/CIDR
+    - **IPv4 address/CIDR**: The IP address of an instance that's associated with the AKS node
+    - **Destination IP address**: The IP address of the storage account
+    - **Destination port**: 445
+3. Select **Check** and check the **Traffic** status.
+
+The **Traffic** status can be **Allowed** or **Denied**. The **Denied** status means that the NSG is blocking the traffic between the AKS cluster and storage account. If the status is **Denied**, the NSG name is shown.
+
+#### Solution: Allow connectivity between AKS and storage account
+
+To resolve this issue, make changes at the NSG level to allow the connectivity between the AKS cluster and the storage account on port 445.
+
+### Cause 3: Virtual Appliance blocks traffic between AKS and storage account
+
+If you use a Virtual Appliance (usually a firewall) to control outbound traffic of the AKS cluster (for example, the Virtual Appliance has a route table applied at the AKS cluster's subnet, and the route table has routes that send traffic towards the Virtual Appliance), the Virtual Appliance might block traffic between the AKS cluster and the storage account.
+
+To isolate the issue, add a route in the route table for the IP address of the storage account to send the traffic towards the internet.
+
+To confirm which route table controls the traffic of the AKS cluster, follow these steps:
+
+1. Go to the AKS cluster in the Azure portal and select **Properties** &gt; **Infrastructure resource group**.
+2. Access the virtual machine scale set (VMSS) or a VM in an availability set if you use such VM set type.
+3. Select **Virtual network/subnet** &gt; **Subnets** and identify the subnet of the AKS cluster. You see the route table to the side.
+
+To add the route in the route table, follow the steps in [Create a route](/en-us/azure/virtual-network/manage-route-table#create-a-route) and fill in the following fields:
+
+- **Address prefix**: &lt;storage-account's-public-IP&gt;/32
+- **Next hop type**：Internet
+
+This route sends all traffic between the AKS cluster and storage account through the public internet.
+
+After you add the route, test the connectivity by using the `nc` or `telnet` command and perform the mounting operation again.
+
+#### Solution: Ensure Virtual Appliance allows traffic between AKS and storage account
+
+If the mounting operation succeeds, consult your networking team to make sure that the Virtual Appliance can allow traffic between the AKS cluster and storage account on port 445.
+
+### Cause 4: FIPS-enabled node pool is used
+
+If you use a [Federal Information Processing Standard (FIPS) enabled node pool](/en-us/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool), the mounting operation fails because FIPS disables some authentication modules. This limitation prevents the mounting of a CIFS share. This behavior is expected and isn't specific to AKS.
+
+To resolve the issue, use one of the following solutions:
+
+#### Solution 1: Schedule pods on nodes in a non-FIPS node pool
+
+AKS node pools have FIPS disabled by default. You can enable FIPS only during node pool creation by using the `--enable-fips-image` parameter.
+
+To resolve the error, schedule the pods on nodes in a non-FIPS node pool.
+
+#### Solution 2: Create a pod that you can schedule on a FIPS-enabled node
+
+To create a pod that you can schedule on a FIPS-enabled node, follow these steps:
+
+1. Use the Azure Files CSI driver to create a custom StorageClass that uses the NFS protocol.
+
+    Refer to the following YAML file as an example:
+
+    ```yml
+    kind: StorageClass 
+    apiVersion: storage.k8s.io/v1 
+    metadata: 
+      name: azurefile-sc-fips 
+    provisioner: file.csi.azure.com 
+    reclaimPolicy: Delete 
+    volumeBindingMode: Immediate 
+    allowVolumeExpansion: true 
+    parameters: 
+      skuName: Premium_LRS 
+      protocol: nfs 
+    ```
+
+    The SKU is set to Premium\_LRS in the YAML file because the Premium SKU is required for NFS. For more information, see [Dynamic Provision](https://github.com/kubernetes-sigs/azurefile-csi-driver/blob/master/docs/driver-parameters.md#dynamic-provision).
+
+    Because of the Premium SKU, the minimum size of the file share is 100 GB. For more information, see [Create a storage class](/en-us/azure/aks/azure-files-dynamic-pv#create-a-storage-class).
+2. Create a PVC that references the custom StorageClass *azurefile-sc-fips*.
+
+    Refer to the following YAML file as an example:
+
+    ```yml
+    apiVersion: v1 
+    kind: PersistentVolumeClaim 
+    metadata: 
+      name: azurefile-pvc-fips 
+    spec: 
+      accessModes: 
+        - ReadWriteMany 
+      storageClassName: azurefile-sc-fips 
+      resources: 
+        requests: 
+          storage: 100Gi 
+    ```
+3. Create a pod that mounts the PVC *azurefile-pvc-fips*.
+
+    Refer to the following YAML file as an example:
+
+    ```yml
+    kind: Pod 
+    apiVersion: v1 
+    metadata: 
+      name: azurefile-pod-fips 
+    spec: 
+      containers: 
+      - name: azurefile-pod-fips 
+        image: mcr.microsoft.com/oss/nginx/nginx:1.15.5-alpine 
+        resources: 
+          requests: 
+            cpu: 100m 
+            memory: 128Mi 
+          limits: 
+            cpu: 250m 
+            memory: 256Mi 
+        volumeMounts: 
+        - mountPath: "/mnt/azure" 
+          name: volume 
+      volumes: 
+        - name: volume 
+          persistentVolumeClaim: 
+            claimName: azurefile-pvc-fips 
+    ```
+
+## Mount error(13): Permission denied
+
+Here are possible causes for this error:
+
+- Cause 1: Kubernetes secret doesn't reference the correct storage account name or key
+- Cause 2: AKS's virtual network and subnet aren't allowed for the storage account
+- Cause 3: Connectivity is via a private link but nodes and the private endpoint are in different virtual networks
+- Cause 4: Storage account is set to require encryption that the client doesn't support
+- Cause 5: Minimum encryption requirement for a storage account isn't met
+- Cause 6: Security profile is used without the NTLM v2 authentication enabled
+
+Note
+
+- Cause 1 applies to public and private scenarios.
+- Cause 2 applies to the public scenario only.
+- Cause 3 applies to the private scenario only.
+- Cause 4 applies to public and private scenarios.
+- Cause 5 applies to public and private scenarios.
+- Cause 6 applies to public and private scenarios.
+
+### Cause 1: Kubernetes secret doesn't reference correct storage account name or key
+
+If you [dynamically create](/en-us/azure/aks/azure-files-dynamic-pv) the file share, the system automatically creates a [Kubernetes secret resource](https://kubernetes.io/docs/concepts/configuration/secret/) with the name `azure-storage-account-<storage-account-name>-secret`.
+
+If you [manually create](/en-us/azure/aks/azure-files-volume) the file share, you must create the Kubernetes secret resource manually.
+
+Regardless of the creation method, if the storage account name or key that the Kubernetes secret references doesn't match the actual value, the mounting operation fails with the "Permission denied" error.
+
+#### Possible causes for mismatch
+
+- If you create the Kubernetes secret manually, you might introduce a typo.
+- If you perform a **Rotate key** operation at the storage account level, the Kubernetes secret doesn't reflect the changes. This mismatch occurs between the key value at the storage account level and the value at the Kubernetes secret level.
+- If you perform a **Rotate key** operation, the Activity log of the storage account displays an operation named **Regenerate Storage Account Keys**. Be aware of the [90 days retention period for Activity log](/en-us/azure/azure-monitor/essentials/activity-log#retention-period).
+
+#### Verify mismatch
+
+To verify the mismatch, follow these steps:
+
+1. Search for and access the storage account in the Azure portal. Select **Access keys** &gt; **Show keys** in the storage account. You see the storage account name and associated keys.
+
+    ![Screenshot of storage account name and keys.](media/fail-to-mount-azure-file-share/storage-account-keys.png)
+2. Go to the AKS cluster, select **Configuration** &gt; **Secrets**, and then search for and access the associated secret.
+
+    [![Screenshot of searching and selecting storage account.](media/fail-to-mount-azure-file-share/select-storage-account.png)](media/fail-to-mount-azure-file-share/select-storage-account.png#lightbox)
+3. Select **Show** (the eye icon) and compare the values of the storage account name and associated key with the values in Step 1.
+
+    [![Screenshot of a Kubernetes secret showing the storage account name and key values.](media/fail-to-mount-azure-file-share/storage-account-associated-secret-key.png)](media/fail-to-mount-azure-file-share/storage-account-associated-secret-key.png#lightbox)
+
+    Before you select **Show**, the values of the storage account name and associated key are encoded into base64 strings. After you select **Show**, the values are decoded.
+
+If you don't have access to the AKS cluster in the Azure portal, perform Step 2 at the kubectl level:
+
+1. Get the YAML file of the Kubernetes secret, and then run the following command to get the values of the storage account name and the key from the output:
+
+    ```console
+    kubectl get secret <secret-name> -n <secret-namespace> -o <yaml-file-name>
+    ```
+2. Use the `echo` command to decode the values of the storage account name and the key and compare them with the values at the storage account level.
+
+    Here's an example to decode the storage account name:
+
+    ```console
+    echo -n '<storage account name>' | base64 --decode ;echo
+    ```
+
+    ![Screenshot of command that decodes storage account name.](media/fail-to-mount-azure-file-share/command-decode-storage-account-name.png)
+
+#### Solution: Adjust the Kubernetes secret and re-create the pods
+
+If the value of the storage account name or key in the Kubernetes secret doesn't match the value in **Access keys** in the storage account, adjust the Kubernetes secret at the Kubernetes secret level by running the following command:
+
+```console
+kubectl edit secret <secret-name> -n <secret-namespace>
+```
+
+The value of the storage account name or the key you add in the Kubernetes secret configuration should be a base64 encoded value. To obtain the encoded value, use the `echo` command.
+
+Here's an example to encode the storage account name:
+
+```console
+echo -n '<storage account name>'| base64 | tr -d '\n' ; echo
+```
+
+For more information, see [Managing Secrets using kubectl](https://kubernetes.io/docs/tasks/configmap-secret/managing-secret-using-kubectl/).
+
+After the Kubernetes secret `azure-storage-account-<storage-account-name>-secret` has the right values, re-create the pods. Otherwise, those pods continue to use the old values that aren't valid anymore.
+
+### Cause 2: AKS virtual network and subnet aren't allowed for storage account
+
+If firewall rules limit the storage account's network to **selected networks**, but you don't add the virtual network and subnet of the AKS cluster to **selected networks**, the mounting operation fails with the "Permission denied" error. For more information, see [Configure Azure Storage firewalls and virtual networks](/en-us/azure/storage/common/storage-network-security) and [Virtual network or firewall rules are enabled on the storage account](/en-us/troubleshoot/azure/azure-storage/files/connectivity/files-troubleshoot-smb-connectivity?tabs=linux#cause-2-virtual-network-or-firewall-rules-are-enabled-on-the-storage-account-or-port-445-is-blocked).
+
+#### Solution: Allow AKS virtual network and subnet for storage account
+
+1. Run the following command to identify the node that hosts the faulty pod:
+
+    ```console
+    kubectl get pod <pod-name> -n <namespace> -o wide
+    ```
+
+    Check the node from the command output:
+
+    ![Screenshot of command that can identity node and output.](media/fail-to-mount-azure-file-share/command-identify-node.png)
+2. Go to the AKS cluster in the Azure portal, select **Properties** &gt; **Infrastructure resource group**, access the VMSS associated with the node, and then check **Virtual network/subnet** to identify the virtual network and subnet.
+
+    ![Screenshot of virtual network/subnet value.](media/fail-to-mount-azure-file-share/virtual-network-subnet-value.png)
+3. Access the storage account in the Azure portal. Select **Networking**. If **Allow access from** is set to **Selected networks**, check whether the virtual network and subnet of the AKS cluster are added.
+
+    [![Screenshot of empty selected networks list.](media/fail-to-mount-azure-file-share/check-virtual-network-added.png)](media/fail-to-mount-azure-file-share/check-virtual-network-added.png#lightbox)
+
+    If you didn't add the virtual network and subnet of the AKS cluster, select **Add existing virtual network**. On the **Add networks** page, type the virtual network and subnet of the AKS cluster, and then select **Add** &gt; **Save**.
+
+    ![Screenshot of adding networks to storage account.](media/fail-to-mount-azure-file-share/add-networks.png)
+
+    It might take a few moments for the changes to take effect. After you add the virtual network and subnet, check whether the pod status changes from **ContainerCreating** to **Running**.
+
+    ![Screenshot of command output that shows current pod status.](media/fail-to-mount-azure-file-share/verify-pod-status.png)
+
+### Cause 3: Connectivity is via private link but nodes and private endpoint are in different virtual networks
+
+When you connect the AKS cluster and storage account through a private link, you use an approved private endpoint connection.
+
+![Screenshot of private endpoint connection.](media/fail-to-mount-azure-file-share/private-endpoint-connections.png)
+
+In this scenario, if the private endpoint and AKS node are in the same virtual network, you can mount an Azure file share.
+
+If the private endpoint and your AKS cluster are in different virtual networks, the mounting operation fails with the "Permission denied" error.
+
+#### Solution: Create virtual network link for virtual network of AKS cluster at private DNS zone
+
+[Get inside the node](/en-us/azure/aks/node-access) and check whether the fully qualified domain name (FQDN) is resolved through a public or private IP address. To do this, run the following command:
+
+```console
+nslookup <storage-account-name>.privatelink.file.core.windows.net
+```
+
+If the FQDN is resolved through a public IP address (see the following screenshot), create a virtual network link for the virtual network of the AKS cluster at the private DNS zone ("privatelink.file.core.windows.net") level. A virtual network link is already automatically created for the virtual network of the storage account's private endpoint.
+
+![Screenshot of nslookup output where the storage account FQDN resolves to a public IP address.](media/fail-to-mount-azure-file-share/verify-fqdn-resolved.png)
+
+To create the virtual network link, follow these steps:
+
+1. Access the Private DNS zone and select **Virtual network links** &gt; **Add**.
+
+    [![Screenshot of the private DNS zone showing a virtual network link for the storage account.](media/fail-to-mount-azure-file-share/storage-account-virtual-network-link.png)](media/fail-to-mount-azure-file-share/storage-account-virtual-network-link.png#lightbox)
+2. Fill in the fields and select the virtual network of the AKS cluster for **Virtual networks**. For how to identify the virtual network of the AKS cluster, see the Solution: Allow AKS virtual network and subnet for storage account section.
+
+    ![Screenshot of the Add virtual network link pane used to select an AKS virtual network.](media/fail-to-mount-azure-file-share/add-virtual-network-link.png)
+3. Select **OK**.
+
+After you add the virtual network link, the FQDN resolves through a private IP address, and the mounting operation succeeds. See the following screenshot for an example:
+
+![Screenshot of nslookup output where the storage account FQDN resolves to a private IP address.](media/fail-to-mount-azure-file-share/private-ip-address-resolved.png)
+
+### Cause 4: Storage account requires encryption that the client doesn't support
+
+[Azure Files Security Settings](/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal#smb-security-settings) contain a number of options for controlling the security and encryption settings on storage accounts. Restricting allowed methods and algorithms can prevent clients from connecting.
+
+The supported SMB encryption algorithm depends on the node operating system and Linux kernel version:
+
+- AKS versions earlier than 1.25 are based on Ubuntu 18.04 LTS, which uses the Linux 5.4 kernel and supports only the AES-128-CCM and AES-128-GCM encryption algorithms. On these versions, the **Maximum security** profile (or a **Custom** profile that disables AES-128-GCM) causes share mapping failures. These AKS versions are out of support, so upgrade to a supported version.
+- AKS versions 1.25 and later are based on Ubuntu 22.04 or a later version, which uses the Linux 5.15 kernel or a later version and supports AES-256-GCM.
+
+#### Solution: Allow AES-128-GCM encryption algorithm to be used
+
+Enable the AES-128-GCM algorithm by using the **Maximum compatibility** profile or a **Custom** profile that enables AES-128-GCM. For more information, see [Azure Files Security Settings](/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal#smb-security-settings).
+
+### Cause 5: Minimum encryption requirement for a storage account isn't met
+
+This problem occurs when a storage account enforces a minimum SMB encryption algorithm (for example, AES-256-GCM only) that the SMB client on the AKS node doesn't support or isn't configured to use. If the node can't negotiate the required cipher, the mounting operation fails with the "Permission denied" error.
+
+#### Solution: Enable AES-128-GCM encryption algorithm for all storage accounts
+
+To successfully mount or access a file share, enable the AES-128-GCM encryption algorithm for all storage accounts.
+
+If you want to use only the AES-256-GCM encryption, follow these steps:
+
+#### Linux
+
+Use the following script to check whether the client supports AES-256-GCM and enforce it only if it does:
+
+```bash
+cifsConfPath="/etc/modprobe.d/cifs.conf"
+echo "$(date) before change ${cifsConfPath}:"
+cat ${cifsConfPath}
+
+# Check if 'require_gcm_256' is already present in the configuration file
+if ! grep -q "require_gcm_256" "${cifsConfPath}"; then
+
+    # Load the CIFS module
+    modprobe cifs
+
+    # Set the parameter at runtime
+    echo 1 > /sys/module/cifs/parameters/require_gcm_256
+
+    # Persist the configuration
+    echo "options cifs require_gcm_256=1" >> "${cifsConfPath}"
+
+    echo "$(date) after changing ${cifsConfPath}:"
+    cat "${cifsConfPath}"
+else
+    echo "require_gcm_256 is already set in ${cifsConfPath}"
+fi
+```
+
+You can also use a Kubernetes DaemonSet to enforce AES-256 on every node. See the following example:
+
+[support-cifs-aes-256-gcm.yaml](https://github.com/andyzhangx/demo/blob/master/aks/support-cifs-aes-256-gcm.yaml)
+
+#### Windows
+
+Use the [Set-SmbClientConfiguration](/en-us/powershell/module/smbshare/set-smbclientconfiguration) PowerShell command to specify the encryption ciphers used by the SMB client and the preferred encryption type without user confirmation:
+
+```powershell
+Set-SmbClientConfiguration -EncryptionCiphers "AES_256_GCM" -Confirm:$false
+```
+
+Note
+
+The `EncryptionCiphers` parameter is available beginning with the 2022-06 Cumulative Update for Windows Server version 21H2 for x64-based systems ([KB5014665](https://support.microsoft.com/help/5014665)) and the Cumulative Update for Windows 11, version 22H2 ([KB5014668](https://support.microsoft.com/help/5014668)).
+
+### Cause 6: Security profile is used without the NTLM v2 authentication enabled
+
+If you use the **Maximum security** profile or a **Custom** security profile without enabling the **NTLM v2** authentication mechanism, the mounting operation fails with the "Mount error(13): Permission denied" error.
+
+#### Solution: Enable NTLM v2 authentication or use the "Maximum compatibility" profile
+
+To mount the share properly in AKS, enable the **NTLM v2** authentication mechanism for the **Custom** security profile or use the **Maximum compatibility** security profile.
+
+## Mount error(22): Invalid argument
+
+This error usually indicates that the Kubernetes secret referenced by the PersistentVolume (PV) or PersistentVolumeClaim (PVC) contains a value for `azurestorageaccountname` or `azurestorageaccountkey` that isn't valid, which makes the underlying `mount -t cifs` call fail with `EINVAL`.
+
+### Cause: Kubernetes secret's `data` field isn't base64 encoded
+
+If you create the Kubernetes secret manually by using a manifest with the `data` field, the values must already be base64 encoded. Unlike the `stringData` field, Kubernetes doesn't encode `data` values for you. If you paste a storage account name or key directly as plain text under `data`, the CSI driver receives a corrupted value, and the mounting operation fails with the "Mount error(22): Invalid argument" error.
+
+To verify this, decode and compare the secret's values with the real storage account name and access keys, following the same steps described in Verify mismatch.
+
+#### Solution: Base64 encode the secret values, or use `stringData` instead
+
+If you use the `data` field in your Secret manifest, base64 encode the storage account name and key before adding them. For example:
+
+```console
+echo -n '<storage account name>' | base64 | tr -d '\n' ; echo
+```
+
+Alternatively, use the `stringData` field instead of `data` in the Secret manifest. Kubernetes automatically base64 encodes `stringData` values on your behalf, so you can provide the storage account name and key as plain text:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: <secret-name>
+type: Opaque
+stringData:
+  azurestorageaccountname: <storage account name>
+  azurestorageaccountkey: <storage account key>
+```
+
+After you correct the secret, re-create the pods so they pick up the updated values.
+
+## References
+
+If you experience other mount errors, see [Troubleshoot Azure Files problems in Linux](/en-us/azure/storage/files/storage-troubleshoot-linux-file-connection-problems).

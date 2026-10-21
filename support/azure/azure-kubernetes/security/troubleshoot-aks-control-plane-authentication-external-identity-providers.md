@@ -1,0 +1,481 @@
+---
+layout: Conceptual
+title: Troubleshoot AKS control plane authentication using external identity providers - Azure | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/security/troubleshoot-aks-control-plane-authentication-external-identity-providers
+breadcrumb_path: /support/breadcrumb/toc.json
+feedback_system: Standard
+recommendations: true
+uhfHeaderId: Azure
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+manager: dcscontentpm
+audience: itpro
+author: kaushika-msft
+ms.author: kaushika
+ms.topic: troubleshooting
+description: Troubleshoot AKS control plane authentication with external identity providers and restore secure access quickly. Follow steps to diagnose and fix issues now.
+ms.reviewer: shasb
+ms.service: azure-kubernetes-service
+ms.date: 2025-11-09T00:00:00.0000000Z
+ms.custom: sap:Identity and Security Management
+zone_pivot_groups: aks-external-identity-provider
+locale: en-us
+document_id: 0fd87abd-7a06-7c1a-cb65-86898fbad6b9
+document_version_independent_id: 0fd87abd-7a06-7c1a-cb65-86898fbad6b9
+original_content_git_url: https://github.com/MicrosoftDocs/SupportArticles-docs-pr/blob/live/support/azure/azure-kubernetes/security/troubleshoot-aks-control-plane-authentication-external-identity-providers.md
+site_name: Docs
+depot_name: MSDN.support1-docset
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: ../toc.json
+pdf_url_template: https://learn.microsoft.com/pdfstore/en-us/MSDN.support1-docset/{branchName}{pdfName}
+feedback_help_link_type: ''
+feedback_help_link_url: ''
+asset_id: azure/azure-kubernetes/security/troubleshoot-aks-control-plane-authentication-external-identity-providers
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: support/azure/azure-kubernetes/security/troubleshoot-aks-control-plane-authentication-external-identity-providers.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/c77bc83e-f0b0-4b63-836e-6630e606bf7c
+- https://authoring-docs-microsoft.poolparty.biz/devrel/8b896464-3b7d-4e1f-84b0-9bb45aeb5f64
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/b98eda1f-6af8-444f-bbfb-7f2366948cbc
+- https://authoring-docs-microsoft.poolparty.biz/devrel/b1d2d671-9549-46e8-918c-24349120dbf5
+platformId: ea0f99c7-29ea-542a-b1e0-33c7e17ac3b2
+---
+
+# Troubleshoot AKS control plane authentication using external identity providers - Azure | Microsoft Learn
+
+## Summary
+
+This article helps you troubleshoot authentication issues when you access the Azure Kubernetes Service (AKS) control plane by using external identity providers.
+
+## Prerequisites
+
+- Azure CLI version 2.61.0 or later. To determine the version, run `az --version`. If you have to install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
+- A tool to connect to the Kubernetes cluster, such as the `kubectl` tool. To install `kubectl` by using Azure CLI, run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
+- The JSON Web Token (JWT) authenticator configuration file that's used for your AKS cluster.
+- Access to https://jwt.ms or a similar JWT token decoder tool for debugging tokens.
+
+## Troubleshooting checklist
+
+### Step 1: Verify identity provider configuration
+
+Make sure that your identity provider is correctly configured and accessible. Follow these steps:
+
+::: zone pivot="github"
+
+1. Verify that your GitHub repository has **Actions** enabled.
+2. Verify that the OpenID Connect (OIDC) provider settings are correctly configured in your workflow.
+3. Make sure that the audience claim in your workflow matches the authenticator configuration.
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+Verify that the OAuth 2.0 client ID and client secret are correct.
+
+::: zone-end
+
+### Step 2: Validate the issuer URL
+
+The issuer URL must be accessible from the AKS cluster nodes. Follow these steps.
+
+1. Verify Domain Name System (DNS) resolution for the issuer URL:
+
+::: zone pivot="github"
+
+    ```bash
+    nslookup token.actions.githubusercontent.com
+    ```
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+    ```bash
+    nslookup accounts.google.com
+    ```
+
+::: zone-end
+2. Test network connectivity from a cluster node:
+
+::: zone pivot="github"
+
+    ```bash
+    curl -v https://token.actions.githubusercontent.com/.well-known/openid-configuration
+    ```
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+    ```bash
+    curl -v https://accounts.google.com/.well-known/openid-configuration
+    ```
+
+::: zone-end
+3. Verify that firewall rules and network security groups allow outbound HTTPS traffic to the identity provider.
+
+### Step 3: Inspect the JWT authenticator configuration
+
+Review your JWT authenticator configuration for common issues. Follow these steps:
+
+1. Verify that the issuer URL exactly matches the `iss` claim in your tokens.
+2. Verify that the audience claim in the configuration matches the `aud` claim in your tokens.
+3. Make sure that Common Expression Language (CEL) expressions in claim mappings are syntactically correct.
+4. Verify that all username and group mappings include the `aks:jwt:` prefix.
+
+Example configuration:
+
+::: zone pivot="github"
+
+```json
+{
+  "issuer": {
+      "url": "https://token.actions.githubusercontent.com",
+      "audiences": [
+          "my-api"
+      ]
+  },
+  "claimValidationRules": [
+      {
+          "expression": "has(claims.sub)",
+          "message": "must have sub claim"
+      }
+  ],
+  "claimMappings": {
+      "username": {
+          "expression": "'aks:jwt:github:' + claims.sub"
+      }
+  },
+  "userValidationRules": [
+      {
+          "expression": "has(user.username)",
+          "message": "must have username"
+      },
+      {
+          "expression": "!user.username.startsWith('aks:jwt:github:system')",
+          "message": "username must not start with 'aks:jwt:github:system'"
+      }
+  ]
+}
+```
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+```json
+{
+    "issuer": {
+        "url": "https://accounts.google.com",
+        "audiences": [
+            "your-client-id.apps.googleusercontent.com"
+        ]
+    },
+    "claimValidationRules": [
+        {
+            "expression": "has(claims.sub)",
+            "message": "must have sub claim"
+        }
+    ],
+    "claimMappings": {
+        "username": {
+            "expression": "'aks:jwt:google:' + claims.sub"
+        },
+        "groups": {
+            "expression": "has(claims.groups) ? claims.groups.split(',').map(g, 'aks:jwt:' + g) : []"
+        }
+    },
+    "userValidationRules": [
+        {
+            "expression": "has(user.username)",
+            "message": "must have username"
+        },
+        {
+            "expression": "!user.username.startsWith('aks:jwt:google:system')",
+            "message": "username must not start with 'aks:jwt:google:system'"
+        }
+    ]
+}
+```
+
+::: zone-end
+
+### Step 4: Decode and verify JWT tokens
+
+Verify claims, and obtain and inspect the JWT token. Follow these steps:
+
+::: zone pivot="github"
+
+1. For GitHub Actions OIDC, tokens are typically obtained within a workflow. Obtain a token:
+
+    ```bash
+    # This is typically done within a GitHub Actions workflow
+    # where ACTIONS_ID_TOKEN_REQUEST_TOKEN and ACTIONS_ID_TOKEN_REQUEST_URL are available
+    curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+      "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=my-api"
+    ```
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+1. Get a token from Google Identity:
+
+    ```bash
+    kubectl oidc-login get-token \
+      --oidc-issuer-url=https://accounts.google.com \
+      --oidc-client-id=your-client-id \
+      --oidc-client-secret=your-client-secret
+    ```
+
+::: zone-end
+
+1. Decode the token at [jwt.ms][jwt-ms], and verify the following items:
+
+    - The `iss` claim matches your issuer URL exactly.
+    - The `aud` claim matches your configured audience.
+    - The token isn't expired (`exp` claim).
+    - Required claims for username and groups are present.
+    - Claims match the format that's expected by your CEL expressions.
+
+### Step 5: Check AKS API server logs
+
+Review the AKS API server logs for authentication errors. Follow these steps:
+
+1. Use diagnostic settings to [enable resource logs][aks-resource-logs] for your AKS cluster. Choose **Kubernetes API Server** when creating the diagnostic setting.
+2. Check logs in Azure Monitor or Azure Log Analytics for authentication failures.
+3. Look for error messages related to JWT validation or claim mapping.
+
+## Common issues and solutions
+
+### Issue 1: 401 Unauthorized errors
+
+**Cause 1: Token audience mismatch**
+
+The audience claim in the token doesn't match the configured audience in the JWT authenticator.
+
+**Solution: Update the authenticator configuration**
+
+Verify the audience claim in your token, and update the JWT authenticator configuration.
+
+```azurecli
+az aks jwtauthenticator update \
+    --resource-group $RESOURCE_GROUP \
+    --cluster-name $CLUSTER_NAME \
+    --name external-auth \
+    --config-file updated-jwt-config.json
+```
+
+**Cause 2: Incorrect issuer URL**
+
+The issuer URL in the configuration doesn't exactly match the `iss` claim in the token.
+
+**Solution: Correct the issuer URL**
+
+Update the issuer URL in your JWT authenticator configuration file to match the exact issuer in your tokens, including the protocol (https://) and any trailing slashes.
+
+**Cause 3: Identity provider misconfiguration**
+
+The OAuth client or OIDC provider settings are incorrect.
+
+**Solution: Verify identity provider settings**
+
+::: zone pivot="github"
+
+1. Verify that the workflow file includes the correct `permissions` for `id-token: write`.
+2. Make sure that the `audience` parameter matches your authenticator configuration.
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com).
+2. Navigate to **APIs & Services** &gt; **Credentials**.
+3. Verify the OAuth 2.0 client ID and secrets.
+
+::: zone-end
+
+### Issue 2: Token validation failures
+
+**Cause: Invalid CEL expressions in claim mappings**
+
+CEL expressions might have syntax errors or return unexpected data types.
+
+**Solution: Verify CEL expressions**
+
+1. Review the CEL expressions in your configuration.
+2. Test expressions by using a CEL evaluator to make sure that they return strings for username and arrays of strings for groups.
+3. Update the configuration to have the corrected expressions.
+
+The following code is an example of a valid CEL expression for extracting groups:
+
+```json
+{
+  "groups": {
+    "expression": "claims.groups.filter(g, g.startsWith('team-'))",
+    "prefix": "aks:jwt:"
+  }
+}
+```
+
+### Issue 3: Network connectivity issues
+
+**Cause: Cluster nodes cannot reach the identity provider**
+
+Issues that affect network security groups, firewalls, or the DNS prevent the cluster from accessing the identity provider.
+
+**Solution 1: Verify DNS resolution**
+
+1. Connect to a cluster node by using `kubectl debug`:
+
+    ```bash
+    kubectl debug node/<node-name> -it --image=mcr.microsoft.com/azurelinux/base/core:3.0
+    ```
+2. Test DNS resolution:
+
+::: zone pivot="github"
+
+    ```bash
+    nslookup token.actions.githubusercontent.com
+    ```
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+    ```bash
+    nslookup accounts.google.com
+    ```
+
+::: zone-end
+
+**Solution 2: Update network security rules**
+
+1. Review network security group rules that are associated with your AKS cluster.
+2. Make sure that outbound HTTPS (port 443) traffic is allowed to your identity provider's domain.
+3. If you use Azure Firewall, add application rules for the identity provider URLs.
+
+### Issue 4: Missing `aks:jwt:` prefix in username or groups
+
+**Cause: Claim mappings don't include the required prefix**
+
+To prevent conflicts with other authentication methods, all usernames and groups must be prefixed by using `aks:jwt:`.
+
+**Solution: Add the required prefix**
+
+Update your JWT authenticator configuration to include the `aks:jwt:` prefix. For example:
+
+::: zone pivot="github"
+
+For GitHub Actions OIDC, create a file that's named `jwt-config.json` that has the following configuration:
+
+```json
+{
+  "issuer": {
+      "url": "https://token.actions.githubusercontent.com",
+      "audiences": [
+          "my-api"
+      ]
+  },
+  "claimValidationRules": [
+      {
+          "expression": "has(claims.sub)",
+          "message": "must have sub claim"
+      }
+  ],
+  "claimMappings": {
+      "username": {
+          "expression": "'aks:jwt:github:' + claims.sub"
+      }
+  },
+  "userValidationRules": [
+      {
+          "expression": "has(user.username)",
+          "message": "must have username"
+      },
+      {
+          "expression": "!user.username.startsWith('aks:jwt:github:system')",
+          "message": "username must not start with 'aks:jwt:github:system'"
+      }
+  ]
+}
+```
+
+::: zone-end
+
+::: zone pivot="google-identity"
+
+### Google OAuth 2.0 configuration
+
+1. Create a file that's named `jwt-config.json` that has the following configuration:
+
+```json
+{
+    "issuer": {
+        "url": "https://accounts.google.com",
+        "audiences": [
+            "your-client-id.apps.googleusercontent.com"
+        ]
+    },
+    "claimValidationRules": [
+        {
+            "expression": "has(claims.sub)",
+            "message": "must have sub claim"
+        }
+    ],
+    "claimMappings": {
+        "username": {
+            "expression": "'aks:jwt:google:' + claims.sub"
+        },
+        "groups": {
+            "expression": "has(claims.groups) ? claims.groups.split(',').map(g, 'aks:jwt:' + g) : []"
+        }
+    },
+    "userValidationRules": [
+        {
+            "expression": "has(user.username)",
+            "message": "must have username"
+        },
+        {
+            "expression": "!user.username.startsWith('aks:jwt:google:system')",
+            "message": "username must not start with 'aks:jwt:google:system'"
+        }
+    ]
+}
+```
+
+::: zone-end
+
+Update the authenticator:
+
+```azurecli
+az aks jwtauthenticator update \
+    --resource-group $RESOURCE_GROUP \
+    --cluster-name $CLUSTER_NAME \
+    --name external-auth \
+    --config-file updated-jwt-config.json
+```
+
+## Advanced troubleshooting
+
+### Enable verbose logging
+
+To get more detailed information about authentication failures:
+
+1. Enable diagnostic settings on your AKS cluster.
+2. Configure the Log Analytics workspace to capture `Kubernetes API Server` logs.
+3. Check API server logs for any JWT authenticator-related issue such as incorrect claim mappings that cause validation errors.
+
+### Resources
+
+- [jwt-ms token decoder tool](https://jwt.ms)
+- [Supported resource logs for Microsoft.ContainerService/managedClusters](/en-us/azure/aks/monitor-aks-reference#supported-resource-logs-for-microsoftcontainerservicemanagedclusters)
+
+**Third-party contact disclaimer**
+
+Microsoft provides third-party contact information to help you find additional information about this topic. This contact information may change without notice. Microsoft does not guarantee the accuracy of third-party contact information.

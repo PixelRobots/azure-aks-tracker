@@ -1,0 +1,300 @@
+---
+layout: Conceptual
+title: Configure internal NGINX ingress controller for Azure private DNS zone - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/create-nginx-ingress-private-controller
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: Understand how to configure an ingress controller with a private IP address and an Azure private DNS zone using the application routing add-on for Azure Kubernetes Service.
+ms.subservice: aks-networking
+ms.custom: devx-track-azurecli
+ms.topic: how-to
+ms.date: 2024-10-08T00:00:00.0000000Z
+author: schaffererin
+ms.author: schaffererin
+locale: en-us
+document_id: 205b472c-94fa-b631-640c-0431ad0506fb
+document_version_independent_id: efc7cb21-2280-8c0e-7f25-e913e705729d
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/create-nginx-ingress-private-controller.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/create-nginx-ingress-private-controller
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/create-nginx-ingress-private-controller.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/20ed8455-bc18-4537-87a4-83784e7b2a39
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 1887df7c-e6f9-0aac-7028-1992cba7f06c
+---
+
+# Configure internal NGINX ingress controller for Azure private DNS zone - Azure Kubernetes Service | Microsoft Learn
+
+Caution
+
+The [Kubernetes SIG Network](https://github.com/kubernetes/community/blob/master/sig-network/README.md) and the Security Response Committee [announced the retirement](https://www.kubernetes.dev/blog/2025/11/12/ingress-nginx-retirement/) of the [Ingress NGINX project](https://github.com/kubernetes/ingress-nginx/), with maintenance that ended in March 2026. Microsoft will provide official support for critical security patches for application routing add-on NGINX Ingress resources through **November 2026**.
+
+AKS aligns with upstream Kubernetes and uses **[Gateway API](https://gateway-api.sigs.k8s.io) as the long-term standard for ingress and L7 traffic management**. Migrate before support ends in November 2026, based on your requirements:
+
+- **Application routing add-on users** and **OSS NGINX users**: Migrate to the [application routing Gateway API implementation](/en-us/azure/aks/app-routing-gateway-api) for a Gateway API-based ingress traffic management experience, or to [Application Gateway for Containers](/en-us/azure/application-gateway/for-containers/overview), which supports both Ingress API and Gateway API.
+- **Service mesh or advanced ingress requirements**: Consider [Gateway API ingress with the Istio service mesh add-on](/en-us/azure/aks/istio-gateway-api). You can use it for ingress without injecting sidecars into your workloads. If you need request header and body size limits, Lua scripts, or rate limiting, review the [Gateway API limitations and alternatives](/en-us/azure/aks/app-routing-gateway-api#limitations).
+
+This article shows you how to configure an NGINX ingress controller to work with an Azure internal load balancer. It also explains how to configure a private Azure DNS zone to enable DNS resolution for the private endpoints to resolve specific domains.
+
+## Before you begin
+
+- An AKS cluster with the [application routing add-on](app-routing).
+- To attach an Azure private DNS Zone, you need the [Owner](/en-us/azure/role-based-access-control/built-in-roles#owner), [Azure account administrator](/en-us/azure/role-based-access-control/rbac-and-directory-admin-roles#classic-subscription-administrator-roles), or [Azure coadministrator](/en-us/azure/role-based-access-control/rbac-and-directory-admin-roles#classic-subscription-administrator-roles) role on your Azure subscription.
+
+## Connect to your AKS cluster
+
+To connect to the Kubernetes cluster from your local computer, you use `kubectl`, the Kubernetes command-line client. You can install it locally using the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command. If you use the Azure Cloud Shell, `kubectl` is already installed.
+
+The following example configures connecting to your cluster named *aks-cluster* in the *test-rg* using the [`az aks get-credentials`](/en-us/cli/azure/aks#az-aks-get-credentials) command.
+
+```azurecli
+az aks get-credentials \
+    --resource-group test-rg \
+    --name aks-cluster
+```
+
+## Create a virtual network
+
+To publish a private DNS zone to your virtual network, specify a list of virtual networks that are allowed to resolve records within the zone with [virtual network links](/en-us/azure/dns/private-dns-virtual-network-links).
+
+The following example creates a virtual network named *vnet-1* in the *test-rg* resource group, and one subnet named *subnet-1* to create within the virtual network with a specific address prefix.
+
+```azurecli
+az network vnet create \
+  --name vnet-1 \
+  --resource-group test-rg \
+  --location eastus \
+  --address-prefix 10.2.0.0/16 \
+  --subnet-name subnet-1 \
+  --subnet-prefixes 10.2.0.0/24
+```
+
+## Create an Azure private DNS zone
+
+Note
+
+You can configure the application routing add-on to automatically create records on one or more Azure global and private DNS zones for hosts defined on ingress resources. All global Azure DNS zones and all private Azure DNS zones must be in the same resource group.
+
+Create a DNS zone using the [az network private-dns zone create](/en-us/cli/azure/network/private-dns/zone?#az-network-private-dns-zone-create) command, specifying the name of the zone and the resource group to create it in. The following example creates a DNS zone named *private.contoso.com* in the *test-rg* resource group.
+
+```azurecli
+az network private-dns zone create \
+    --resource-group test-rg \
+    --name private.contoso.com
+```
+
+You create a virtual network link to the DNS zone created earlier using the [az network private-dns link vnet create](/en-us/cli/azure/network/private-dns/link/vnet#az-network-private-dns-link-vnet-create) command. The following example creates a link named *dns-link* to the zone *private.contoso.com* for the virtual network *vnet-1*. Include the `--registration-enabled` parameter to specify the link isn't registration enabled.
+
+```azurecli
+az network private-dns link vnet create \
+    --resource-group test-rg \
+    --name dns-link \
+    --zone-name private.contoso.com \
+    --virtual-network vnet-1 \
+    --registration-enabled false
+```
+
+The Azure DNS private zone auto registration feature manages DNS records for virtual machines deployed in a virtual network. When you link a virtual network with a private DNS zone with this setting enabled, a DNS record gets created for each Azure virtual machine for your AKS node deployed in the virtual network.
+
+## Attach an Azure private DNS zone to the application routing add-on
+
+Note
+
+The `az aks approuting zone add` command uses the permissions of the user running the command to create the [Azure DNS Zone](/en-us/azure/dns/dns-protect-private-zones-recordsets) role assignment. The **Private DNS Zone Contributor** role is a built-in role for managing private DNS resources and is assigned to the add-on's managed identity. For more information on AKS managed identities, see [Summary of managed identities](managed-identity-overview#summary-of-managed-identities-used-by-aks).
+
+1. Retrieve the resource ID for the DNS zone using the [`az network dns zone show`](/en-us/cli/azure/network/dns/zone#az-network-dns-zone-show) command and set the output to a variable named `ZONEID`. The following example queries the zone *private.contoso.com* in the resource group *test-rg*.
+
+    ```azurecli
+    ZONEID=$(az network private-dns zone show \
+    --resource-group test-rg \
+    --name private.contoso.com \
+    --query "id" \
+    --output tsv)
+    ```
+2. Update the add-on to enable integration with Azure DNS using the [`az aks approuting zone`](/en-us/cli/azure/aks/approuting/zone) command. You can pass a comma-separated list of DNS zone resource IDs. The following example updates the AKS cluster *aks-cluster* in the resource group *test-rg*.
+
+    ```azurecli
+    az aks approuting zone add \
+    --resource-group test-rg \
+    --name aks-cluster \
+    --ids=${ZONEID} \
+    --attach-zones
+    ```
+
+## Create an NGINX ingress controller with a private IP address and an internal load balancer
+
+The application routing add-on uses a Kubernetes [custom resource definition (CRD)](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) called [`NginxIngressController`](https://aka.ms/aks/approuting/nginxingresscontrollercrd) to configure NGINX ingress controllers. You can create more ingress controllers or modify an existing configuration.
+
+The `NginxIngressController` CRD has a `loadBalancerAnnotations` field to control the behavior of the NGINX ingress controller's service by setting load balancer annotations. For more information about load balancer annotations, see [Customizations via Kubernetes annotations](configure-load-balancer-standard#customize-the-load-balancer-using-kubernetes-annotations).
+
+Perform the following steps to create an NGINX ingress controller with an internal facing Azure Load Balancer with a private IP address.
+
+1. Copy the following YAML manifest into a new file named **nginx-internal-controller.yaml** and save the file to your local computer.
+
+    ```yml
+    apiVersion: approuting.kubernetes.azure.com/v1alpha1
+    kind: NginxIngressController
+    metadata:
+      name: nginx-internal
+    spec:
+      ingressClassName: nginx-internal
+      controllerNamePrefix: nginx-internal
+      loadBalancerAnnotations: 
+        service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    ```
+2. Create the NGINX ingress controller resources using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
+
+    ```bash
+    kubectl apply -f nginx-internal-controller.yaml
+    ```
+
+    The following example output shows the created resource:
+
+    ```output
+    nginxingresscontroller.approuting.kubernetes.azure.com/nginx-internal created
+    ```
+3. Verify the ingress controller was created
+
+    You can verify the status of the NGINX ingress controller using the [`kubectl get nginxingresscontroller`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) command.
+
+    ```bash
+    kubectl get nginxingresscontroller
+    ```
+
+    The following example output shows the created resource. It might take a few minutes for the controller to be available:
+
+    ```output
+    NAME             INGRESSCLASS                         CONTROLLERNAMEPREFIX   AVAILABLE
+    default          webapprouting.kubernetes.azure.com   nginx                  True
+    nginx-internal   nginx-internal                       nginx-internal         True
+    ```
+
+## Deploy an application
+
+The application routing add-on uses annotations on Kubernetes Ingress objects to create the appropriate resources.
+
+1. Create the application namespace called `aks-store` to run the example pods using the `kubectl create namespace` command.
+
+    ```bash
+    kubectl create namespace aks-store
+    ```
+2. Deploy the AKS store application using the following YAML manifest file:
+
+    ```yaml
+    kubectl apply -f https://raw.githubusercontent.com/Azure-Samples/aks-store-demo/main/sample-manifests/docs/app-routing/aks-store-deployments-and-services.yaml -n aks-store
+    ```
+
+This manifest creates the necessary deployments and services for the AKS store application.
+
+## Create the Ingress resource that uses a host name on the Azure private DNS zone and a private IP address
+
+Update **`host`** with the name of your DNS host, for example, **store-front.private.contoso.com**. Verify you're specifying nginx-internal for the ingressClassName.
+
+1. Copy the following YAML manifest into a new file named **ingress.yaml** and save the file to your local computer.
+
+    ```yaml
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: store-front
+      namespace: aks-store
+    spec:
+      ingressClassName: nginx-internal
+      rules:
+      - host: store-front.private.contoso.com
+        http:
+          paths:
+          - backend:
+              service:
+                name: store-front
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+    ```
+2. Create the ingress resource using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
+
+    ```bash
+    kubectl apply -f ingress.yaml -n aks-store
+    ```
+
+    The following example output shows the created resource:
+
+    ```output
+    ingress.networking.k8s.io/store-front created
+    ```
+
+## Verify the managed Ingress was created
+
+You can verify the managed Ingress was created using the [`kubectl get ingress`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) command.
+
+```bash
+kubectl get ingress -n aks-store
+```
+
+The following example output shows the created managed Ingress:
+
+```output
+NAME          CLASS            HOSTS                             ADDRESS   PORTS   AGE
+store-front   nginx-internal   store-front.private.contoso.com             80      10s
+```
+
+## Verify the Azure private DNS zone was updated
+
+In a few minutes, run the [az network private-dns record-set a list](/en-us/cli/azure/network/private-dns/record-set/a#az-network-private-dns-record-set-a-list) command to view the A records for your Azure private DNS zone. Specify the name of the resource group and the name of the DNS zone. In this example, the resource group is *test-rg* and DNS zone is *private.contoso.com*.
+
+```azurecli
+az network private-dns record-set a list \
+    --resource-group test-rg \
+    --zone-name private.contoso.com
+```
+
+The following example output shows the created record:
+
+```output
+[
+  {
+    "aRecords": [
+      {
+        "ipv4Address": "10.224.0.7"
+      }
+    ],
+    "etag": "ecc303c5-4577-4ca2-b545-d34e160d1c2d",
+    "fqdn": "store-front.private.contoso.com.",
+    "id": "/subscriptions/aaaa0a0a-bb1b-cc2c-dd3d-eeeeee4e4e4e/resourceGroups/test-rg/providers/Microsoft.Network/privateDnsZones/private.contoso.com/A/store-front",
+    "isAutoRegistered": false,
+    "name": "store-front",
+    "resourceGroup": "test-rg",
+    "ttl": 300,
+    "type": "Microsoft.Network/privateDnsZones/A"
+  }
+]
+```

@@ -1,0 +1,450 @@
+---
+layout: Conceptual
+title: Use the Azure Key Vault Secret Store extension to sync secrets to the Kubernetes secret store for offline access in Azure Arc-enabled Kubernetes clusters - Azure Arc | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/secret-store-extension
+breadcrumb_path: ../../breadcrumb/azure-management/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/146/azure-arc/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/5c778dec-0625-ec11-b6e6-000d3a4f0858
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+author: davidsmatlak
+learn_banner_products:
+- azure
+ms.reviewer: davidsmatlak
+ms.author: davidsmatlak
+ms.service: azure-arc
+ms.subservice: azure-arc-kubernetes
+description: The Azure Key Vault Secret Store extension for Kubernetes ("SSE") automatically synchronizes secrets from an Azure Key Vault to a Kubernetes cluster for offline access.
+ms.date: 2026-10-14T00:00:00.0000000Z
+ms.topic: how-to
+ms.custom: references_regions, ignite-2024
+locale: en-us
+document_id: 13c80491-5c2b-2234-2437-ab23298dce85
+document_version_independent_id: 32bf271d-3513-723c-8569-06a68c295bb6
+original_content_git_url: https://github.com/MicrosoftDocs/azure-management-docs-pr/blob/live/articles/azure-arc/kubernetes/secret-store-extension.md
+site_name: Docs
+depot_name: Learn.azure-management
+page_type: conceptual
+toc_rel: toc.json
+asset_id: azure-arc/kubernetes/secret-store-extension
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/azure-arc/kubernetes/secret-store-extension.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/f488294d-f483-456e-94e3-755f933b811b
+- https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/02662057-0b9b-40f4-a3c7-537125b6d283
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
+platformId: efb9c594-7177-5a3e-35e9-04c2ad0eb1a2
+---
+
+# Use the Azure Key Vault Secret Store extension to sync secrets to the Kubernetes secret store for offline access in Azure Arc-enabled Kubernetes clusters - Azure Arc | Microsoft Learn
+
+The Azure Key Vault Secret Store extension for Kubernetes (SSE) automatically synchronizes secrets from an [Azure Key Vault](/en-us/azure/key-vault/general/overview) to an [Azure Arc-enabled Kubernetes cluster](overview) for offline access. This means you can use Azure Key Vault to store, maintain, and rotate your secrets, even when running your Kubernetes cluster in a semi-disconnected state. Synchronized secrets are stored in the cluster [secret store](https://Kubernetes.io/docs/concepts/configuration/secret/), making them available as Kubernetes secrets to be used in all the usual ways: mounted as data volumes, or exposed as environment variables to a container in a pod.
+
+Synchronized secrets are critical business assets, so the SSE secures them through isolated namespaces, role-based access control (RBAC) policies, and limited permissions for the synchronization controller. For extra protection, [encrypt](https://Kubernetes.io/docs/tasks/administer-cluster/encrypt-data/) the Kubernetes secret store on your cluster.
+
+This article shows you how to install and configure the SSE as an [Azure Arc-enabled Kubernetes extension](conceptual-extensions).
+
+Tip
+
+The Azure Key Vault Secrets Provider extension retires on October 9, 2027. If you use it, see [Migrate from the Azure Key Vault Secrets Provider extension](secret-store-extension-migration). Don't run both extensions in the same cluster.
+
+## Prerequisites
+
+- An Arc-enabled cluster. This can be one that you [connected to yourself](quickstart-connect-cluster) (this guide assumes a [K3s](https://k3s.io/) cluster, and provides guidance on how to Arc-enable it.) or a Microsoft-managed [AKS enabled by Azure Arc](/en-us/azure/aks/hybrid/aks-overview) cluster. The cluster must be running Kubernetes version 1.27 or higher.
+- Ensure you meet the [general prerequisites for cluster extensions](extensions#prerequisites), including the latest version of the `k8s-extension` Azure CLI extension.
+- [Certificate Management for Azure Arc](cert-manager-overview) extension is required to support TLS for intracluster log communication. The following examples direct you through installation. For more information, see [What is Certificate Management for Azure Arc?](cert-manager-overview)
+
+Install the [Azure CLI](/en-us/cli/azure/install-azure-cli-linux?pivots=apt) and sign in, if you haven't already:
+
+```azurecli
+az login
+```
+
+Before you begin, set environment variables to be used for configuring Azure and cluster resources. If you already have a managed identity, Azure Key Vault, or other resource listed here, update the names in the environment variables to reflect those resources. Note that the KEYVAULT\_NAME must be globally unique; keyvault creation will fail later if this name is already in use within Azure.
+
+```azurecli
+export RESOURCE_GROUP="AzureArcTest"
+export CLUSTER_NAME="AzureArcTest1"
+export LOCATION="EastUS"
+export SUBSCRIPTION="$(az account show --query id --output tsv)"
+export AZURE_TENANT_ID="$(az account show -s $SUBSCRIPTION --query tenantId --output tsv)"
+export CURRENT_USER="$(az account show --query user.name --output tsv)"
+export KEYVAULT_NAME="my-UNIQUE-kv-name"
+export KEYVAULT_SECRET_NAME="my-secret"
+export USER_ASSIGNED_IDENTITY_NAME="my-identity"
+export FEDERATED_IDENTITY_CREDENTIAL_NAME="my-credential"
+export KUBERNETES_NAMESPACE="my-namespace"
+export SERVICE_ACCOUNT_NAME="my-service-account"
+```
+
+Create the resource group if necessary:
+
+```azurecli
+az group create --name ${RESOURCE_GROUP}  --location ${LOCATION}
+```
+
+## Activate workload identity federation in your cluster
+
+The SSE uses a feature called [workload identity federation](conceptual-workload-identity) to access and synchronize Azure Key Vault secrets. This section describes how to set the feature up. The following sections will explain how it's used in detail.
+
+# [Arc-enabled Kubernetes](#tab/arc-k8s)
+Tip
+
+The following steps are based on the [How-to guide](/en-us/azure/azure-arc/kubernetes/workload-identity) for configuring Arc-enabled Kubernetes with workload identity federation. Refer to that documentation for any additional assistance.
+
+If your cluster isn't yet connected to Azure Arc, [follow these steps](quickstart-connect-cluster). During these steps, enable workload identity federation as part of the `connect` command:
+
+```azurecli
+az connectedk8s connect --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP} --enable-oidc-issuer
+```
+
+If your cluster is already connected to Azure Arc, enable workload identity using the `update` command:
+
+```azurecli
+az connectedk8s update --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP} --enable-oidc-issuer
+```
+
+Now configure your cluster to issue service account tokens with a new issuer URL (`service-account-issuer`) that enables Microsoft Entra ID to find the public keys necessary for it to validate these tokens. These public keys are for the cluster's own service account token issuer, and they were obtained and cloud-hosted at this URL as a result of the `--enable-oidc-issuer` option that you set earlier.
+
+Optionally, you can also configure limits on the SSE's own permissions as a privileged resource running in the control plane by configuring [`OwnerReferencesPermissionEnforcement`](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#ownerreferencespermissionenforcement)[admission controller](https://Kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#how-do-i-turn-on-an-admission-controller). This admission controller constrains how much the SSE can change other objects in the cluster.
+
+1. Configure your [kube-apiserver](https://Kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) with the issuer URL field and permissions enforcement. The following example is for a k3s cluster. Your cluster may have different means for changing API server arguments: `--kube-apiserver-arg="--service-account-issuer=${SERVICE_ACCOUNT_ISSUER}"`, `--kube-apiserver-arg=service-account-max-token-expiration=24h` and `--kube-apiserver-arg="--enable-admission-plugins=OwnerReferencesPermissionEnforcement"`.
+
+    - Get the service account issuer URL.
+
+        ```console
+        export SERVICE_ACCOUNT_ISSUER="$(az connectedk8s show --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP} --query "oidcIssuerProfile.issuerUrl" --output tsv)"
+        echo $SERVICE_ACCOUNT_ISSUER
+        ```
+    - Update the API server arguments in the K3s cluster's config file.
+
+        ```yaml
+        cat <<EOF > /tmp/k3s-config.yaml
+        kube-apiserver-arg:
+            - 'service-account-issuer=${SERVICE_ACCOUNT_ISSUER}'
+            - 'service-account-max-token-expiration=24h'
+            - 'enable-admission-plugins=OwnerReferencesPermissionEnforcement'
+        EOF
+        sudo mv /tmp/k3s-config.yaml /etc/rancher/k3s/config.yaml
+        ```
+2. Restart your kube-apiserver.
+
+    ```console
+    sudo systemctl restart k3s
+    ```
+3. (optional) Verify the service account issuer has been configured correctly:
+
+    ```console
+    kubectl cluster-info dump | grep service-account-issuer
+    ```
+
+# [AKS on Azure Local](#tab/aks-local)
+Use the [How-to guide](/en-us/azure/aks/hybrid/workload-identity) to activate workload identity federation on AKS on Azure Local by using the `--enable-oidc-issuer` flag.
+
+Return to these steps after the initial activation. There's no need to complete the remainder of that guide.
+
+Validate the activation by getting the cluster's service account issuer URL. You use this URL in the following steps:
+
+```console
+export SERVICE_ACCOUNT_ISSUER="$(az connectedk8s show --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP} --query "oidcIssuerProfile.issuerUrl" --output tsv)"
+echo $SERVICE_ACCOUNT_ISSUER
+```
+
+# [AKS Edge Essentials](#tab/aks-ee)
+Use the [How-to guide](/en-us/azure/aks/hybrid/aks-edge-workload-identity) to activate workload identity federation on AKS Edge Essentials.
+
+Return to these steps after the initial activation. There's no need to complete the remainder of that guide.
+
+Validate the activation by getting the cluster's service account issuer URL. You use this URL in the following steps:
+
+```console
+export SERVICE_ACCOUNT_ISSUER="$(az connectedk8s show --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP} --query "oidcIssuerProfile.issuerUrl" --output tsv)"
+echo $SERVICE_ACCOUNT_ISSUER
+```
+
+---
+
+## Create a secret and configure an identity to access it
+
+To access and synchronize a given Azure Key Vault secret, the SSE requires access to an Azure managed identity with appropriate Azure permissions to access that secret. The managed identity must be linked to a Kubernetes service account using the workload identity feature that you activated earlier. The SSE uses the associated federated Azure managed identity to pull secrets from Azure Key Vault to your Kubernetes secret store. The following sections describe how to set this up.
+
+### Create an Azure Key Vault
+
+[Create an Azure Key Vault](/en-us/azure/key-vault/secrets/quick-create-cli) and add a secret. If you already have an Azure Key Vault and secret, you can skip this section.
+
+1. Create an Azure Key Vault:
+
+    ```azurecli
+    az keyvault create --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --name "${KEYVAULT_NAME}" --enable-rbac-authorization
+    ```
+2. Give yourself 'Secrets Officer' permissions on the vault, so you can create a secret:
+
+    ```azurecli
+    az role assignment create --role "Key Vault Secrets Officer" --assignee ${CURRENT_USER} --scope /subscriptions/${SUBSCRIPTION}/resourcegroups/${RESOURCE_GROUP}/providers/Microsoft.KeyVault/vaults/${KEYVAULT_NAME}
+    ```
+
+    Tip
+
+    If this command fails due to conditional access policies, you can assign the 'Secrets Officer' role to your account [using the Azure portal](/en-us/azure/role-based-access-control/role-assignments-portal) instead.
+3. Create a secret and update it so you have two versions:
+
+    ```azurecli
+    az keyvault secret set --vault-name "${KEYVAULT_NAME}" --name "${KEYVAULT_SECRET_NAME}" --value 'Hello!'
+    az keyvault secret set --vault-name "${KEYVAULT_NAME}" --name "${KEYVAULT_SECRET_NAME}" --value 'Hello2'
+    ```
+
+### Create a user-assigned managed identity
+
+Next, create a user-assigned managed identity and give it permissions to access the Azure Key Vault. If you already have a managed identity with Key Vault Reader and Key Vault Secrets User permissions to the Azure Key Vault, you can skip this section. For more information, see [Create a user-assigned managed identity](/en-us/entra/identity/managed-identities-azure-resources/how-manage-user-assigned-managed-identities?pivots=identity-mi-methods-azp#create-a-user-assigned-managed-identity) and [Using Azure RBAC secret, key, and certificate permissions with Key Vault](/en-us/azure/key-vault/general/rbac-guide?tabs=azure-cli#using-azure-rbac-secret-key-and-certificate-permissions-with-key-vault).
+
+1. Create the user-assigned managed identity:
+
+    ```azurecli
+    az identity create --name "${USER_ASSIGNED_IDENTITY_NAME}" --resource-group "${RESOURCE_GROUP}" --location "${LOCATION}" --subscription "${SUBSCRIPTION}"
+    ```
+2. Give the identity Key Vault Reader and Key Vault Secrets User permissions. You may need to wait a moment for replication of the identity creation before these commands succeed:
+
+    ```azurecli
+    export USER_ASSIGNED_CLIENT_ID="$(az identity show --resource-group "${RESOURCE_GROUP}" --name "${USER_ASSIGNED_IDENTITY_NAME}" --query 'clientId' -otsv)"
+    az role assignment create --role "Key Vault Reader" --assignee "${USER_ASSIGNED_CLIENT_ID}" --scope /subscriptions/${SUBSCRIPTION}/resourcegroups/${RESOURCE_GROUP}/providers/Microsoft.KeyVault/vaults/${KEYVAULT_NAME}
+    az role assignment create --role "Key Vault Secrets User" --assignee "${USER_ASSIGNED_CLIENT_ID}" --scope /subscriptions/${SUBSCRIPTION}/resourcegroups/${RESOURCE_GROUP}/providers/Microsoft.KeyVault/vaults/${KEYVAULT_NAME}
+    ```
+
+### Create a federated identity credential
+
+Create a Kubernetes service account for the workload that needs access to secrets. Then, create a [federated identity credential](https://azure.github.io/azure-workload-identity/docs/topics/federated-identity-credential.html) to link between the managed identity, the OIDC service account issuer, and the Kubernetes service account.
+
+1. Create a Kubernetes service account that will be federated to the managed identity. Annotate it with details of the associated user-assigned managed identity.
+
+    ```console
+    kubectl create ns ${KUBERNETES_NAMESPACE}
+    ```
+
+    ```console
+    cat <<EOF | kubectl apply -f -
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ${SERVICE_ACCOUNT_NAME}
+        namespace: ${KUBERNETES_NAMESPACE}
+    EOF
+    ```
+2. Create a federated identity credential:
+
+    ```azurecli
+    az identity federated-credential create --name ${FEDERATED_IDENTITY_CREDENTIAL_NAME} --identity-name ${USER_ASSIGNED_IDENTITY_NAME} --resource-group ${RESOURCE_GROUP} --issuer ${SERVICE_ACCOUNT_ISSUER} --subject system:serviceaccount:${KUBERNETES_NAMESPACE}:${SERVICE_ACCOUNT_NAME} --audience api://AzureADTokenExchange
+    ```
+
+## Install the SSE
+
+The SSE is available as an Azure Arc extension. An [Azure Arc-enabled Kubernetes cluster](overview) can be extended with [Azure Arc-enabled Kubernetes extensions](extensions). Extensions enable Azure capabilities on your connected cluster and provide an Azure Resource Manager-driven experience for the extension installation and lifecycle management.
+
+You must also install the [Certificate Management for Azure Arc](cert-manager-overview) extension for secure communication of logs between cluster services. Install it before the SSE extension. The Certificate Management for Azure Arc extension installs both cert-manager and trust-manager.
+
+1. Install the Certificate Management for Azure Arc extension.
+
+    ```azurecli
+    az k8s-extension create \
+      --resource-group ${RESOURCE_GROUP} \
+      --cluster-name ${CLUSTER_NAME} \
+      --cluster-type connectedClusters \
+      --name "azure-cert-management" \
+      --extension-type "microsoft.certmanagement"
+    ```
+
+    For more information, see [Deploy Certificate Management for Azure Arc](cert-manager-deploy).
+2. Install the SSE to your Arc-enabled cluster using the following command:
+
+    ```console
+    az k8s-extension create \
+      --cluster-name ${CLUSTER_NAME} \
+      --cluster-type connectedClusters \
+      --extension-type microsoft.azure.secretstore \
+      --resource-group ${RESOURCE_GROUP} \
+      --name ssarcextension \
+      --scope cluster
+    ```
+
+    If desired, you can optionally modify the default rotation poll interval by adding `--configuration-settings rotationPollIntervalInSeconds=<time_in_seconds>` (see [configuration reference](secret-store-extension-reference#arc-extension-configuration-settings)).
+
+## Configure the SSE
+
+Configure the installed extension with information about your Azure Key Vault and which secrets to synchronize to your cluster by defining instances of Kubernetes [custom resources](https://Kubernetes.io/docs/concepts/extend-Kubernetes/api-extension/custom-resources/).
+
+SSE can be configured with a single simplified resource designed to suit most use cases, or the SSE internal components can be configured directly via two resources. The simplified configuration is a preview feature and may benefit from minor changes in upcoming versions. The direct configuration style will remain available for all deployments.
+
+# [Simplified (preview)](#tab/simplified-configuration)
+The easiest way to configure SSE is to create an `AKVSync` custom resource. This resource captures details about your AKV instance, which secrets to fetch, and where to put them in Kubernetes' secret store.
+
+```yaml
+cat <<EOF > akvsync.yaml
+kind: AKVSync
+apiVersion: secret-sync.x-k8s.io/v1alpha1
+metadata:
+  name: my-akv-secrets
+  namespace: ${KUBERNETES_NAMESPACE}
+spec:
+  keyvaultName: ${KEYVAULT_NAME}
+  clientID: "${USER_ASSIGNED_CLIENT_ID}"
+  tenantID: "${AZURE_TENANT_ID}"
+  serviceAccountName: ${SERVICE_ACCOUNT_NAME}
+  objects:
+    - secretInAKV: ${KEYVAULT_SECRET_NAME}
+EOF
+```
+
+See [AKVSync reference](secret-store-extension-reference#akvsync-resources-preview) for additional configuration guidance.
+
+### Apply the configuration
+
+Apply the configuration custom resource (CR) using the `kubectl apply` command:
+
+```bash
+kubectl apply -f ./akvsync.yaml
+```
+
+When an `AKVSync` configuration is applied SSE automatically generates equivalent direct configuration resources. Do not modify the autogenerated `SecretSync` and `SecretProviderClass` resources, they will be updated as needed automatically.
+
+# [Direct](#tab/direct-configuration)
+To configure SSE directly, you create two types of custom resources:
+
+- A `SecretProviderClass` object to define the connection to the Key Vault.
+- A `SecretSync` object for each secret to be synchronized.
+
+### Create a `SecretProviderClass` resource
+
+The `SecretProviderClass` resource is used to define the connection to the Azure Key Vault, the identity to use to access the vault, which secrets to synchronize, and the number of versions of each secret to retain locally.
+
+You need a separate `SecretProviderClass` for each Azure Key Vault you intend to synchronize, for each identity used for access to an Azure Key Vault, and for each target Kubernetes namespace.
+
+Create one or more `SecretProviderClass` YAML files with the appropriate values for your Key Vault and secrets by following this example.
+
+```yaml
+cat <<EOF > spc.yaml
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: secret-provider-class-name                       # Name of the class; must be unique per Kubernetes namespace
+  namespace: ${KUBERNETES_NAMESPACE}                     # Kubernetes namespace to make the secrets accessible in
+spec:
+  provider: azure
+  parameters:
+    clientID: "${USER_ASSIGNED_CLIENT_ID}"               # Managed Identity Client ID for accessing the Azure Key Vault with.
+    keyvaultName: ${KEYVAULT_NAME}                       # The name of the Azure Key Vault to synchronize secrets from.
+    objects: |
+      array:
+        - |
+          objectName: ${KEYVAULT_SECRET_NAME}            # The name of the secret to synchronize.
+          objectType: secret
+          objectVersionHistory: 2                        # [optional] The number of versions to synchronize, starting from latest.
+    tenantID: "${AZURE_TENANT_ID}"                       # The tenant ID of the Key Vault
+EOF
+```
+
+See [SecretProviderClass reference](secret-store-extension-reference#secretproviderclass-resources) for additional configuration guidance.
+
+### Create a `SecretSync` object
+
+A `SecretSync` object is needed to define how items fetched by the `SecretsProviderClass` are stored in Kubernetes. Kubernetes secrets are key-value maps, just like `ConfigMaps`, and the `SecretSync` object tells SSE how to map items defined in the linked `SecretsProviderClass` into keys in the Kubernetes secret. SSE will create a Kubernetes secret with the same name as the `SecretSync` that describes it.
+
+Create one `SecretSync` object YAML file for each Kubernetes secret, following this template. The Kubernetes namespace should match the namespace of the `SecretProviderClass`.
+
+```yaml
+cat <<EOF > ss.yaml
+apiVersion: secret-sync.x-k8s.io/v1alpha1
+kind: SecretSync
+metadata:
+  name: secret-sync-name                                   # Name of the object; must be unique per Kubernetes namespace
+  namespace: ${KUBERNETES_NAMESPACE}                       # Kubernetes namespace
+spec:
+  serviceAccountName: ${SERVICE_ACCOUNT_NAME}              # The Kubernetes service account to be given permissions to access the secret.
+  secretProviderClassName: secret-provider-class-name      # The name of the matching SecretProviderClass with the configuration to access the AKV storing this secret
+  secretObject:
+    type: Opaque
+    data:
+    - sourcePath: ${KEYVAULT_SECRET_NAME}/0                # Name of the secret in Azure Key Vault with an optional version number (defaults to latest)
+      targetKey: v0         # Target data key within this secret (must be unique within the secret)
+    - sourcePath: ${KEYVAULT_SECRET_NAME}/1                # [optional] Next version of the AKV secret. Note that objectVersionHistory in the secrets provider class must be configured to reference historic versions.
+      targetKey: v1         # [optional] Next target data key within this secret
+EOF
+```
+
+Tip
+
+Do not include "/0" when referencing a secret from the `SecretProviderClass` where `objectVersionHistory` &lt; 2. The latest version is used implicitly.
+
+See [SecretSync reference](secret-store-extension-reference#secretsync-resources) for additional configuration guidance.
+
+### Apply the configuration CRs
+
+Apply the configuration custom resources (CRs) using the `kubectl apply` command:
+
+```bash
+kubectl apply -f ./spc.yaml
+kubectl apply -f ./ss.yaml
+```
+
+---
+
+The SSE automatically looks for the secrets and begins syncing them to the cluster.
+
+## Observe secrets synchronizing to the cluster
+
+Once the configuration is applied, secrets begin syncing to the cluster automatically at the cadence specified when installing the SSE.
+
+### View synchronized secrets
+
+View the secrets synchronized to the cluster by running the following command:
+
+```bash
+# View a list of all secrets in the namespace
+kubectl get secrets -n ${KUBERNETES_NAMESPACE}
+```
+
+Tip
+
+Add `-o yaml` or `-o json` to change the output format of `kubectl get` and `kubectl describe` commands.
+
+### View secret value
+
+To view the synchronized secret value, now stored in the Kubernetes secret store, use the following command:
+
+```bash
+kubectl get secret <NAME> -n ${KUBERNETES_NAMESPACE} -o jsonpath="{.data.v0}" | base64 -d && echo
+```
+
+`<NAME>` is `${KEYVAULT_SECRET_NAME}` if using the simplified configuration example, or `secret-sync-name` if using the direct configuration example.
+
+## Troubleshooting
+
+See the [troubleshooting guide](secret-store-extension-troubleshooting) for assistance diagnosing and resolving issues.
+
+## Remove the SSE
+
+To remove the SSE and stop synchronizing secrets, uninstall it with the `az k8s-extension delete` command:
+
+```console
+az k8s-extension delete --name ssarcextension --cluster-name $CLUSTER_NAME  --resource-group $RESOURCE_GROUP  --cluster-type connectedClusters
+```
+
+Uninstalling the extension doesn't remove secrets or CRDs (`AKVSync`, `SecretSync`, or `SecretProviderClass`) from the cluster. These objects must be removed directly with `kubectl`.
+
+By default, deleting `SecretSync` or `AKVSync` resource removes all secrets defined within them, but secrets may persist if:
+
+- You modified ownership of any of the secrets.
+- You changed the [garbage collection](https://kubernetes.io/docs/concepts/architecture/garbage-collection/) settings in your cluster, including setting different [finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/).
+
+In these cases, secrets must be deleted directly using `kubectl`.

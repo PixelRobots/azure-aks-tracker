@@ -1,0 +1,683 @@
+---
+layout: Conceptual
+title: Troubleshoot AKS image pull errors - Azure | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/cannot-pull-image-from-acr-to-aks-cluster
+breadcrumb_path: /support/breadcrumb/toc.json
+feedback_system: Standard
+recommendations: true
+uhfHeaderId: Azure
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+manager: dcscontentpm
+audience: itpro
+author: kaushika-msft
+ms.author: kaushika
+ms.topic: troubleshooting
+description: Troubleshoot AKS image pull errors from ACR, MCR and other image registries. Learn how to fix 401, 403, timeout, and platform issues. Get solutions now.
+ms.date: 2026-07-31T00:00:00.0000000Z
+ms.reviewer: chiragpa, andbar, albarqaw, v-weizhu, v-leedennis, v-ryanberg
+ms.service: azure-kubernetes-service
+ms.custom: sap:Connectivity
+locale: en-us
+document_id: 343ebff0-12b9-8601-8cf6-b26a516ed873
+document_version_independent_id: 343ebff0-12b9-8601-8cf6-b26a516ed873
+original_content_git_url: https://github.com/MicrosoftDocs/SupportArticles-docs-pr/blob/live/support/azure/azure-kubernetes/connectivity/cannot-pull-image-from-acr-to-aks-cluster.md
+site_name: Docs
+depot_name: MSDN.support1-docset
+page_type: conceptual
+toc_rel: ../toc.json
+pdf_url_template: https://learn.microsoft.com/pdfstore/en-us/MSDN.support1-docset/{branchName}{pdfName}
+feedback_help_link_type: ''
+feedback_help_link_url: ''
+asset_id: azure/azure-kubernetes/connectivity/cannot-pull-image-from-acr-to-aks-cluster
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: support/azure/azure-kubernetes/connectivity/cannot-pull-image-from-acr-to-aks-cluster.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/cb49e66a-8528-497d-adaa-eade2d009d1b
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/472c9d15-157b-443c-afa2-e209c8fecf58
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 9d0ed65f-0b5f-1175-7dfe-58fe870ba0ae
+---
+
+# Troubleshoot AKS image pull errors - Azure | Microsoft Learn
+
+Note
+
+Was this article helpful? Your input is important to us. Please use the **Feedback** button on this page to let us know how well this article worked for you or how we can improve it.
+
+## Summary
+
+When you use Microsoft Azure Container Registry together with Azure Kubernetes Service (AKS), you need to establish an authentication mechanism. Set up the AKS to Container Registry integration by using a few simple Azure CLI or Azure PowerShell commands. This integration assigns either the [Container Registry Repository Reader role](/en-us/azure/role-based-access-control/built-in-roles#container-registry-repository-reader) (for attribute-based access control (ABAC)-enabled registries) or the [AcrPull role](/en-us/azure/role-based-access-control/built-in-roles#acrpull) (for non-ABAC-enabled registries) for the kubelet identity that's associated with the AKS cluster to pull images from a container registry. For more information about the necessary ACR role to assign based on whether your ACR registry is ABAC-enabled, see [Microsoft Entra attribute-based access control (ABAC) for repository permissions](/en-us/azure/container-registry/container-registry-rbac-abac-repository-permissions?tabs=azure-portal).
+
+In some cases, pulling images from a container registry to an AKS cluster fails. This article provides guidance for troubleshooting the most common errors that you encounter when you pull images from a container registry to an AKS cluster.
+
+## Before you begin
+
+This article assumes that you have an existing AKS cluster and an existing container registry. See the following quickstarts:
+
+- If you need an AKS cluster, deploy one by using [the Azure CLI](/en-us/azure/aks/kubernetes-walkthrough) or [the Azure portal](/en-us/azure/aks/kubernetes-walkthrough-portal).
+- If you need an Azure Container Registry (ACR), create one by using [the Azure CLI](/en-us/azure/container-registry/container-registry-get-started-azure-cli) or [the Azure portal](/en-us/azure/container-registry/container-registry-get-started-portal).
+
+You also need Azure CLI version 2.0.59 or a later version installed and configured. Run [az version](/en-us/cli/azure/reference-index#az-version) to determine the version. If you need to install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
+
+## Symptoms and initial troubleshooting
+
+The Kubernetes pod **STATUS** shows **ImagePullBackOff** or **ErrImagePull**. To get detailed error information, run the following command and check **Events** in the output.
+
+```console
+kubectl describe pod <podname> -n <namespace>
+```
+
+Start troubleshooting by checking the [container registry's health](/en-us/azure/container-registry/container-registry-check-health) and verifying whether the AKS cluster can access the container registry.
+
+To check the container registry's health, run the following command:
+
+```azurecli
+az acr check-health --name <myregistry> --ignore-errors --yes
+```
+
+If a problem exists, the command returns an error code and description. For more information about the errors and possible solutions, see [Health check error reference](/en-us/azure/container-registry/container-registry-health-error-reference).
+
+Note
+
+If you get Helm-related or Notary-related errors, it doesn't mean that this issue affects the container registry or AKS. It can indicate that Helm or Notary isn't installed or that Azure CLI isn't compatible with the current installed version of Helm or Notary.
+
+To validate whether the AKS cluster can access the container registry, run the following [az aks check-acr](/en-us/cli/azure/aks#az-aks-check-acr) command:
+
+```azurecli
+az aks check-acr --resource-group <MyResourceGroup> --name <MyManagedCluster> --acr <myacr>.azurecr.io
+```
+
+The following sections help you troubleshoot the most common errors that appear in **Events** in the output of the `kubectl describe pod` command.
+
+## How the image pull flow works
+
+Every image pull that kubelet performs goes through three distinct stages. Identifying which stage fails is the fastest way to find the cause:
+
+1. **Authentication and authorization.** The node identity (kubelet managed identity, service principal, or an image pull secret) gets a token that's authorized to pull from the registry. A failure at this stage appears as `401 Unauthorized`, `403 Forbidden`, or `failed to fetch anonymous token`.
+2. **Registry (login) endpoint.** kubelet resolves and connects to the registry endpoint to authenticate and read the image manifest. For Azure Container Registry, this endpoint is `<registry>.azurecr.io`; for the Microsoft Artifact Registry, it's `mcr.microsoft.com`. DNS, private endpoint, or firewall problems on this hop appear as `i/o timeout`, `TLS handshake timeout`, or `connection reset`. For a complete list of endpoints supported by ACR, see [Azure Container Registry endpoint](/en-us/azure/container-registry/container-registry-endpoint-reference).
+3. **Data (storage) endpoint.** kubelet downloads the image layers (blobs) from the registry's *data* endpoint, which is a **separate host** from the authentication endpoint. For Azure Container Registry, the data endpoint is `*.blob.core.windows.net`; for the Microsoft Artifact Registry, it's `*.data.mcr.microsoft.com`. If the authentication endpoint works but the data endpoint is blocked or resolves incorrectly, the manifest read succeeds but the layer download fails.
+
+Tip
+
+An unauthenticated request to the registry endpoint (for example, `curl -v https://<registry>.azurecr.io/v2/`) that returns `401 Unauthorized` is *expected* and confirms that the authentication endpoint is reachable. If pulls still fail, focus on the authorization token (stage 1) or the data endpoint (stage 3) rather than the authentication endpoint.
+
+## Find your error quickly
+
+Match the message you see in the **Events** output of `kubectl describe pod <podname> -n <namespace>`, and then go to the indicated section. The causes in this article fall into five areas: **authentication and authorization** (Causes 1 and 10), **networking and connectivity** (Causes 3, 4, 7, and 8), **image, manifest, and scheduling** (Causes 2, 5, and 9), **rate limiting** (Causes 6 and 11), and **performance** (Cause 12).
+
+| Error signature in pod events | Likely area | Go to |
+| --- | --- | --- |
+| `failed to fetch oauth token: ... 401 Unauthorized`, `no basic auth credentials` | Authentication and authorization | Cause 1 |
+| `no match for platform in manifest`, `exec format error` | Image or node architecture mismatch | Cause 1b, Cause 5 |
+| `not found` for a repository, tag, or manifest | Image name, tag, or availability | Cause 2 |
+| `403 Forbidden` | Network access to the registry (private DNS or IP allowlist) | Cause 3 |
+| `dial tcp ...:443: i/o timeout` | Private-link networking to the registry | Cause 4 |
+| `pull QPS exceeded` | kubelet image pull rate limit | Cause 6 |
+| `net/http: TLS handshake timeout`, `connection reset by peer` | Network path (firewall, proxy, or network virtual appliance) | Cause 7 |
+| Layer download fails or `connection reset` on `*.blob.core.windows.net` or `*.data.mcr.microsoft.com` | Data endpoint blocked (DNS or egress) | Cause 8 |
+| `manifest not found` after a tag was recently pushed or updated | Tag reuse causing stale digest on node | Cause 9 |
+| `401 Unauthorized` despite correct role assignment, `context deadline exceeded` from credential provider | Node credential cache not refreshed | Cause 10 |
+| `429 Too Many Requests` from Docker Hub or third-party registry | External registry rate limiting | Cause 11 |
+
+## Cause 1: `401 Unauthorized` error
+
+### Cause 1a: `401 Unauthorized` error due to incorrect authorization
+
+An AKS cluster requires an identity. This identity can be either a managed identity or a service principal. If the AKS cluster uses a managed identity, the kubelet identity authenticates with ACR. If the AKS cluster uses a service principal as its identity, the service principal authenticates with ACR. Regardless of the identity, you need the proper authorization to pull an image from a container registry. Otherwise, you might get the following `401 Unauthorized` error:
+
+`Failed to pull image "\<acrname>.azurecr.io/\<repository\:tag>": [rpc error: code = Unknown desc = failed to pull and unpack image "\<acrname>.azurecr.io/\<repository\:tag>": failed to resolve reference "\<acrname>.azurecr.io/\<repository\:tag>": failed to authorize: failed to fetch oauth token: unexpected status: 401 Unauthorized`
+
+Several solutions can help you resolve this error, subject to the following constraints:
+
+- Solutions 2, 3, and 5 apply only to [AKS clusters that use a service principal](/en-us/azure/aks/kubernetes-service-principal).
+- Solutions 1, 2, 3, and 4 apply to the Azure method of [creating the role assignment at Container Registry level for AKS's identity](/en-us/azure/aks/cluster-container-registry-integration).
+- Solutions 5 and 6 apply to the Kubernetes method of [pulling a Kubernetes secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/).
+
+#### Solution 1: Make sure the correct ACR role assignment is created for identity
+
+The integration between AKS and the container registry creates the correct role assignment at container registry level for the AKS cluster's kubelet identity.
+
+Note
+
+Make sure that you create the correct role assignment (`Container Registry Repository Reader` for ABAC-enabled registries, and `AcrPull` for non-ABAC-enabled registries). See [Microsoft Entra attribute-based access control (ABAC) for repository permissions](/en-us/azure/container-registry/container-registry-rbac-abac-repository-permissions?tabs=azure-portal) for more information on the correct ACR role needed based on whether the registry is ABAC-enabled or not.
+
+To check whether the correct ACR role assignment exists, use one of the following methods:
+
+- Run the following command:
+
+    ```azurecli
+    az role assignment list --scope /subscriptions/<subscriptionID>/resourceGroups/<resourcegroupname>/providers/Microsoft.ContainerRegistry/registries/<acrname> -o table
+    ```
+- Check in the Azure portal by selecting **Azure Container Registry** &gt; **Access control (IAM)** &gt; **Role assignments**. For more information, see [List Azure role assignments using the Azure portal](/en-us/azure/role-based-access-control/role-assignments-list-portal).
+
+Besides either the `Container Registry Repository Reader` role (for ABAC-enabled registries) and `AcrPull` role (for non-ABAC-enabled registries), some [built-in roles](/en-us/azure/role-based-access-control/built-in-roles) and [custom roles](/en-us/azure/role-based-access-control/custom-roles) can also contain the necessary Microsoft Entra permissions for image pull. Check those roles as needed.
+
+If either the `Container Registry Repository Reader` role (for ABAC-enabled registries) or `AcrPull` role (for non-ABAC-enabled registries) don't exist, you can create the role assignment.
+
+For non-ABAC-enabled registries, you can assign the `AcrPull` role with the following command:
+
+```azurecli
+az aks update -n <myAKSCluster> -g <myResourceGroup> --attach-acr <acr-resource-id>
+```
+
+For ABAC-enabled registries, the `az aks --attach-acr` command doesn't support adding the `Container Registry Repository Reader` role. You must manually assign this role to the AKS kubelet identity using either the Azure portal or the `az role assignment` CLI commands.
+
+#### Solution 2: Make sure service principal isn't expired
+
+Make sure that the secret of the service principal that's associated with the AKS cluster isn't expired. To check the expiration date of your service principal, run the following commands:
+
+```azurecli
+SP_ID=$(az aks show --resource-group <myResourceGroup> --name <myAKSCluster> \
+    --query servicePrincipalProfile.clientId -o tsv)
+
+az ad app credential list --id "SP_ID" --query "[].endDateTime" --output tsv
+```
+
+For more information, see [Check the expiration date of your service principal](/en-us/azure/aks/update-credentials#check-the-expiration-date-of-your-service-principal).
+
+If the secret is expired, [update the credentials for the AKS cluster](/en-us/azure/aks/update-credentials).
+
+#### Solution 3: Make sure the correct ACR role is assigned to correct service principal
+
+In some cases, the container registry role assignment still refers to the old service principal. For example, when the service principal of the AKS cluster is replaced with a new one. To make sure that the container registry role assignment refers to the correct service principal, follow these steps:
+
+1. To check the service principal that's used by the AKS cluster, run the following command:
+
+    ```azurecli
+    az aks show --resource-group <myResourceGroup> \
+        --name <myAKSCluster> \
+        --query servicePrincipalProfile.clientId \
+        --output tsv
+    ```
+2. To check the service principal that's referenced by the container registry role assignment, run the following command:
+
+    ```azurecli
+    az role assignment list --scope /subscriptions/<subscriptionID>/resourceGroups/<resourcegroupname>/providers/Microsoft.ContainerRegistry/registries/<acrname> -o table
+    ```
+3. Compare the two service principals. If they don't match, integrate the AKS cluster with the container registry again.
+
+#### Solution 4: Make sure the kubelet identity is referenced in the AKS Virtual Machine Scale Sets
+
+When you use a managed identity for authentication with the ACR, the managed identity is the kubelet identity. By default, the AKS Virtual Machine Scale Sets assign the kubelet identity. If you remove the kubelet identity from the AKS Virtual Machine Scale Sets, the AKS nodes can't pull images from the ACR.
+
+To find the kubelet identity of your AKS cluster, run the following command:
+
+```azurecli
+az aks show --resource-group <MyResourceGroup> --name <MyManagedCluster> --query identityProfile.kubeletidentity
+```
+
+To find the kubelet identity for your AKS cluster, run the following command:
+
+```azurecli
+az vmss identity show --resource-group <NodeResourceGroup> --name <AksVmssName>
+```
+
+If the kubelet identity of your AKS cluster isn't assigned to the AKS Virtual Machine Scale Sets, assign it back.
+
+Note
+
+[Modifying the AKS Virtual Machine Scale Sets by using the internet-as-a-service (IaaS) APIs or from the Azure portal isn't supported](/en-us/azure/aks/support-policies#user-customization-of-agent-nodes) and no AKS operation can remove the kubelet identity from the AKS Virtual Machine Scale Sets. This condition means that something or someone removed it, like a manual removal performed by a team member. To prevent such removal or modification, consider using the [NRGLockdown feature](/en-us/azure/aks/cluster-configuration#fully-managed-resource-group-preview).
+
+Because modifications to the AKS Virtual Machine Scale Sets aren't supported, they don't propagate at the AKS level. To reassign the kubelet identity to the AKS Virtual Machine Scale Sets, a reconciliation operation is needed. To do this, run the following command:
+
+```azurecli
+az aks update --resource-group <MyResourceGroup> --name <MyManagedCluster>
+```
+
+#### Solution 5: Make sure the service principal is correct and the secret is valid
+
+If you pull an image by using an [image pull secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry), and you created that Kubernetes secret by using the values of a service principal, make sure that the associated service principal is correct and the secret is still valid. Follow these steps:
+
+1. Run the following [kubectl get](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) and [base64](https://ss64.com/bash/base64.html) command to see the values of the Kubernetes secret:
+
+    ```console
+    kubectl get secret <secret-name> --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+    ```
+2. Check the expiration date by running the following [az ad sp credential list](/en-us/cli/azure/ad/sp/credential#az-ad-sp-credential-list) command. The username is the service principal value.
+
+    ```azurecli
+    az ad sp credential list --id "<username>" --query "[].endDate" --output tsv
+    ```
+3. If necessary, reset the secret of that service principal by running the following [az ad sp credential reset](/en-us/cli/azure/ad/sp/credential#az-ad-sp-credential-reset) command:
+
+    ```azurecli
+    az ad sp credential reset --name "$SP_ID" --query password --output tsv
+    ```
+4. Update or recreate the Kubernetes secret accordingly.
+
+#### Solution 6: Make sure the Kubernetes secret has the correct values of the container registry admin account
+
+If you pull an image by using an [image pull secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/), and you created that Kubernetes secret by using values of [container registry admin account](/en-us/azure/container-registry/container-registry-authentication#admin-account), make sure that the values in the Kubernetes secret are the same as the values of the container registry admin account. Follow these steps:
+
+1. Run the following [kubectl get](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) and [base64](https://ss64.com/bash/base64.html) command to see the values of the Kubernetes secret:
+
+    ```console
+    kubectl get secret <secret-name> --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+    ```
+2. In the [Azure portal](https://portal.azure.com), search for and select **Container registries**.
+3. In the list of container registries, select your container registry.
+4. In the navigation pane for the container registry, select **Access keys**.
+5. In the **Access keys** page for the container registry, compare the container registry values with the values in the Kubernetes secret.
+6. If the values don't match, update or recreate the Kubernetes secret accordingly.
+
+Note
+
+If a **Regenerate** password operation occurs, an operation named `Regenerate Container Registry Login Credentials` displays in the **Activity log** page of the container registry. The **Activity log** has a [90-day retention period](/en-us/azure/azure-monitor/essentials/activity-log#retention-period).
+
+### Cause 1b: `401 Unauthorized` error due to incompatible architecture
+
+You might encounter a `401 Unauthorized` error even when the AKS cluster identity is authorized (as described in the Cause 1a: `401 Unauthorized` error due to incorrect authorization section). This problem occurs if the container image in the ACR doesn't match the architecture (like ARM64 versus AMD64) of the node that's running the container. For example, deploying an ARM64 image on an AMD64 node or vice versa can result in this error.
+
+The error message appears as follows:
+
+`Failed to pull image "\<acrname>.azurecr.io/\<repository:\tag>": [rpc error: code = NotFound desc = failed to pull and unpack image "\<acrname>.azurecr.io/\<repository:\tag>": no match for platform in manifest: not found, failed to pull and unpack image "\<acrname>.azurecr.io/\<repository\:tag>": failed to resolve reference "\<acrname>.azurecr.io/\<repository\:tag>": failed to authorize: failed to fetch anonymous token: unexpected status from GET request to https://\<acrname>.azurecr.io/oauth2/token?scope=repository%3A\<repository>%3Apull&service=\<acrname>.azurecr.io: 401 Unauthorized]`
+
+When diagnosing this problem by using the Azure CLI, you might see an unexpected `exec format` error if your system node pool runs a different architecture than the image in the ACR:
+
+```azurecli
+az aks check-acr --resource-group <MyResourceGroup> --name <MyManagedCluster> --acr <myacr>.azurecr.io
+
+exec /canipull: exec format error
+```
+
+#### Solution: Push images with the correct architecture or push multi-architecture images
+
+To resolve this issue, use one of the following methods:
+
+- Ensure the container images you push to ACR match the architecture of your AKS nodes (for example, ARM64 or AMD64).
+- Create and push multi-architecture images that support both ARM64 and AMD64 architectures.
+
+## Cause 2: Image not found error
+
+The image not found error appears as follows:
+
+`Failed to pull image "\<acrname>.azurecr.io/\<repository\:tag>": [rpc error: code = NotFound desc = failed to pull and unpack image "\<acrname>.azurecr.io/\<repository\:tag>": failed to resolve reference "\<acrname>.azurecr.io/\<repository\:tag>": \<acrname>.azurecr.io/\<repository\:tag>: not found`
+
+### Solution: Make sure the image name is correct
+
+If you see this error, make sure that the image name is correct. Check the registry name, the registry sign-in server, the repository name, and the tag.
+
+Note
+
+A common mistake is that the sign-in server is specified as **azureacr.io** instead of **azurecr.io**.
+
+If the image name isn't fully correct, the 401 Unauthorized error can also occur because AKS always tries anonymous pull regardless of whether the container registry has enabled anonymous pull access.
+
+## Cause 3: `403 forbidden` error
+
+The `403 Forbidden` error message appears as follows:
+
+`Failed to pull image "\<acrname>.azurecr.io/\<repository\:tag>": rpc error: code = Unknown desc = failed to pull and unpack image "\<acrname>.azurecr.io/\<repository\:tag>": failed to resolve reference "\<acrname>.azurecr.io/\<repository\:tag>": failed to authorize: failed to fetch anonymous token: unexpected status: 403 Forbidden`
+
+### Solution 1: Make sure the AKS virtual network link is set in the container registry's Private DNS zone
+
+If the network interface of the container registry's private endpoint and the AKS cluster are in different virtual networks, make sure that the [virtual network link](/en-us/azure/dns/private-dns-virtual-network-links) for the AKS cluster's virtual network is set in the private DNS zone of the container registry. (That link is named **privatelink.azurecr.io** by default.) If the virtual network link isn't in the private DNS zone of the container registry, add it using one of the following methods:
+
+- Use the Azure portal:
+
+1. In the Azure portal, select the private DNS zone **privatelink.azurecr.io**.
+2. In **Settings**, select **Virtual network links** &gt; **Add**.
+3. Select a name and the virtual network of the AKS cluster, and then select **OK**.
+
+Note
+
+It's optional to select the [Enable auto registration](/en-us/azure/dns/private-dns-autoregistration) feature.
+
+- [Create a virtual network link to the specified private DNS zone by using Azure CLI](/en-us/cli/azure/network/private-dns/link/vnet#az-network-private-dns-link-vnet-create).
+
+### Solution 2: Add the AKS load balancer's public IP address to the allowed IP address range of the container registry
+
+If the AKS cluster connects publicly to the container registry (**not** through a private link or an endpoint) and you limit the public network access of the container registry to selected networks, add the AKS load balancer's public IP address to the allowed IP address range of the container registry by using the following steps:
+
+1. Verify that the public network access is limited to selected networks.
+
+    1. In the Azure portal, go to the container registry.
+    2. In **Settings**, select **Networking**.
+    3. On the **Public access** tab, set **Public network access** to **Selected networks** or **Disabled**.
+2. Get the AKS load balancer's public IP address by using one of the following methods:
+
+    - Use the Azure portal:
+
+        1. In the Azure portal, go to the AKS cluster.
+        2. In **Settings**, select **Properties**.
+        3. Select one of the Virtual Machine Scale Sets in the infrastructure resource group and check the public IP address of the AKS load balancer.
+    - Run the following command:
+
+        ```azurecli
+        az network public-ip show --resource-group <infrastructure-resource-group> --name <public-IP-name> --query ipAddress -o tsv
+        ```
+3. Allow access from the AKS load balancer's public IP address by using one of the following methods:
+
+    - Run the `az acr network-rule add` command as follows:
+
+        ```azurecli
+        az acr network-rule add --name acrname --ip-address <AKS-load-balancer-public-IP-address>
+        ```
+
+        For more information, see [Add network rule to registry](/en-us/azure/container-registry/container-registry-access-selected-networks#add-network-rule-to-registry).
+    - Use the Azure portal:
+
+        1. In the Azure portal, go to the container registry.
+        2. In **Settings**, select **Networking**.
+        3. On the **Public access** tab, in **Firewall**, add the AKS load balancer's public IP address to **Address range** and then select **Save**.
+
+        For more information, see [Access from selected public network - portal](/en-us/azure/container-registry/container-registry-access-selected-networks#access-from-selected-public-network---portal).
+
+        Note
+
+        If **Public network access** is set to **Disabled**, switch it to **Selected networks** first.
+
+        [![Screenshot showing how to add AKS Load Balancer's public IP address to address range.](media/cannot-pull-image-from-acr-to-aks-cluster/add-aks-load-balancer-public-ip.png)](media/cannot-pull-image-from-acr-to-aks-cluster/add-aks-load-balancer-public-ip.png#lightbox)
+
+## Cause 4: `i/o timeout` error
+
+The `i/o timeout` error message appears as follows:
+
+`Failed to pull image "\<acrname>.azurecr.io/\<repository\:tag>": rpc error: code = Unknown desc = failed to pull and unpack image "\<acrname>.azurecr.io/\<repository\:tag>": failed to resolve reference "\<acrname>.azurecr.io/<repository\:tag>": failed to do request: Head "https://\<acrname>.azurecr.io/v2/\<repository>/manifests/v1": dial tcp \<acrprivateipaddress>:443: i/o timeout`
+
+Note
+
+The `i/o timeout` error occurs only when you [connect privately to a container registry by using Azure Private Link](/en-us/azure/container-registry/container-registry-private-link).
+
+### Solution 1: Make sure virtual network peering is used
+
+If the network interface of the container registry's private endpoint and the AKS cluster are in different virtual networks, make sure that [virtual network peering](/en-us/azure/virtual-network/virtual-network-peering-overview) is used for both virtual networks. You can check virtual network peering by running the Azure CLI command `az network vnet peering list --resource-group <MyResourceGroup> --vnet-name <MyVirtualNetwork> --output table` or in the Azure portal by selecting the **VNETs** &gt; **Peerings** in the **Settings** panel. For more information about listing all peerings of a specified virtual network, see [az network vnet peering list](/en-us/cli/azure/network/vnet/peering#az-network-vnet-peering-list).
+
+If the virtual network peering is used for both virtual networks, make sure that the status is **Connected**. If the status is [Disconnected](/en-us/azure/virtual-network/virtual-network-troubleshoot-peering-issues#the-peering-status-is-disconnected), delete the peering from both virtual networks, and then recreate it. If the status is **Connected**, see the troubleshooting guide: [The peering status is "Connected"](/en-us/azure/virtual-network/virtual-network-troubleshoot-peering-issues#the-peering-status-is-connected).
+
+For further troubleshooting, connect to one of the AKS nodes or [pods](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#exec) and then test the connectivity with the container registry at the TCP level by using the telnet or netcat utility. Check the IP address with the `nslookup <acrname>.azurecr.io` command and then run the `telnet <ip-address-of-the-container-registry> 443` command.
+
+For more information about connecting to AKS nodes, see [Connect with SSH to Azure Kubernetes Service (AKS) cluster nodes for maintenance or troubleshooting](/en-us/azure/aks/ssh).
+
+### Solution 2: Use Azure Firewall
+
+If the network interface of the container registry's private endpoint and the AKS cluster are in different virtual networks (in addition to virtual network peering), you can use Azure Firewall to set up a [Hub-spoke network topology in Azure](/en-us/azure/architecture/reference-architectures/hybrid-networking/hub-spoke?tabs=cli). When you set up the firewall rule, you need to use network rules to explicitly allow the [outbound connection](/en-us/azure/firewall/rule-processing#outbound-connectivity) to the container registry private endpoint IP addresses.
+
+## Cause 5: No match for platform in manifest
+
+The host operating system (node OS) is incompatible with the image that you use for the pod or container. For example, if you schedule a pod to run a Linux container on a Windows node, or a Windows container on a Linux node, the following error occurs:
+
+`Failed to pull image "\<acrname>.azurecr.io/\<repository:tag>"\:\ [\ &nbsp; rpc error:\ &nbsp; code = NotFound\ &nbsp; desc = failed to pull and unpack image "\<acrname>.azurecr.io/\<repository:tag>": **no match for platform in manifest**: not found,\ ]`
+
+This error occurs for an image that's pulled from any source if the image is incompatible with the host OS. The error isn't limited to images that you pull from the container registry.
+
+### Solution: Configure the nodeSelector field correctly in your pod or deployment
+
+Specify the correct `nodeSelector` field in the configuration settings of your pod or deployment. The correct value for this field's `kubernetes.io/os` setting ensures that the pod is scheduled on the correct type of node. The following table shows how to set the `kubernetes.io/os` setting in YAML:
+
+| Container type | YAML setting |
+| --- | --- |
+| Linux container | `"kubernetes.io/os": linux` |
+| Windows container | `"kubernetes.io/os": windows` |
+
+For example, the following YAML code describes a pod that needs to be scheduled on a Linux node:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: aspnetapp
+  labels:
+    app: aspnetapp
+spec:
+  containers:
+  - image: "mcr.microsoft.com/dotnet/core/samples:aspnetapp"
+    name: aspnetapp-image
+    ports:
+    - containerPort: 80
+      protocol: TCP
+  nodeSelector:
+    "kubernetes.io/os": linux
+```
+
+## Cause 6: Kubelet exceeds the default image pull rate limit
+
+When multiple jobs pull the same images, the kubelet default pull rate limit can be exceeded. In this case, an error message like the following one is displayed:
+
+`Failed to pull image "acrname.azurecr.io/repo/nginx:latest": pull QPS exceeded. This occurred for pod \<podname\> at 4/22/2025, 12:48:32.000 PM UTC.`
+
+For more information about the limit, see the [registryPullQPS configuration](https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/#kubelet-config-k8s-io-v1beta1-KubeletConfiguration).
+
+### Solution: Change the value of imagePullPolicy to IfNotPresent
+
+To resolve this issue, change the value of [imagePullPolicy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) from `Always` to `IfNotPresent` in the deployment YAML file to prevent unnecessary pulls. `IfNotPresent` ensures that the image is pulled from the registry only if it's not already present on the node.
+
+Here's an example of the deployment YAML file:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-container
+        image: myacr.azurecr.io/my-image:latest
+        imagePullPolicy: IfNotPresent
+```
+
+## Cause 7: TLS handshake timeout error occurs when pulling images from ACR
+
+The following events and messages might occur when pulling images from ACR to AKS:
+
+```text
+ Type     Reason     Age                From               Message
+
+ ----     ------     ----               ----               -------
+
+ Normal   Scheduled  59s                default-scheduler  Successfully assigned api/testapi-worker-51235 to aks-api-573618vmss00000
+
+ Normal   BackOff    39s                kubelet            Back-off pulling image "test.azurecr.io/test-api:v1.1.3"
+
+ Warning  Failed     39s                kubelet            Error: ImagePullBackOff
+
+ Normal   Pulling    25s (x2 over 59s)  kubelet            Pulling image "test.azurecr.io/test-api:v1.1.3"
+
+ Warning  Failed     5s (x2 over 39s)   kubelet            Failed to pull image "test.azurecr.io/test-api:v1.1.3": failed to pull and unpack image "test.azurecr.io/test-api:v1.1.3": failed to resolve reference "test.azurecr.io/test-api:v1.1.3": failed to do request: Head "https://test.azurecr.io/v2/test-api/manifests/v1.1.3": net/http: TLS handshake timeout
+
+ Warning  Failed     5s (x2 over 39s)   kubelet            Error: ErrImagePull
+```
+
+### Solution: Update Azure Virtual Network Appliance (NVAs) by using validated routes
+
+If you receive this `net/http: TLS handshake` time-out, check your network configuration, including firewall, proxy, and network connectivity settings.
+
+## Cause 8: Data endpoint DNS or egress blocked
+
+The image manifest resolves successfully, but the layer (blob) download fails because the node can't reach the registry's **data endpoint**. For Azure Container Registry, the data endpoint is `<registry-name>.<region>.data.azurecr.io` or `*.blob.core.windows.net`. For the Microsoft Artifact Registry (MCR), it's `*.data.mcr.microsoft.com`.
+
+This situation occurs when a firewall or network virtual appliance (NVA) allows the registry authentication endpoint (`<registry>.azurecr.io`) but doesn't allow the separate data endpoint used for layer downloads (see How the image pull flow works, stage 3).
+
+The error typically appears as:
+
+`Failed to pull image "...": failed to copy: httpReadSeeker: failed open: failed to do request: ... dial tcp <IP>:443: i/o timeout`
+
+or:
+
+`Get "https://<region>.data.mcr.microsoft.com/...": connection reset by peer`
+
+### Solution 1: Add the data endpoint to your firewall or egress allowlist
+
+If you use Azure Firewall, a proxy, or an NVA for egress filtering, add the data endpoints to the allowlist:
+
+- For ACR: allow `*.blob.core.windows.net` (or the specific `<registry-name>.<region>.data.azurecr.io` host) on TCP 443.
+- For MCR: allow `*.data.mcr.microsoft.com` on TCP 443.
+- For Docker Hub: allow `production.cloudflare.docker.com` on TCP 443.
+
+For the full list of required endpoints, see [Azure Container Registry firewall access rules](/en-us/azure/container-registry/container-registry-firewall-access-rules).
+
+### Solution 2: Correct the private DNS zone for the data endpoint
+
+If you use a private endpoint for ACR, the data endpoint resolves through a separate private DNS zone (`privatelink.blob.core.windows.net`). If this zone is missing or misconfigured, layer downloads fail even though authentication succeeds.
+
+1. Verify DNS resolution from a debug pod or node.
+
+    ```console
+    nslookup <registry-name>.<region>.data.azurecr.io
+    ```
+2. If the data endpoint doesn't resolve or resolves to an unexpected IP, add or correct the `privatelink.blob.core.windows.net` private DNS zone and link it to the AKS virtual network.
+3. Confirm connectivity by testing TCP 443 to the resolved IP.
+
+    ```console
+    curl -v https://<registry-name>.<region>.data.azurecr.io
+    ```
+
+For more information, see [Azure DNS troubleshooting documentation](../../dns/welcome-azure-dns).
+
+## Cause 9: Tag reuse causes stale digest on node
+
+When you overwrite a mutable tag (such as `latest` or `v1`) with new image content, nodes that previously pulled that tag might still reference the **old manifest digest** in their local cache. Depending on timing and `imagePullPolicy`, this situation can cause:
+
+- A `manifest not found` error because the old digest no longer exists in the registry.
+- `401 Unauthorized` when attempting to fetch a digest that's been garbage-collected.
+- No error but the pod runs **stale code** because `imagePullPolicy: IfNotPresent` sees the tag as already cached.
+
+The error appears as:
+
+`Failed to pull image "<acrname>.azurecr.io/<repository>:<tag>": ... manifest not found`
+
+### Solution 1: Use immutable (unique) tags
+
+Tag images with a unique identifier such as the Git commit SHA or build ID (for example, `myapp:abc123f`). This approach eliminates digest ambiguity entirely and ensures every deployment pulls exactly the intended image.
+
+### Solution 2: Set imagePullPolicy to Always for mutable tags
+
+If you must reuse tags like `latest`, set `imagePullPolicy: Always` so kubelet always checks the registry for the current digest:
+
+```yaml
+containers:
+- name: myapp
+  image: myacr.azurecr.io/myapp:latest
+  imagePullPolicy: Always
+```
+
+Refer to [Impage Pull Policy Behavior](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) for more details.
+
+### Solution 3: Force a rollout restart to re-resolve the tag
+
+To immediately clear the stale digest from all pods, trigger a rolling restart:
+
+```console
+kubectl rollout restart deployment/<deployment-name> -n <namespace>
+```
+
+After the restart, kubelet re-resolves the tag to the current digest in the registry.
+
+## Cause 10: Node credential cache not refreshed
+
+After a credential change - such as migrating from a service principal to a managed identity, rotating a service principal secret, or reassigning the kubelet identity - image pulls can fail with `401 Unauthorized` even though the new credentials are correctly configured. This failure happens because:
+
+- The kubelet credential provider caches tokens and doesn't immediately pick up new identity bindings.
+- The `acr-credential-provider` process on the node might time out reaching IMDS (`169.254.169.254`) if the node's network path to IMDS is disrupted.
+
+The error appears as:
+
+`failed getting credential from external registry credential provider: ... context deadline exceeded`
+
+or:
+
+`failed to authorize: failed to fetch oauth token: unexpected status: 401 Unauthorized`
+
+Despite role assignments being correct when checked with `az role assignment list`.
+
+Note
+
+Kubelet's credential cache typically refreshes within a few minutes. If pulls continue to fail beyond 5 minutes after a credential change, proceed with Solution 2 (node image upgrade).
+
+### Solution 1: Reconcile the cluster to propagate identity changes
+
+Run a reconcile operation to ensure all nodes pick up the new identity:
+
+```azurecli
+az aks update --resource-group <MyResourceGroup> --name <MyManagedCluster>
+```
+
+### Solution 2: Upgrade the node image to refresh credential state
+
+If reconcile doesn't resolve the issue (for example, after a service-principal-to-managed-identity migration), upgrade the node image so nodes rebind the identity from scratch:
+
+```azurecli
+az aks nodepool upgrade --resource-group <MyResourceGroup> --cluster-name <MyManagedCluster> --name <nodepool-name> --node-image-only
+```
+
+### Solution 3: Verify IMDS reachability from the node
+
+If the `acr-credential-provider` logs show `context deadline exceeded`, verify that the node can reach the Instance Metadata Service:
+
+```console
+curl -s -H "Metadata: true" "http://169.254.169.254/metadata/identity/oauth2/token?resource=https://management.azure.com&api-version=2018-02-01"
+```
+
+If this call times out, check that no NVA, network security group, or custom route is blocking traffic to `169.254.169.254`.
+
+## Cause 11: Public or third-party registry rate limits
+
+When pulling images from Docker Hub, GitHub Container Registry (`ghcr.io`), or other public registries, the AKS cluster shares a rate limit with all traffic from the node's outbound IP address. If the limit is exceeded, the pull fails with:
+
+`Failed to pull image "docker.io/library/nginx:latest": ... 429 Too Many Requests`
+
+or:
+
+`You have reached your pull rate limit. You may increase the limit by authenticating...`
+
+This commonly affects clusters that:
+
+- Pull many different public images during node scale-up.
+- Use `imagePullPolicy: Always` with frequently restarting pods.
+- Share an egress IP with other clusters or workloads.
+
+### Solution 1: Import public images into your own ACR
+
+Eliminate upstream rate limits by importing the images you need into your own Azure Container Registry:
+
+```azurecli
+az acr import --name <myacr> --source docker.io/library/nginx:latest --image nginx:latest
+```
+
+Then update your deployments to reference `<myacr>.azurecr.io/nginx:latest`.
+
+### Solution 2: Use ACR Artifact Cache (pull-through cache)
+
+Configure [ACR Artifact Cache](/en-us/azure/container-registry/container-registry-artifact-cache) to automatically cache upstream images. This provides a pull-through proxy that caches images from Docker Hub, `ghcr.io`, and other registries inside your ACR.
+
+### Solution 3: Authenticate with the upstream registry
+
+For Docker Hub, authenticated users get higher rate limits. Create a pull secret and reference it in your pod spec:
+
+```console
+kubectl create secret docker-registry dockerhub-secret \
+  --docker-server=https://index.docker.io/v1/ \
+  --docker-username=<username> \
+  --docker-password=<access-token> \
+  -n <namespace>
+```
+
+```yaml
+spec:
+  imagePullSecrets:
+  - name: dockerhub-secret
+```
+
+## Other considerations
+
+If the troubleshooting guidance in this article doesn't help you resolve the issue, consider the following suggestions:
+
+- Check the network security groups and route tables that are associated with subnets.
+- If a virtual appliance such as a firewall controls the traffic between subnets, check the firewall and [Firewall access rules](/en-us/azure/container-registry/container-registry-firewall-access-rules).
+
+**Third-party information disclaimer**
+
+The third-party products that this article discusses are manufactured by companies that are independent of Microsoft. Microsoft makes no warranty, implied or otherwise, about the performance or reliability of these products.

@@ -1,0 +1,293 @@
+---
+layout: Conceptual
+title: Tutorial -Trigger Image Build on Private Base Image Update - Azure Container Registry | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/container-registry/container-registry-tutorial-private-base-image-update
+breadcrumb_path: ../breadcrumb/azure-management/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/62/azure-container-registry/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/180a533d-0d25-ec11-b6e6-000d3a4f0858
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+author: KumudD
+learn_banner_products:
+- azure
+manager: kumud
+ms.reviewer: kumud
+ms.author: kumud
+ms.service: azure-container-registry
+description: Configure an Azure Container Registry Task to automatically trigger container image builds when a base image in another private registry is updated.
+ms.topic: tutorial
+ms.date: 2023-10-31T00:00:00.0000000Z
+ms.custom: devx-track-azurecli
+locale: en-us
+document_id: 464bd773-be48-aec5-48b4-1aec32eb38d2
+document_version_independent_id: 781ab3ff-c6af-6457-6069-06764fefe947
+original_content_git_url: https://github.com/MicrosoftDocs/azure-management-docs-pr/blob/live/articles/container-registry/container-registry-tutorial-private-base-image-update.md
+site_name: Docs
+depot_name: Learn.azure-management
+page_type: conceptual
+toc_rel: toc.json
+asset_id: container-registry/container-registry-tutorial-private-base-image-update
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/container-registry/container-registry-tutorial-private-base-image-update.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/cb49e66a-8528-497d-adaa-eade2d009d1b
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/472c9d15-157b-443c-afa2-e209c8fecf58
+platformId: 5a8c13f2-779c-4757-f586-7c28850a5a8a
+---
+
+# Tutorial -Trigger Image Build on Private Base Image Update - Azure Container Registry | Microsoft Learn
+
+[ACR Tasks](container-registry-tasks-overview) supports automated image builds when a container's [base image is updated](container-registry-tasks-base-images), such as when you patch the OS or application framework in one of your base images.
+
+In this tutorial, you learn how to create an ACR task that triggers a build in the cloud when a container's base image is pushed to another Azure container registry. You can also try a tutorial to create an ACR task that triggers an image build when a base image is pushed to the [same Azure container registry](container-registry-tutorial-base-image-update).
+
+In this tutorial:
+
+- Build the base image in a base registry
+- Create an application build task in another registry to track the base image
+- Update the base image to trigger an application image task
+- Display the triggered task
+- Verify updated application image
+
+## Prerequisites
+
+### Complete the previous tutorials
+
+This tutorial assumes you've already configured your environment and completed the steps in the first two tutorials in the series, in which you:
+
+- Create Azure container registry
+- Fork sample repository
+- Clone sample repository
+- Create GitHub personal access token
+
+If you haven't already done so, complete the following tutorials before proceeding:
+
+[Build container images in the cloud with Azure Container Registry Tasks](container-registry-tutorial-quick-task)
+
+[Automate container image builds with Azure Container Registry Tasks](container-registry-tutorial-build-task)
+
+In addition to the container registry created for the previous tutorials, you need to create a registry to store the base images. If you want to, create the second registry in a different location than the original registry.
+
+### Configure the environment
+
+Populate these shell environment variables with values appropriate for your environment. This step isn't strictly required, but makes executing the multiline Azure CLI commands in this tutorial a bit easier. If you don't populate these environment variables, you must manually replace each value wherever it appears in the example commands.
+
+```azurecli
+BASE_ACR=<base-registry-name>   # The name of your Azure container registry for base images
+ACR_NAME=<registry-name>        # The name of your Azure container registry for application images
+GIT_USER=<github-username>      # Your GitHub user account name
+GIT_PAT=<personal-access-token> # The PAT you generated in the second tutorial
+```
+
+### Base image update scenario
+
+This tutorial walks you through a base image update scenario. This scenario reflects a development workflow to manage base images in a common, private container registry when creating application images in other registries. The base images could specify common operating systems and frameworks used by a team, or even common service components.
+
+For example, developers who develop application images in their own registries can access a set of base images maintained in the common base registry. The base registry can be in another region or even geo-replicated.
+
+The [code sample](https://github.com/Azure-Samples/acr-build-helloworld-node) includes two Dockerfiles: an application image, and an image it specifies as its base. In the following sections, you create an ACR task that automatically triggers a build of the application image when a new version of the base image is pushed to a different Azure container registry.
+
+- [Dockerfile-app](https://github.com/Azure-Samples/acr-build-helloworld-node/blob/main/Dockerfile-app): A small Node.js web application that renders a static web page displaying the Node.js version on which it's based. The version string is simulated: it displays the contents of an environment variable, `NODE_VERSION`, that's defined in the base image.
+- [Dockerfile-base](https://github.com/Azure-Samples/acr-build-helloworld-node/blob/main/Dockerfile-base): The image that `Dockerfile-app` specifies as its base. It is itself based on a [Node](https://hub.docker.com/_/node/) image, and includes the `NODE_VERSION` environment variable.
+
+In the following sections, you create a task, update the `NODE_VERSION` value in the base image Dockerfile, then use ACR Tasks to build the base image. When the ACR task pushes the new base image to your registry, it automatically triggers a build of the application image. Optionally, you run the application container image locally to see the different version strings in the built images.
+
+In this tutorial, your ACR task builds and pushes an application container image specified in a Dockerfile. ACR Tasks can also run [multi-step tasks](container-registry-tasks-multi-step), using a YAML file to define steps to build, push, and optionally test multiple containers.
+
+## Build the base image
+
+Start by building the base image with an ACR Tasks *quick task*, using [az acr build](/en-us/cli/azure/acr#az-acr-build). As discussed in the [first tutorial](container-registry-tutorial-quick-task) in the series, this process not only builds the image, but pushes it to your container registry if the build is successful. In this example, the image is pushed to the base image registry.
+
+```azurecli
+az acr build --registry $BASE_ACR --image baseimages/node:15-alpine --file Dockerfile-base .
+```
+
+## Create a task to track the private base image
+
+Next, create a task in the application image registry with [az acr task create](/en-us/cli/azure/acr/task#az-acr-task-create), enabling a [managed identity](container-registry-tasks-authentication-managed-identity). The managed identity is used in later steps so that the task authenticates with the base image registry.
+
+This example uses a system-assigned identity, but you could create and enable a user-assigned managed identity for certain scenarios. For details, see [Cross-registry authentication in an ACR task using an Azure-managed identity](container-registry-tasks-cross-registry-authentication).
+
+```azurecli
+az acr task create \
+    --registry $ACR_NAME \
+    --name baseexample2 \
+    --image helloworld:{{.Run.ID}} \
+    --context https://github.com/$GIT_USER/acr-build-helloworld-node.git#main \
+    --file Dockerfile-app \
+    --git-access-token $GIT_PAT \
+    --arg REGISTRY_NAME=$BASE_ACR.azurecr.io \
+    --assign-identity
+```
+
+This task is similar to the task created in the [previous tutorial](container-registry-tutorial-build-task). It instructs ACR Tasks to trigger an image build when commits are pushed to the repository specified by `--context`. While the Dockerfile used to build the image in the previous tutorial specifies a public base image (`FROM node:15-alpine`), the Dockerfile in this task, [Dockerfile-app](https://github.com/Azure-Samples/acr-build-helloworld-node/blob/main/Dockerfile-app), specifies a base image in the base image registry:
+
+```Dockerfile
+FROM ${REGISTRY_NAME}/baseimages/node:15-alpine
+```
+
+This configuration makes it easy to simulate a framework patch in the base image later in this tutorial.
+
+## Give identity pull permissions to base registry
+
+To give the task's managed identity permissions to pull images from the base image registry, first run [az acr task show](/en-us/cli/azure/acr/task#az-acr-task-show) to get the service principal ID of the identity. Then run [az acr show](/en-us/cli/azure/acr#az-acr-show) to get the resource ID of the base registry:
+
+```azurecli
+# Get service principal ID of the task
+principalID=$(az acr task show --name baseexample2 --registry $ACR_NAME --query identity.principalId --output tsv) 
+
+# Get resource ID of the base registry
+baseregID=$(az acr show --name $BASE_ACR --query id --output tsv) 
+```
+
+Assign the managed identity pull permissions to the registry by running [az role assignment create](/en-us/cli/azure/role/assignment#az-role-assignment-create). The correct role to use in the role assignment depends on whether the registry is [ABAC-enabled or not](container-registry-rbac-abac-repository-permissions).
+
+```azurecli
+ROLE="Container Registry Repository Reader" # For ABAC-enabled registries. For non-ABAC registries, use AcrPull.
+az role assignment create \
+  --assignee $principalID \
+  --scope $baseregID --role "$ROLE" 
+```
+
+## Add target registry credentials to the task
+
+Run [az acr task credential add](/en-us/cli/azure/acr/task/credential#az-acr-task-credential-add) to add credentials to the task. Pass the `--use-identity [system]` parameter to indicate that the task's system-assigned managed identity can access the credentials.
+
+```azurecli
+az acr task credential add \
+  --name baseexample2 \
+  --registry $ACR_NAME \
+  --login-server $BASE_ACR.azurecr.io \
+  --use-identity [system] 
+```
+
+## Manually run the task
+
+Use [az acr task run](/en-us/cli/azure/acr/task#az-acr-task-run) to manually trigger the task and build the application image. This step is needed so that the task tracks the application image's dependency on the base image.
+
+```azurecli
+az acr task run --registry $ACR_NAME --name baseexample2
+```
+
+Once the task has completed, take note of the **Run ID** (for example, "da6") if you wish to complete the following optional step.
+
+### Optional: Run application container locally
+
+If you're working locally (not in the Cloud Shell), and you have Docker installed, run the container to see the application rendered in a web browser before you rebuild its base image. If you're using the Cloud Shell, skip this section (Cloud Shell does not support `az acr login` or `docker run`).
+
+First, authenticate to your container registry with [az acr login](/en-us/cli/azure/acr#az-acr-login):
+
+```azurecli
+az acr login --name $ACR_NAME
+```
+
+Now, run the container locally with `docker run`. Replace **&lt;run-id&gt;** with the Run ID found in the output from the previous step (for example, "da6"). This example names the container `myapp` and includes the `--rm` parameter to remove the container when you stop it.
+
+```bash
+docker run -d -p 8080:80 --name myapp --rm $ACR_NAME.azurecr.io/helloworld:<run-id>
+```
+
+Navigate to `http://localhost:8080` in your browser, and you should see the Node.js version number rendered in the web page, similar to the following. In a later step, you bump the version by adding an "a" to the version string.
+
+![Screenshot of sample application in browser](media/container-registry-tutorial-base-image-update/base-update-01.png)
+
+To stop and remove the container, run the following command:
+
+```bash
+docker stop myapp
+```
+
+## List the builds
+
+Next, list the task runs that ACR Tasks has completed for your registry using the [az acr task list-runs](/en-us/cli/azure/acr/task#az-acr-task-list-runs) command:
+
+```azurecli
+az acr task list-runs --registry $ACR_NAME --output table
+```
+
+If you completed the previous tutorial (and didn't delete the registry), you should see output similar to the following. Take note of the number of task runs, and the latest RUN ID, so you can compare the output after you update the base image in the next section.
+
+```output
+RUN ID    TASK            PLATFORM    STATUS     TRIGGER       STARTED               DURATION
+--------  --------------  ----------  ---------  ------------  --------------------  ----------
+ca12      baseexample2    linux       Succeeded  Manual        2023-11-21T00:00:56Z  00:00:36
+ca11      baseexample1    linux       Succeeded  Image Update  2023-11-20T23:38:24Z  00:00:34
+ca10      taskhelloworld  linux       Succeeded  Image Update  2023-11-20T23:38:24Z  00:00:24
+cay                       linux       Succeeded  Manual        2023-11-20T23:38:08Z  00:00:22
+cax       baseexample1    linux       Succeeded  Manual        2023-11-20T23:33:12Z  00:00:30
+caw       taskhelloworld  linux       Succeeded  Commit        2023-11-20T23:16:07Z  00:00:29
+```
+
+## Update the base image
+
+Here you simulate a framework patch in the base image. Edit **Dockerfile-base**, and add an "a" after the version number defined in `NODE_VERSION`:
+
+```Dockerfile
+ENV NODE_VERSION 15.2.1a
+```
+
+Run a quick task to build the modified base image. Take note of the **Run ID** in the output.
+
+```azurecli
+az acr build --registry $BASE_ACR --image baseimages/node:15-alpine --file Dockerfile-base .
+```
+
+Once the build is complete and the ACR task has pushed the new base image to your registry, it triggers a build of the application image. It may take few moments for the task you created earlier to trigger the application image build, as it must detect the newly built and pushed base image.
+
+## List updated build
+
+Now that you've updated the base image, list your task runs again to compare to the earlier list. If at first the output doesn't differ, periodically run the command to see the new task run appear in the list.
+
+```azurecli
+az acr task list-runs --registry $ACR_NAME --output table
+```
+
+Output is similar to the following. The TRIGGER for the last-executed build should be "Image Update", indicating that the task was kicked off by your quick task of the base image.
+
+```azurecli
+az acr task list-runs --registry $ACR_NAME --output table
+```
+
+```output
+         PLATFORM    STATUS     TRIGGER       STARTED               DURATION
+--------  --------------  ----------  ---------  ------------  --------------------  ----------
+ca13      baseexample2    linux       Succeeded  Image Update  2023-11-21T00:06:00Z  00:00:43
+ca12      baseexample2    linux       Succeeded  Manual        2023-11-21T00:00:56Z  00:00:36
+ca11      baseexample1    linux       Succeeded  Image Update  2023-11-20T23:38:24Z  00:00:34
+ca10      taskhelloworld  linux       Succeeded  Image Update  2023-11-20T23:38:24Z  00:00:24
+cay                       linux       Succeeded  Manual        2023-11-20T23:38:08Z  00:00:22
+cax       baseexample1    linux       Succeeded  Manual        2023-11-20T23:33:12Z  00:00:30
+caw       taskhelloworld  linux       Succeeded  Commit        2023-11-20T23:16:07Z  00:00:29
+```
+
+If you'd like to perform the following optional step of running the newly built container to see the updated version number, take note of the **RUN ID** value for the Image Update-triggered build (in the preceding output, it's "ca13").
+
+### Optional: Run newly built image
+
+If you're working locally (not in the Cloud Shell), and you have Docker installed, run the new application image once its build has completed. Replace `<run-id>` with the RUN ID you obtained in the previous step. If you're using the Cloud Shell, skip this section (Cloud Shell does not support `docker run`).
+
+```bash
+docker run -d -p 8081:80 --name updatedapp --rm $ACR_NAME.azurecr.io/helloworld:<run-id>
+```
+
+Navigate to http://localhost:8081 in your browser, and you should see the updated Node.js version number (with the "a") in the web page:
+
+![Screenshot of updated sample application in browser](media/container-registry-tutorial-base-image-update/base-update-02.png)
+
+What's important to note is that you updated your **base** image with a new version number, but the last-built **application** image displays the new version. ACR Tasks picked up your change to the base image, and rebuilt your application image automatically.
+
+To stop and remove the container, run the following command:
+
+```bash
+docker stop updatedapp
+```

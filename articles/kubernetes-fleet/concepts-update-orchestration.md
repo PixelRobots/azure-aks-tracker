@@ -1,0 +1,482 @@
+---
+layout: Conceptual
+title: Safely update Kubernetes and node images across multiple clusters | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/kubernetes-fleet/concepts-update-orchestration
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+learn_banner_products:
+- azure
+description: This article describes the foundational concepts for Azure Kubernetes Fleet Manager Update Runs for safe and reliable multi-cluster updates.
+ms.date: 2026-08-21T00:00:00.0000000Z
+author: sjwaight
+ms.author: simonwaight
+ms.service: azure-kubernetes-fleet-manager
+ms.topic: concept-article
+locale: en-us
+document_id: f7bcd689-e8d8-3a1b-9f2b-58fb1b9f018f
+document_version_independent_id: b1e55a0c-f00b-0f61-824d-cc01a779c243
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/kubernetes-fleet/concepts-update-orchestration.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+toc_rel: toc.json
+asset_id: kubernetes-fleet/concepts-update-orchestration
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/kubernetes-fleet/concepts-update-orchestration.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/bcbcbad5-4208-4783-8035-8481272c98b8
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+platformId: 95a77447-160a-8f86-a472-24f1f1de1d63
+---
+
+# Safely update Kubernetes and node images across multiple clusters | Microsoft Learn
+
+**Applies to:** ✔️ Fleet Manager ✔️ Fleet Manager with hub cluster
+
+Platform admins who manage many clusters often struggle to stage node OS image or Kubernetes version upgrades safely and predictably. Azure Kubernetes Fleet Manager lets you orchestrate these upgrades across multiple clusters by using update runs.
+
+Update runs consist of stages, groups, and strategies. You can apply update runs manually for one-time updates or automatically for ongoing regular updates by using auto-upgrade profiles. All update runs, both manual and automated, honor cluster [maintenance windows](/en-us/azure/aks/planned-maintenance).
+
+## Understanding Update Runs
+
+An update run represents an update being applied to a collection of AKS clusters. It consists of the update goal and sequence. The update goal describes the desired updates. For example, upgrading to a specific Kubernetes version or applying a consistent node image across all clusters.
+
+To achieve the best results when using update runs, it's important to understand the following concepts.
+
+- **Update Strategy**: describes a reusable update sequence consisting of stages and groups of clusters. A cluster appears in a group in a stage based on the update group or member labels it's assigned. For more information, see understanding update strategies.
+
+    - **Update Stage**: an Update Strategy is divided into Update Stages, which are applied sequentially. For example, test environment clusters are in the first Update Stage, while production environment clusters go in a second Update Stage. An Update Stage contains one or more Update Groups. You can use additional controls such as maximum concurrency, wait times, and approval gates for more control over Update Stage execution.
+    - **Update Group**: Each Update Stage contains one or more Update Groups, which select clusters to update. Assign member clusters to Update Groups by using either the Update Group property of the cluster or the in-preview label-based matching by using member labels. Update Groups in an Update Stage update in parallel.
+
+    Note
+
+    The maximum number of Update Groups in each Update Stage is **50**.
+
+    - **Further flow controls**: more controls are available to provide flexibility over how fast a fleet of clusters can be updated:
+
+        - **Maximum Concurrency (preview)**: use the Maximum Concurrency configuration to change how many clusters are upgraded in parallel. You can configure this behavior at both the Stage and Group level.
+        - **Maximum allowed failures (preview)**: use the Maximum allowed failures configuration to control how many member cluster upgrade failures are tolerated before the update run is stopped. You can configure this behavior at both the Stage and Group level.
+        - **Gates**: Pause the update run until their condition is met.
+
+            - **Approval gates (preview)**: Can be configured before or after each stage or group. Approvals pause the update run, allowing either you or automations that you've set up to check that it's OK to proceed. After you or your automation grants approval, the update run will continue.
+            - **Scheduled start gates (preview)**: Can be configured before each stage or group. Scheduled start gates pause the update run until a specified day and time. The gate completes automatically when the scheduled time is reached, or you can manually complete it to proceed at any time.
+- **Auto-upgrade Profile**: automatically create and start an update run when new Kubernetes or node image versions are made available by AKS. For further information, see understanding auto-upgrade profiles.
+
+### Update Run options
+
+Update runs can apply three types of upgrades:
+
+- Upgrade Kubernetes versions for the control plane and the nodes. This upgrade includes upgrading the node image.
+- Upgrade Kubernetes versions for only the control plane of the clusters.
+- Upgrade only the node images.
+
+You can specify the target Kubernetes version to upgrade to, but you can't select the target node image versions. The system automatically selects the target node image versions based on your preferences:
+
+- **Latest**: Use the latest node images available in the Azure region of each cluster when the upgrade of that cluster starts. As a result, different image versions could be used across the fleet, depending on which Azure region a cluster is in and when its upgrade actually starts.
+- **Consistent**: When the update run starts, pick image versions that are currently available in all Azure regions where the clusters in this run are located. As such, consistent image versions are used across all clusters.
+
+Choose **Latest** to use fresher image versions and minimize security risks. Choose **Consistent** to improve reliability by using and verifying those images in clusters in earlier stages before using them in later clusters.
+
+### Update Run states
+
+To understand the lifecycle of an update run, you need to know each status, the actions you can take, and how the status is calculated.
+
+| Status | Possible Transitions | Description | Possible Actions |
+| --- | --- | --- | --- |
+| **Not Started** | - **Running**- **Pending** | Update run hasn't started. | None |
+| **Running** | - **Pending**- **Failed**- **Stopped** | Update run is in progress for at least one cluster. | Stop |
+| **Pending** | - **Running**- **Failed**- **Stopped** | The current Stage is Pending.See detailed pending status overview. | Stop |
+| **Skipped** | - **Stopped** | See detailed skipped status overview. | Stop |
+| **Stopped** | - **Running**- **Pending**- **Failed** | A user stopped the Update Run. | Start |
+| **Stopping** | - **Stopped**- **Failed** | A user request or cluster upgrade failures triggered the Update Run to stop.Updating clusters are finishing. | None |
+| **Failed** | - **Running**- **Pending**- **Failed** | A cluster upgrade has failed, so the Update Run is stopped with a Failed status.See detailed failed status overview. | Start |
+| **Completed** | **None** | The update run successfully finished. | None |
+
+Note
+
+You can restart a failed or stopped update run at any time. The restarted update run begins with the last unprocessed cluster.
+
+#### Pending status
+
+- **Update Run**: if the current stage is in `Pending` state.
+- **Update Stage**: if all Update Groups in the stage are `Pending` or not started, or if it has a `Pending` gate.
+- **Update Group**: if all clusters in the group are `Pending` or not started, or if it has a `Pending` gate. When a cluster moves to `Pending`, the update run attempts to upgrade the next cluster in the group. If all members are `Pending`, the group moves to `Pending`. The update run waits for all groups in a stage to complete before moving on to the next stage.
+- **Member cluster**: for any of the following reasons, which you can view in the message field.
+    - Maintenance window isn't open. Message indicates next opening time.
+    - Target Kubernetes or node image version isn't yet available in the cluster's Azure region. Message links to the AKS release tracker to check release status.
+
+#### Skipped status
+
+- **Update Run**: the system detected that all stages were `Skipped`.
+- **Update Stage**: a user marked the stage, or all groups in the stage as `Skipped`.
+- **Update Group**: a user marked the group, or all clusters in the group as `Skipped`.
+- **Member cluster**: for any of the following reasons, which you can view in the message field.
+    - User explicitly skipped the cluster, group, or stage.
+    - Cluster is already at the target Kubernetes version (if update run mode is `Full` or `ControlPlaneOnly`) and all node pools are at the target node image version.
+    - When consistent node image is selected and it's not possible to find the target image version for one of the node pools. This situation can occur when a new node pool with a new Virtual Machine (VM) SKU is added after an update run is started.
+
+#### Failed status
+
+The failed status cascades from clusters as shown. A summary error message displays the cause of the failed cluster upgrade.
+
+- **Update Run**: at least one cluster in the current group failed.
+- **Update Stage**: at least one cluster in a group in the stage failed.
+- **Update Group**: at least one cluster in the group failed.
+- **Member cluster**: the upgrade failed and the cluster status is set as `Failed`.
+
+When you configure Maximum allowed failures, the failure threshold affects the status of the update group, update stage, and update run. It doesn't affect an individual member cluster's status. If a member cluster upgrade fails, its status is still set to `Failed`.
+
+- If the failure count for the group or stage exceeds the configured `maxAllowedFailures` threshold, the group or stage is marked as `Failed` with a summary error message, and the update run stops progressing. If no `maxAllowedFailures` is configured (or it's set to `0`), a single failure stops the entire run.
+- If the failure count is within the `maxAllowedFailures` threshold, the update run continues upgrading subsequent members. For more information, see Maximum allowed failures.
+
+Note
+
+Even when a cluster update fails, other in-progress cluster updates continue. The update run status shows as **Stopping** until all in-progress cluster updates finish.
+
+#### Completed status
+
+A `Completed` status means the update run reached a terminal lifecycle state. When you use Maximum allowed failures, `Completed` means the configured failure threshold wasn't exceeded when Fleet Manager decided whether to continue scheduling work. It doesn't guarantee a minimum success rate or healthy outcomes. Always inspect `FailureCount`, member states, and failure messages.
+
+### Planned maintenance windows
+
+Update runs honor [planned maintenance windows](/en-us/azure/aks/planned-maintenance) that you set at the AKS cluster level.
+
+AKS clusters support two distinct maintenance windows - one for Kubernetes (control plane) upgrades and one for node image upgrades. Maintenance windows define periods when updates can be applied to a cluster, but aren't an update trigger.
+
+Fleet Manager update runs honors AKS maintenance windows as follows:
+
+| Fleet Manager update channel | AKS upgrade option | AKS maintenance window setting |
+| --- | --- | --- |
+| Kubernetes Control Plane | Kubernetes Version | AKSManagedAutoUpgradeSchedule |
+| Kubernetes + Node Image | Kubernetes Version | AKSManagedAutoUpgradeSchedule |
+| Node Image Only | Node Image | AKSManagedNodeOSAutoUpgradeSchedule |
+
+Update run prioritizes upgrading clusters based on planned maintenance in the following order:
+
+1. Cluster with an open ongoing maintenance window.
+2. Cluster with maintenance window opening in the next four hours.
+3. Cluster with no maintenance window.
+4. Cluster with a closed maintenance window.
+
+### AKS platform-initiated upgrades
+
+Fleet Manager orchestrates upgrades for member clusters within the [AKS support window](/en-us/azure/aks/supported-kubernetes-versions). When a cluster's Kubernetes version reaches end of life, it enters a 60-day [platform support grace period](../aks/platform-initiated-upgrades#platform-support-grace-period). If the cluster remains on the unsupported version after this period, AKS performs a [platform-initiated upgrade](../aks/platform-initiated-upgrades) directly on the member cluster.
+
+Because AKS initiates this upgrade directly, Fleet Manager update runs, update groups, and update strategies don't control its sequencing. The upgrade can also occur outside the cluster's planned maintenance window.
+
+To keep upgrades under Fleet orchestration, use update runs and auto-upgrade profiles to keep member clusters on supported Kubernetes versions.
+
+## Auto-upgrade profiles overview
+
+Use Auto-upgrade Profiles to automatically trigger Update Runs when new Kubernetes or node image versions are available for AKS.
+
+In an Auto-upgrade Profile, you configure:
+
+- a **Channel** (Rapid, Stable, TargetKubernetesVersion, NodeImage, SecurityPatch (preview)) which determines the type of update applied to the clusters.
+- an **UpdateStrategy** that configures the sequence in which the clusters are upgraded. If you don't supply a strategy, clusters update one by one sequentially.
+- the **NodeImageSelectionType** (Latest, Consistent) to specify how the node image is selected when upgrading the Kubernetes version.
+
+Note
+
+When you create an auto-upgrade profile, it can take days or weeks before a new Kubernetes or node image release from AKS causes auto-upgrade to create and execute an update run.
+
+You can generate an update run from an auto-upgrade profile at any time using the [`az fleet autoupgradeprofile generate-update-run`](/en-us/cli/azure/fleet/autoupgradeprofile#az-fleet-autoupgradeprofile-generate-update-run) command. The resulting update run is based on the current AKS-published Kubernetes or node image version.
+
+For more information on creating an on-demand update run from an auto-upgrade profile, see [generate an update run from an auto-upgrade profile](update-orchestration#generate-an-update-run-from-an-auto-upgrade-profile).
+
+Keep the following information in mind when using auto upgrade:
+
+- Auto-upgrade only updates to generally available versions of Kubernetes and doesn't update to preview versions.
+- Auto-upgrade requires the cluster's Kubernetes version to be within the [AKS support window](/en-us/azure/aks/supported-kubernetes-versions).
+- If a cluster has no defined planned maintenance window, it's upgraded immediately when the update run reaches the cluster.
+- If you want to have your Kubernetes version upgraded, you need to create an Auto-upgrade Profile with `Rapid`, `Stable`, or `TargetKubernetesVersion` channels.
+- When using the `TargetKubernetesVersion` channel, you must specify the target Kubernetes version using the `--target-kubernetes-version` parameter.
+- If you want to upgrade your Node Image version, create an Auto-upgrade Profile with `NodeImage`, or `SecurityPatch` channels.
+- The `SecurityPatch` channel applies security patches to Linux nodes only. Windows nodes are skipped.
+- You can create multiple auto-upgrade profiles for the same Fleet Manager.
+
+### Rapid channel
+
+The Rapid channel is always the most recent AKS-supported Kubernetes minor release. Cluster minor versions automatically change when AKS releases a new Kubernetes minor version.
+
+Examples:
+
+- The latest supported minor version is *1.30*. Any patch release in the *1.30* minor range is considered for Rapid channel updates.
+- A new minor Kubernetes version of *1.31* is published. *1.30* shifts to the Stable channel. Any cluster previously receiving updates from *1.30* is updated to the most recent patch for *1.31* that's now the Rapid channel.
+
+### Stable channel
+
+The Stable channel is always the minor version before the **Rapid** channel. Sometimes, people refer to Stable as *"N-1"*, where *"N"* is the latest (Rapid channel) supported Kubernetes minor version. Cluster minor versions automatically change when AKS releases a new Kubernetes minor version.
+
+Examples:
+
+- The latest supported minor Kubernetes version is *1.30*. Any patch releases in the *1.29* minor range would be considered for Stable channel updates.
+- A new minor Kubernetes version of *1.31* is published. The Stable channel considers any patch release in the *1.30* minor range for updates. Any cluster previously receiving updates from *1.29* is updated to the most recent patch for *1.30*.
+
+### TargetKubernetesVersion channel
+
+The TargetKubernetesVersion channel gives you control over when to move your clusters to the next Kubernetes minor version. You must specify the target Kubernetes version in the format "{major}.{minor}" (for example, "1.33"). Fleet Manager automatically upgrades clusters to the latest patch release of the specified target Kubernetes version when the patch is available. Fleet Manager doesn't upgrade to the next minor version until the auto-upgrade profile's target Kubernetes version is updated.
+
+Examples:
+
+- You create an auto upgrade profile by using the TargetKubernetesVersion channel and specify a target Kubernetes version of "1.30". A new patch version 1.30.5 is published. An update run is automatically created with the target of 1.30.5.
+- You create an auto-upgrade profile by using the TargetKubernetesVersion channel, specify a target Kubernetes version of "1.29", and enable LongTermSupport (LTS) in the auto-upgrade profile. The latest community supported minor version is "1.33". A new patch version 1.29.5 is published. An update run is automatically created with the target of 1.29.5. If the generated update run includes clusters without LTS enabled, it fails.
+
+#### Minor version skipping behavior
+
+Auto-upgrade doesn't move clusters between minor Kubernetes versions when there's more than one minor Kubernetes version difference (for example: 1.28 to 1.30). When administrators have a diverse set of Kubernetes versions, first use one or more update run to bring clusters into a set of consistently versioned releases so that configured `Stable` or `Rapid` channel updates ensure consistency is maintained in future.
+
+### NodeImage channel
+
+Member cluster nodes are updated with a newly patched VHD containing security fixes and bug fixes on a weekly cadence. The update to the new VHD is disruptive, following maintenance windows and surge settings. No extra VHD cost is incurred when choosing this option. Node image upgrades support patch versions that are deprecated, so long as the minor Kubernetes version is still supported. Node images are AKS-tested, fully managed, and applied with safe deployment practices.
+
+Nodes on different operating systems are updated in accordance with the node image versions aligned to those operating systems.
+
+Example:
+
+- A cluster has nodes with a NodeImage of *AKSWindows-2022-containerd* of version *20348.2582.240716*. A new NodeImage version *20348.2582.240916* is released and the cluster nodes are automatically upgraded to version *20348.2582.240916*.
+
+Important
+
+Node image versions are only valid for 90 days from their original publish date. If the target node image version selected by an update run exceeds the 90-day window by the time a member cluster is upgraded, the upgrade for that member cluster might fail.
+
+#### Understanding node image upgrades and snapshots
+
+When a cluster has agent pools that were [created from a node pool snapshot](/en-us/azure/aks/node-pool-snapshot), the outcome of the node image upgrade depends on the Fleet Manager Update Run node image selection.
+
+| Node image selection | Upgrade outcome |
+| --- | --- |
+| **Latest** | Follows standard AKS upgrade behavior. The agent pool keeps its reference to the snapshot (`creationData`), and the node image isn't modified. |
+| **Consistent** | The node image is upgraded to the version determined by Fleet Manager. The reference to the snapshot (`creationData`) is removed from the agent pool. |
+
+### SecurityPatch channel (preview)
+
+Update member cluster **Linux** nodes with **only security fixes** on a weekly cadence. [Canonical Ubuntu](https://ubuntu.com/server) and [Azure Linux](/en-us/azure/azure-linux/intro-azure-linux) make OS security patches available once a day. Microsoft tests these patches and bundles them into weekly updates to node images.
+
+Important
+
+Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
+
+The SecurityPatch Auto-upgrade channel is less disruptive as it uses OS live patching when possible, minimizing node disruption while keeping nodes protected against known vulnerabilities. When live patching isn't possible a pre-patched node image is deployed instead.
+
+Only Linux-based nodes are updated when using `SecurityPatch`, and Windows-based nodes are automatically skipped.
+
+If you need bug fixes that come with new node images (VHD), or a consistent experience with Windows nodes, choose the NodeImage channel instead.
+
+## Understanding Update Strategies
+
+Administrators can control the order in which clusters are updated by building reusable Update Strategies using series of Update Stages and Groups. They can configure when approvals and pauses should occur within those stages and groups. The entire configuration can be saved as an Update Strategy which can be managed independently of Update Runs or Auto-upgrade Profiles, allowing strategies to be reused as required.
+
+[![A diagram showing an example update strategy containing two update stages. Each update stage contains two update groups. Each update group contains two clusters.](media/conceptual-update-orchestration-inline.png)](media/conceptual-update-orchestration-inline.png#lightbox)
+
+### Group clusters using member labels (preview)
+
+Member labels can be used to group clusters and configure your update sequence with Kubernetes-style label selectors. This way, you can assign multiple labels to member clusters and use them for different strategies instead of being restricted to a single update group per cluster. You can group clusters in your strategy with their member labels by configuring `memberSelector` on your strategy at two levels:
+
+- **Stage level**: Selects clusters for the entire stage. When no groups are defined, all matching clusters form a single implicit group. When groups are also defined, the stage-level selector acts as a pre-filter before group-level matching is applied.
+- **Group level**: Selects clusters for a specific group within a stage, enabling parallel subsets with different concurrency limits.
+
+Important
+
+Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
+
+`memberSelector` uses a string-based label selector that's parsed by using standard Kubernetes label selector syntax. Supported operators are: `=`, `==`, `!=`, `in`, `notin`, `exists`, and `!exists`.
+
+Note
+
+Use member labels instead of update groups to group clusters in update strategies. By using member labels, you can easily manage large fleets with dynamic membership and complex grouping needs.
+
+Existing group name based strategies continue to work without changes.
+
+For instructions on assigning member labels and using `memberSelector` in a strategy, see [Create an update strategy using member selectors](update-create-update-strategy#create-an-update-strategy-using-member-selectors-preview).
+
+### Maximum concurrency (preview)
+
+`Maximum concurrency` is an optional setting on your update strategy that controls how many clusters can upgrade concurrently. You can set `Maximum concurrency` at two levels:
+
+- **Stage level**: Defines the maximum number of clusters that can upgrade at the same time across all groups in a stage. Acts as a global ceiling for the stage.
+- **Group level**: Defines the maximum number of clusters that can upgrade concurrently within a specific group.
+
+Important
+
+Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
+
+Note
+
+The upper limits of Maximum Concurrency values are:
+
+- **Stage level**: Can't exceed the system limit of **50**.
+- **Group level**: Can't exceed the stage-level Maximum Concurrency value, and can't exceed the number of clusters in the group.
+- If a configured value exceeds these limits, the operation is rejected.
+
+When no Maximum Concurrency is specified, the defaults are `stage.maxConcurrency = 50` and `group.maxConcurrency = 1`.
+
+Existing update strategies and update runs created before this feature was available automatically receive these defaults the next time the resource is updated.
+
+Maximum Concurrency accepts two value forms:
+
+- **Fixed integer**: For example, `"3"` limits concurrency to exactly three clusters.
+- **Percentage**: For example, `"25%"` limits concurrency to a percentage of clusters. For stage-level settings, the percentage is calculated from all clusters in the stage. For group-level settings, the percentage is calculated from the clusters in that group. Percentages are calculated at runtime, rounded down, and enforced with a minimum resolved value of 1.
+
+#### Concurrency control suggestions
+
+If you want to upgrade with safety (less speed, but less likely to end with multiple broken clusters): set maximum concurrency to a smaller value. If you want to upgrade with speed (more speed, but more likely end with multiple broken clusters): set maximum concurrency to a larger value.
+
+##### How stage and group limits interact
+
+The stage-level Maximum concurrency always acts as the overall ceiling. Even if individual groups allow higher concurrency, the stage limit takes precedence. Group-level concurrency might be lower than configured due to the stage-level limit, group size, or member-specific conditions.
+
+##### Example 1: Fixed limits
+
+| Setting | Value |
+| --- | --- |
+| `stage.maxConcurrency` | `"4"` |
+| `groupA.maxConcurrency` | `"2"` |
+| `groupB.maxConcurrency` | `"2"` |
+
+Result: Up to four clusters total, with a maximum of two per group.
+
+##### Example 2: Stage limit throttles groups
+
+| Setting | Value |
+| --- | --- |
+| `stage.maxConcurrency` | `"2"` |
+| `groupA.maxConcurrency` | `"5"` |
+| `groupB.maxConcurrency` | `"5"` |
+
+Result: Only two clusters total upgrade at the same time because the stage limit takes precedence.
+
+##### Example 3: Percentage-based rollout
+
+A stage has 20 clusters across two groups: Group A (eight clusters) and Group B (12 clusters).
+
+| Setting | Value | Resolves to |
+| --- | --- | --- |
+| `stage.maxConcurrency` | `"25%"` | 5 |
+| `groupA.maxConcurrency` | `"50%"` | 4 |
+| `groupB.maxConcurrency` | `"25%"` | 3 |
+
+Result: Up to five concurrent upgrades total, distributed across groups according to their individual limits.
+
+### Maximum allowed failures (preview)
+
+`Maximum allowed failures` is an optional update strategy setting that controls how Fleet Manager responds to failures during multicluster updates.
+
+By default, updates follow a fail-fast model - a single cluster failure stops further updates. When you configure `maximum allowed failures`, the update run becomes failure-tolerant, and updates continue across clusters until the specified failure threshold is reached.
+
+This setting provides a deliberate balance between early error detection and maintaining deployment momentum. Set `maximum allowed failures` at two levels:
+
+- **Stage level**: Defines the maximum number of member upgrade failures tolerated across all groups in a stage before the stage is marked as failed.
+- **Group level**: Defines the maximum number of member upgrade failures tolerated within a specific group before the group is marked as failed.
+
+Important
+
+Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
+
+Note
+
+- During preview, you can set `maxAllowedFailures` only through direct REST API calls or the Azure CLI `fleet` extension. The Azure portal doesn't support configuring `maxAllowedFailures`. If you set the field through the CLI or REST API, later editing the same update strategy or update run in the portal doesn't remove the configured values. To reset the behavior to fail-fast, set the field to `0`.
+- When you don't specify `maxAllowedFailures` or set the value to empty, the resolved value defaults to `0`, which preserves fail-fast behavior: a single member upgrade failure immediately stops the entire update run. Existing strategies and update runs keep this behavior unless you explicitly set the field, so no migration is required.
+
+`Maximum allowed failures` accepts two value forms:
+
+- **Fixed integer**: For example, `"3"` allows up to three member cluster failures before the group or stage is marked as failed.
+- **Percentage**: For example, `"25%"` allows failures up to 25% of the member clusters. For stage-level settings, the percentage is calculated from all clusters in the stage. For group-level settings, the percentage is calculated from the clusters in that group. Percentages are resolved when the update run is created, using ceiling rounding, for example, 25% of 5 clusters resolves to 2.
+
+Fleet Manager evaluates `maxAllowedFailures` only against the count of failed member updates. It doesn't evaluate success rate, and it doesn't require any minimum number of successful members. When this setting is present, `Completed` means the configured failure threshold wasn't exceeded at the time Fleet Manager made its scheduling decisions. `Completed` doesn't mean the rollout was healthy or successful.
+
+#### Example: Completed with 0% success
+
+Suppose a group has four members and `group.maxAllowedFailures` is set to `"4"`. If all four member updates fail, the group can still be marked `Completed`. This outcome is expected and intentional, not a bug, because four failures equals the configured tolerance and therefore doesn't exceed the threshold. In other words, a group can be `Completed` even when 100% of its members failed.
+
+Only use such a threshold when that behavior matches your rollout expectations.
+
+#### Choose threshold values carefully
+
+- **Absolute values** are easy to understand, but they can produce counterintuitive results in small groups. For example, allowing `"2"` failures in a two-member group means the group can finish `Completed` even if neither member succeeded.
+- **Percentage values** scale better across different group sizes, so they're recommended for most users.
+- Avoid setting `maxAllowedFailures` equal to the total number of members unless you intentionally want effectively "never fail because of member failures" behavior. If that behavior is intentional, `100%` usually scales more clearly than a fixed number.
+- Be extra careful with small groups, where a single failure can represent a large percentage of the rollout.
+- Reevaluate the threshold as your fleet grows. A value that feels safe for five clusters might be too strict or too permissive for 500 clusters.
+
+#### Understand FailureCount
+
+The `FailureCount` fields are reporting metrics. They count failed member updates. They aren't ratios or percentages, and they aren't the same as the configured enforcement threshold.
+
+- **`UpdateRun.FailureCount`**: Total failed member updates across all stages and all groups in the run.
+- **`Stage.FailureCount`**: Total failed member updates across all groups within that stage.
+- **`Group.FailureCount`**: Total failed member updates within that group.
+
+Always review these counts together with member-level statuses, conditions, and failure messages before you decide whether the rollout outcome is acceptable.
+
+#### Why FailureCount can exceed maxAllowedFailures
+
+`maxAllowedFailures` controls Fleet Manager's decision-making about whether to continue scheduling new work. It isn't a hard upper bound on the final reported number of failures.
+
+If you allow parallel member updates by using `maxConcurrency`, several members can fail at nearly the same time before Fleet Manager observes that the threshold is exceeded and stops scheduling more work. As a result, it's possible and expected for `FailureCount` to be greater than the configured `maxAllowedFailures` value.
+
+#### How stage and group failure limits interact
+
+Group-level and stage-level `maxAllowedFailures` are evaluated independently:
+
+- Each group tracks its own failure count against its own threshold.
+- Those same group failures also roll up into the stage's `FailureCount`.
+- If either threshold is exceeded, Fleet Manager stops scheduling new work for that segment.
+- Already-started member updates might still finish, which can increase the final reported `FailureCount` after the stop decision is made.
+
+The stage-level `maxAllowedFailures` acts as the overall ceiling for failure tolerance in a stage. Even if individual groups allow higher failure counts, the stage limit takes precedence. If a group's failure count exceeds its own `maxAllowedFailures`, that group is marked as failed regardless of the stage-level setting.
+
+##### Example 1: Fixed failure limits
+
+| Setting | Value |
+| --- | --- |
+| `stage.maxAllowedFailures` | `"5"` |
+| `groupA.maxAllowedFailures` | `"2"` |
+| `groupB.maxAllowedFailures` | `"3"` |
+
+Result: Group A tolerates up to two failures and Group B tolerates up to three. If total failures across the stage exceed five, the stage fails.
+
+##### Example 2: Percentage-based tolerance
+
+A stage has 19 clusters across two groups: Group A with 7 clusters and Group B with 12 clusters.
+
+| Setting | Value | Resolves to |
+| --- | --- | --- |
+| `stage.maxAllowedFailures` | `"25%"` | 5 (rounded up) |
+| `groupA.maxAllowedFailures` | `"25%"` | 2 (rounded up) |
+| `groupB.maxAllowedFailures` | `"25%"` | 3 (12 × 25% = 3) |
+
+#### Recommended and nonrecommended uses
+
+Use higher or percentage-based thresholds when you're upgrading large fleets, you expect some transient failures, or rollout progress is more important than strict fail-fast behavior.
+
+Use `0` or very small values for safety-critical rollouts, tightly controlled production stages, or any situation where you must stop and inspect after the first failure.
+
+Note
+
+Keep the following points in mind:
+
+- A group can be `Completed` even if all members failed.
+- `Completed` doesn't mean success.
+- `FailureCount` can exceed `maxAllowedFailures` when updates run in parallel.
+- Absolute thresholds can hide total failure in small groups.
+- Percentage-based thresholds usually scale better.
+- You must validate rollout outcomes by checking `FailureCount`, member states, and failure reasons.

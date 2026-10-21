@@ -1,0 +1,299 @@
+---
+layout: Conceptual
+title: Troubleshoot DNS resolution failures from inside the pod - Azure | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/dns/troubleshoot-dns-failure-from-pod-but-not-from-worker-node
+breadcrumb_path: /support/breadcrumb/toc.json
+feedback_system: Standard
+recommendations: true
+uhfHeaderId: Azure
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+manager: dcscontentpm
+audience: itpro
+author: kaushika-msft
+ms.author: kaushika
+ms.topic: troubleshooting
+description: DNS resolution fails in AKS pods while nodes resolve correctly? Troubleshoot DNS resolution failures in Azure Kubernetes Service and restore outbound connectivity now.
+ms.date: 2026-07-22T00:00:00.0000000Z
+ms.reviewer: chiragpa, rissing, v-leedennis
+editor: v-jsitser
+ms.service: azure-kubernetes-service
+ms.custom: sap:Connectivity
+locale: en-us
+document_id: 4e51cf8d-062f-6698-8e5e-bd57b4edf4fd
+document_version_independent_id: 4e51cf8d-062f-6698-8e5e-bd57b4edf4fd
+original_content_git_url: https://github.com/MicrosoftDocs/SupportArticles-docs-pr/blob/live/support/azure/azure-kubernetes/connectivity/dns/troubleshoot-dns-failure-from-pod-but-not-from-worker-node.md
+site_name: Docs
+depot_name: MSDN.support1-docset
+page_type: conceptual
+toc_rel: ../../toc.json
+pdf_url_template: https://learn.microsoft.com/pdfstore/en-us/MSDN.support1-docset/{branchName}{pdfName}
+feedback_help_link_type: ''
+feedback_help_link_url: ''
+asset_id: azure/azure-kubernetes/connectivity/dns/troubleshoot-dns-failure-from-pod-but-not-from-worker-node
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: support/azure/azure-kubernetes/connectivity/dns/troubleshoot-dns-failure-from-pod-but-not-from-worker-node.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/20ed8455-bc18-4537-87a4-83784e7b2a39
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
+platformId: ae1f44dd-2d97-bb1f-4874-43f3ed07d095
+---
+
+# Troubleshoot DNS resolution failures from inside the pod - Azure | Microsoft Learn
+
+## Summary
+
+This article discusses how to troubleshoot Domain Name System (DNS) resolution failures that occur from inside the pod, but not from the worker node, when you try to establish an outbound connection from a Microsoft Azure Kubernetes Service (AKS) cluster.
+
+## Prerequisites
+
+- The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/) tool, or a similar tool to connect to the cluster. To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
+- A test container image that the cluster can pull and that includes DNS lookup tools such as [host](https://linux.die.net/man/1/host), `dig`, and `nslookup`. This article uses `mcr.microsoft.com/aks/fundamental/base-ubuntu`. If you instead use a minimal image that doesn't include these tools, you also need a package manager (such as [apt-get](https://linux.die.net/man/8/apt-get)) to install them. If you prefer a different image, use a [glibc](https://www.gnu.org/software/libc/)-based distribution (such as Ubuntu, Debian, or Azure Linux) rather than a musl-based one (such as Alpine or BusyBox). The resolver behavior described in this article (for example, the *resolv.conf* search-domain and `ndots` handling and the three name server limit) follows the glibc implementation, and a musl-based image can resolve DNS differently.
+- The [systemctl](https://man7.org/linux/man-pages/man1/systemctl.1.html) command-line tool.
+
+## Background
+
+For DNS resolution, the pods send requests to the CoreDNS pods in the `kube-system` namespace.
+
+If the DNS query is for an internal component, such as a service name, the CoreDNS pod responds by itself. However, if the request is for an external domain, the CoreDNS pod sends the request to the upstream DNS server.
+
+The upstream DNS servers are obtained based on the *resolv.conf* file of the worker node in which the pod is running. The *resolv.conf* file (*/run/systemd/resolve/resolv.conf*) is updated based on the DNS settings of the virtual network on which the worker node is running.
+
+## Troubleshooting checklist
+
+To troubleshoot DNS issues from within the pod, use the instructions in the following sections.
+
+### Step 1: Troubleshoot DNS problems from within the pod
+
+Use `kubectl` commands to troubleshoot DNS problems from within the pod, as shown in the following steps:
+
+1. Verify that the CoreDNS pods are running:
+
+    ```bash
+    kubectl get pods -l k8s-app=kube-dns -n kube-system
+    ```
+2. Check whether the CoreDNS pods are overused:
+
+    ```console
+    $ kubectl top pods -n kube-system -l k8s-app=kube-dns
+    NAME                      CPU(cores)   MEMORY(bytes)
+    coredns-dc97c5f55-424f7   3m           23Mi
+    coredns-dc97c5f55-wbh4q   3m           25Mi
+    ```
+3. Verify that the nodes that host the CoreDNS pods aren't overused. Also, get the nodes that are hosting the CoreDNS pods:
+
+    ```bash
+    kubectl get pods -n kube-system -l k8s-app=kube-dns -o jsonpath='{.items[*].spec.nodeName}'
+    ```
+4. Check the usage of these nodes:
+
+    ```bash
+    kubectl top nodes
+    ```
+5. Verify the logs for the CoreDNS pods:
+
+    ```bash
+    kubectl logs -l k8s-app=kube-dns -n kube-system
+    ```
+
+Note
+
+To see more debugging information, enable verbose logs in CoreDNS. To enable verbose logging in CoreDNS, see [Troubleshooting CoreDNS customizations in AKS](/en-us/azure/aks/coredns-custom#troubleshooting).
+
+### Step 2: Create a test pod to run commands
+
+If DNS resolution fails, follow these steps:
+
+1. [Run a test pod in the same namespace as the problematic pod](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/#create-a-simple-pod-to-use-as-a-test-environment).
+2. Start a test pod in the cluster:
+
+    ```bash
+    kubectl run -it --rm aks-ssh --namespace <namespace> --image=mcr.microsoft.com/aks/fundamental/base-ubuntu:v0.0.11
+    ```
+
+    When the test pod is running, you gain access to the pod.
+3. Verify that the *resolv.conf* file has the correct entries:
+
+    ```console
+    cat /etc/resolv.conf
+    search default.svc.cluster.local svc.cluster.local cluster.local 00idcnmrrm4edot5s2or1onxsc.bx.internal.cloudapp.net
+    nameserver 10.0.0.10
+    options ndots:5
+    ```
+
+    Note
+
+    If [LocalDNS](/en-us/azure/aks/localdns-custom) is enabled on the node pool, an incorrect LocalDNS configuration can cause DNS resolution to fail from the pod but not from the node. Check the LocalDNS configuration (such as the `kubeDNSOverrides` and `vnetDNSOverrides` settings) on the node pool.
+4. Use the `host` command to determine whether the DNS requests are routed to the upstream server:
+
+    ```console
+    $ host -a microsoft.com
+    Trying "microsoft.com.default.svc.cluster.local"
+    Trying "microsoft.com.svc.cluster.local"
+    Trying "microsoft.com.cluster.local"
+    Trying "microsoft.com.00idcnmrrm4edot5s2or1onxsc.bx.internal.cloudapp.net"
+    Trying "microsoft.com"
+    Trying "microsoft.com"
+    ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62884
+    ;; flags: qr rd ra; QUERY: 1, ANSWER: 27, AUTHORITY: 0, ADDITIONAL: 5
+    
+    ;; QUESTION SECTION:
+    ;microsoft.com.                 IN      ANY
+    
+    ;; ANSWER SECTION:
+    microsoft.com.          30      IN      NS      ns1-39.azure-dns.com.
+    ...
+    ...
+    ns4-39.azure-dns.info.  30      IN      A       13.107.206.39
+    
+    Received 2121 bytes from 10.0.0.10#53 in 232 ms
+    ```
+5. Check the upstream DNS server from the pod to determine whether the DNS resolution is working correctly. For example, for Azure DNS, run the following [nslookup](/en-us/windows-server/administration/windows-commands/nslookup) command:
+
+    ```console
+    $ nslookup microsoft.com 168.63.129.16
+    Server:         168.63.129.16
+    Address:        168.63.129.16#53
+    ...
+    ...
+    Address: 20.81.111.85
+    ```
+
+Note
+
+If DNS works in a newly created test pod but *not* in the original pod, check the original pod's YAML for a custom DNS configuration (such as `dnsPolicy` or `dnsConfig`) that sends its queries to a different resolver.
+
+### Step 3: Check whether DNS requests work when you explicitly specify the upstream DNS server
+
+If DNS requests from pods work when you explicitly specify the upstream DNS server, verify the following conditions:
+
+1. Check for a custom ConfigMap for CoreDNS:
+
+    ```bash
+    kubectl describe cm coredns-custom -n kube-system
+    ```
+
+    If a custom ConfigMap exists, verify that the configuration is correct. For more information, see [Customize CoreDNS with Azure Kubernetes Service](/en-us/azure/aks/coredns-custom).
+2. Check whether a network policy is blocking traffic on User Datagram Protocol (UDP) port 53 to the CoreDNS pods in the `kube-system` namespace.
+3. Check whether the CoreDNS pods are on a different node pool (System node pool). If they are, check whether a network security group (NSG) associated with the System node pool is blocking traffic on UDP port 53.
+4. Check whether the virtual network was updated recently to add the new DNS servers.
+
+    If a virtual network update occurred, check whether one of the following events also occurred:
+
+    - The nodes were restarted.
+    - The network service in the node was restarted.
+
+    For the update in DNS settings to take effect, the network service on the node and the CoreDNS pods must restart. To restart the network service or the pods, use one of the following methods:
+
+    - Restart the node.
+    - Scale new nodes. (New nodes have the updated configuration.)
+    - Restart the network service in the nodes, and then restart the CoreDNS pods. Follow these steps:
+
+        1. Make a Secure Shell (SSH) connection to the nodes. For more information, see [Connect to Azure Kubernetes Service (AKS) cluster nodes for maintenance or troubleshooting](/en-us/azure/aks/node-access).
+        2. From within the node, restart the network service:
+
+            ```bash
+            systemctl restart systemd-networkd
+            ```
+        3. Check whether the settings are updated:
+
+            ```bash
+            cat /run/systemd/resolve/resolv.conf
+            ```
+        4. After the network service restarts, use kubectl to restart the CoreDNS pods:
+
+            ```bash
+            kubectl delete pods -l k8s-app=kube-dns -n kube-system
+            ```
+5. Check whether more than one DNS server is specified in the virtual network DNS settings.
+
+    If multiple DNS servers are specified in the AKS virtual network, one of the following sequences occurs:
+
+    - The AKS node sends a request to the upstream DNS server as part of a series. In this sequence, the request goes to the first DNS server that's configured in the virtual network (if the DNS servers are reachable and running). If the first DNS server isn't reachable and isn't responding, the request goes to the next DNS server.
+
+        AKS nodes use the [resolver](https://man7.org/linux/man-pages/man5/resolv.conf.5.html) command to send requests to the DNS servers. The configuration file for this resolver can be found at */run/systemd/resolve/resolv.conf* in the AKS nodes.
+
+        Are there multiple servers? In this case, the resolver library queries them in the order that's listed. The strategy it uses is to try a name server first. If the query times out, it tries the next name server, and continues until the list of name servers is exhausted. Then, the query continues to try to connect to the name servers until the maximum number of retries are made.
+
+        Note
+
+        The Linux resolver reads at most the first three `nameserver` entries from *resolv.conf* (the `MAXNS` limit). If the virtual network specifies more than three DNS servers, only the first three take effect, and the rest are ignored. For more information, see [resolv.conf](https://man7.org/linux/man-pages/man5/resolv.conf.5.html).
+    - CoreDNS uses the [forward](https://coredns.io/plugins/forward/) plug-in to send requests to upstream DNS servers. This plug-in uses a random algorithm to select the upstream DNS server. In this sequence, the request can go to any of the DNS servers that are mentioned in the virtual network. For example, you might receive the following output:
+
+        ```console
+        $ kubectl describe cm coredns -n kube-system
+        Name:         coredns
+        Namespace:    kube-system
+        Labels:       addonmanager.kubernetes.io/mode=Reconcile
+                      k8s-app=kube-dns
+                      kubernetes.io/cluster-service=true
+        Annotations:  <none>
+        
+        Data
+        ====
+        Corefile:
+        ----
+        .:53 {
+            errors
+            ready
+            health {
+              lameduck 5s
+            }
+            kubernetes cluster.local in-addr.arpa ip6.arpa {
+              pods insecure
+              fallthrough in-addr.arpa ip6.arpa
+              ttl 30
+            }
+            prometheus :9153
+            forward . /etc/resolv.conf                            # Here!
+            cache 30
+            loop
+            reload
+            loadbalance
+            import custom/*.override
+            template ANY ANY internal.cloudapp.net {
+              match "^(?:[^.]+\.){4,}internal\.cloudapp\.net\.$"
+              rcode NXDOMAIN
+              fallthrough
+            }
+            template ANY ANY reddog.microsoft.com {
+              rcode NXDOMAIN
+            }
+        }
+        import custom/*.server
+
+        BinaryData
+        ====
+        
+        Events:  <none>
+        ```
+
+    In the CoreDNS `forward` plugin, `policy` specifies the policy to use for selecting upstream servers. The following table describes each policy.
+
+    | Policy name | Description |
+    | --- | --- |
+    | `random` | A policy that implements random upstream selection. This policy is the default policy. |
+    | `round_robin` | A policy that selects hosts based on round robin ordering. |
+    | `sequential` | A policy that selects hosts based on sequential ordering. |
+
+    If the AKS virtual network contains multiple DNS servers, the requests from the AKS node might go to the first DNS server. However, the requests from the pod might go to second DNS server.
+
+## Cause: Multiple destinations for DNS requests
+
+If you specify two custom DNS servers and set the third DNS server as Azure DNS (168.63.129.16), the node sends requests to the first custom DNS server if it's running and reachable. In this setup, the node can resolve the custom domain. However, some of the DNS requests from the pod might go to Azure DNS. This situation happens because CoreDNS can select the upstream server at random. In this scenario, the custom domain can't be resolved. Therefore, the DNS request fails.
+
+## Solution: Remove Azure DNS from virtual network settings
+
+Don't combine Azure DNS with custom DNS servers in the virtual network settings. If you want to use custom DNS servers, add only the custom DNS servers in the virtual network settings. Then, configure Azure DNS in the forwarder settings of your custom DNS servers.
+
+For more information, see [Name resolution that uses your own DNS server](/en-us/azure/virtual-network/virtual-networks-name-resolution-for-vms-and-role-instances#name-resolution-that-uses-your-own-dns-server).
+
+**Third-party contact disclaimer**
+
+Microsoft provides third-party contact information to help you find additional information about this topic. This contact information may change without notice. Microsoft does not guarantee the accuracy of third-party contact information.

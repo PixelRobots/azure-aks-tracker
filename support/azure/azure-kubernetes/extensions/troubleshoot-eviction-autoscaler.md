@@ -1,0 +1,233 @@
+---
+layout: Conceptual
+title: Troubleshoot upgrade failure because of conflicting PodDisruptionBudgets - Azure | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/extensions/troubleshoot-eviction-autoscaler
+breadcrumb_path: /support/breadcrumb/toc.json
+feedback_system: Standard
+recommendations: true
+uhfHeaderId: Azure
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+manager: dcscontentpm
+audience: itpro
+author: kaushika-msft
+ms.author: kaushika
+ms.topic: troubleshooting-problem-resolution
+description: Learn how to troubleshoot AKS upgrade failures caused by conflicting PodDisruptionBudgets that block node drain. Use this guide to fix the issue fast.
+ms.date: 2026-08-03T00:00:00.0000000Z
+editor: v-jsitser
+ms.reviewer: v-leedennis
+ms.service: azure-kubernetes-service
+ms.custom: sap:Extensions, Policies and Add-Ons
+locale: en-us
+document_id: ee747bad-4ea2-6672-f54f-014dd28fa6d9
+document_version_independent_id: ee747bad-4ea2-6672-f54f-014dd28fa6d9
+original_content_git_url: https://github.com/MicrosoftDocs/SupportArticles-docs-pr/blob/live/support/azure/azure-kubernetes/extensions/troubleshoot-eviction-autoscaler.md
+site_name: Docs
+depot_name: MSDN.support1-docset
+page_type: conceptual
+toc_rel: ../toc.json
+pdf_url_template: https://learn.microsoft.com/pdfstore/en-us/MSDN.support1-docset/{branchName}{pdfName}
+feedback_help_link_type: ''
+feedback_help_link_url: ''
+asset_id: azure/azure-kubernetes/extensions/troubleshoot-eviction-autoscaler
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: support/azure/azure-kubernetes/extensions/troubleshoot-eviction-autoscaler.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
+platformId: e9931679-dd46-b75f-610d-ffa3661676bd
+---
+
+# Troubleshoot upgrade failure because of conflicting PodDisruptionBudgets - Azure | Microsoft Learn
+
+## Summary
+
+This article explains how to troubleshoot AKS upgrade failures caused by conflicting `PodDisruptionBudgets` (PDBs). Use these steps to unblock node drain and complete your cluster or node pool upgrade.
+
+## Prerequisites
+
+- [Azure CLI](/en-us/cli/azure/install-azure-cli).
+- The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) tool. To install kubectl by using Azure CLI, run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
+
+## Symptoms
+
+During a cluster or node pool upgrade, AKS drains each node by evicting pods. If a pod is covered by more than one `PodDisruptionBudget` (PDB), the Kubernetes eviction API doesn't support it, and the eviction is blocked. This behavior causes the upgrade to fail and return an error message that resembles the following example:
+
+```text
+{
+  "code": "UpgradeFailed",
+  "message": "Upgrade failed due to one or more node errors. See details for more information.",
+  "details": [
+    {
+      "code": "KubernetesAPICallFailed",
+      "message": "Drain node aks-agentpool0-26528033-vmss000001 failed when
+        evicting pod ea-demo-7d8898f6df-pc8vz.
+        Evict blocked by conflicting disruption budgets.
+        See http://aka.ms/aks/debugdrainfailures.
+        Original error: This pod has more than one PodDisruptionBudget,
+        which the eviction subresource does not support.
+        PDB debug info:
+          ea-upgrade/ea-demo-7d8898f6df-pc8vz blocked by pdb ea-demo
+          (MinAvailable: 1) (CurrentHealthy: 1) (DesiredHealthy: 1) (ExpectedPods: 2)
+          with 1 unready pods:(log at most 5 pods)
+          [ea-upgrade/ea-demo-7d8898f6df-fz89v:Pending_]."
+    }
+  ]
+}
+```
+
+**Key indicators**
+
+- Error code: `UpgradeFailed` plus detail code `KubernetesAPICallFailed`
+- Message contains: **"Evict blocked by conflicting disruption budgets"**
+- Message contains: **"This pod has more than one PodDisruptionBudget"**
+
+### Verify the issue
+
+1. Identify the affected pod and namespace from the error message (for example, `ea-upgrade/ea-demo-7d8898f6df-pc8vz`).
+2. List all PDBs in the namespace.
+3. Run the following command to verify that the pod's labels match multiple PDBs:
+
+```bash
+kubectl get pdb -n <namespace>
+kubectl describe pdb -n <namespace>
+```
+
+1. Check which PDBs select the affected pod:
+
+```bash
+kubectl get pod <pod-name> -n <namespace> --show-labels
+```
+
+1. Compare the pod labels against the `.spec.selector` of each PDB in the namespace. If the pod matches more than one PDB, the following cause applies.
+
+## Cause: Pods covered by multiple PDBs
+
+The Kubernetes eviction subresource doesn't support pods that are covered by multiple PDBs. When AKS tries to evict such a pod during a node drain, the API server rejects the eviction request, and the upgrade can't proceed.
+
+## Solution: Remove conflicting PDBs and retry the upgrade
+
+### Step 1: Identify the conflicting PDBs
+
+Run the following command:
+
+```bash
+kubectl get pdb -n <namespace> -o wide
+```
+
+### Step 2: Delete a PDB and reconcile
+
+If a pod is matched by multiple PDBs, delete one of the conflicting PDBs. The goal is to make sure that each pod is covered by no more than one PDB.
+
+1. List the PDBs, and pick one to delete:
+
+```bash
+kubectl get pdb -n <namespace> -o wide
+kubectl delete pdb <pdb-name-to-remove> -n <namespace>
+```
+
+1. After you delete the PDB, reconcile the deployment to make sure that pods are healthy and ready:
+
+```bash
+kubectl rollout status deployment/<deployment-name> -n <namespace>
+kubectl get pods -n <namespace>
+```
+
+1. If pods are stuck in the `Pending` state, check for resource constraints or scheduling issues:
+
+```bash
+kubectl describe pod <pending-pod-name> -n <namespace>
+```
+
+### Step 3: Reconcile and retry the upgrade
+
+Verify that all pods are healthy and only one PDB covers each pod. Then, use one of the following options to reconcile and retry the upgrade.
+
+#### Option 1: Retry using Azure CLI
+
+Reissue the upgrade command:
+
+```bash
+az aks upgrade -g <resource-group> -n <cluster-name> --kubernetes-version <version>
+```
+
+For a node pool upgrade, run the following command:
+
+```bash
+az aks nodepool upgrade -g <resource-group> --cluster-name <cluster-name> -n <nodepool-name> --kubernetes-version <version>
+```
+
+#### Option 2: Empty `az aks update`
+
+To trigger back-end reconciliation without changing the configuration:
+
+```bash
+az aks update -g <resource-group> -n <cluster-name>
+```
+
+This command issues an empty `PutManagedCluster` request that retriggers the back-end reconciliation logic.
+
+#### Option 3: Use `az resource update`
+
+To trigger a resource-level reconciliation:
+
+```bash
+az resource update --ids /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.ContainerService/managedClusters/<cluster-name>
+```
+
+#### Option 4: Perform a scale operation
+
+If the upgrade left nodes in a bad state, reimage the problematic nodes, and run a scale operation to the desired count. This action automatically retriggers the failed upgrade:
+
+```bash
+az aks nodepool scale -g <resource-group> --cluster-name <cluster-name> -n <nodepool-name> --node-count <desired-count>
+```
+
+## More information
+
+To prevent this issue from reoccurring, make sure that each pod is matched by no more than one PDB. Avoid overlapping label selectors across multiple PDBs in the same namespace.
+
+### Automatic PDB creation with the Eviction Autoscaler extension
+
+The [Automatic Pod Disruption Budget management in AKS (preview)](/en-us/azure/aks/automatic-pod-disruption-budget-management) extension can automatically create and manage PDBs for your deployments. This setup helps you to avoid misconfigured or conflicting PDBs.
+
+When installed together with `controllerConfig.pdb.create=true`, the extension automatically creates PDBs for deployments that don't already have one. You can control this behavior per deployment by using the `eviction-autoscaler.azure.com/pdb-create` annotation.
+
+- To **prevent** automatic PDB creation for a specific deployment, set the annotation to `"false"`:
+
+    ```yaml
+    metadata:
+      annotations:
+        eviction-autoscaler.azure.com/pdb-create: "false"
+    ```
+- By default, deployments without this annotation (or that have it set to `"true"`) get an automatically created PDB if `pdb.create=true` is enabled.
+
+You can also control which namespaces the extension operates in by using the `eviction-autoscaler.azure.com/enable` annotation on the namespace.
+
+- In opt-in mode (`enabledByDefault=false`: the default setting), add the annotation to enable a namespace:
+
+    ```yaml
+    metadata:
+      annotations:
+        eviction-autoscaler.azure.com/enable: "true"
+    ```
+- In opt-out mode (`enabledByDefault=true`), add the annotation to disable a namespace:
+
+    ```yaml
+    metadata:
+      annotations:
+        eviction-autoscaler.azure.com/enable: "false"
+    ```
+
+For more information, see [Automatic Pod Disruption Budget management in AKS (preview)](/en-us/azure/aks/automatic-pod-disruption-budget-management).
+
+**Third-party information disclaimer**
+
+The third-party products that this article discusses are manufactured by companies that are independent of Microsoft. Microsoft makes no warranty, implied or otherwise, about the performance or reliability of these products.

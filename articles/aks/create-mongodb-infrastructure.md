@@ -1,0 +1,370 @@
+---
+layout: Conceptual
+title: Create the infrastructure for running a MongoDB cluster on Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/create-mongodb-infrastructure
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: In this article, you learn how to create the infrastructure needed to run a MongoDB cluster on AKS.
+ms.topic: how-to
+ms.date: 2025-09-15T00:00:00.0000000Z
+author: fossygirl
+ms.author: carols
+ms.custom: aks-related-content, stateful-workloads
+zone_pivot_groups: azure-cli-or-terraform
+locale: en-us
+document_id: 6a9ace43-7f74-566c-d4de-9e9cf93beb8d
+document_version_independent_id: 6607e3ce-28a1-374c-11fc-ce156ece1ca3
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/create-mongodb-infrastructure.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/create-mongodb-infrastructure
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/create-mongodb-infrastructure.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/f488294d-f483-456e-94e3-755f933b811b
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/02662057-0b9b-40f4-a3c7-537125b6d283
+platformId: db8d4a5c-e396-a0c5-6483-000dfdfc3c1c
+---
+
+# Create the infrastructure for running a MongoDB cluster on Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+
+In this article, you create the required infrastructure resources to run a MongoDB cluster on Azure Kubernetes Service (AKS).
+
+## Prerequisites
+
+- Review of the [overview for deploying a MongoDB cluster on AKS](mongodb-overview).
+- An Azure subscription. If you don't have one, create a [free account](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn).
+- Azure CLI version 2.61.0. To install or upgrade, see [Install the Azure CLI](/en-us/cli/azure/install-azure-cli).
+- Helm version 3 or later. To install, see [Installing Helm](https://helm.sh/docs/intro/install/).
+- `kubectl`, which Azure Cloud Shell installs by default.
+- Docker installed on your local machine. To install, see [Get Docker](https://docs.docker.com/get-docker/).
+
+## Set environment variables
+
+Set the required environment variables for use throughout this guide:
+
+```bash
+random=$(echo $RANDOM | tr '[0-9]' '[a-z]')
+export MY_LOCATION=australiaeast
+export MY_RESOURCE_GROUP_NAME=myResourceGroup-rg-$(echo $MY_LOCATION)
+export MY_ACR_REGISTRY=mydnsrandomname$(echo $random)
+export MY_IDENTITY_NAME=ua-identity-123
+export MY_KEYVAULT_NAME=vault-$(echo $random)-kv
+export MY_CLUSTER_NAME=cluster-aks
+export SERVICE_ACCOUNT_NAME=mongodb
+export SERVICE_ACCOUNT_NAMESPACE=mongodb
+export AKS_MONGODB_NAMESPACE=mongodb
+export AKS_MONGODB_SECRETS_NAME=cluster-aks-mongodb-secrets
+export AKS_MONGODB_CLUSTER_NAME=cluster-aks-mongodb
+export AKS_MONGODB_SECRETS_ENCRYPTION_KEY=cluster-aks-mongodb-secrets-mongodb-encryption-key
+export AKS_AZURE_SECRETS_NAME=cluster-aks-azure-secrets
+export AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_NAME=mongodbsa$(echo $random)
+export AKS_MONGODB_BACKUP_STORAGE_CONTAINER_NAME=backups
+```
+
+::: zone pivot="azure-cli"
+
+## Create a resource group
+
+- Create a resource group using the [`az group create`](/en-us/cli/azure/group#az-group-create) command.
+
+    ```azurecli
+    az group create --name $MY_RESOURCE_GROUP_NAME --location $MY_LOCATION --output table
+    ```
+
+    Example output:
+
+    ```output
+    Location       Name
+    -------------  --------------------------------
+    australiaeast  myResourceGroup-rg-australiaeast   
+    ```
+
+## Create an identity to access secrets in Azure Key Vault
+
+In this step, you create a user-assigned managed identity that External Secrets Operator uses to access the MongoDB passwords stored in Azure Key Vault.
+
+- Create a user-assigned managed identity using the [`az identity create`](/en-us/cli/azure/identity#az-identity-create) command.
+
+    ```azurecli
+    az identity create --name $MY_IDENTITY_NAME --resource-group $MY_RESOURCE_GROUP_NAME --output none
+    export MY_IDENTITY_NAME_ID=$(az identity show --name $MY_IDENTITY_NAME -g $MY_RESOURCE_GROUP_NAME --query id -o tsv)
+    export MY_IDENTITY_NAME_PRINCIPAL_ID=$(az identity show --name $MY_IDENTITY_NAME -g $MY_RESOURCE_GROUP_NAME --query principalId -o tsv)
+    export MY_IDENTITY_NAME_CLIENT_ID=$(az identity show --name $MY_IDENTITY_NAME -g $MY_RESOURCE_GROUP_NAME --query clientId -o tsv)
+    ```
+
+## Create an Azure Key Vault instance
+
+- Create an Azure Key Vault instance using the [`az keyvault create`](/en-us/cli/azure/keyvault#az-keyvault-create) command.
+
+    ```azurecli
+    az keyvault create --name $MY_KEYVAULT_NAME --resource-group $MY_RESOURCE_GROUP_NAME --location $MY_LOCATION --enable-rbac-authorization false --output table
+    export KEYVAULTID=$(az keyvault show --name $MY_KEYVAULT_NAME --query "id" --output tsv)
+    export KEYVAULTURL=$(az keyvault show --name $MY_KEYVAULT_NAME --query "properties.vaultUri" --output tsv)
+    ```
+
+    Example output:
+
+    ```output
+    Location       Name            ResourceGroup
+    -------------  --------------  --------------------------------
+    australiaeast  vault-cjcfc-kv  myResourceGroup-rg-australiaeast
+    ```
+
+## Create an Azure Container Registry instance
+
+- Create an Azure Container Registry instance to store and manage your container images using the [`az acr create`](/en-us/cli/azure/acr#az-acr-create) command.
+
+    ```azurecli
+    az acr create \
+    --name ${MY_ACR_REGISTRY} \
+    --resource-group $MY_RESOURCE_GROUP_NAME \
+    --sku Premium \
+    --location $MY_LOCATION \
+    --admin-enabled true \
+    --output table
+    export MY_ACR_REGISTRY_ID=$(az acr show --name $MY_ACR_REGISTRY --resource-group $MY_RESOURCE_GROUP_NAME --query id -o tsv)
+    ```
+
+    Example output:
+
+    ```output
+    NAME                  RESOURCE GROUP                    LOCATION       SKU      LOGIN SERVER                     CREATION DATE         ADMIN ENABLED
+    --------------------  --------------------------------  -------------  -------  -------------------------------  --------------------  ---------------
+    mydnsrandomnamecjcfc  myResourceGroup-rg-australiaeast  australiaeast  Premium  mydnsrandomnamecjcfc.azurecr.io  2024-07-01T12:18:34Z  True
+    ```
+
+## Create an Azure storage account
+
+- Create an Azure storage account to store the MongoDB backups using the [`az acr create`](/en-us/cli/azure/storage/account#az-storage-account-create) command.
+
+    ```azurecli
+    az storage account create --name $AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_NAME --resource-group $MY_RESOURCE_GROUP_NAME --location $MY_LOCATION --sku Standard_ZRS --output table
+    az storage container create --name $AKS_MONGODB_BACKUP_STORAGE_CONTAINER_NAME --account-name $AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_NAME --output table
+    export AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_KEY=$(az storage account keys list --account-name $AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_NAME --query "[0].value" -o tsv)
+    az keyvault secret set --vault-name $MY_KEYVAULT_NAME --name AZURE-STORAGE-ACCOUNT-KEY --value $AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_KEY --output none
+    ```
+
+    Example output:
+
+    ```output
+    AccessTier    AllowBlobPublicAccess    AllowCrossTenantReplication    CreationTime                      EnableHttpsTrafficOnly    Kind       Location       MinimumTlsVersion    Name            PrimaryLocation    ProvisioningState    ResourceGroup
+    StatusOfPrimary
+    ------------  -----------------------  -----------------------------  --------------------------------  ------------------------  ---------  -------------  -------------------  --------------  -----------------  -------------------  --------------------------------  -----------------
+    Hot           False                    False                          2024-08-09T07:06:41.727230+00:00  True                      StorageV2  australiaeast  TLS1_0               mongodbsabdibh  australiaeast      Succeeded            myResourceGroup-rg-australiaeast  available
+    Created
+    ---------
+    True
+    ```
+
+## Create an AKS cluster
+
+In the following steps, you create an AKS cluster with a workload identity and OpenID Connect (OIDC) issuer enabled. The workload identity gives the External Secrets Operator service account permission to access the MongoDB passwords stored in your key vault.
+
+1. Create an AKS cluster using the [`az aks create`](/en-us/cli/azure/aks#az-aks-create) command.
+
+    ```azurecli
+    az aks create \
+    --location $MY_LOCATION \
+    --name $MY_CLUSTER_NAME \
+    --tier standard \
+    --resource-group $MY_RESOURCE_GROUP_NAME \
+    --network-plugin azure \
+    --node-vm-size Standard_DS4_v2 \
+    --node-count 1 \
+    --nodepool-name systempool \
+    --nodepool-tags "pool=system" \
+    --auto-upgrade-channel stable \
+    --node-os-upgrade-channel NodeImage \
+    --attach-acr ${MY_ACR_REGISTRY} \
+    --enable-oidc-issuer \
+    --enable-workload-identity \
+    --zones 1 2 3 \
+    --generate-ssh-keys \
+    --output none
+    ```
+2. Add a user node pool to the AKSc luster using the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command. This node pool is where the MongoDB pods run.
+
+    ```azurecli
+    az aks nodepool add \
+    --resource-group $MY_RESOURCE_GROUP_NAME \
+    --cluster-name $MY_CLUSTER_NAME \
+    --name mongodbpool \
+    --node-vm-size Standard_DS4_v2 \
+    --node-count 3 \
+    --zones 1 2 3 \
+    --mode User \
+    --output table
+    ```
+
+    Example output:
+
+    ```output
+    Name        OsType    KubernetesVersion    VmSize           Count    MaxPods    ProvisioningState    Mode
+    ----------  --------  -------------------  ---------------  -------  ---------  -------------------  ------
+    userpool    Linux     1.28                 Standard_DS4_v2  3        30         Succeeded            User
+    ```
+3. Get the OIDC issuer URL to use for the workload identity configuration using the [`az aks show`](/en-us/cli/azure/aks#az-aks-show) command.
+
+    ```azurecli
+    export OIDC_URL=$(az aks show --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_CLUSTER_NAME --query oidcIssuerProfile.issuerUrl -o tsv)
+    ```
+4. Assign the `AcrPull` role to the kubelet identity using the [`az role assignment create`](/en-us/cli/azure/role/assignment#az-role-assignment-create) command.
+
+    ```azurecli
+    export KUBELET_IDENTITY=$(az aks show -g $MY_RESOURCE_GROUP_NAME --name $MY_CLUSTER_NAME -o tsv --query identityProfile.kubeletidentity.objectId)
+    az role assignment create \
+    --assignee ${KUBELET_IDENTITY} \
+    --role "AcrPull" \
+    --scope ${MY_ACR_REGISTRY_ID} \
+    --output none
+    ```
+
+## Upload Percona images to Azure Container Registry
+
+In this section, you download the Percona images from Docker Hub and upload them to Azure Container Registry. This step ensures that the image is available in your private registry and can be used in your AKS cluster. We don't recommend consuming the public image in a production environment.
+
+- Import the Percona images from Docker Hub and upload them to Azure Container Registry using the following [`az acr import`](/en-us/cli/azure/acr#az-acr-import) commands:
+
+    ```azurecli
+    az acr import \
+        --name $MY_ACR_REGISTRY \
+        --source docker.io/percona/percona-server-mongodb:7.0.8-5  \
+        --image percona-server-mongodb:7.0.8-5
+    
+    az acr import \
+        --name $MY_ACR_REGISTRY \
+        --source docker.io/percona/pmm-client:2.41.2  \
+        --image pmm-client:2.41.2
+    
+    az acr import \
+        --name $MY_ACR_REGISTRY \
+        --source docker.io/percona/percona-backup-mongodb:2.4.1  \
+        --image percona-backup-mongodb:2.4.1
+    
+    az acr import \
+        --name $MY_ACR_REGISTRY \
+        --source docker.io/percona/percona-server-mongodb-operator:1.16.1  \
+        --image percona-server-mongodb-operator:1.16.1
+    ```
+
+::: zone-end
+
+::: zone pivot="terraform"
+
+## Deploy the infrastructure with Terraform
+
+To deploy the infrastructure using Terraform, we're going to use the [Azure Verified Module](https://azure.github.io/Azure-Verified-Modules/) for AKS. The repository [terraform-azurerm-avm-res-containerservice-managedcluster](https://github.com/Azure/terraform-azurerm-avm-res-containerservice-managedcluster.git) contains a full example with the infrastructure required to run a MongoDB cluster on Azure Kubernetes Service (AKS).
+
+Note
+
+If you're planning to run this in production, we recommend looking at [AKS production pattern module for Azure Verified Modules](https://github.com/Azure/terraform-azurerm-avm-ptn-aks-production). This comes coupled with best practice recommendations.
+
+1. Clone the git repository with the terraform module:
+
+    ```bash
+    git clone https://github.com/Azure/terraform-azurerm-avm-res-containerservice-managedcluster.git
+    cd examples/stateful-workloads
+    ```
+2. Create a `mongodb.tfvars` file to define variables using the following command:
+
+    ```bash
+    cat > mongodb.tfvars <<EOL
+    location = "$MY_LOCATION"
+    resource_group_name = "$MY_RESOURCE_GROUP_NAME"
+    acr_registry_name = "$MY_ACR_REGISTRY"
+    cluster_name = "$MY_CLUSTER_NAME"
+    identity_name = "$MY_IDENTITY_NAME"
+    keyvault_name = "$MY_KEYVAULT_NAME"
+    aks_mongodb_backup_storage_account_name = "$AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_NAME"
+    aks_mongodb_backup_storage_container_name = "$AKS_MONGODB_BACKUP_STORAGE_CONTAINER_NAME"
+    mongodb_enabled = true
+    mongodb_namespace = "$AKS_MONGODB_NAMESPACE"
+    service_account_name = "$SERVICE_ACCOUNT_NAME"
+    
+    acr_task_content = <<-EOF
+    version: v1.1.0
+    steps:
+      - cmd: bash echo Waiting 10 seconds the propagation of the Container Registry Data Importer and Data Reader role
+      - cmd: bash sleep 10
+      - cmd: az login --identity
+      - cmd: az acr import --name \$RegistryName --source docker.io/percona/percona-server-mongodb:7.0.8-5 --image percona-server-mongodb:7.0.8-5
+      - cmd: az acr import --name \$RegistryName --source docker.io/percona/pmm-client:2.41.2 --image pmm-client:2.41.2
+      - cmd: az acr import --name \$RegistryName --source docker.io/percona/percona-backup-mongodb:2.4.1 --image percona-backup-mongodb:2.4.1
+      - cmd: az acr import --name \$RegistryName --source docker.io/percona/percona-server-mongodb-operator:1.16.1 --image percona-server-mongodb-operator:1.16.1
+    EOF
+    
+    node_pools = {
+      mongodbserver = {
+        name       = "mongodbpool"
+        vm_size    = "Standard_D2ds_v4"
+        node_count = 3
+        zones      = [1, 2, 3]
+        os_type    = "Linux"
+      }
+    }
+    EOL
+    ```
+3. Run the following Terraform commands to deploy the infrastructure:
+
+    ```bash
+    terraform init
+    terraform fmt
+    terraform apply -var-file="mongodb.tfvars"
+    ```
+4. Run the following command to export the Terraform output values as environment variables in the terminal to use them in the next steps:
+
+    ```bash
+    export MY_ACR_REGISTRY_ID=$(terraform output -raw acr_registry_id)
+    export MY_ACR_REGISTRY=$(terraform output -raw acr_registry_name)
+    export MY_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
+    export KUBELET_IDENTITY=$(terraform output -raw aks_kubelet_identity_id)
+    export OIDC_URL=$(terraform output -raw aks_oidc_issuer_url)
+    export identity_name=$(terraform output -raw identity_name)
+    export MY_IDENTITY_NAME_ID=$(terraform output -raw identity_name_id)
+    export MY_IDENTITY_NAME_PRINCIPAL_ID=$(terraform output -raw identity_name_principal_id)
+    export MY_IDENTITY_NAME_CLIENT_ID=$(terraform output -raw identity_name_client_id)
+    export KEYVAULTID=$(terraform output -raw key_vault_id)
+    export KEYVAULTURL=$(terraform output -raw key_vault_uri)
+    export AKS_MONGODB_BACKUP_STORAGE_ACCOUNT_KEY=$(terraform output -raw storage_account_key)
+    export STORAGE_ACCOUNT_NAME=$(terraform output -raw storage_account_name)
+    export TENANT_ID=$(terraform output -raw identity_name_tenant_id)
+    ```
+
+::: zone-end
+
+Note
+
+In AKS, the keepalive time (the duration of inactivity after which the first keepalive probe is sent) default duration is [7,200 seconds or 2 hours](/en-us/azure/aks/improve-network-fault-tolerance-in-aks-using-tcp-keepalive#configuring-tcp-keepalive-on-aks). For MongoDB, you'll generally experience better results with a shorter keepalive value, on the order of [120 seconds or 2 minutes](https://www.mongodb.com/docs/manual/faq/diagnostics/#does-tcp-keepalive-time-affect-mongodb-deployments-).
+
+## Connect to the AKS cluster
+
+- Configure `kubectl` to connect to your AKS cluster using the [`az aks get-credentials`](/en-us/cli/azure/aks#az-aks-get-credentials) command.
+
+    ```azurecli
+    az aks get-credentials --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_CLUSTER_NAME --overwrite-existing --output table
+    ```

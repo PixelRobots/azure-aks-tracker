@@ -1,0 +1,762 @@
+---
+layout: Conceptual
+title: Configure and Deploy a Valkey Cluster on Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/deploy-valkey-cluster
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: In this article, you learn how to configure and deploy a Valkey cluster on Azure Kubernetes Service (AKS) using the Kubernetes stateful framework.
+ms.topic: how-to
+ms.date: 2025-09-15T00:00:00.0000000Z
+author: schaffererin
+ms.author: schaffererin
+zone_pivot_groups: azure-cli-or-terraform
+ms.custom: stateful-workloads, aks-data-messaging
+locale: en-us
+document_id: f9e3822d-11ce-a605-954b-265f2ee3454e
+document_version_independent_id: 5fc4d709-928b-5a97-c379-2d911f1fb01a
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/deploy-valkey-cluster.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/deploy-valkey-cluster
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/deploy-valkey-cluster.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 48db0a7a-f70e-5fcb-3256-3e82669ae55b
+---
+
+# Configure and Deploy a Valkey Cluster on Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+
+In this article, we configure and deploy a Valkey cluster on Azure Kubernetes Service (AKS), including the creation of a Valkey cluster ConfigMap, primary and replica cluster pods to ensure redundancy and zone replication, and a Pod Disruption Budget (PDB) to ensure high availability.
+
+Note
+
+This article contains references to the terms *master* (primary) and *slave* (replica), which are terms that Microsoft no longer uses. When the term is removed from the Valkey software, we’ll remove it from this article.
+
+## Connect to the AKS cluster
+
+Note
+
+If you're using Terraform, make sure you replace the placeholders in the code with the actual outputs from the Terraform commands when [deploying the infrastructure](create-valkey-infrastructure).
+
+- Configure `kubectl` to connect to your AKS cluster using the [`az aks get-credentials`](/en-us/cli/azure/aks#az-aks-get-credentials) command.
+
+    ```azurecli
+    az aks get-credentials --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_CLUSTER_NAME --overwrite-existing --output table
+    ```
+
+## Create a namespace
+
+- Create a namespace for the Valkey cluster using the `kubectl create namespace` command.
+
+    ```bash
+    kubectl create namespace valkey --dry-run=client --output yaml | kubectl apply -f -
+    ```
+
+    Example output:
+
+    ```output
+    namespace/valkey created
+    ```
+
+::: zone pivot="azure-cli"
+
+## Create secrets
+
+1. Generate a random password for the Valkey cluster using openssl and store it in your Azure key vault using the [`az keyvault secret set`](/en-us/cli/azure/keyvault/secret#az-keyvault-secret-set) command.
+
+    ```azurecli
+    export SECRET=$(openssl rand -base64 32)
+    echo requirepass $SECRET > /tmp/valkey-password-file.conf
+    echo primaryauth $SECRET >> /tmp/valkey-password-file.conf
+    az keyvault secret set --vault-name $MY_KEYVAULT_NAME --name valkey-password-file --file /tmp/valkey-password-file.conf --output none
+    rm /tmp/valkey-password-file.conf
+    
+    ```
+2. Set the policy to allow the user-assigned identity to get the secret using the [`az keyvault set-policy`](/en-us/cli/azure/keyvault#az-keyvault-set-policy) command.
+
+    ```azurecli
+    az keyvault set-policy --name $MY_KEYVAULT_NAME --object-id $userAssignedObjectID --secret-permissions get --output table
+    ```
+
+::: zone-end
+
+::: zone pivot="terraform"
+
+## Get the user-assigned identity details
+
+- Get the identity ID and the object ID created by the Azure Key Vault Secrets Provider add-on using the [`az aks show`](/en-us/cli/azure/aks#az-aks-show) command.
+
+    ```azurecli
+    export userAssignedIdentityID=$(az aks show --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_CLUSTER_NAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.clientId --output tsv)
+    export userAssignedObjectID=$(az aks show --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_CLUSTER_NAME --query addonProfiles.azureKeyvaultSecretsProvider.identity.objectId --output tsv)
+    ```
+
+::: zone-end
+
+## Configure access to the Valkey password stored in Azure Key Vault
+
+- Create a `SecretProviderClass` resource to access the Valkey password stored in your key vault using the `kubectl apply` command.
+
+    ```bash
+    export TENANT_ID=$(az account show --query tenantId --output tsv)
+    kubectl apply -f - <<EOF
+    ---
+    apiVersion: secrets-store.csi.x-k8s.io/v1
+    kind: SecretProviderClass
+    metadata:
+      name: valkey-password
+      namespace: valkey
+    spec:
+      provider: azure
+      parameters:
+        usePodIdentity: "false"
+        useVMManagedIdentity: "true"
+        userAssignedIdentityID: "${userAssignedIdentityID}"
+        keyvaultName: ${MY_KEYVAULT_NAME}              # the name of the AKV instance
+        objects: |
+          array:
+            - |
+              objectName: valkey-password-file
+              objectAlias: valkey-password-file.conf
+              objectType: secret
+        tenantId: "${TENANT_ID}" # the tenant ID of the AKV instance
+    EOF
+    ```
+
+## Create the Valkey configuration file
+
+- Create a `ConfigMap` resource to store the Valkey configuration file.
+
+    ```bash
+    kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: valkey-cluster
+      namespace: valkey
+    data:
+      valkey.conf:  |+
+        cluster-enabled yes
+        cluster-node-timeout 15000
+        cluster-config-file /data/nodes.conf
+        appendonly yes
+        protected-mode yes
+        dir /data
+        port 6379
+        include /etc/valkey-password/valkey-password-file.conf
+    EOF
+    ```
+
+    Example output:
+
+    ```output
+    configmap/valkey-cluster created
+    ```
+
+## Create Valkey primary cluster pods
+
+- Create a `StatefulSet` resource with a `spec.affinity` goal is to keep all primaries in zone 1 and zone 2, preferably in different nodes, using the `kubectl apply` command.
+
+    ```bash
+    kubectl apply -f - <<EOF
+    ---
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: valkey-masters
+      namespace: valkey
+    spec:
+      serviceName: "valkey-masters"
+      replicas: 3
+      selector:
+        matchLabels:
+          app: valkey
+      template:
+        metadata:
+          labels:
+            app: valkey
+            appCluster: valkey-masters
+        spec:
+          terminationGracePeriodSeconds: 20
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: agentpool
+                    operator: In
+                    values:
+                    - valkey
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                    - ${MY_LOCATION}-1
+                - matchExpressions:
+                  - key: agentpool
+                    operator: In
+                    values:
+                    - valkey
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                    - ${MY_LOCATION}-2
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - valkey
+                  topologyKey: topology.kubernetes.io/zone
+              - weight: 90
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - valkey
+                  topologyKey: kubernetes.io/hostname
+          containers:
+          - name: role-master-checker
+            image: "${MY_ACR_REGISTRY}.azurecr.io/valkey:latest"
+            command:
+              - "/bin/bash"
+              - "-c"
+            args:
+              [
+                "while true; do role=\$(valkey-cli --pass \$(cat /etc/valkey-password/valkey-password-file.conf | awk '{print \$2; exit}') role | awk '{print \$1; exit}');     if [ \"\$role\" = \"slave\" ]; then valkey-cli --pass \$(cat /etc/valkey-password/valkey-password-file.conf | awk '{print \$2; exit}') cluster failover; fi; sleep 30; done"
+              ]
+            volumeMounts:
+            - name: valkey-password
+              mountPath: /etc/valkey-password
+              readOnly: true
+          - name: valkey
+            image: "${MY_ACR_REGISTRY}.azurecr.io/valkey:latest"
+            env:
+            - name: VALKEY_PASSWORD_FILE
+              value: "/etc/valkey-password/valkey-password-file.conf"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            command:
+              - "valkey-server"
+            args:
+              - "/conf/valkey.conf"
+              - "--cluster-announce-ip"
+              - "\$(MY_POD_IP)"
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "100Mi"
+            ports:
+                - name: valkey
+                  containerPort: 6379
+                  protocol: "TCP"
+                - name: cluster
+                  containerPort: 16379
+                  protocol: "TCP"
+            volumeMounts:
+            - name: conf
+              mountPath: /conf
+              readOnly: false
+            - name: data
+              mountPath: /data
+              readOnly: false
+            - name: valkey-password
+              mountPath: /etc/valkey-password
+              readOnly: true
+          volumes:
+          - name: valkey-password
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: valkey-password
+          - name: conf
+            configMap:
+              name: valkey-cluster
+              defaultMode: 0755
+      volumeClaimTemplates:
+      - metadata:
+          name: data
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: managed-csi-premium
+          resources:
+            requests:
+              storage: 20Gi
+    EOF
+    ```
+
+    Example output:
+
+    ```output
+    statefulset.apps/valkey-masters created
+    ```
+
+## Create Valkey replica cluster pods
+
+- Create a second `StatefulSet` resource for the Valkey replicas with a `spec.affinity` goal to keep all replicas in zone 3, preferably in different nodes, using the `kubectl apply` command.
+
+    ```bash
+    kubectl apply -f - <<EOF
+    ---
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: valkey-replicas
+      namespace: valkey
+    spec:
+      serviceName: "valkey-replicas"
+      replicas: 3
+      selector:
+        matchLabels:
+          app: valkey
+      template:
+        metadata:
+          labels:
+            app: valkey
+            appCluster: valkey-replicas
+        spec:
+          terminationGracePeriodSeconds: 20
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: agentpool
+                    operator: In
+                    values:
+                    - valkey
+                  - key: topology.kubernetes.io/zone
+                    operator: In
+                    values:
+                    - ${MY_LOCATION}-3
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 90
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - valkey
+                  topologyKey: kubernetes.io/hostname
+          containers:
+          - name: valkey
+            image: "${MY_ACR_REGISTRY}.azurecr.io/valkey:latest"
+            env:
+            - name: VALKEY_PASSWORD_FILE
+              value: "/etc/valkey-password/valkey-password-file.conf"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            command:
+              - "valkey-server"
+            args:
+              - "/conf/valkey.conf"
+              - "--cluster-announce-ip"
+              - "\$(MY_POD_IP)"
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "100Mi"
+            ports:
+                - name: valkey
+                  containerPort: 6379
+                  protocol: "TCP"
+                - name: cluster
+                  containerPort: 16379
+                  protocol: "TCP"
+            volumeMounts:
+            - name: conf
+              mountPath: /conf
+              readOnly: false
+            - name: data
+              mountPath: /data
+              readOnly: false
+            - name: valkey-password
+              mountPath: /etc/valkey-password
+              readOnly: true
+          volumes:
+          - name: valkey-password
+            csi:
+              driver: secrets-store.csi.k8s.io
+              readOnly: true
+              volumeAttributes:
+                secretProviderClass: valkey-password
+          - name: conf
+            configMap:
+              name: valkey-cluster
+              defaultMode: 0755
+      volumeClaimTemplates:
+      - metadata:
+          name: data
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          storageClassName: managed-csi-premium
+          resources:
+            requests:
+              storage: 20Gi
+    EOF
+    ```
+
+    Example output:
+
+    ```output
+    statefulset.apps/valkey-replicas created
+    ```
+
+## Verify pod and node distribution
+
+- Verify the `master-N` and `replica-N` are running in different nodes and zones using the `kubectl get nodes` and `kubectl get pods` commands.
+
+    ```bash
+    kubectl get pods -n valkey -o wide
+    kubectl get node -o custom-columns=Name:.metadata.name,Zone:".metadata.labels.topology\.kubernetes\.io/zone"
+    ```
+
+    Example output:
+
+    ```output
+    NAME                READY   STATUS    RESTARTS   AGE     IP             NODE                             NOMINATED NODE   READINESS GATES
+    valkey-masters-0    1/1     Running   0          2m55s   10.224.0.4     aks-valkey-18693609-vmss000004   <none>           <none>
+    valkey-masters-1    1/1     Running   0          2m31s   10.224.0.137   aks-valkey-18693609-vmss000000   <none>           <none>
+    valkey-masters-2    1/1     Running   0          2m7s    10.224.0.222   aks-valkey-18693609-vmss000001   <none>           <none>
+    valkey-replicas-0   1/1     Running   0          88s     10.224.0.237   aks-valkey-18693609-vmss000005   <none>           <none>
+    valkey-replicas-1   1/1     Running   0          70s     10.224.0.18    aks-valkey-18693609-vmss000002   <none>           <none>
+    valkey-replicas-2   1/1     Running   0          48s     10.224.0.242   aks-valkey-18693609-vmss000005   <none>           <none>
+    Name                                Zone
+    aks-nodepool1-17621399-vmss000000   centralus-1
+    aks-nodepool1-17621399-vmss000001   centralus-2
+    aks-nodepool1-17621399-vmss000003   centralus-3
+    aks-valkey-18693609-vmss000000      centralus-1
+    aks-valkey-18693609-vmss000001      centralus-2
+    aks-valkey-18693609-vmss000002      centralus-3
+    aks-valkey-18693609-vmss000003      centralus-1
+    aks-valkey-18693609-vmss000004      centralus-2
+    aks-valkey-18693609-vmss000005      centralus-3
+    ```
+
+    **Wait for around three minutes for all `master-N` and `replica-N` pods to be running before proceeding to the next step**.
+
+## Create headless services
+
+- Create three headless `Service` resources (the first for the entire cluster, the second for the primaries, and the third for the replicas) to use to get the IP addresses of the Valkey pods using the `kubectl apply` command.
+
+    ```bash
+    kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: valkey-cluster
+      namespace: valkey
+    spec:
+      clusterIP: None
+      ports:
+      - name: valkey-port
+        port: 6379
+        protocol: TCP
+        targetPort: 6379
+      selector:
+        app: valkey
+      sessionAffinity: None
+      type: ClusterIP
+    EOF
+    
+    kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: valkey-masters
+      namespace: valkey
+    spec:
+      clusterIP: None
+      ports:
+      - name: valkey-port
+        port: 6379
+        protocol: TCP
+        targetPort: 6379
+      selector:
+        app: valkey
+        appCluster: valkey-masters
+      sessionAffinity: None
+      type: ClusterIP
+    EOF
+    
+    kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: valkey-replicas
+      namespace: valkey
+    spec:
+      clusterIP: None
+      ports:
+      - name: valkey-port
+        port: 6379
+        protocol: TCP
+        targetPort: 6379
+      selector:
+        app: valkey
+        appCluster: valkey-replicas
+      sessionAffinity: None
+      type: ClusterIP
+    EOF
+    ```
+
+    Example output:
+
+    ```output
+    service/valkey-cluster created
+    service/valkey-masters created
+    service/valkey-replicas created
+    ```
+
+## Create Pod Disruption Budget (PDB)
+
+- Create a Pod Disruption Budget (PDB) to ensure always that one pod at most is unavailable during voluntary disruptions, such as upgrades or maintenance. This helps maintain the stability and availability of the Valkey application within the Kubernetes cluster.
+
+    ```bash
+    kubectl apply -f - <<EOF
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: valkey
+      namespace: valkey
+    spec:
+      maxUnavailable: 1
+      selector:
+        matchLabels:
+          app: valkey
+    EOF
+    ```
+
+    Example output:
+
+    ```output
+    poddisruptionbudget.policy/valkey created
+    ```
+
+## Run the Valkey cluster
+
+In a Valkey cluster, slot allocation is a fundamental part of how data is distributed across nodes. Valkey Clusters (similar to Redis Clusters) divide the key space into *16,384 hash slots*, which are evenly distributed across the primary nodes in the cluster.
+
+In the following sections, we set up a three-node Valkey cluster with three replicas, ensuring:
+
+- Full slot coverage (all 16,384 slots).
+- High availability via replication.
+- Proper role assignment and cluster health verification.
+
+## Initialize Valkey cluster with primary nodes in zone 1 and 2 and configure slot distribution
+
+- Create the cluster with three primary nodes in zone 1 and 2 and evenly distribute all 16,384 hash slots across them using the `kubectl exec` command.
+
+    ```bash
+    kubectl exec -it -n valkey valkey-masters-0 -- valkey-cli --cluster create --cluster-yes --cluster-replicas 0 \
+                        valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379 \
+                        valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379 \
+                        valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379 \
+                        --pass ${SECRET}
+    ```
+
+    Example output:
+
+    ```output
+    >>> Performing hash slots allocation on 3 nodes...
+    Master[0] -> Slots 0 - 5460
+    Master[1] -> Slots 5461 - 10922
+    Master[2] -> Slots 10923 - 16383
+    M: ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35 valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[0-5460] (5461 slots) master
+    M: fd1fb98db83976478e05edd3d2a02f9a13badd80 valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[5461-10922] (5462 slots) master
+    M: ea47bf57ae7080ef03164a4d48b662c7b4c8770e valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[10923-16383] (5461 slots) master
+    >>> Nodes configuration updated
+    >>> Assign a different config epoch to each node
+    >>> Sending CLUSTER MEET messages to join the cluster
+    Waiting for the cluster to join
+    ...
+    >>> Performing Cluster Check (using node valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379)
+    M: ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35 valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[0-5460] (5461 slots) master
+    M: ea47bf57ae7080ef03164a4d48b662c7b4c8770e 10.224.0.176:6379
+       slots:[10923-16383] (5461 slots) master
+    M: fd1fb98db83976478e05edd3d2a02f9a13badd80 10.224.0.247:6379
+       slots:[5461-10922] (5462 slots) master
+    [OK] All nodes agree about slots configuration.
+    >>> Check for open slots...
+    >>> Check slots coverage...
+    [OK] All 16384 slots covered.
+    ```
+
+## Add the Valkey replicas in zone 3 to enable high availability
+
+- Add one replica per primary node in a different zone to ensure fault tolerance and automatic failover capability using the following `kubectl exec` commands.
+
+    ```bash
+    kubectl exec -ti -n valkey valkey-masters-0 -- valkey-cli --cluster add-node \
+                        valkey-replicas-0.valkey-replicas.valkey.svc.cluster.local:6379 \
+                        valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379  --cluster-slave \
+                        --pass ${SECRET}
+    
+    kubectl exec -ti -n valkey valkey-masters-0 -- valkey-cli --cluster add-node \
+                        valkey-replicas-1.valkey-replicas.valkey.svc.cluster.local:6379 \
+                        valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379  --cluster-slave \
+                        --pass ${SECRET}
+    
+    kubectl exec -ti -n valkey valkey-masters-0 -- valkey-cli --cluster add-node \
+                        valkey-replicas-2.valkey-replicas.valkey.svc.cluster.local:6379 \
+                        valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379  --cluster-slave \
+                        --pass ${SECRET}
+    ```
+
+    Example output:
+
+    ```output
+    >>> Adding node valkey-replicas-0.valkey-replicas.valkey.svc.cluster.local:6379 to cluster valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379
+    >>> Performing Cluster Check (using node valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379)
+    M: ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35 valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[0-5460] (5461 slots) master
+    M: ea47bf57ae7080ef03164a4d48b662c7b4c8770e 10.224.0.176:6379
+       slots:[10923-16383] (5461 slots) master
+    M: fd1fb98db83976478e05edd3d2a02f9a13badd80 10.224.0.247:6379
+       slots:[5461-10922] (5462 slots) master
+    [OK] All nodes agree about slots configuration.
+    >>> Check for open slots...
+    >>> Check slots coverage...
+    [OK] All 16384 slots covered.
+    Automatically selected master valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379
+    >>> Send CLUSTER MEET to node valkey-replicas-0.valkey-replicas.valkey.svc.cluster.local:6379 to make it join the cluster.
+    Waiting for the cluster to join
+    >>> Configure node as replica of valkey-masters-0.valkey-masters.valkey.svc.cluster.local:6379.
+    [OK] New node added correctly.
+    >>> Adding node valkey-replicas-1.valkey-replicas.valkey.svc.cluster.local:6379 to cluster valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379
+    >>> Performing Cluster Check (using node valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379)
+    M: fd1fb98db83976478e05edd3d2a02f9a13badd80 valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[5461-10922] (5462 slots) master
+    S: 0ebceb60cbcc31da9040159440a1f4856b992907 10.224.0.224:6379
+       slots: (0 slots) slave
+       replicates ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35
+    M: ea47bf57ae7080ef03164a4d48b662c7b4c8770e 10.224.0.176:6379
+       slots:[10923-16383] (5461 slots) master
+    M: ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35 10.224.0.14:6379
+       slots:[0-5460] (5461 slots) master
+       1 additional replica(s)
+    [OK] All nodes agree about slots configuration.
+    >>> Check for open slots...
+    >>> Check slots coverage...
+    [OK] All 16384 slots covered.
+    Automatically selected master valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379
+    >>> Send CLUSTER MEET to node valkey-replicas-1.valkey-replicas.valkey.svc.cluster.local:6379 to make it join the cluster.
+    Waiting for the cluster to join
+    >>> Configure node as replica of valkey-masters-1.valkey-masters.valkey.svc.cluster.local:6379.
+    [OK] New node added correctly.
+    >>> Adding node valkey-replicas-2.valkey-replicas.valkey.svc.cluster.local:6379 to cluster valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379
+    >>> Performing Cluster Check (using node valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379)
+    M: ea47bf57ae7080ef03164a4d48b662c7b4c8770e valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379
+       slots:[10923-16383] (5461 slots) master
+    S: 0ebceb60cbcc31da9040159440a1f4856b992907 10.224.0.224:6379
+       slots: (0 slots) slave
+       replicates ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35
+    S: fa44edff683e2e01ee5c87233f9f3bc35c205dce 10.224.0.103:6379
+       slots: (0 slots) slave
+       replicates fd1fb98db83976478e05edd3d2a02f9a13badd80
+    M: ee6ac1d00d3f016b6f46c7ce11199bc1a7809a35 10.224.0.14:6379
+       slots:[0-5460] (5461 slots) master
+       1 additional replica(s)
+    M: fd1fb98db83976478e05edd3d2a02f9a13badd80 10.224.0.247:6379
+       slots:[5461-10922] (5462 slots) master
+       1 additional replica(s)
+    [OK] All nodes agree about slots configuration.
+    >>> Check for open slots...
+    >>> Check slots coverage...
+    [OK] All 16384 slots covered.
+    Automatically selected master valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379
+    >>> Send CLUSTER MEET to node valkey-replicas-2.valkey-replicas.valkey.svc.cluster.local:6379 to make it join the cluster.
+    Waiting for the cluster to join
+    >>> Configure node as replica of valkey-masters-2.valkey-masters.valkey.svc.cluster.local:6379.
+    [OK] New node added correctly.
+    ```
+
+## Verify the roles of the pods and replication status
+
+- Confirm each primary and replica is correctly configured and that replication relationships are established using the following `kubectl exec` commands.
+
+    ```bash
+    for x in $(seq 0 2); do echo "valkey-masters-$x"; kubectl exec -n valkey valkey-masters-$x  -- valkey-cli --pass ${SECRET} role; echo; done
+    for x in $(seq 0 2); do echo "valkey-replicas-$x"; kubectl exec -n valkey valkey-replicas-$x -- valkey-cli --pass ${SECRET} role; echo; done
+    ```
+
+    Example output:
+
+    ```output
+    valkey-masters-0
+    master
+    84
+    10.224.0.224
+    6379
+    84
+    valkey-masters-1
+    master
+    84
+    10.224.0.103
+    6379
+    84
+    valkey-masters-2
+    master
+    70
+    10.224.0.200
+    6379
+    70
+    valkey-replicas-0
+    slave
+    10.224.0.14
+    6379
+    connected
+    98
+    valkey-replicas-1
+    slave
+    10.224.0.247
+    6379
+    connected
+    98
+    valkey-replicas-2
+    slave
+    10.224.0.176
+    6379
+    connected
+    84
+    ```

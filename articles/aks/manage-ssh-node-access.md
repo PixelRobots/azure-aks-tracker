@@ -1,0 +1,642 @@
+---
+layout: Conceptual
+title: Manage SSH access on Azure Kubernetes Service cluster nodes - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/manage-ssh-node-access
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: Learn how to configure SSH and manage SSH keys on Azure Kubernetes Service (AKS) cluster nodes.
+ms.topic: how-to
+ms.subservice: aks-security
+ms.custom: devx-track-azurecli
+ms.date: 2025-11-10T00:00:00.0000000Z
+author: shashankbarsin
+ms.author: shasb
+zone_pivot_groups: aks-ssh-access-type
+locale: en-us
+document_id: 3c9b99fc-06ca-0162-ada3-0407c4cac4cb
+document_version_independent_id: 8cbdf535-4b43-84ac-0184-69f876ad8b42
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/manage-ssh-node-access.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/manage-ssh-node-access
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/manage-ssh-node-access.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/1433a524-c01f-4b87-beab-670c040dea4f
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/312f1f05-a431-4193-8a4d-e6245d5966de
+platformId: 29fd376a-0e4a-bcab-8643-51545f7bcb0a
+---
+
+# Manage SSH access on Azure Kubernetes Service cluster nodes - Azure Kubernetes Service | Microsoft Learn
+
+This article describes how to configure SSH access (preview) on your AKS clusters or node pools, during initial deployment or at a later time.
+
+AKS supports the following configuration options to manage SSH access on cluster nodes:
+
+- **Disabled SSH**: Completely disable SSH access to cluster nodes for enhanced security
+- **Entra ID based SSH**: Use Microsoft Entra ID credentials for SSH authentication. Benefits of using Entra ID based SSH:
+    - **Centralized identity management**: Use your existing Entra ID identities to access cluster nodes
+    - **No SSH key management**: Eliminates the need to generate, distribute, and rotate SSH keys
+    - **Enhanced security**: Leverage Entra ID security features like Conditional Access and MFA
+    - **Audit and compliance**: Centralized logging of access events through Entra ID logs
+    - **Just-in-time access**: Combine with Azure RBAC for granular access control
+- **Local User SSH**: Traditional SSH key-based authentication for node access
+
+::: zone pivot="disabled-ssh"
+
+Important
+
+AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+
+- [AKS support policies](/en-us/azure/aks/support-policies)
+- [Azure support FAQ](/en-us/azure/aks/faq)
+
+::: zone-end
+
+::: zone pivot="entraid-ssh"
+
+Important
+
+AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+
+- [AKS support policies](/en-us/azure/aks/support-policies)
+- [Azure support FAQ](/en-us/azure/aks/faq)
+
+::: zone-end
+
+## Prerequisites
+
+::: zone pivot="disabled-ssh"
+
+- Use the Bash environment in [Azure Cloud Shell](/en-us/azure/cloud-shell/overview). For more information, see [Get started with Azure Cloud Shell](/en-us/azure/cloud-shell/quickstart).
+
+    [![](../reusable-content/azure-cli/media/hdi-launch-cloud-shell.png)](https://shell.azure.com)
+- If you prefer to run CLI reference commands locally, [install](/en-us/cli/azure/install-azure-cli) the Azure CLI. If you're running on Windows or macOS, consider running Azure CLI in a Docker container. For more information, see [How to run the Azure CLI in a Docker container](/en-us/cli/azure/run-azure-cli-docker).
+
+    - If you're using a local installation, sign in to the Azure CLI by using the [az login](/en-us/cli/azure/reference-index#az-login) command. To finish the authentication process, follow the steps displayed in your terminal. For other sign-in options, see [Authenticate to Azure using Azure CLI](/en-us/cli/azure/authenticate-azure-cli).
+    - When you're prompted, install the Azure CLI extension on first use. For more information about extensions, see [Use and manage extensions with the Azure CLI](/en-us/cli/azure/azure-cli-extensions-overview).
+    - Run [az version](/en-us/cli/azure/reference-index?#az-version) to find the version and dependent libraries that are installed. To upgrade to the latest version, run [az upgrade](/en-us/cli/azure/reference-index?#az-upgrade).
+
+- This article requires version 2.61.0 or later of the Azure CLI. If you're using Azure Cloud Shell, the latest version is already installed there.
+- You need `aks-preview` version 9.0.0b1 or later.
+
+    - If you don't already have the `aks-preview` extension, install it using the [`az extension add`](/en-us/cli/azure/extension#az-extension-add) command: 
+
+        ```azurecli
+        az extension add --name aks-preview
+        ```
+    - If you already have the `aks-preview` extension, update it to make sure you have the latest version using the [`az extension update`](/en-us/cli/azure/extension#az-extension-update) command: 
+
+        ```azurecli
+        az extension update --name aks-preview
+        ```
+- Register the `DisableSSHPreview` feature flag using the [`az feature register`](/en-us/cli/azure/feature#az-feature-register) command.
+
+    ```azurecli
+    az feature register --namespace "Microsoft.ContainerService" --name "DisableSSHPreview"
+    ```
+
+    It takes a few minutes for the status to show *Registered*.
+- Verify the registration status using the [`az feature show`](/en-us/cli/azure/feature#az-feature-show) command.
+
+    ```azurecli
+    az feature show --namespace "Microsoft.ContainerService" --name "DisableSSHPreview"
+    ```
+- When the status reflects *Registered*, refresh the registration of the *Microsoft.ContainerService* resource provider using the [`az provider register`](/en-us/cli/azure/provider#az-provider-register) command.
+
+    ```azurecli
+    az provider register --namespace Microsoft.ContainerService
+    ```
+
+::: zone-end
+
+::: zone pivot="entraid-ssh"
+
+- Use the Bash environment in [Azure Cloud Shell](/en-us/azure/cloud-shell/overview). For more information, see [Get started with Azure Cloud Shell](/en-us/azure/cloud-shell/quickstart).
+
+    [![](../reusable-content/azure-cli/media/hdi-launch-cloud-shell.png)](https://shell.azure.com)
+- If you prefer to run CLI reference commands locally, [install](/en-us/cli/azure/install-azure-cli) the Azure CLI. If you're running on Windows or macOS, consider running Azure CLI in a Docker container. For more information, see [How to run the Azure CLI in a Docker container](/en-us/cli/azure/run-azure-cli-docker).
+
+    - If you're using a local installation, sign in to the Azure CLI by using the [az login](/en-us/cli/azure/reference-index#az-login) command. To finish the authentication process, follow the steps displayed in your terminal. For other sign-in options, see [Authenticate to Azure using Azure CLI](/en-us/cli/azure/authenticate-azure-cli).
+    - When you're prompted, install the Azure CLI extension on first use. For more information about extensions, see [Use and manage extensions with the Azure CLI](/en-us/cli/azure/azure-cli-extensions-overview).
+    - Run [az version](/en-us/cli/azure/reference-index?#az-version) to find the version and dependent libraries that are installed. To upgrade to the latest version, run [az upgrade](/en-us/cli/azure/reference-index?#az-upgrade).
+
+- This article requires version 2.73.0 or later of the Azure CLI. If you're using Azure Cloud Shell, the latest version is already installed there.
+- You need `aks-preview` version 19.0.0b7 or later for Entra ID SSH.
+
+    - If you don't already have the `aks-preview` extension, install it using the [`az extension add`](/en-us/cli/azure/extension#az-extension-add) command: 
+
+        ```azurecli
+        az extension add --name aks-preview
+        ```
+    - If you already have the `aks-preview` extension, update it to make sure you have the latest version using the [`az extension update`](/en-us/cli/azure/extension#az-extension-update) command: 
+
+        ```azurecli
+        az extension update --name aks-preview
+        ```
+- Appropriate Azure RBAC permissions to access nodes:
+
+    - **Required action**: `Microsoft.Compute/virtualMachineScaleSets/*/read`- to read Virtual Machine Scale Sets information
+        - **Required data action**:
+            - `Microsoft.Compute/virtualMachineScaleSets/virtualMachines/login/action` - to authenticate and log in to VMs as regular user.
+            - `Microsoft.Compute/virtualMachines/loginAsAdmin/action` - to login with root user privileges.
+        - **Built-in role**: [**Virtual Machine Administrator Login**](/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-administrator-login) or [**Virtual Machine User Login**](/en-us/azure/role-based-access-control/built-in-roles#virtual-machine-user-login) (for non-admin access)
+- Register the `EntraIdSSHPreview` feature flag using the [`az feature register`](/en-us/cli/azure/feature#az-feature-register) command.
+
+    ```azurecli
+    az feature register --namespace "Microsoft.ContainerService" --name "EntraIdSSHPreview"
+    ```
+
+    It takes a few minutes for the status to show *Registered*.
+- Verify the registration status using the [`az feature show`](/en-us/cli/azure/feature#az-feature-show) command.
+
+    ```azurecli
+    az feature show --namespace "Microsoft.ContainerService" --name "EntraIdSSHPreview"
+    ```
+- When the status reflects *Registered*, refresh the registration of the *Microsoft.ContainerService* resource provider using the [`az provider register`](/en-us/cli/azure/provider#az-provider-register) command.
+
+    ```azurecli
+    az provider register --namespace Microsoft.ContainerService
+    ```
+
+::: zone-end
+
+::: zone pivot="local-user-ssh"
+
+- Use the Bash environment in [Azure Cloud Shell](/en-us/azure/cloud-shell/overview). For more information, see [Get started with Azure Cloud Shell](/en-us/azure/cloud-shell/quickstart).
+
+    [![](../reusable-content/azure-cli/media/hdi-launch-cloud-shell.png)](https://shell.azure.com)
+- If you prefer to run CLI reference commands locally, [install](/en-us/cli/azure/install-azure-cli) the Azure CLI. If you're running on Windows or macOS, consider running Azure CLI in a Docker container. For more information, see [How to run the Azure CLI in a Docker container](/en-us/cli/azure/run-azure-cli-docker).
+
+    - If you're using a local installation, sign in to the Azure CLI by using the [az login](/en-us/cli/azure/reference-index#az-login) command. To finish the authentication process, follow the steps displayed in your terminal. For other sign-in options, see [Authenticate to Azure using Azure CLI](/en-us/cli/azure/authenticate-azure-cli).
+    - When you're prompted, install the Azure CLI extension on first use. For more information about extensions, see [Use and manage extensions with the Azure CLI](/en-us/cli/azure/azure-cli-extensions-overview).
+    - Run [az version](/en-us/cli/azure/reference-index?#az-version) to find the version and dependent libraries that are installed. To upgrade to the latest version, run [az upgrade](/en-us/cli/azure/reference-index?#az-upgrade).
+
+- This article requires version 2.61.0 or later of the Azure CLI. If you're using Azure Cloud Shell, the latest version is already installed there.
+- You need `aks-preview`version 9.0.0b1 or later to update SSH access method on nodepools.
+    - If you don't already have the `aks-preview` extension, install it using the [`az extension add`](/en-us/cli/azure/extension#az-extension-add) command: 
+
+        ```azurecli
+        az extension add --name aks-preview
+        ```
+    - If you already have the `aks-preview` extension, update it to make sure you have the latest version using the [`az extension update`](/en-us/cli/azure/extension#az-extension-update) command: 
+
+        ```azurecli
+        az extension update --name aks-preview
+        ```
+
+::: zone-end
+
+### Set environment variables
+
+Set the following environment variables for your resource group, cluster name, and location:
+
+```bash
+export RESOURCE_GROUP="<your-resource-group-name>"
+export CLUSTER_NAME="<your-cluster-name>"
+export LOCATION="<your-azure-region>"
+```
+
+::: zone pivot="entraid-ssh"
+
+## Limitations
+
+- Entra ID SSH to nodes is not yet available for Windows node pool.
+- Entra ID SSH to nodes is not supported for AKS automatic because of [node resource group lockdown](node-resource-group-lockdown) preventing role assignments.
+- Entra ID SSH to nodes is not supported for Azure Container Linux (ACL) node pools because the AADSSHLoginForLinux extension is not compatible with the immutable OS filesystem.
+
+::: zone-end
+
+## Configure SSH access
+
+::: zone pivot="disabled-ssh"
+
+To improve security and support your corporate security requirements or strategy, AKS supports disabling SSH both on the cluster and at the node pool level. Disable SSH introduces a simplified approach compared to configuring [network security group rules](concepts-security#azure-network-security-groups) on the AKS subnet/node network interface card (NIC). Disable SSH only supports Virtual Machine Scale Sets node pools.
+
+When you disable SSH at cluster creation time, it takes effect after the cluster is created. However, when you disable SSH on an existing cluster or node pool, AKS doesn't automatically disable SSH. At any time, you can choose to perform a nodepool upgrade operation. The disable/enable SSH operation takes effect after the node image update is complete.
+
+Note
+
+When you disable SSH at the cluster level, it applies to all existing node pools. Any node pools created after this operation will have SSH enabled by default, and you'll need to run these commands again in order to disable it.
+
+Note
+
+[kubectl debug node](node-access) continues to work after you disable SSH because it doesn't depend on the SSH service.
+
+### Create a resource group
+
+Create a resource group using the [`az group create`](/en-us/cli/azure/group#az-group-create) command.
+
+```azurecli
+az group create --name $RESOURCE_GROUP --location $LOCATION
+```
+
+### Disable SSH on a new cluster deployment
+
+By default, the SSH service on AKS cluster nodes is open to all users and pods running on the cluster. You can prevent direct SSH access from any network to cluster nodes to help limit the attack vector if a container in a pod becomes compromised.
+
+Use the [`az aks create`](/en-us/cli/azure/aks#az-aks-create) command to create a new cluster, and include the `--ssh-access disabled` argument to disable SSH (preview) on all the node pools during cluster creation.
+
+Important
+
+After you disable the SSH service, you can't SSH into the cluster to perform administrative tasks or to troubleshoot.
+
+Note
+
+On a newly created cluster, disable SSH will only configure the first system node pool. All other node pools need to be configured at the node pool level.
+
+```azurecli
+az aks create --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --ssh-access disabled
+```
+
+After a few minutes, the command completes and returns JSON-formatted information about the cluster. The following example resembles the output and the results related to disabling SSH:
+
+```json
+"securityProfile": {
+  "sshAccess": "Disabled"
+},
+```
+
+### Disable SSH for a new node pool
+
+Use the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command to add a node pool, and include the `--ssh-access disabled` argument to disable SSH during node pool creation.
+
+```azurecli
+az aks nodepool add \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --ssh-access disabled
+```
+
+After a few minutes, the command completes and returns JSON-formatted information about the cluster indicating *mynodepool* was successfully created. The following example resembles the output and the results related to disabling SSH:
+
+```json
+"securityProfile": {
+  "sshAccess": "Disabled"
+},
+```
+
+### Disable SSH for an existing node pool
+
+Important
+
+AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+
+- [AKS support policies](/en-us/azure/aks/support-policies)
+- [Azure support FAQ](/en-us/azure/aks/faq)
+
+Use the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command with the `--ssh-access disabled` argument to disable SSH (preview) on an existing node pool.
+
+```azurecli
+az aks nodepool update \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --ssh-access disabled
+```
+
+After a few minutes, the command completes and returns JSON-formatted information about the cluster indicating *mynodepool* was successfully updated. The following example resembles the output and the results related to disabling SSH:
+
+```json
+"securityProfile": {
+  "sshAccess": "Disabled"
+},
+```
+
+For the change to take effect, you need to reimage the node pool by using the [`az aks nodepool upgrade`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-upgrade) command.
+
+```azurecli
+az aks nodepool upgrade \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --node-image-only
+```
+
+Important
+
+To disable SSH on an existing cluster, you need to disable SSH for each node pool on this cluster.
+
+### Re-enable SSH access
+
+To re-enable SSH access on a node pool, update the node pool with either `--ssh-access localuser` (for traditional SSH key-based access) or `--ssh-access entraid` (for Entra ID based access). See the respective sections for detailed instructions.
+
+::: zone-end
+
+::: zone pivot="entraid-ssh"
+
+You can configure your AKS cluster to use Microsoft Entra ID (formerly Azure AD) for SSH authentication to cluster nodes. This eliminates the need to manage SSH keys and allows you to use your Entra ID credentials to access nodes securely.
+
+### Create a resource group
+
+Create a resource group using the [`az group create`](/en-us/cli/azure/group#az-group-create) command.
+
+```azurecli
+az group create --name $RESOURCE_GROUP --location $LOCATION
+```
+
+### Enable Entra ID based SSH on a new cluster
+
+Use the [`az aks create`](/en-us/cli/azure/aks#az-aks-create) command with the `--ssh-access entraid` argument to enable Entra ID based SSH authentication during cluster creation.
+
+```azurecli
+az aks create \
+    --resource-group $RESOURCE_GROUP \
+    --name $CLUSTER_NAME \
+    --ssh-access entraid
+```
+
+After a few minutes, the command completes and returns JSON-formatted information about the cluster. The following example resembles the output:
+
+```json
+"securityProfile": {
+  "sshAccess": "EntraID"
+},
+```
+
+### Enable Entra ID based SSH for a new node pool
+
+Use the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command with the `--ssh-access entraid` argument to enable Entra ID based SSH during node pool creation.
+
+```azurecli
+az aks nodepool add \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --ssh-access entraid
+```
+
+After a few minutes, the command completes and returns JSON-formatted information indicating *mynodepool* was successfully created with Entra ID based SSH. The following example resembles the output:
+
+```json
+"securityProfile": {
+  "sshAccess": "EntraID"
+},
+```
+
+### Enable Entra ID based SSH for an existing node pool
+
+Use the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command with the `--ssh-access entraid` argument to enable Entra ID based SSH on an existing node pool.
+
+```azurecli
+az aks nodepool update \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --ssh-access entraid
+```
+
+After a few minutes, the command completes and returns JSON-formatted information indicating *mynodepool* was successfully updated with Entra ID based SSH. The following example resembles the output:
+
+```json
+"securityProfile": {
+  "sshAccess": "EntraID"
+},
+```
+
+For the change to take effect, you need to reimage the node pool by using the [`az aks nodepool upgrade`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-upgrade) command.
+
+```azurecli
+az aks nodepool upgrade \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --node-image-only
+```
+
+Important
+
+To enable Entra ID based SSH on an existing cluster, you need to enable it for each node pool individually.
+
+::: zone-end
+
+::: zone pivot="local-user-ssh"
+
+Local user SSH access uses traditional SSH key-based authentication. This is the default SSH access method for AKS clusters.
+
+### Create a resource group
+
+Create a resource group using the [`az group create`](/en-us/cli/azure/group#az-group-create) command.
+
+```azurecli
+az group create --name $RESOURCE_GROUP --location $LOCATION
+```
+
+### Create an AKS cluster with SSH keys
+
+Use the [az aks create](/en-us/cli/azure/aks#az-aks-create) command to deploy an AKS cluster with an SSH public key. You can either specify the key or a key file using the `--ssh-key-value` argument, or use `--ssh-access localuser` to explicitly set local user SSH access.
+
+| SSH parameter | Description | Default value |
+| --- | --- | --- |
+| `--generate-ssh-key` | If you don't have your own SSH keys, specify `--generate-ssh-key`. The Azure CLI automatically generates a set of SSH keys and saves them in the default directory `~/.ssh/`. |  |
+| `--ssh-key-value` | Public key path or key contents to install on node VMs for SSH access. For example, `ssh-rsa AAAAB...snip...UcyupgH azureuser@linuxvm`. | `~/.ssh/id_rsa.pub` |
+| `--ssh-access localuser` | Explicitly enable local user SSH access with key-based authentication. |  |
+| `--no-ssh-key` | If you don't require SSH keys, specify this argument. However, AKS automatically generates a set of SSH keys because the Azure Virtual Machine resource dependency doesn't support an empty SSH keys file. As a result, the keys aren't returned and can't be used to SSH into the node VMs. The private key is discarded and not saved. |  |
+
+Note
+
+If no parameters are specified, the Azure CLI defaults to referencing the SSH keys stored in the `~/.ssh/id_rsa.pub` file. If the keys aren't found, the command returns the message `An RSA key file or key value must be supplied to SSH Key Value`.
+
+**Examples:**
+
+- To create a cluster and use the default generated SSH keys:
+
+    ```azurecli
+    az aks create --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --generate-ssh-key
+    ```
+- To specify an SSH public key file:
+
+    ```azurecli
+    az aks create --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --ssh-key-value ~/.ssh/id_rsa.pub
+    ```
+- To explicitly enable local user SSH access:
+
+    ```azurecli
+    az aks create --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --ssh-access localuser --generate-ssh-key
+    ```
+
+### Enable local user SSH for a new node pool
+
+Use the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command with the `--ssh-access localuser` argument to enable local user SSH during node pool creation.
+
+```azurecli
+az aks nodepool add \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --ssh-access localuser
+```
+
+### Enable local user SSH for an existing node pool
+
+Important
+
+AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+
+- [AKS support policies](/en-us/azure/aks/support-policies)
+- [Azure support FAQ](/en-us/azure/aks/faq)
+
+Use the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command with the `--ssh-access localuser` argument to enable local user SSH on an existing node pool.
+
+```azurecli
+az aks nodepool update \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --ssh-access localuser
+```
+
+Important
+
+For the change to take effect, you need to reimage the node pool by using the [`az aks nodepool upgrade`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-upgrade) command.
+
+```azurecli
+az aks nodepool upgrade \
+    --cluster-name $CLUSTER_NAME \
+    --name mynodepool \
+    --resource-group $RESOURCE_GROUP \
+    --node-image-only
+```
+
+### Update SSH public key on an existing AKS cluster
+
+Use the [`az aks update`](/en-us/cli/azure/aks#az-aks-update) command to update the SSH public key (preview) on your cluster. This operation updates the key on all node pools. You can either specify a key or a key file using the `--ssh-key-value` argument.
+
+Note
+
+Updating the SSH keys is supported on Azure virtual machine scale sets with AKS clusters.
+
+**Examples:**
+
+- To specify a new SSH public key value:
+
+    ```azurecli
+    az aks update --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --ssh-key-value 'ssh-rsa AAAAB3Nza-xxx'
+    ```
+- To specify an SSH public key file:
+
+    ```azurecli
+    az aks update --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --ssh-key-value ~/.ssh/id_rsa.pub
+    ```
+
+Important
+
+After you update the SSH key, AKS doesn't automatically update your node pool. At any time, you can choose to perform a [nodepool upgrade operation](node-image-upgrade). The update SSH keys operation takes effect after a node image update is complete. For clusters with [Node Auto-provisioning](node-autoprovision) enabled, a node image update can be performed by applying a new label to the Kubernetes NodePool custom resource.
+
+::: zone-end
+
+## Verify SSH service status
+
+::: zone pivot="disabled-ssh"
+
+After disabling SSH, you can verify that the SSH service is inactive on your cluster nodes.
+
+Use the Virtual Machine Scale Set [`az vmss run-command invoke`](/en-us/cli/azure/vmss/run-command#az-vmss-run-command-invoke) command to check SSH service status.
+
+```azurecli
+az vmss run-command invoke --resource-group <node-resource-group> --name <vmss-name> --command-id RunShellScript --instance-id 0 --scripts "systemctl status ssh"
+```
+
+The following sample output shows the expected result when SSH is disabled:
+
+```json
+{
+  "value": [
+    {
+      "code": "ProvisioningState/succeeded",
+      "displayStatus": "Provisioning succeeded",
+      "level": "Info",
+      "message": "Enable succeeded: \n[stdout]\n○ ssh.service - OpenBSD Secure Shell server\n     Loaded: loaded (/lib/systemd/system/ssh.service; disabled; vendor preset: enabled)\n     Active: inactive (dead) since Wed 2024-01-03 15:36:53 UTC; 25min ago\n..."
+    }
+  ]
+}
+```
+
+Search for the word **Active** and verify that its value is `Active: inactive (dead)`, which confirms SSH is disabled on the node.
+
+::: zone-end
+
+::: zone pivot="entraid-ssh"
+
+After enabling Entra ID based SSH, you can verify that the SSH service is active and configured for Entra ID authentication on your cluster nodes.
+
+Use the Virtual Machine Scale Set [`az vmss run-command invoke`](/en-us/cli/azure/vmss/run-command#az-vmss-run-command-invoke) command to check SSH service status.
+
+```azurecli
+az vmss run-command invoke --resource-group <node-resource-group> --name <vmss-name> --command-id RunShellScript --instance-id 0 --scripts "systemctl status ssh"
+```
+
+The following sample output shows the expected result when SSH is enabled:
+
+```json
+{
+  "value": [
+    {
+      "code": "ProvisioningState/succeeded",
+      "displayStatus": "Provisioning succeeded",
+      "level": "Info",
+      "message": "Enable succeeded: \n[stdout]\n● ssh.service - OpenBSD Secure Shell server\n     Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)\n     Active: active (running) since Wed 2024-01-03 15:40:20 UTC; 19min ago\n..."
+    }
+  ]
+}
+```
+
+Search for the word **Active** and verify that its value is `Active: active (running)`, which confirms SSH is enabled on the node.
+
+::: zone-end
+
+::: zone pivot="local-user-ssh"
+
+After configuring local user SSH, you can verify that the SSH service is active on your cluster nodes.
+
+Use the Virtual Machine Scale Set [`az vmss run-command invoke`](/en-us/cli/azure/vmss/run-command#az-vmss-run-command-invoke) command to check SSH service status.
+
+```azurecli
+az vmss run-command invoke --resource-group <node-resource-group> --name <vmss-name> --command-id RunShellScript --instance-id 0 --scripts "systemctl status ssh"
+```
+
+The following sample output shows the expected result when SSH is enabled:
+
+```json
+{
+  "value": [
+    {
+      "code": "ProvisioningState/succeeded",
+      "displayStatus": "Provisioning succeeded",
+      "level": "Info",
+      "message": "Enable succeeded: \n[stdout]\n● ssh.service - OpenBSD Secure Shell server\n     Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)\n     Active: active (running) since Wed 2024-01-03 15:40:20 UTC; 19min ago\n..."
+    }
+  ]
+}
+```
+
+Search for the word **Active** and verify that its value is `Active: active (running)`, which confirms SSH is enabled on the node.
+
+::: zone-end

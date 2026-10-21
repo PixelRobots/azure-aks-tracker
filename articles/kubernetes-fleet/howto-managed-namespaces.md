@@ -1,0 +1,866 @@
+---
+layout: Conceptual
+title: Create and configure Managed Fleet Namespaces with Azure Kubernetes Fleet Manager | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/kubernetes-fleet/howto-managed-namespaces
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
+adobe-target: true
+learn_banner_products:
+- azure
+description: Learn how to create Managed Fleet Namespaces to define resource quotas, network policies, and to delegate user access to namespaces on multiple clusters.
+author: sjwaight
+ms.author: simonwaight
+ms.topic: how-to
+ms.date: 2026-07-28T00:00:00.0000000Z
+ms.service: azure-kubernetes-fleet-manager
+ms.custom: devx-track-terraform
+zone_pivot_groups: azure-portal-azure-cli-terraform
+locale: en-us
+document_id: 0f218d3d-92ac-46d9-b34f-0e79e4a1cf19
+document_version_independent_id: 3fa5f18e-2a30-4286-5017-0f7c5dc6eb4e
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/kubernetes-fleet/howto-managed-namespaces.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: kubernetes-fleet/howto-managed-namespaces
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/kubernetes-fleet/howto-managed-namespaces.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
+platformId: 405ea444-5f71-4cd3-7257-6af9dd6552b3
+---
+
+# Create and configure Managed Fleet Namespaces with Azure Kubernetes Fleet Manager | Microsoft Learn
+
+**Applies to:** ✔️ Fleet Manager with hub cluster
+
+This article shows you how to use Fleet Manager to create and configure a Managed Fleet Namespace that defines resource quotas, network policies, and delegated user access for the namespaces on multiple clusters.
+
+If you're looking to view or access existing Managed Fleet Namespaces you have access to, see [view and access Managed Fleet Namespaces](howto-managed-namespaces-access).
+
+## Known limitations
+
+- When a Managed Fleet Namespace adopts a single cluster [Managed Kubernetes Namespace](../aks/concepts-managed-namespaces) or vice versa, it may lead to conflicting ownership. To avoid, use a delete policy of `keep` for both the Managed Fleet and Kubernetes Namespaces.
+- Clusters must be members managed by the Fleet Manager hosting the Managed Fleet Namespace.
+- Clusters must have a Kubernetes version of at least 1.30.0. Clusters below this version **will not** block users on the cluster from modifying the placed Kubernetes resources.
+- RBAC roles assigned to a Managed Fleet Namespace scope grant equivalent access to any unmanaged Kubernetes namespaces with the same name on member clusters.
+
+## Before you begin
+
+- You need an Azure account with an active subscription. [Create an account for free](https://azure.microsoft.com/pricing/purchase-options/azure-account?cid=msft_learn).
+- You need a Fleet Manager with a hub cluster. If you don't have one, see [create and join at least one Azure Kubernetes Service (AKS) cluster to the fleet](quickstart-create-fleet-and-members).
+- Ensure the user performing the steps has the [Role Based Access Control Administrator](/en-us/azure/role-based-access-control/built-in-roles/privileged#role-based-access-control-administrator) role assigned for the Fleet Manager.
+- Understand the Managed Fleet Namespace concept by [reading the overview](concepts-fleet-managed-namespace).
+
+::: zone pivot="terraform"
+
+- [Install and configure Terraform](/en-us/azure/developer/terraform/quickstart-configure).
+- You need the Azure CLI installed to verify the Managed Fleet Namespace that Terraform creates. To install or upgrade, see [Install Azure CLI](/en-us/cli/azure/aks#az-aks-install-cli).
+- You need the `fleet` Azure CLI extension version 1.8.0 or later to verify the Managed Fleet Namespace. You can install it and update to the latest version by using the [`az extension add`](/en-us/cli/azure/extension#az-extension-add) and [`az extension update`](/en-us/cli/azure/extension#az-extension-update) commands.
+
+    ```azurecli
+    az extension add --name fleet
+    az extension update --name fleet
+    ```
+- If you don't already have a Fleet Manager with a hub cluster, the first part of this article creates one for you by using a separate Terraform sample and state from the Managed Fleet Namespace sample. If you already have one, note its resource group and Fleet Manager name and skip to Create the Managed Fleet Namespace with Terraform.
+- The prerequisite Terraform sample creates only a Fleet Manager and hub cluster; it doesn't create or join any member clusters. You can create a Managed Fleet Namespace and view its configuration without any member clusters joined, but verifying that the namespace actually rolls out (propagates) to a member cluster requires at least one AKS cluster joined to the Fleet. If you don't have one, see [create and join at least one Azure Kubernetes Service (AKS) cluster to the fleet](quickstart-create-fleet-and-members) using the existing supported guidance.
+
+::: zone-end
+
+::: zone pivot="azure-cli"
+
+- You need Azure CLI version 2.78.0 or later installed to complete this article. To install or upgrade, see [Install Azure CLI](/en-us/cli/azure/aks#az-aks-install-cli).
+- You need the `fleet` Azure CLI extension version 1.8.0 or later. You can install it and update to the latest version using the [`az extension add`](/en-us/cli/azure/extension#az-extension-add) and [`az extension update`](/en-us/cli/azure/extension#az-extension-update) commands.
+
+    ```azurecli
+    # Install the extension
+    az extension add --name fleet
+    
+    # Update the extension
+    az extension update --name fleet
+    ```
+- Confirm the fleet extension version is at least 1.8.0 using the [`az extension show`](/en-us/cli/azure/extension#az-extension-show) command.
+
+    ```azurecli
+    az extension show --name fleet
+    ```
+- Set the following environment variables for your subscription ID, resource group, Fleet, and Fleet Member:
+
+    ```bash
+    export SUBSCRIPTION_ID=<subscription-id>
+    export GROUP=<resource-group-name>
+    export FLEET=<fleet-name>
+    export FLEET_ID=<fleet-id>
+    ```
+- Set the default Azure subscription using the [`az account set`](/en-us/cli/azure/account#az-account-set) command.
+
+    ```azurecli
+    az account set --subscription ${SUBSCRIPTION_ID}
+    ```
+
+## Create a new Managed Fleet Namespace
+
+Create a new Managed Fleet Namespace using the [`az fleet namespace create`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-create) command.
+
+```azurecli
+    az fleet namespace create \
+        --resource-group $GROUP \
+        --fleet-name $FLEET \
+        --name my-managed-namespace \ 
+        --annotations annotation1=value1 annotation2=value2 \
+        --labels team=myTeam label2=value2 \
+        --cpu-requests 1m \
+        --cpu-limits 4m \
+        --memory-requests 1Mi \
+        --memory-limits 4Mi \
+        --ingress-policy allowAll \
+        --egress-policy allowAll \
+        --delete-policy keep \
+        --adoption-policy never
+```
+
+Note
+
+These settings are optional: networking policies, compute quota, deletion and adoption policy, labels and annotations.
+
+When using networking policies, users with a `Microsoft.ContainerService/managedClusters/networking.k8s.io/networkpolicies/write` action, such as `Azure Kubernetes Service RBAC Writer`, on the Microsoft Entra ID role they're assigned can add more network policies through the Kubernetes API.
+
+For example, if an admin applies a `Deny All` policy for ingress/egress, and a user applies an `Allow` policy for a namespace via the Kubernetes API, the `Allow` policy takes priority over the `Deny All` policy, and traffic is allowed to flow for the namespace. This additive behavior is standard for networking policies.
+
+### Assign user or group access
+
+You can now grant access to a user for the Managed Fleet Namespace across member clusters using one of the [Azure RBAC built-in roles](concepts-fleet-managed-namespace#managed-fleet-namespace-built-in-roles).
+
+Create a role assignment using the [`az role assignment create`](/en-us/cli/azure/role/assignment#az-role-assignment-create) command.
+
+The following example assigns a user the *Azure Kubernetes Fleet Manager RBAC Writer for Member Clusters* role on any cluster that receives the `my-managed-namespace` Managed Fleet Namespace:
+
+```azurecli
+az role assignment create \
+    --role "Azure Kubernetes Fleet Manager RBAC Writer for Member Clusters" \
+    --assignee <USER-ENTRA-ID> \
+    --scope "$FLEET_ID/managedNamespaces/my-managed-namespace"
+```
+
+### Add member clusters
+
+You can control which member clusters to deploy the managed namespace to by specifying the desired list of member cluster names.
+
+Specify the full list of member clusters you want to deploy the managed namespace to using the [`az fleet namespace create`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-create) command with the `--member-cluster-names` parameter. The managed namespace is propagated to all clusters in the list.
+
+In this example, the managed namespace is deployed to `contoso-prd-01-fm` and `contoso-prd-02-fm`.
+
+```azurecli
+az fleet namespace create \
+    --resource-group $GROUP \
+    --fleet-name $FLEET \
+    --name my-managed-namespace \
+    --member-cluster-names contoso-prd-01-fm contoso-prd-02-fm
+```
+
+### Remove member clusters
+
+You can remove member clusters from a Managed Fleet Namespace by excluding them from the list of member clusters you want the namespace on.
+
+Specify the list of member clusters you want the managed namespace to remain on using the [`az fleet namespace create`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-create) command with the `--member-cluster-names` parameter. The managed namespace is removed from any clusters excluded from the list.
+
+In this example, the managed namespace is removed from `contoso-prd-02-fm`.
+
+```azurecli
+az fleet namespace create \
+    --resource-group $GROUP \
+    --fleet-name $FLEET \
+    --name my-managed-namespace \
+    --member-cluster-names contoso-prd-01-fm
+```
+
+## Configure an existing Managed Fleet Namespace
+
+You can modify networking policies, resource quotas, labels, and annotations on an existing Managed Fleet Namespace by using the [`az fleet namespace create`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-create) command with updated parameter values. The command performs an upsert operation, updating the namespace if it already exists.
+
+Important
+
+When updating an existing managed namespace, you must specify all parameters you want to retain, even if you're not changing them. Any parameters you omit are reset to their default values. This includes network policies, resource quotas, labels, annotations, delete policy, adoption policy, and member cluster names.
+
+The following example updates the network policies, resource quotas, labels, and annotations for an existing managed namespace:
+
+```azurecli
+az fleet namespace create \
+    --resource-group $GROUP \
+    --fleet-name $FLEET \
+    --name my-managed-namespace \
+    --annotations "updated-annotation=new-value" \
+    --labels "team=updatedTeam environment=production" \
+    --cpu-requests 1000m \
+    --cpu-limits 2000m \
+    --memory-requests 1000Mi \
+    --memory-limits 1000Mi \
+    --ingress-policy allowAll \
+    --egress-policy allowAll \
+    --delete-policy keep \
+    --adoption-policy never \
+    --member-cluster-names contoso-prd-01-fm contoso-prd-02-fm
+```
+
+### View a Managed Fleet Namespace's configuration
+
+View a specific Managed Fleet Namespace's details by using the [`az fleet namespace show`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-show) command.
+
+```azurecli
+az fleet namespace show \ 
+    --resource-group $GROUP \ 
+    --fleet-name $FLEET \ 
+    --name my-managed-namespace \ 
+    -o table 
+```
+
+Your output should resemble the following example output:
+
+```output
+AdoptionPolicy  DeletePolicy   ETag                                    Location   Name                  ProvisioningState   ResourceGroup
+--------------  ------------   -------------------------------------   --------   --------------------  -----------------   -------------
+Always          Delete         "aaaaaaaa-0b0b-1c1c-2d2d-333333333333   westus2    my-managed-namespace  Succeeded           test-rg
+```
+
+## Delete a Managed Fleet Namespace
+
+Delete a Managed Fleet Namespace using the [`az fleet namespace delete`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-delete) command.
+
+```azurecli
+az fleet namespace delete \
+    --resource-group $GROUP \
+    --fleet-name $FLEET \
+    --name my-managed-namespace 
+```
+
+Warning
+
+Deleting a Fleet Managed Namespace with a `DeletePolicy` set to `delete` is a permanent action. If you're unsure, you should update the policy to `keep` to keep the namespace.
+
+Azure RBAC assignments are always deleted to avoid dangling permissions.
+
+::: zone-end
+
+::: zone pivot="azure-portal"
+
+## Create a new Managed Fleet Namespace
+
+You can create a new Managed Fleet Namespace from within Fleet Manager, or via Kubernetes center.
+
+Starting in Fleet Manager:
+
+- In the Azure portal, navigate to your Azure Kubernetes Fleet Manager resource.
+- From the left menu, under **Fleet Resources**, select **Namespaces**.
+- From the menu select **+ Create**, then **Managed Fleet Namespace**.
+
+[![Screenshot of the Azure portal menu for creating a Managed Fleet Namespace in Azure Kubernetes Fleet Manager.](media/managed-namespace/create-managed-fleet-namespace-fleet-manager-menu.png)](media/managed-namespace/create-managed-fleet-namespace-fleet-manager-menu.png#lightbox)
+
+Starting in Kubernetes center:
+
+- Open [Kubernetes center - Managed namespaces](https://portal.azure.com/#view/Microsoft_Azure_KubernetesFleet/KubernetesHub.MenuView/%7E/managedNamespaces) in the Azure portal.
+- From the menu select **+ Create**, then **Managed Fleet Namespace**.
+- Select a **Subscription** and **Fleet Manager** instance.
+
+[![Screenshot of the Azure portal Kubernetes Center menu for creating a Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-kubernetes-center.png)](media/managed-namespace/create-managed-fleet-namespace-kubernetes-center.png#lightbox)
+
+- Select one of the following options for **Scope**:
+    - **New** - create a new Kubernetes namespace that doesn't exist on the Fleet Manager hub cluster. Enter a **Name** for the new namespace.
+    - **Convert to Managed** - use an existing Kubernetes namespace on the Fleet Manager hub cluster. Select the **Namespace** from the list of namespaces on the Fleet Manager hub cluster.
+
+[![Screenshot of the Azure portal showing the Basics tab with Project details completed for a new Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-project-details.png)](media/managed-namespace/create-managed-fleet-namespace-project-details.png#lightbox)
+
+### Assign user or group access
+
+Select the Microsoft Entra users and groups that access the Managed Fleet Namespace on clusters it's distributed to.
+
+[![Screenshot of the Azure portal showing completed Access details for a new Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-set-access.png)](media/managed-namespace/create-managed-fleet-namespace-set-access.png#lightbox)
+
+Note
+
+This step is optional. You can create and distribute a Managed Fleet Namespace without assigning users or groups. This allows you to distribute the namespace without granting access immediately.
+
+### Add network policies and compute quota
+
+Control the flow of network traffic into and out of the namespace on each cluster it's distributed to, along with defining the CPU and memory resource quotas for the namespace.
+
+[![Screenshot of the Azure portal showing completed Networking policies and Compute quota for a new Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-policies-quota.png)](media/managed-namespace/create-managed-fleet-namespace-policies-quota.png#lightbox)
+
+Note
+
+These settings are optional. You can create and distribute a Managed Fleet Namespace without networking policies or quota controls applied.
+
+Users with a `Microsoft.ContainerService/managedClusters/networking.k8s.io/networkpolicies/write` action, such as `Azure Kubernetes Service RBAC Writer`, on the Microsoft Entra ID role they're assigned can add more network policies through the Kubernetes API.
+
+For example, if an admin applies a `Deny All` policy for ingress/egress, and a user applies an `Allow` policy for a namespace via the Kubernetes API, the `Allow` policy takes priority over the `Deny All` policy, and traffic is allowed to flow for the namespace. This additive behavior is standard for networking policies.
+
+### Select member clusters
+
+Define which member clusters to distribute the managed namespace to by adding them as follows.
+
+- From the menu, select **+ Add**.
+- In the **Select member clusters** dialog, search for the member clusters and select them by checking the box.
+- Finally, choose **Select** to add the member clusters.
+
+[![Screenshot of the Azure portal showing two member clusters selected to host a new Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-select-member-clusters.png)](media/managed-namespace/create-managed-fleet-namespace-select-member-clusters.png#lightbox)
+
+Note
+
+This step is optional. If you don't provide any member clusters the Managed Fleet Namespace is deployed only to the Fleet Manager hub cluster. You can add member clusters at a later time.
+
+### Set labels, annotations, and tags
+
+Define optional Kubernetes labels and annotations, and Azure Resource Manager (ARM) tags that provide metadata that can be used for automation and resource management.
+
+[![Screenshot of the Azure portal showing settings for labels and annotations for a new Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-labels-annotations.png)](media/managed-namespace/create-managed-fleet-namespace-labels-annotations.png#lightbox)
+
+Note
+
+This step is optional. You can manage labels, annotations, and tags at a later time.
+
+### Create the Managed Fleet Namespace
+
+Once you have configured all properties for the new Managed Fleet Namespace, you can confirm the details before creating the namespace by selecting **Create**.
+
+An Azure Resource Manager deployment is immediately started, which initiates a Fleet Manager workload placement to distribute the namespace to the selected clusters.
+
+Once the deployment is completed, you can find the Managed Fleet Namespace in the list of namespaces for the Fleet Manager.
+
+[![Screenshot of the Azure portal with the new Managed Fleet Namespace listed with other namespaces on the hub cluster.](media/managed-namespace/create-managed-fleet-namespace-view.png)](media/managed-namespace/create-managed-fleet-namespace-view.png#lightbox)
+
+To review the rollout of the Kubernetes namespace across clusters, use [Resource placements](quickstart-resource-propagation), and look for the resource placement named the same as the Managed Fleet Namespace.
+
+[![Screenshot of the Azure portal showing the resource placement status of the new Managed Fleet Namespace.](media/managed-namespace/create-managed-fleet-namespace-placement-status.png)](media/managed-namespace/create-managed-fleet-namespace-placement-status.png#lightbox)
+
+## Configure an existing Managed Fleet Namespace
+
+You can locate a Managed Fleet Namespace from within Fleet Manager, or via Kubernetes center.
+
+Starting in Fleet Manager:
+
+- In the Azure portal, navigate to your Azure Kubernetes Fleet Manager resource.
+- From the left menu, under **Fleet Resources**, select **Namespaces**.
+
+Starting in Kubernetes center:
+
+- Open [Kubernetes center - Managed namespaces](https://portal.azure.com/#view/Microsoft_Azure_KubernetesFleet/KubernetesHub.MenuView/%7E/managedNamespaces) in the Azure portal.
+- Set the **Type** filter to **Managed Fleet Namespace**.
+
+### Modify configuration
+
+Modify networking policies, resource quotas, labels, annotations, and tags by selecting **edit** next to the appropriate item in the Managed Fleet Namespace overview screen.
+
+Selecting **edit** next to labels, annotations or tags, opens a dialog box where you can modify any of these three items.
+
+Selecting **edit** next to any of the network policy or resource quota options opens a dialog box where you can modify any of these items.
+
+[![Screenshot of the Azure portal showing the overview screen for a Managed Fleet Namespace with edit options highlighted in red boxes.](media/managed-namespace/modify-managed-fleet-namespace-overview.png)](media/managed-namespace/modify-managed-fleet-namespace-overview.png#lightbox)
+
+### Modify user or group access
+
+A Managed Fleet Namespace is an Azure Resource Manager (ARM) resource, so managing user and group access can be achieved by selecting **Access control (IAM)** in the left navigation in the Manage Fleet Namespace overview screen.
+
+### Modify member clusters
+
+On the Managed Fleet Namespace overview select **Member clusters** in the left navigation.
+
+To remove member clusters:
+
+- Select the clusters to remove by checking the box on the left of the row.
+- In the top navigation select **Remove**.
+- Confirm the action and select **Remove**.
+
+To add member clusters:
+
+- From the menu select **+ Add**.
+- In the **Add member clusters** dialog, search for the member clusters and select them by checking the box.
+- Finally, choose **Add** to add the member clusters.
+
+[![Screenshot of the Azure portal showing a single member cluster selected ready to be removed from the Managed Fleet Namespace.](media/managed-namespace/remove-member-cluster-managed-fleet-namespace.png)](media/managed-namespace/remove-member-cluster-managed-fleet-namespace.png#lightbox)
+
+Once the clusters hosting the Managed Fleet Namespace are modified, the overview is updated to display the clusters actively hosting the namespace.
+
+## Delete a Managed Fleet Namespace
+
+On the Managed Fleet Namespace overview select **Delete** in the top navigation.
+
+In the **Delete Managed Fleet Namespace** confirmation select the option you want:
+
+- **Keep namespace, remove management capabilities:** the Managed Fleet Namespace is converted into a standard Kubernetes namespace, remaining on the Fleet Manager hub cluster and member clusters, but no longer managed by Azure Resource Manager (ARM).
+- **Delete namespace and all associated resources:** the Managed Fleet Namespace ARM resource is deleted, along with the Kubernetes namespace on both the Fleet Manager hub cluster and member clusters.
+
+Warning
+
+Deleting the namespace and all associated resources is a permanent action. If you're unsure, you should elect to keep the namespace.
+
+In both cases Azure RBAC assignments are deleted to avoid dangling permissions.
+
+::: zone-end
+
+::: zone pivot="terraform"
+
+## Create a new Managed Fleet Namespace
+
+The Terraform samples in this section are split across two directories, each with its own Terraform state: a prerequisite sample that creates a Fleet Manager with a hub cluster, and a scenario sample that creates the Managed Fleet Namespace on an existing Fleet Manager. By keeping the Fleet Manager and the Managed Fleet Namespace in separate states, you can create a Managed Fleet Namespace against any existing Fleet Manager with a hub cluster. This setup works whether or not you created the Fleet Manager by using Terraform. You can destroy a Managed Fleet Namespace without affecting the Fleet Manager or any other Managed Fleet Namespaces on it.
+
+### Create a Fleet Manager with a hub cluster
+
+If you already have a Fleet Manager with a hub cluster, skip to Create the Managed Fleet Namespace with Terraform and use its resource group and Fleet Manager name in that section.
+
+Note
+
+The sample code for this section is located in the [Azure Terraform GitHub repo](https://github.com/Azure/terraform/tree/master/quickstart/101-aks-fleet-with-hub). View the log file containing the [test results from current and previous versions of Terraform](https://github.com/Azure/terraform/tree/master/quickstart/101-aks-fleet-with-hub/TestRecord.md).
+
+See more [articles and sample code showing how to use Terraform to manage Azure resources](/en-us/azure/terraform).
+
+1. Create a directory in which to test the sample Terraform code, and make it the current directory. Use a directory separate from the one you use for the Managed Fleet Namespace sample later in this article, because each sample keeps its own Terraform state.
+2. Create a file named `providers.tf`, and insert the following code:
+
+    ```terraform
+    terraform {
+      required_version = ">= 1.5.0"
+      required_providers {
+        azurerm = {
+          source  = "hashicorp/azurerm"
+          version = "~> 4.0"
+        }
+        azapi = {
+          source  = "Azure/azapi"
+          version = "~> 2.0"
+        }
+        random = {
+          source  = "hashicorp/random"
+          version = "~> 3.0"
+        }
+      }
+    }
+    
+    provider "azurerm" {
+      features {}
+    }
+    
+    provider "azapi" {}
+    ```
+3. Create a file named `variables.tf`, and insert the following code:
+
+    ```terraform
+    variable "resource_group_location" {
+      type        = string
+      default     = "eastus"
+      description = "Location of the resource group"
+    }
+    variable "resource_group_name_prefix" {
+      type        = string
+      default     = "rg"
+      description = "Prefix of the resource group name that's combined with a random ID so name is unique in your Azure subscription."
+    }
+    variable "fleet_name" {
+      type        = string
+      description = "Name of the fleet resource. If left blank, this value is randomly generated."
+      default     = ""
+    }
+    ```
+4. Create a file named `main.tf`, and insert the following code:
+
+    ```terraform
+    resource "random_pet" "rg_name" {
+      prefix = var.resource_group_name_prefix
+    }
+    
+    resource "azurerm_resource_group" "fleet_rg" {
+      name     = random_pet.rg_name.id
+      location = var.resource_group_location
+    }
+    
+    resource "random_string" "fleet_name" {
+      length  = 54
+      lower   = true
+      numeric = false
+      special = false
+      upper   = false
+    }
+    
+    locals {
+      fleet_name = coalesce(var.fleet_name != "" ? var.fleet_name : null, random_string.fleet_name.result)
+    }
+    
+    # A fleet with a hub cluster is required for features such as managed namespaces,
+    # which the plain azurerm_kubernetes_fleet_manager resource cannot provision because
+    # its hub_profile attribute is deprecated and is no longer sent to the API.
+    resource "azapi_resource" "fleet" {
+      type      = "Microsoft.ContainerService/fleets@2025-03-01"
+      name      = local.fleet_name
+      location  = azurerm_resource_group.fleet_rg.location
+      parent_id = azurerm_resource_group.fleet_rg.id
+    
+      body = {
+        properties = {
+          hubProfile = {
+            dnsPrefix = local.fleet_name
+          }
+        }
+      }
+    
+      identity {
+        type = "SystemAssigned"
+      }
+    
+      response_export_values = ["name"]
+    }
+    ```
+5. Create a file named `outputs.tf`, and insert the following code:
+
+    ```terraform
+    output "resource_group_name" {
+      value = azurerm_resource_group.fleet_rg.name
+    }
+    
+    output "fleet_name" {
+      value = azapi_resource.fleet.name
+    }
+    ```
+
+The sample creates a resource group and a Fleet Manager with a hub cluster by using the [`azapi_resource`](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/azapi_resource) resource type instead of `azurerm_kubernetes_fleet_manager`, because the `azurerm` provider's `hub_profile` attribute is deprecated and the Fleet API no longer accepts it. If you don't set the `fleet_name` variable, Terraform generates a random name for you.
+
+Run [terraform init](https://developer.hashicorp.com/terraform/cli/commands/init) to initialize the Terraform deployment. This command downloads the Azure providers required to manage your Azure resources.
+
+```console
+terraform init
+```
+
+Run [terraform fmt](https://developer.hashicorp.com/terraform/cli/commands/fmt) to format the configuration files consistently.
+
+```console
+terraform fmt
+```
+
+Run [terraform validate](https://developer.hashicorp.com/terraform/cli/commands/validate) to confirm that the configuration files are syntactically valid.
+
+```console
+terraform validate
+```
+
+Run [terraform plan](https://developer.hashicorp.com/terraform/cli/commands/plan) to create an execution plan.
+
+```console
+terraform plan -out main.tfplan
+```
+
+Run [terraform apply](https://developer.hashicorp.com/terraform/cli/commands/apply) to apply the execution plan to your cloud infrastructure.
+
+```console
+terraform apply main.tfplan
+```
+
+Save the resource group and Fleet Manager names from the Terraform outputs. You need these values for the Managed Fleet Namespace sample.
+
+```console
+resource_group_name=$(terraform output -raw resource_group_name)
+fleet_manager_name=$(terraform output -raw fleet_name)
+```
+
+This sample doesn't create or join any member clusters to the Fleet. Check whether the Fleet Manager already has member clusters joined by using the [`az fleet member list`](/en-us/cli/azure/fleet/member#az-fleet-member-list) command:
+
+```azurecli
+az fleet member list \
+    --resource-group $resource_group_name \
+    --fleet-name $fleet_manager_name \
+    -o table
+```
+
+If this command returns no members, you can still complete the following section to create a Managed Fleet Namespace and view its configuration, but you can't verify that it rolls out to a member cluster until you [create and join at least one AKS cluster to the fleet](quickstart-create-fleet-and-members).
+
+### Create the Managed Fleet Namespace with Terraform
+
+Note
+
+The sample code for this section is located in the [Azure Terraform GitHub repo](https://github.com/Azure/terraform/tree/master/quickstart/201-aks-fleet-managed-namespaces). View the log file containing the [test results from current and previous versions of Terraform](https://github.com/Azure/terraform/tree/master/quickstart/201-aks-fleet-managed-namespaces/TestRecord.md).
+
+See more [articles and sample code showing how to use Terraform to manage Azure resources](/en-us/azure/terraform).
+
+1. Create a new, separate directory to test this sample's Terraform code, and make it the current directory.
+2. Create a file named `providers.tf`, and insert the following code:
+
+    ```terraform
+    terraform {
+      required_version = ">= 1.5.0"
+      required_providers {
+        azurerm = {
+          source  = "hashicorp/azurerm"
+          version = "~> 4.0"
+        }
+        azapi = {
+          source  = "Azure/azapi"
+          version = "~> 2.0"
+        }
+      }
+    }
+    
+    provider "azurerm" {
+      features {}
+    }
+    
+    provider "azapi" {}
+    ```
+3. Create a file named `variables.tf`, and insert the following code:
+
+    ```terraform
+    variable "resource_group_name" {
+      type        = string
+      description = "Name of the resource group that contains the Fleet Manager."
+    }
+    
+    variable "fleet_name" {
+      type        = string
+      description = "Name of the existing Azure Kubernetes Fleet Manager."
+    }
+    
+    variable "managed_namespace_name" {
+      type        = string
+      description = "Name of the Managed Fleet Namespace."
+      default     = "platform-ns"
+    
+      validation {
+        condition     = can(regex("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", var.managed_namespace_name)) && length(var.managed_namespace_name) <= 63
+        error_message = "The managed namespace name must be 1-63 characters, use lowercase letters, numbers, or hyphens, and start and end with a lowercase letter or number."
+      }
+    }
+    
+    variable "tags" {
+      type        = map(string)
+      description = "Tags to apply to the Managed Fleet Namespace."
+      default = {
+        environment = "demo"
+        managed_by  = "terraform"
+      }
+    }
+    ```
+4. Create a file named `main.tf`, and insert the following code:
+
+    ```terraform
+    data "azurerm_client_config" "current" {}
+    
+    data "azurerm_resource_group" "fleet_rg" {
+      name = var.resource_group_name
+    }
+    
+    locals {
+      fleet_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}/providers/Microsoft.ContainerService/fleets/${var.fleet_name}"
+    }
+    
+    resource "azapi_resource" "managed_fleet_namespace" {
+      type      = "Microsoft.ContainerService/fleets/managedNamespaces@2025-08-01-preview"
+      name      = var.managed_namespace_name
+      parent_id = local.fleet_id
+      location  = data.azurerm_resource_group.fleet_rg.location
+      tags      = var.tags
+    
+      body = {
+        properties = {
+          adoptionPolicy = "Never"
+          deletePolicy   = "Keep"
+          managedNamespaceProperties = {
+            labels = {
+              team        = "platform"
+              environment = "demo"
+            }
+            annotations = {
+              owner                          = "aks-fleet-demo"
+              "app.kubernetes.io/managed-by" = "terraform"
+            }
+            defaultNetworkPolicy = {
+              ingress = "AllowAll"
+              egress  = "AllowAll"
+            }
+            defaultResourceQuota = {
+              cpuRequest    = "100m"
+              cpuLimit      = "500m"
+              memoryRequest = "128Mi"
+              memoryLimit   = "512Mi"
+            }
+          }
+          propagationPolicy = {
+            type = "Placement"
+            placementProfile = {
+              defaultClusterResourcePlacement = {
+                policy = {
+                  placementType = "PickAll"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    ```
+5. Create a file named `outputs.tf`, and insert the following code:
+
+    ```terraform
+    output "managed_fleet_namespace_id" {
+      description = "Resource ID of the Managed Fleet Namespace."
+      value       = azapi_resource.managed_fleet_namespace.id
+    }
+    ```
+6. Create a file named `terraform.tfvars.example`, and insert the following code:
+
+    ```terraform
+    resource_group_name    = "<resource-group-name>"
+    fleet_name             = "<fleet-manager-name>"
+    managed_namespace_name = "platform-ns"
+    ```
+7. Copy `terraform.tfvars.example` to `terraform.tfvars` in the same directory. Set `resource_group_name` and `fleet_name` to the values you saved in the previous section (or to the values of your existing Fleet Manager). Set `managed_namespace_name` to the name you want for the namespace.
+
+    ```console
+    cp terraform.tfvars.example terraform.tfvars
+    ```
+
+This sample doesn't create its own Fleet Manager. Instead, it uses the [`azurerm_resource_group`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) and [`azurerm_client_config`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) data sources to look up the resource group and current subscription. Then it builds the resource ID of the existing Fleet Manager named in the `fleet_name` variable to use as the parent for the Managed Fleet Namespace. This is how the sample consumes the Fleet Manager information from the prerequisite state, or from any pre-existing Fleet Manager with a hub cluster, without sharing Terraform state between the two samples.
+
+The sample creates the namespace by using the `azapi_resource` resource type at the preview API version `2025-08-01-preview` of `Microsoft.ContainerService/fleets/managedNamespaces`, because this resource type doesn't yet have a native `azurerm` resource. The following properties are hardcoded in `main.tf` and aren't exposed as variables. To change them, edit the `body.properties` block directly:
+
+- `adoptionPolicy` is set to `Never` and `deletePolicy` is set to `Keep`, matching the Azure CLI defaults shown earlier in this article.
+- `managedNamespaceProperties.labels` sets the Kubernetes labels `team=platform` and `environment=demo`.
+- `managedNamespaceProperties.annotations` sets the Kubernetes annotations `owner=aks-fleet-demo` and `app.kubernetes.io/managed-by=terraform`.
+- `managedNamespaceProperties.defaultNetworkPolicy` sets both `ingress` and `egress` to `AllowAll`.
+- `managedNamespaceProperties.defaultResourceQuota` sets `cpuRequest=100m`, `cpuLimit=500m`, `memoryRequest=128Mi`, and `memoryLimit=512Mi`.
+- `propagationPolicy.placementProfile.defaultClusterResourcePlacement.policy.placementType` is set to `PickAll`, so the namespace is propagated to every member cluster currently joined to the Fleet. Unlike the Azure CLI's `--member-cluster-names` parameter, this sample doesn't expose a way to target specific named member clusters. To scope placement to a subset of clusters, use the Azure CLI or Azure portal pivots on this page, or extend the `placementProfile` block in `main.tf` following the [Microsoft.ContainerService fleets ARM template reference](/en-us/azure/templates/microsoft.containerservice/fleets).
+
+The only variable that maps to Azure Resource Manager (ARM) tags on the Managed Fleet Namespace resource, rather than Kubernetes labels on the namespace itself, is `tags`. It's optional and defaults to `{ environment = "demo", managed_by = "terraform" }` in `variables.tf` if you don't set it. The sample's `terraform.tfvars.example` doesn't include `tags`, so add it to your `terraform.tfvars` file only if you want to override the default.
+
+Run [terraform init](https://developer.hashicorp.com/terraform/cli/commands/init) to initialize the Terraform deployment.
+
+```console
+terraform init
+```
+
+Run [terraform fmt](https://developer.hashicorp.com/terraform/cli/commands/fmt) to format the configuration files consistently.
+
+```console
+terraform fmt
+```
+
+Run [terraform validate](https://developer.hashicorp.com/terraform/cli/commands/validate) to confirm that the configuration files are syntactically valid.
+
+```console
+terraform validate
+```
+
+Run [terraform plan](https://developer.hashicorp.com/terraform/cli/commands/plan) to create an execution plan.
+
+```console
+terraform plan -out main.tfplan
+```
+
+Run [terraform apply](https://developer.hashicorp.com/terraform/cli/commands/apply) to apply the execution plan to your cloud infrastructure.
+
+```console
+terraform apply main.tfplan
+```
+
+### Assign user or group access
+
+Terraform doesn't manage Azure RBAC role assignments in this sample. Grant a user access to the Managed Fleet Namespace across its member clusters by using the [`az role assignment create`](/en-us/cli/azure/role/assignment#az-role-assignment-create) command. Use the Terraform output as the scope:
+
+```console
+managed_namespace_id=$(terraform output -raw managed_fleet_namespace_id)
+```
+
+```azurecli
+az role assignment create \
+    --role "Azure Kubernetes Fleet Manager RBAC Writer for Member Clusters" \
+    --assignee <USER-ENTRA-ID> \
+    --scope "$managed_namespace_id"
+```
+
+### Add or remove member clusters
+
+Because the sample's `propagationPolicy` uses `PickAll`, the namespace always propagates to every current member cluster of the Fleet. Adding a member cluster to the Fleet automatically adds the namespace to it, and removing a member cluster from the Fleet automatically removes the namespace from it. The sample doesn't support targeting a specific list of member cluster names the way the Azure CLI's `--member-cluster-names` parameter does. If you need to select specific member clusters, use the Azure CLI or Azure portal pivots on this page instead.
+
+## Configure an existing Managed Fleet Namespace
+
+Terraform performs an upsert for the `azapi_resource` type, so you can update an existing Managed Fleet Namespace by changing the sample and reapplying it.
+
+- To change the ARM tags, add or update the `tags` variable in `terraform.tfvars` (it's optional and isn't included in `terraform.tfvars.example`).
+- To change the Kubernetes labels, annotations, network policies, or resource quotas, edit the corresponding values in the `managedNamespaceProperties` block of `main.tf`. The sample doesn't expose these settings as variables.
+
+After making your changes, rerun `terraform plan -out main.tfplan` and `terraform apply main.tfplan` in the Managed Fleet Namespace directory.
+
+### View a Managed Fleet Namespace's configuration
+
+The Terraform output only returns the Managed Fleet Namespace's resource ID. Extract the resource group, Fleet Manager, and namespace names from the ID. Then view the namespace's details by using the [`az fleet namespace show`](/en-us/cli/azure/fleet/namespace#az-fleet-namespace-show) command.
+
+```console
+managed_namespace_id=$(terraform output -raw managed_fleet_namespace_id)
+resource_group_name=$(echo $managed_namespace_id | cut -d'/' -f5)
+fleet_manager_name=$(echo $managed_namespace_id | cut -d'/' -f9)
+managed_namespace_name=$(echo $managed_namespace_id | cut -d'/' -f11)
+```
+
+```azurecli
+az fleet namespace show \
+    --resource-group $resource_group_name \
+    --fleet-name $fleet_manager_name \
+    --name $managed_namespace_name \
+    -o table
+```
+
+To review the rollout of the namespace across member clusters, use [Resource placements](quickstart-resource-propagation), and look for the resource placement named the same as the Managed Fleet Namespace. Reviewing the namespace's configuration by using `az fleet namespace show` doesn't require any member clusters to be joined to the Fleet, but reviewing rollout or placement status does require at least one member cluster joined. If you don't have one yet, see [create and join at least one Azure Kubernetes Service (AKS) cluster to the fleet](quickstart-create-fleet-and-members) first.
+
+## Delete a Managed Fleet Namespace
+
+Delete the Managed Fleet Namespace before you delete the Fleet Manager it belongs to.
+
+In the directory containing the Managed Fleet Namespace sample, run [terraform plan](https://developer.hashicorp.com/terraform/cli/commands/plan) with the `-destroy` flag to create a destroy execution plan.
+
+```console
+terraform plan -destroy -out main.destroy.tfplan
+```
+
+Run [terraform apply](https://developer.hashicorp.com/terraform/cli/commands/apply) to apply the destroy plan.
+
+```console
+terraform apply main.destroy.tfplan
+```
+
+Warning
+
+Deleting a Managed Fleet Namespace configured with a `deletePolicy` of `Delete` is a permanent action. This sample sets `deletePolicy` to `Keep`, so after the ARM resource is destroyed the Kubernetes namespace remains on the Fleet Manager hub cluster and member clusters, but is no longer managed by Azure Resource Manager. If you want the namespace removed everywhere instead, change `deletePolicy` to `Delete` in `main.tf` and reapply before you destroy the resource.
+
+Azure RBAC assignments scoped to the Managed Fleet Namespace are always deleted to avoid dangling permissions.
+
+If you deployed the Fleet Manager with a hub cluster prerequisite sample only for this article, and you don't need it for anything else, switch to that sample's directory and destroy it too.
+
+```console
+terraform plan -destroy -out main.destroy.tfplan
+```
+
+```console
+terraform apply main.destroy.tfplan
+```
+
+Warning
+
+This command deletes the Fleet Manager, its hub cluster, and the resource group created by the prerequisite sample, not just the Fleet Manager. Confirm the resource group doesn't contain other resources you want to keep, and that no other Managed Fleet Namespaces or member clusters still depend on the Fleet Manager, before you run this command.
+
+::: zone-end

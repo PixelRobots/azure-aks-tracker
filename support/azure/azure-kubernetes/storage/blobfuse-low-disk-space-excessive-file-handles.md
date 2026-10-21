@@ -1,0 +1,141 @@
+---
+layout: Conceptual
+title: Troubleshoot low disk space on AKS nodes caused by BlobFuse file handles - Azure | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/storage/blobfuse-low-disk-space-excessive-file-handles
+breadcrumb_path: /support/breadcrumb/toc.json
+feedback_system: Standard
+recommendations: true
+uhfHeaderId: Azure
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+manager: dcscontentpm
+audience: itpro
+author: kaushika-msft
+ms.author: kaushika
+ms.topic: troubleshooting
+description: Learn how to troubleshoot low disk space on AKS nodes when workloads keep many files open on Azure Blob CSI (BlobFuse) volumes, and how to mitigate the issue.
+ms.service: azure-kubernetes-service
+ms.date: 2026-10-15T00:00:00.0000000Z
+ms.reviewer: cssakscic
+ms.custom: sap:Storage
+ai-usage: ai-assisted
+locale: en-us
+document_id: eb03d303-62c2-cbe4-622f-97f7af374f1f
+document_version_independent_id: eb03d303-62c2-cbe4-622f-97f7af374f1f
+original_content_git_url: https://github.com/MicrosoftDocs/SupportArticles-docs-pr/blob/live/support/azure/azure-kubernetes/storage/blobfuse-low-disk-space-excessive-file-handles.md
+site_name: Docs
+depot_name: MSDN.support1-docset
+page_type: conceptual
+toc_rel: ../toc.json
+pdf_url_template: https://learn.microsoft.com/pdfstore/en-us/MSDN.support1-docset/{branchName}{pdfName}
+feedback_help_link_type: ''
+feedback_help_link_url: ''
+asset_id: azure/azure-kubernetes/storage/blobfuse-low-disk-space-excessive-file-handles
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: support/azure/azure-kubernetes/storage/blobfuse-low-disk-space-excessive-file-handles.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/ea957f26-244e-4bd1-9b19-105f0a0a73d6
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/85dd85bb-c2e5-412e-96b2-f2765a3fe51c
+platformId: 29e877c2-0db4-479c-1085-dca18ea0901c
+---
+
+# Troubleshoot low disk space on AKS nodes caused by BlobFuse file handles - Azure | Microsoft Learn
+
+## Summary
+
+This article helps you troubleshoot low disk space on Azure Kubernetes Service (AKS) nodes when a workload keeps a large number of files open on a volume that uses the Azure Blob storage Container Storage Interface (CSI) driver with BlobFuse.
+
+## Symptoms
+
+You experience one or more of the following symptoms:
+
+- Disk usage alerts fire for a node disk, and usage keeps growing even though the workload doesn't write much data to local disk.
+- Applications that use the BlobFuse volume fail with `Input/output error`. The following is an example.
+
+    ```output
+    dd: closing output file '/mnt/blob/openfiles/file_381.dat': Input/output error
+    ```
+- The node stays in the `Ready` state, and the `DiskPressure` condition stays `False`, even though a disk on the node is full.
+- The problem occurs when a log collection, backup, antivirus, or indexing tool reads many files from the BlobFuse volume at the same time.
+
+## Cause
+
+BlobFuse uses a local cache to serve files from Blob Storage. In the default file cache mode, BlobFuse downloads the entire content of each open file into a temporary path (`tmp-path`) on the node. By default, the Azure Blob storage CSI driver uses a path under `/mnt` on the node, such as `/mnt/<storage-account>_<container>`.
+
+BlobFuse can only evict cached content for files that are closed. When a tool keeps many files open at the same time, such as a log collector that tails many large files, BlobFuse caches all of those files in full. The total size of the open files can exceed the free space on the disk, and BlobFuse fails the operations with `Input/output error`. Each open file also uses a file handle in the `blobfuse2` process.
+
+On many virtual machine (VM) sizes, `/mnt` is the VM temporary disk, which is separate from the OS disk. The kubelet `DiskPressure` condition and the node `ephemeral-storage` capacity track the OS disk only. As a result, a full BlobFuse cache disk doesn't trigger `DiskPressure` or pod eviction.
+
+## Investigate the issue
+
+Follow these steps to investigate the issue:
+
+1. Check the disk usage on the node. Use a [node debugging pod](/en-us/azure/aks/node-access) and compare the OS disk with the disk that's mounted on `/mnt`. Run the following command.
+
+    ```bash
+    kubectl debug node/<node-name> -it --image=mcr.microsoft.com/cbl-mariner/base/core:2.0 -- df -h /host /host/mnt
+    ```
+
+    The following output shows the cache disk full while the OS disk is unaffected:
+
+    ```output
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/sdb1        74G   73G     0 100% /mnt
+    ```
+2. Find the BlobFuse cache directory that uses the space. Run the following command.
+
+    ```bash
+    du -sh /host/mnt/* 2>/dev/null | sort -h | tail
+    ```
+3. Count the file handles that the `blobfuse2` process holds. Run the following command.
+
+    ```bash
+    ls /proc/$(pgrep -o blobfuse2)/fd | wc -l
+    ```
+
+    A count that grows with the number of files that your tool keeps open is the typical sign of this problem.
+4. Identify the process that holds many files open on the mount. Run the following command.
+
+    ```bash
+    lsof +D <mount-path> | awk '{print $1, $2}' | sort | uniq -c | sort -rn | head
+    ```
+
+## Mitigation
+
+Use block cache (streaming) mode. In this mode, BlobFuse caches only the blocks that you read or write, instead of whole files. In a test that kept more than 250 large files open at the same time, block cache kept local disk usage at about 200 MB, compared to a completely full 74-GB disk in file cache mode.
+
+Set the mount options in the `StorageClass` or `PersistentVolume`. Run the following command.
+
+```yaml
+mountOptions:
+  - -o allow_other
+  - --block-cache
+  - --block-cache-disk-size=2048
+```
+
+For more information, see [BlobFuse2 configuration](/en-us/azure/storage/blobs/blobfuse2-configuration) and [Use Azure Blob storage CSI driver](/en-us/azure/aks/azure-blob-csi).
+
+Note
+
+The following file cache settings don't prevent this problem when files stay open, because BlobFuse can't evict files that are open:
+
+- `--file-cache-timeout-in-seconds` evicts closed files, but doesn't affect open files.
+- `--cache-size-mb` together with `--hard-limit=true` doesn't stop the cache from growing beyond the limit while files are open.
+
+Also consider the following actions to reduce the problem at its source:
+
+- Reduce the number of files that the tool opens at the same time, or exclude the BlobFuse volume from file scanning.
+- Ensure that the tool closes files after it reads them.
+- Use a node pool with a larger temporary disk, or set the `tmp-path` option to a larger disk.
+
+## References
+
+- [Use Azure Blob storage CSI driver on AKS](/en-us/azure/aks/azure-blob-csi)
+- [What is BlobFuse?](/en-us/azure/storage/blobs/blobfuse2-what-is)
+- [BlobFuse2 configuration reference](/en-us/azure/storage/blobs/blobfuse2-configuration)

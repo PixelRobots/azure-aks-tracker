@@ -1,0 +1,734 @@
+---
+layout: Conceptual
+title: Kubernetes Gateway API Ingress for Istio Service Mesh Add-on for Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/istio-gateway-api
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: Configure ingresses for the Istio service mesh add-on for AKS using the Kubernetes Gateway API.
+ms.topic: how-to
+author: nshankar
+ms.date: 2025-08-21T00:00:00.0000000Z
+ms.author: nshankar
+ms.reviewer: schaffererin
+locale: en-us
+document_id: 8d05b20f-d848-9e53-d80b-90d00edec834
+document_version_independent_id: ef069fb5-385b-f61e-3786-e391a0b04457
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/istio-gateway-api.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/istio-gateway-api
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/istio-gateway-api.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/f488294d-f483-456e-94e3-755f933b811b
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/f98c9a19-e481-4f15-8047-76b641e6ed57
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/02662057-0b9b-40f4-a3c7-537125b6d283
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
+platformId: e682c675-7d5f-6984-da18-65ae2987a0c1
+---
+
+# Kubernetes Gateway API Ingress for Istio Service Mesh Add-on for Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+
+The Istio service mesh add-on supports both [Istio's own ingress traffic management API](istio-deploy-ingress) and the Kubernetes Gateway API for ingress traffic management. You can use the Istio Gateway API [automated deployment model](https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#automated-deployment) or the [manual deployment model](https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#manual-deployment). This article describes how to configure ingress traffic management for the Istio service mesh add-on using the Kubernetes Gateway API with the [automated deployment model](https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#automated-deployment).
+
+You can use this setup for ingress without adding sidecars to your applications. The managed Istio control plane and gateway proxies still run. You must initiate and complete [canary upgrades](istio-upgrade#minor-revision-upgrade) for minor revision updates, even when using the add-on only for ingress.
+
+## Limitations and considerations
+
+- The Istio service mesh add-on and the [application routing Gateway API implementation](app-routing-gateway-api) cannot be enabled simultaneously. You must disable one first and enable the other in a separate operation.
+- Using the Kubernetes Gateway API for [egress traffic management](istio-deploy-egress) with the Istio add-on is only supported for the [manual deployment model](https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#manual-deployment).
+- ConfigMap customizations for `Gateway` resources must fall within the resource customization allow list. Fields not on the allow list are disallowed and blocked via add-on managed webhooks. See the [Istio add-on support policy](istio-support-policy#allowed-supported-and-blocked-customizations) for more information on `allowed`, `blocked`, and `supported` features.
+- The add-on allows `EnvoyFilter` resources, but Azure support doesn't cover issues caused by their configuration. See the [Istio add-on limitations](istio-about#limitations) and [support policy](istio-support-policy#allowed-supported-and-blocked-customizations).
+- Configuring HTTPS ingress access to HTTPS services - i.e. Server Name Indication (SNI) Passthrough - via the `TLSRoute` resource is not supported on Istio service mesh add-on revision `asm-1-29`. Support for the `TLSRoute` resource will be available for Istio service mesh add-on revision `asm-1-30` and onwards.
+- Injecting non-Microsoft-managed sidecars (for example, custom telemetry, logging, or security agents) into the Istio ingress gateway proxy pods managed by the add-on is not officially supported. If you choose to inject your own sidecar into a managed proxy pod, Microsoft provides only best-effort support for any issues you encounter.
+
+## Prerequisites
+
+- Enable the [Managed Gateway API](managed-gateway-api) on your AKS cluster.
+- Install the Istio service mesh add-on revision `asm-1-26` or higher. Follow the [installation guide](istio-deploy-addon) if you don't have the Istio service mesh add-on installed yet, or the [upgrade guide](istio-upgrade) if you're on a lower minor revision. If you're using the add-on only for ingress, skip the [sidecar injection steps](istio-deploy-addon#enable-sidecar-injection) in the installation guide.
+
+## Set environment variables
+
+Set the following environment variables to use throughout this article:
+
+| Variable | Description |
+| --- | --- |
+| `RESOURCE_GROUP` | The name of the resource group containing your AKS cluster. |
+| `CLUSTER_NAME` | The name of your AKS cluster. |
+| `LOCATION` | The Azure region where your AKS cluster is deployed. |
+| `KEY_VAULT_NAME` | The name of the Azure Key Vault resource to be created for storing TLS secrets. If you have an existing resource, use that name. |
+
+## Deploy sample application
+
+- First, deploy the sample `httpbin` application in the `default` namespace using the [`kubectl apply`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_apply/) command.
+
+    ```bash
+    export ISTIO_RELEASE="release-1.27"
+    kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_RELEASE/samples/httpbin/httpbin.yaml
+    ```
+
+## Create Kubernetes Gateway and HTTPRoute
+
+The example manifest creates an external ingress load balancer service that's accessible from outside the cluster. You can add annotations to create an internal load balancer and customize other load balancer settings.
+
+- Deploy a Gateway API configuration in the `default` namespace with the `gatewayClassName` set to `istio` and an `HTTPRoute` that routes traffic to the `httpbin` service using the following manifest:
+
+    ```bash
+    kubectl apply -f - <<EOF
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: Gateway
+    metadata:
+      name: httpbin-gateway
+    spec:
+      gatewayClassName: istio
+      listeners:
+      - name: http
+        port: 80
+        protocol: HTTP
+        allowedRoutes:
+          namespaces:
+            from: Same
+    ---
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: httpbin
+    spec:
+      parentRefs:
+      - name: httpbin-gateway
+      hostnames: ["httpbin.example.com"]
+      rules:
+      - matches:
+        - path:
+            type: PathPrefix
+            value: /get
+        backendRefs:
+        - name: httpbin
+          port: 8000
+    EOF
+    ```
+
+    Note
+
+    By default, the Istio control plane will append the `GatewayClass` name `istio` to the name of the resources that it provisions for the `Gateway`. You can annotate your `Gateway` resource with `gateway.istio.io/name-override` to override the name of the provisioned resources. The resource names must be less than `63` characters and must be a valid DNS name.
+
+    Note
+
+    If you're performing a [minor revision upgrade](istio-upgrade) and have two Istio service mesh add-on revisions installed on your cluster simultaneously, the control plane for the higher minor revision takes ownership of the `Gateways` by default. You can add the `istio.io/rev` label to the `Gateway` to control which control plane revision owns it. If you add the revision label, make sure that you update it accordingly to the appropriate control plane revision before rolling back or completing the upgrade operation.
+
+## Verify resource creation
+
+- Verify the `Deployment`, `Service`, `HorizontalPodAutoscaler`, and `PodDisruptionBudget` resources were created using the following `kubectl get` commands:
+
+    ```bash
+    kubectl get deployment httpbin-gateway-istio
+    kubectl get service httpbin-gateway-istio
+    kubectl get hpa httpbin-gateway-istio
+    kubectl get pdb httpbin-gateway-istio
+    ```
+
+    Example output:
+
+    ```output
+    # Deployment resource
+    NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+    httpbin-gateway-istio   2/2     2            2           31m
+    
+    # Service resource
+    NAME                    TYPE           CLUSTER-IP   EXTERNAL-IP      PORT(S)                        AGE
+    httpbin-gateway-istio   LoadBalancer   10.0.65.45   <external-ip>    15021:32053/TCP,80:31587/TCP   33m
+    
+    # HPA resource
+    NAME                    REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+    httpbin-gateway-istio   Deployment/httpbin-gateway-istio   cpu: 3%/80%   2         5         3          34m
+    
+    # PDB resource
+    NAME                    MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+    httpbin-gateway-istio   1               N/A               2                     36m
+    ```
+
+## Send request to sample application
+
+1. Try sending a `curl` request to the `httpbin` application. First, set the `INGRESS_HOST` environment variable:
+
+    ```bash
+    kubectl wait --for=condition=programmed gateways.gateway.networking.k8s.io httpbin-gateway
+    export INGRESS_HOST=$(kubectl get gateways.gateway.networking.k8s.io httpbin-gateway -ojsonpath='{.status.addresses[0].value}')
+    ```
+2. Try sending an HTTP request to `httpbin`.
+
+    ```bash
+    curl -s -I -HHost:httpbin.example.com "http://$INGRESS_HOST/get"
+    ```
+
+    In the output, you should see an `HTTP 200` response.
+
+## Secure Istio ingress traffic with the Kubernetes Gateway API
+
+The Istio service mesh add-on supports syncing secrets from Azure Key Vault for securing Gateway API-based ingress traffic with [Transport Layer Security (TLS) termination](https://istio.io/latest/docs/tasks/traffic-management/ingress/secure-ingress/). In the following sections, you sync secrets from Azure Key Vault onto your AKS cluster using the [Azure Key Vault provider for Secrets Store Container Storage Interface (CSI) Driver add-on](csi-secrets-store-driver) and terminate TLS at the ingress gateway.
+
+## Create client/server certificates and keys
+
+1. Create a root certificate and private key for signing the certificates for sample services:
+
+    ```bash
+    mkdir httpbin_certs
+    openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:2048 -subj '/O=example Inc./CN=example.com' -keyout httpbin_certs/example.com.key -out httpbin_certs/example.com.crt
+    ```
+2. Generate a certificate and a private key for `httpbin.example.com`:
+
+    ```bash
+    openssl req -out httpbin_certs/httpbin.example.com.csr -newkey rsa:2048 -nodes -keyout httpbin_certs/httpbin.example.com.key -subj "/CN=httpbin.example.com/O=httpbin organization"
+    openssl x509 -req -sha256 -days 365 -CA httpbin_certs/example.com.crt -CAkey httpbin_certs/example.com.key -set_serial 0 -in httpbin_certs/httpbin.example.com.csr -out httpbin_certs/httpbin.example.com.crt
+    ```
+
+## Set up Azure Key Vault and create secrets
+
+1. Create an Azure Key Vault instance to supply the certificate and key inputs to the Istio service mesh add-on using the [`az keyvault create`](/en-us/cli/azure/keyvault#az-keyvault-create) command. If you already have an Azure Key Vault instance, you can skip this step.
+
+    ```azurecli
+    az keyvault create --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP --location $LOCATION
+    ```
+2. Enable the [Azure Key Vault provider for Secrets Store (CSI) Driver add-on](csi-secrets-store-driver) on your cluster using the [`az aks enable-addons`](/en-us/cli/azure/aks#az-aks-enable-addons) command.
+
+    ```azurecli
+    az aks enable-addons --addons azure-keyvault-secrets-provider --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME
+    ```
+3. If your key vault uses Azure role-based access control (RBAC) for the permissions model, follow the instructions in [Provide access to Azure Key Vault keys, certificates, and secrets with Azure role-based access control](/en-us/azure/key-vault/general/rbac-guide) to assign an Azure role of *Key Vault Secrets User* for the add-on's user-assigned managed identity. Alternatively, if your key vault uses the vault access policy permissions model, authorize the user-assigned managed identity of the add-on to access Azure Key Vault resource using access policy using the [`az keyvault set-policy`](/en-us/cli/azure/keyvault#az-keyvault-set-policy) command.
+
+    ```azurecli
+    OBJECT_ID=$(az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.objectId' -o tsv | tr -d '\r')
+    CLIENT_ID=$(az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --query 'addonProfiles.azureKeyvaultSecretsProvider.identity.clientId')
+    TENANT_ID=$(az keyvault show --resource-group $RESOURCE_GROUP --name $KEY_VAULT_NAME --query 'properties.tenantId')
+    
+    az keyvault set-policy --name $KEY_VAULT_NAME --object-id $OBJECT_ID --secret-permissions get list
+    ```
+4. Create secrets in Azure Key Vault using the certificates and keys using the following [`az keyvault secret set`](csi-secrets-store-driver) commands:
+
+    ```azurecli
+    az keyvault secret set --vault-name $KEY_VAULT_NAME --name test-httpbin-key --file httpbin_certs/httpbin.example.com.key
+    az keyvault secret set --vault-name $KEY_VAULT_NAME --name test-httpbin-crt --file httpbin_certs/httpbin.example.com.crt
+    ```
+
+## Deploy SecretProviderClass and sample pod
+
+1. Deploy the SecretProviderClass to provide Azure Key Vault specific parameters to the CSI driver using the following manifest. In this example, `test-httpbin-key` and `test-httpbin-crt` are the names of the secret objects in Azure Key Vault.
+
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: secrets-store.csi.x-k8s.io/v1
+    kind: SecretProviderClass
+    metadata:
+      name: httpbin-credential-spc
+    spec:
+      provider: azure
+      secretObjects:
+      - secretName: httpbin-credential
+        type: kubernetes.io/tls
+        data:
+        - objectName: test-httpbin-key
+          key: tls.key
+        - objectName: test-httpbin-crt
+          key: tls.crt
+      parameters:
+        useVMManagedIdentity: "true"
+        userAssignedIdentityID: $CLIENT_ID 
+        keyvaultName: $KEY_VAULT_NAME
+        cloudName: ""
+        objects:  |
+          array:
+            - |
+              objectName: test-httpbin-key
+              objectType: secret
+              objectAlias: "test-httpbin-key"
+            - |
+              objectName: test-httpbin-crt
+              objectType: secret
+              objectAlias: "test-httpbin-crt"
+        tenantId: $TENANT_ID
+    EOF
+    ```
+
+    Note
+
+    Alternatively, to reference a certificate object type directly from Azure Key Vault, use the following manifest to deploy SecretProviderClass. In this example, `test-httpbin-cert-pfx` is the name of the certificate object in Azure Key Vault.
+
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: secrets-store.csi.x-k8s.io/v1
+    kind: SecretProviderClass
+    metadata:
+      name: httpbin-credential-spc
+    spec:
+      provider: azure
+      secretObjects:
+      - secretName: httpbin-credential
+        type: kubernetes.io/tls
+        data:
+        - objectName: test-httpbin-key
+          key: tls.key
+        - objectName: test-httpbin-crt
+          key: tls.crt
+      parameters:
+        useVMManagedIdentity: "true"
+        userAssignedIdentityID: $CLIENT_ID 
+        keyvaultName: $KEY_VAULT_NAME
+        cloudName: ""
+        objects:  |
+          array:
+            - |
+              objectName: test-httpbin-cert-pfx  #certificate object name from keyvault
+              objectType: secret
+              objectAlias: "test-httpbin-key"
+            - |
+              objectName: test-httpbin-cert-pfx #certificate object name from keyvault
+              objectType: cert
+              objectAlias: "test-httpbin-crt"
+        tenantId: $TENANT_ID
+    EOF
+    ```
+2. Deploy a sample pod using the following manifest. The Azure Key Vault provider for Secrets Store (CSI) Driver add-on requires a pod to reference the SecretProviderClass resource to ensure secrets sync from Azure Key Vault to the cluster.
+
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: secrets-store-sync-httpbin
+    spec:
+      containers:
+        - name: busybox
+          image: mcr.microsoft.com/oss/busybox/busybox:1.33.1
+          command:
+            - "/bin/sleep"
+            - "10"
+          volumeMounts:
+          - name: secrets-store01-inline
+            mountPath: "/mnt/secrets-store"
+            readOnly: true
+      volumes:
+        - name: secrets-store01-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "httpbin-credential-spc"
+    EOF
+    ```
+
+## Verify TLS secret creation
+
+- Verify the `httpbin-credential` secret was created in the `default` namespace as defined in the SecretProviderClass resource using the `kubectl describe secret` command.
+
+    ```bash
+    kubectl describe secret/httpbin-credential
+    ```
+
+    Example output:
+
+    ```output
+    Name:         httpbin-credential
+    Namespace:    default
+    Labels:       secrets-store.csi.k8s.io/managed=true
+    Annotations:  <none>
+    
+    Type:  kubernetes.io/tls
+    
+    Data
+    ====
+    tls.crt:  1180 bytes
+    tls.key:  1675 bytes
+    ```
+
+## Deploy TLS Gateway
+
+1. Create a Kubernetes Gateway that references the `httpbin-credential` secret under the TLS configuration using the following manifest:
+
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: Gateway
+    metadata:
+      name: httpbin-gateway
+    spec:
+      gatewayClassName: istio
+      listeners:
+      - name: https
+        hostname: "httpbin.example.com"
+        port: 443
+        protocol: HTTPS
+        tls:
+          mode: Terminate
+          certificateRefs:
+          - name: httpbin-credential
+        allowedRoutes:
+          namespaces:
+            from: Selector
+            selector:
+              matchLabels:
+                kubernetes.io/metadata.name: default
+    EOF
+    ```
+
+    Note
+
+    In the gateway definition, `tls.certificateRefs.name` must match the `secretName` in SecretProviderClass resource.
+2. Create a corresponding `HTTPRoute` to configure ingress traffic routing to the `httpbin` service over HTTPS using the following manifest:
+
+    ```bash
+    cat <<EOF | kubectl apply -f -
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: httpbin
+    spec:
+      parentRefs:
+      - name: httpbin-gateway
+      hostnames: ["httpbin.example.com"]
+      rules:
+      - matches:
+        - path:
+            type: PathPrefix
+            value: /status
+        - path:
+            type: PathPrefix
+            value: /delay
+        backendRefs:
+        - name: httpbin
+          port: 8000
+    EOF
+    ```
+3. Get the ingress gateway's external IP address and secure port using the following commands:
+
+    ```bash
+    kubectl wait --for=condition=programmed gateways.gateway.networking.k8s.io httpbin-gateway
+    export INGRESS_HOST=$(kubectl get gateways.gateway.networking.k8s.io httpbin-gateway -o jsonpath='{.status.addresses[0].value}')
+    export SECURE_INGRESS_PORT=$(kubectl get gateways.gateway.networking.k8s.io httpbin-gateway -o jsonpath='{.spec.listeners[?(@.name=="https")].port}')
+    ```
+4. Send an HTTPS request to access the `httpbin` service:
+
+    ```bash
+    curl -v -HHost:httpbin.example.com --resolve "httpbin.example.com:$SECURE_INGRESS_PORT:$INGRESS_HOST" \
+    --cacert httpbin_certs/example.com.crt "https://httpbin.example.com:$SECURE_INGRESS_PORT/status/418"
+    ```
+
+    The output should show the `httpbin` service return the *418 I’m a Teapot* code.
+
+    Note
+
+    To configure HTTPS ingress access to an HTTPS service, update the TLS mode in the gateway definition to `Passthrough`. This configuration instructs the gateway to pass the ingress traffic *as is*, without terminating TLS.
+
+## Annotation customizations
+
+You can add annotations under `spec.infrastructure.annotations` to [configure load balancer settings](configure-load-balancer-standard#customize-the-load-balancer-using-kubernetes-annotations) for the `Gateway`. For instance, to create an [internal load balancer](internal-lb) attached to a specific subnet, you can create a `Gateway` with the following annotations:
+
+```yaml
+spec:
+  # ... existing spec content ...
+  infrastructure:
+    annotations: 
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      service.beta.kubernetes.io/azure-load-balancer-internal-subnet: "my-subnet"
+```
+
+## ConfigMap customizations
+
+The Istio service mesh add-on supports [customizations of the resources](https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#automated-deployment) generated for the `Gateways`, including:
+
+- Service
+- Deployment
+- Horizontal Pod Autoscaler (HPA)
+- Pod Disruption Budget (PDB)
+
+The [default settings for these resources](https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/#gatewayclass-defaults) are set in the `istio-gateway-class-defaults` ConfigMap in the `aks-istio-system` namespace, which is provisioned by AKS when the Managed Gateway API CRDs are enabled along with the Istio add-on. This ConfigMap must have the `gateway.istio.io/defaults-for-class` label set to `istio` for the customizations to take effect for all `Gateways` with `spec.gatewayClassName: istio`. The `GatewayClass`-level ConfigMap is installed by default in the `aks-istio-system` namespace when the [Managed Gateway API installation](managed-gateway-api) is enabled. It could take up to five minutes for the `istio-gateway-class-defaults` ConfigMap to get deployed after installing the Managed Gateway API CRDs.
+
+Note
+
+The `istio-gateway-class-defaults` ConfigMap is provisioned and reconciled by AKS when the Managed Gateway API CRDs and the Istio add-on are enabled together. If you previously created the `istio-gateway-class-defaults` ConfigMap in the `aks-istio-system` namespace yourself, you must delete the self-managed ConfigMap instance prior to enabling the Managed Gateway API CRDs to avoid conflicts with reconciliation of the AKS-managed ConfigMap.
+
+```bash
+kubectl get configmap istio-gateway-class-defaults -n aks-istio-system -o yaml
+```
+
+```yaml
+...
+data:
+  horizontalPodAutoscaler: |
+    spec:
+      minReplicas: 2
+      maxReplicas: 5
+  podDisruptionBudget: |
+    spec:
+      minAvailable: 1
+...
+```
+
+You can modify these settings for all Istio `Gateways` at a `GatewayClass` level by updating the `istio-gateway-class-defaults` ConfigMap, or you can set them for individual `Gateway` resources. For both the `GatewayClass`-level and `Gateway`-level `ConfigMaps`, you must add fields to the allow list for the given resource. If there are customizations both for the `GatewayClass` and an individual `Gateway`, the `Gateway`-level configuration takes precedence.
+
+## Deployment customization allow list fields
+
+| Field path | Description |
+| --- | --- |
+| `metadata.labels` | Deployment labels |
+| `metadata.annotations` | Deployment annotations |
+| `spec.minReadySeconds` | Deployment readiness check |
+| `spec.replicas` | Deployment replica count |
+| `spec.template.metadata.labels` | Pod labels |
+| `spec.template.metadata.annotations` | Pod annotations |
+| `spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms` | Node affinity |
+| `spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution` | Node affinity |
+| `spec.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution` | Pod affinity |
+| `spec.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution` | Pod affinity |
+| `spec.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution` | Pod anti-affinity |
+| `spec.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution` | Pod anti-affinity |
+| `spec.template.spec.containers.resizePolicy` | Container resource utilization |
+| `spec.template.spec.containers.resources.limits` | Container resource utilization |
+| `spec.template.spec.containers.resources.requests` | Container resource utilization |
+| `spec.template.spec.containers.stdin` | Container debugging |
+| `spec.template.spec.containers.stdinOnce` | Container debugging |
+| `spec.template.spec.nodeSelector` | Pod scheduling |
+| `spec.template.spec.nodeName` | Pod scheduling |
+| `spec.template.spec.tolerations` | Pod scheduling |
+| `spec.template.spec.topologySpreadConstraints` | Pod scheduling |
+| `spec.template.spec.terminationGracePeriodSeconds` | Pod lifecycle |
+
+## Service customization allow list fields
+
+| Field path | Description |
+| --- | --- |
+| `metadata.labels` | Service labels |
+| `metadata.annotations` | Service annotations |
+| `spec.type` | Service type |
+| `spec.loadBalancerSourceRanges` | Service load balancer settings |
+| `spec.loadBalancerClass` | Service load balancer settings |
+| `spec.externalTrafficPolicy` | Service traffic policy |
+| `spec.internalTrafficPolicy` | Service traffic policy |
+| `spec.healthCheckNodePort` | Service health probe settings |
+
+Note
+
+The Istio add-on adds [Azure Load Balancer annotations](https://cloud-provider-azure.sigs.k8s.io/topics/loadbalancer/) to the `Gateway` Service to configure health probes for the default `externalTrafficPolicy` setting of "Cluster." If you set `spec.externalTrafficPolicy` to "Local," you must unset the following annotations either in the `GatewayClass`-level ConfigMap or the per-`Gateway` ConfigMap:
+
+```yaml
+ service: |
+    spec:
+       externalTrafficPolicy: Local
+    metadata:
+      annotations:
+        service.beta.kubernetes.io/port_80_health-probe_port:
+        service.beta.kubernetes.io/port_80_health-probe_protocol:
+        service.beta.kubernetes.io/port_80_health-probe_request-path:
+```
+
+## HorizontalPodAutoscaler (HPA) customization allow list fields
+
+| Field path | Description |
+| --- | --- |
+| `metadata.labels` | HPA labels |
+| `metadata.annotations` | HPA annotations |
+| `spec.behavior.scaleUp.stabilizationWindowSeconds` | HPA scale-up behavior |
+| `spec.behavior.scaleUp.selectPolicy` | HPA scale-up behavior |
+| `spec.behavior.scaleUp.policies` | HPA scale-up behavior |
+| `spec.behavior.scaleDown.stabilizationWindowSeconds` | HPA scale-down behavior |
+| `spec.behavior.scaleDown.selectPolicy` | HPA scale-down behavior |
+| `spec.behavior.scaleDown.policies` | HPA scale-down behavior |
+| `spec.metrics` | HPA scaling resource metrics |
+| `spec.minReplicas` | HPA minimum replica count. Must not be below 2. |
+| `spec.maxReplicas` | HPA maximum replica count |
+
+## PodDisruptionBudget (PDB) customization allow list fields
+
+| Field path | Description |
+| --- | --- |
+| `metadata.labels` | PDB labels |
+| `metadata.annotations` | PDB annotations |
+| `spec.minAvailable` | PDB minimum availability |
+| `spec.unhealthyPodEvictionPolicy` | PDB eviction policy |
+
+Note
+
+Modifying the `PDB` minimum availability and eviction policy can lead to potential errors during cluster/node upgrade and deletion operations. Follow the [PDB troubleshooting guide](/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/error-code-poddrainfailure) to address *UpgradeFailed* errors due to `PDB` eviction failures.
+
+## Configure GatewayClass-level settings
+
+1. Update the `GatewayClass`-level ConfigMap in the `aks-istio-system` namespace using the `kubectl edit configmap` command:
+
+    ```bash
+    kubectl edit cm istio-gateway-class-defaults -n aks-istio-system
+    ```
+2. Edit the resource settings in the `data` section as needed. For example, to update the HPA min/max replicas and add a label to the `Deployment`, modify the ConfigMap as follows:
+
+    ```yaml
+    ...
+    data:
+      deployment: |
+        metadata:
+          labels:
+            test.azureservicemesh.io/deployment-config: "updated"
+      horizontalPodAutoscaler: |
+        spec:
+          minReplicas: 3
+          maxReplicas: 6
+      podDisruptionBudget: |
+        spec:
+          minAvailable: 1
+    ...
+    ```
+
+    Note
+
+    Only one ConfigMap per `GatewayClass` is allowed.
+3. Now, you should see the `HPA` for `httpbin-gateway` that you created earlier get updated with the new min/max values. Verify the `HPA` settings using the `kubectl get hpa` command.
+
+    ```bash
+    kubectl get hpa httpbin-gateway-istio
+    ```
+
+    Example output:
+
+    ```output
+    NAME                    REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+    httpbin-gateway-istio   Deployment/httpbin-gateway-istio   cpu: 3%/80%   3         6         3          36m
+    ```
+4. Verify the `Deployment` is updated with the new label using the `kubectl get deployment` command.
+
+    ```bash
+    kubectl get deployment httpbin-gateway-istio -ojsonpath='{.metadata.labels.test\.azureservicemesh\.io\/deployment-config}'
+    ```
+
+    Example output:
+
+    ```output
+    updated
+    ```
+
+## Configure settings for a specific gateway
+
+1. Create a ConfigMap with resource customizations for the `httpbin` Gateway using the following manifest:
+
+    ```bash
+    kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: gw-options
+    data:
+      horizontalPodAutoscaler: |
+        spec:
+          minReplicas: 2
+          maxReplicas: 4
+      deployment: |
+        metadata:
+          labels:
+            test.azureservicemesh.io/deployment-config: "updated-per-gateway"
+    EOF
+    ```
+2. Update the `httpbin``Gateway` to reference the ConfigMap:
+
+    ```yaml
+    spec:
+      # ... existing spec content ...
+      infrastructure:
+        parametersRef:
+          group: ""
+          kind: ConfigMap
+          name: gw-options
+    ```
+3. Apply the update using the `kubectl apply` command.
+
+    ```bash
+    kubectl apply -f httpbin-gateway-updated.yaml
+    ```
+4. Verify the `HPA` is updated with the new min/max values using the `kubectl get hpa` command. If you also configured the `GatewayClass`-level ConfigMap, the `Gateway`-level settings should take precedence.
+
+    ```bash
+    kubectl get hpa httpbin-gateway-istio
+    ```
+
+    Example output:
+
+    ```output
+    NAME                    REFERENCE                          TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+    httpbin-gateway-istio   Deployment/httpbin-gateway-istio   cpu: 3%/80%   2         4         2          4h14m
+    ```
+5. Inspect the `Deployment` labels to ensure that the `test.azureservicemesh.io/deployment-config` is updated to the new value using the `kubectl get deployment` command.
+
+    ```bash
+    kubectl get deployment httpbin-gateway-istio -ojsonpath='{.metadata.labels.test\.azureservicemesh\.io\/deployment-config}'
+    ```
+
+    Example output:
+
+    ```output
+    updated-per-gateway
+    ```
+
+## Enable access logs for the Gateway pods
+
+`Telemetry` CRDs are installed automatically with the Istio add-on. You can use the `Telemetry API` to configure access logging for `Gateway` pods.
+
+Create the resource in the `aks-istio-system` namespace to enable access logs for all `Gateway` pods in the mesh, or in a specific namespace to enable access logs only for `Gateway` pods in that namespace.
+
+The following example shows a `Telemetry` resource that enables `Gateway` access logging:
+
+```yaml
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+  name: mesh-default
+  namespace: aks-istio-system
+spec:
+  accessLogging:
+  - providers:
+    - name: envoy
+```
+
+Note
+
+The above manifest enables access logging across the entire mesh, both for `Gateway` pods as well as sidecar proxies injected by Istio. Use selectors to target specific pods. Refer to the [Istio add-on documentation](istio-telemetry) for more details on how to configure access logging with the `Telemetry API`.
+
+## Clean up resources
+
+If you no longer need the resources created in this article, you can delete them to avoid incurring any charges.
+
+1. Delete the Gateway and HTTPRoute resources using the following `kubectl delete` commands:
+
+    ```bash
+    kubectl delete gateways.gateway.networking.k8s.io httpbin-gateway
+    kubectl delete httproute httpbin
+    ```
+2. If you created a ConfigMap to customize your Gateway resources, delete it using the `kubectl delete configmap` command.
+
+    ```bash
+    kubectl delete configmap gw-options
+    ```
+3. If you created a SecretProviderClass and secret to use for TLS termination delete the resources using the following `kubectl delete` commands:
+
+    ```bash
+    kubectl delete secret httpbin-credential
+    kubectl delete pod secrets-store-sync-httpbin
+    kubectl delete secretproviderclass httpbin-credential-spc
+    ```

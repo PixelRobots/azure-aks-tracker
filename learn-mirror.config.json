@@ -1,0 +1,30 @@
+{
+  "sitemaps": "/_sitemaps/(azure|troubleshoot)_en-us_\\d+\\.xml$",
+  "tocs": [
+    "https://learn.microsoft.com/en-us/azure/aks/toc.json",
+    "https://learn.microsoft.com/en-us/azure/kubernetes-fleet/toc.json",
+    "https://learn.microsoft.com/en-us/azure/application-network/toc.json",
+    "https://learn.microsoft.com/en-us/azure/container-registry/toc.json",
+    "https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/toc.json",
+    "https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/toc.json",
+    "https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/toc.json"
+  ],
+  "extraUrls": [],
+  "include": "^https://learn\\.microsoft\\.com/en-us/(azure/(aks|aks-hybrid-edge|kubernetes-fleet|application-network|container-registry|azure-arc/kubernetes|application-gateway/for-containers)/|troubleshoot/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/)",
+  "exclude": [],
+  "trackedPaths": "^(articles/(aks/|aks-hybrid-edge/|application-network/|kubernetes-fleet/|container-registry/|azure-arc/kubernetes/|application-gateway/for-containers/)|support/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/).+\\.md$",
+  "sourceRepos": [
+    "MicrosoftDocs/azure-aks-docs",
+    "MicrosoftDocs/azure-aks-docs-pr",
+    "MicrosoftDocs/azure-management-docs",
+    "MicrosoftDocs/azure-management-docs-pr",
+    "MicrosoftDocs/azure-docs",
+    "MicrosoftDocs/azure-docs-pr",
+    "MicrosoftDocs/SupportArticles-docs",
+    "MicrosoftDocs/SupportArticles-docs-pr"
+  ],
+  "priority": "(whats-new|release-notes)",
+  "concurrency": 4,
+  "maxRequestsPerSecond": 4,
+  "userAgent": "azure-aks-tracker-learn-mirror/1.0 (+https://github.com/PixelRobots/azure-aks-tracker)"
+}

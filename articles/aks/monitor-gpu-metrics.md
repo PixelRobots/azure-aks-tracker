@@ -1,0 +1,218 @@
+---
+layout: Conceptual
+title: GPU observability in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/monitor-gpu-metrics
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: This article shows how to monitor key utilization and performance NVIDIA DCGM GPU metrics on Azure Kubernetes Service (AKS).
+ms.topic: how-to
+ms.date: 2026-05-01T00:00:00.0000000Z
+author: sachidesai
+ms.author: sachidesai
+locale: en-us
+document_id: c35f52a7-c5fb-210d-ca32-9348de416359
+document_version_independent_id: cfb04558-df28-0c45-8757-4a67e6ef545a
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/monitor-gpu-metrics.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/monitor-gpu-metrics
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/monitor-gpu-metrics.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/07bb3e10-d135-43ff-bc8b-360497cb39fa
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+platformId: 443c7e3e-597d-40ca-30a0-373140162800
+---
+
+# GPU observability in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+
+Efficient placement and optimization of GPU workloads often requires visibility into resource utilization and performance. Managed GPU metrics on AKS (preview) provide automated collection and exposure of GPU utilization, memory, and performance data across NVIDIA GPU-enabled node pools. This enables platform administrators to optimize cluster resources and developers to tune and debug workloads with limited manual instrumentation.
+
+In this article, you learn about GPU metrics collected by the NVIDIA Data Center GPU Manager [(DCGM) exporter](https://github.com/NVIDIA/dcgm-exporter/tree/main) with [a fully managed GPU-enabled node pool (preview)](aks-managed-gpu-nodes) in Azure Kubernetes Service (AKS).
+
+Important
+
+AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+
+- [AKS support policies](/en-us/azure/aks/support-policies)
+- [Azure support FAQ](/en-us/azure/aks/faq)
+
+## Prerequisites
+
+- An AKS cluster with [a fully managed GPU-enabled node pool (preview)](aks-managed-gpu-nodes) and ensure that the GPUs are schedulable.
+- A [sample GPU workload](use-nvidia-gpu#run-a-gpu-enabled-workload) deployed to your node pool.
+- [Azure Managed Prometheus](/en-us/azure/azure-monitor/containers/kubernetes-monitoring-enable?tabs=cli#enable-with-cli) enabled on your AKS cluster.
+
+## Verify that managed GPU components are installed
+
+After creating your managed NVIDIA GPU node pool (preview) following [these instructions](aks-managed-gpu-nodes), confirm that the GPU software components were installed with the [az aks nodepool show](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-show) command:
+
+```azurecli
+az aks nodepool show \
+    --resource-group <resource-group-name> \
+    --cluster-name <cluster-name> \
+    --name <node-pool-name> \
+```
+
+Your output should include the following values:
+
+```output
+  ...
+  "gpuProfile": {
+      "driver": "Install",
+      "driverType": "",
+      "nvidia": {
+          "managementMode": "Managed",
+          ...
+          ...
+      }
+  },
+...
+...
+```
+
+## Customize scraping of GPU metrics in Azure Managed Prometheus
+
+Create and apply a ConfigMap that enables a scraping profile for NVIDIA GPU metrics from `dcgm-exporter` in the Azure Monitor agent in the `kube-system` namespace, similar to the following:
+
+```bash
+cat <<EOF | kubectl create -f -
+kind: ConfigMap
+apiVersion: v1
+data:
+  schema-version:
+    v1
+  config-version:
+    ver1
+  default-scrape-settings-enabled: |-
+    dcgmexporter = true
+metadata:
+  name: ama-metrics-settings-configmap
+  namespace: kube-system
+EOF
+```
+
+Note
+
+After this ConfigMap is applied once on the AKS cluster, all existing and new NVIDIA GPU node pools added to the cluster are scraped automatically.
+
+### Disable automatic scraping of GPU metrics in Azure Managed Prometheus
+
+To disable scraping of NVIDIA DCGM metrics by the Azure Monitor managed Prometheus (AMA) agent, edit the same ConfigMap. Your GPU workloads aren't affected.
+
+Run the following command:
+
+```bash
+kubectl edit configmap ama-metrics-settings-configmap -n kube-system
+```
+
+Update the `dcgmexporter` setting from `true` to `false`:
+
+```bash
+...
+...
+default-scrape-settings-enabled: |-
+  dcgmexporter = false
+...
+...
+```
+
+NVIDIA DCGM metrics no longer appear in Azure Monitor or Metrics Explorer.
+
+## Monitor GPU metrics in the Azure portal
+
+1. After you create an [Azure Monitor workspace for the AKS cluster](monitor-aks), go to the [Azure portal](https://portal.azure.com) and open **Azure Monitor** &gt; **Dashboards with Grafana** in your Azure Monitor workspace.
+2. Using the search bar, filter for the `Kubernetes | NVIDIA GPU DCGM Exporter` Grafana dashboard with the `Azure-managed` tag.
+3. Select this dashboard and confirm that the selected `Cluster` and `Prometheus Datasource` match your GPU-enabled node pools. You can now view the real-time GPU metrics, as shown in the following image:
+
+[![Screenshot of the AKS-managed GPU metrics dashboard.](media/monitor-gpu-metrics/gpu-metrics-portal.png)](media/monitor-gpu-metrics/gpu-metrics-portal.png#lightbox)
+
+## Understanding GPU metrics
+
+### GPU Utilization Metrics
+
+GPU utilization metrics show the percentage of time the GPU’s cores are actively processing work. High values indicate that the GPU is heavily used, which is generally desirable for workloads like training or data processing. Interpretation of this metric should consider the type of workload: AI training typically keeps utilization high, while inference may have intermittent utilization due to bursty traffic.
+
+Memory Utilization: Shows the percentage of GPU memory in use. High memory usage without high GPU utilization can indicate memory-bound workloads where the GPU waits on memory transfers. Low memory usage with low utilization may suggest the workload is too small to fully leverage the GPU.
+
+SM (Streaming Multiprocessor) Efficiency: Measures the efficiency with which the GPU’s cores are used. A low SM efficiency indicates that cores are idle or underutilized due to workload imbalance or suboptimal kernel design. High efficiency is ideal for compute-heavy applications.
+
+### Memory Metrics
+
+Memory Bandwidth Utilization: Reflects how much of the theoretical memory bandwidth is being consumed. High bandwidth utilization with low compute utilization can indicate a memory-bound workload. Conversely, high utilization in both compute and memory bandwidth suggests a well-balanced workload.
+
+Memory Errors: Tracks error-correcting code (ECC) errors if enabled. A high number of errors may indicate hardware degradation or thermal issues and should be monitored for reliability.
+
+### Temperature and Power Metrics
+
+GPU Temperature: Indicates the operating temperature of the GPU. Sustained high temperatures can trigger thermal throttling, reducing performance. Ideal interpretation of this metric involves observing temperature relative to the GPU’s thermal limits and cooling capacity.
+
+Power Usage: Shows instantaneous power draw. Comparing power usage to TDP (Thermal Design Power) helps understand whether the GPU is being pushed to its limits. Sudden drops in power may indicate throttling or underutilization.
+
+### Clocks and Frequency Metrics
+
+GPU Clock: The actual operating frequency of the GPU. Combined with utilization, this helps determine if the GPU is throttling or underperforming relative to its potential.
+
+Memory Clock: Operating frequency of GPU memory. Memory-bound workloads may benefit from higher memory clocks; a mismatch between memory and compute utilization can highlight bottlenecks.
+
+### PCIe and NVLink Metrics
+
+PCIe Bandwidth: Measures the throughput over the PCIe bus. Low utilization with heavy workloads may suggest CPU-GPU communication is not a bottleneck. High utilization could point to data transfer limitations impacting performance.
+
+NVLink Bandwidth: This metric is similar to PCIe bandwidth but specific to NVLink interconnects, and relevant in multi-GPU systems for cross-GPU communication. High NVLink usage with low SM utilization may indicate synchronization or data transfer delays.
+
+### Error and Reliability Metrics
+
+Retired Pages and XID Errors: Track GPU memory errors and critical failures. Frequent occurrences signal potential hardware faults and require attention for long-running workloads.
+
+### Interpretation Guidance
+
+DCGM metrics should be interpreted contextually with the type of your workload on AKS. A high compute-intensive workload should ideally show high GPU and SM utilization, high memory bandwidth usage, stable temperatures below throttling thresholds, and power draw near but below TDP.
+
+Memory-bound workloads might show high memory utilization and bandwidth but lower compute utilization. Anomalies such as low utilization with high temperature or power consumption often indicate throttling, inefficient scheduling, or system-level bottlenecks.
+
+Monitoring trends over time rather than single snapshots is critical. Sudden drops in utilization or spikes in errors often reveal underlying issues before they impact production workloads. Comparing metrics across multiple GPUs can also help identify outliers or misbehaving devices in a node pool. Understanding these metrics in combination, rather than isolation, provides the clearest insight into GPU efficiency and workload performance.
+
+## Common GPU metrics
+
+The following NVIDIA DCGM metrics are commonly evaluated for performance of GPU node pools on Kubernetes:
+
+| GPU Metric Name | Meaning | Typical Range / Indicator | Usage Tip |
+| --- | --- | --- | --- |
+| `DCGM_FI_DEV_GPU_UTIL` | GPU utilization (% time GPU cores are active) | 0–100% (higher is better) | Monitor per-node and per-pod; low values may indicate CPU or I/O bottlenecks |
+| `DCGM_FI_DEV_SM_UTIL` | Streaming Multiprocessor efficiency (% active cores) | 0–100% | Low values with high memory usage indicate a memory-bound workload |
+| `DCGM_FI_DEV_FB_USED` | Framebuffer memory used (bytes) | 0 to total memory | Use pod GPU memory limits and track per-pod memory usage |
+| `DCGM_FI_DEV_FB_FREE` | Free GPU memory (bytes) | 0 to total memory | Useful for scheduling and to avoid OOM errors |
+| `DCGM_FI_DEV_MEMORY_UTIL` | Memory utilization (%) | 0–100% | Combine with GPU/SM utilization to determine memory-bound workloads |
+| `DCGM_FI_DEV_MEMORY_CLOCK` | Current memory clock frequency (MHz) | 0 to max memory clock | Low values under high memory utilization may indicate throttling |
+| `DCGM_FI_DEV_POWER_USAGE` | Instantaneous power usage (Watts) | 0 to TDP | Drops during high utilization may indicate throttling |
+| `DCGM_FI_DEV_TEMPERATURE` | GPU temperature (°C) | ~30–85°C normal | Alert on sustained high temperatures |
+| `DCGM_FI_DEV_NVLINK_RX` | NVLink receive bandwidth utilization (%) | 0–100% | Multi-GPU synchronization bottleneck if high with low SM utilization |
+| `DCGM_FI_DEV_XID_ERRORS` | GPU critical errors reported by driver | Typically 0 | Immediate investigation required; can taint node in Kubernetes |
+
+To learn about the full suite of GPU metrics, visit [NVIDIA DCGM](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/index.html) Upstream documentation.

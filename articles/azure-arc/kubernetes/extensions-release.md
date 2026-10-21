@@ -1,0 +1,400 @@
+---
+layout: Conceptual
+title: Available extensions for Azure Arc-enabled Kubernetes clusters - Azure Arc | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/extensions-release
+breadcrumb_path: ../../breadcrumb/azure-management/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/146/azure-arc/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/5c778dec-0625-ec11-b6e6-000d3a4f0858
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+author: davidsmatlak
+learn_banner_products:
+- azure
+ms.reviewer: davidsmatlak
+ms.author: davidsmatlak
+ms.service: azure-arc
+ms.subservice: azure-arc-kubernetes
+ms.date: 2026-10-14T00:00:00.0000000Z
+ms.topic: how-to
+description: See a list of extensions that are currently available for Azure Arc-enabled Kubernetes clusters. View Flux extension release notes.
+ms.custom:
+- build-2025
+locale: en-us
+document_id: 82b950c6-af11-ed3f-cd34-c3bce246a718
+document_version_independent_id: ebfdd45e-1f42-8683-9ce4-f3e2bc1746fa
+original_content_git_url: https://github.com/MicrosoftDocs/azure-management-docs-pr/blob/live/articles/azure-arc/kubernetes/extensions-release.md
+site_name: Docs
+depot_name: Learn.azure-management
+page_type: conceptual
+toc_rel: toc.json
+asset_id: azure-arc/kubernetes/extensions-release
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/azure-arc/kubernetes/extensions-release.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 329ebcbc-7964-bff2-af0b-afdc96bb61ee
+---
+
+# Available extensions for Azure Arc-enabled Kubernetes clusters - Azure Arc | Microsoft Learn
+
+[Cluster extensions for Azure Arc-enabled Kubernetes](conceptual-extensions) provide an Azure Resource Manager-based experience to install and manage lifecycles for different Azure capabilities in your cluster. You can [deploy extensions to your clusters](extensions) to support different scenarios and to improve cluster management.
+
+The following extensions are currently available to use with Azure Arc-enabled Kubernetes clusters. With one exception, all the extensions that are described in this article are [cluster-scoped](conceptual-extensions#extension-scope). Azure API Management on Azure Arc is namespace-scoped.
+
+## Agentic Retrieval in Foundry Local (preview)
+
+- **Supported distributions**: AKS enabled by Azure Arc
+
+Agentic Retrieval in Foundry Local is an Azure Arc-enabled Kubernetes extension that supports Microsoft's [adaptive cloud](https://azure.microsoft.com/solutions/adaptive-cloud) approach. It provides an agentic retrieval-augmented generation (RAG) platform at the edge. The platform combines a knowledge layer (document ingestion, embeddings, and vector search) with an agentic layer (AI agents, knowledge orchestration, and an MCP server) to create intelligent, multistep assistants grounded in private on-premises data. Agentic Retrieval is supported on Azure Local and in disconnected environments.
+
+For more information, see [Agentic Retrieval in Agents and Tools with Foundry Local](../agents-tools-foundry-local/overview).
+
+## Argo CD (GitOps)
+
+- **Supported distributions**: All CNCF-certified Kubernetes clusters.
+
+The Argo CD (GitOps) extension (preview) lets you use your Git repository as the source of truth for cluster configuration and application deployment.
+
+For more information, see [Tutorial: Deploy applications using GitOps with Argo CD](tutorial-use-gitops-argocd).
+
+Important
+
+Argo CD (GitOps) is currently in preview.
+
+See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability (GA).
+
+## Azure AI Video Indexer enabled by Azure Arc
+
+- **Supported distributions**: AKS enabled by Azure Arc
+
+Azure AI Video Indexer enabled by Azure Arc is an Azure Arc extension that runs video and audio analysis, including generative AI, on edge devices. It provides real-time video analysis with live AI insights, including built-in people and vehicle detection, custom object and situation detection based on text descriptions and example images, and specialized AI agents for retail operations, customer service, sales recommendations, and security monitoring. The extension also supports uploaded file indexing with transcription in more than 35 source languages, scene and shot detection, keyframe extraction, and AI-generated video summaries. All media processing stays on-premises, and no customer data is sent to the cloud.
+
+For more information, see [What is Azure AI Video Indexer enabled by Arc?](/en-us/azure/azure-video-indexer/azure-video-indexer-enabled-by-arc-overview).
+
+## Azure API Management on Azure Arc
+
+- **Supported distributions**: All CNCF-certified Kubernetes clusters.
+
+With the integration between Azure API Management and Azure Arc on Kubernetes, you can deploy the API Management gateway component as an extension in an Azure Arc-enabled Kubernetes cluster. This extension is [namespace-scoped](conceptual-extensions#extension-scope), not cluster-scoped.
+
+For more information, see [Deploy an Azure API Management gateway on Azure Arc (preview)](/en-us/azure/api-management/how-to-deploy-self-hosted-gateway-azure-arc).
+
+Important
+
+The API Management self-hosted gateway on Azure Arc is currently in preview.
+
+See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability (GA).
+
+## Azure Arc-enabled data services
+
+- **Supported distributions**: AKS, AKS on Azure Local, Azure Red Hat OpenShift, Google Kubernetes Engine, Canonical Kubernetes Distribution, OpenShift Container Platform, and Amazon Elastic Kubernetes Service.
+
+This extension makes it possible for you to run Azure data services on-premises, at the edge, and in public clouds by using Kubernetes and the infrastructure of your choice. This extension enables the *custom locations* feature, providing a way to configure Azure Arc-enabled Kubernetes clusters as target locations for deploying instances of Azure offerings.
+
+For more information, see [Azure Arc-enabled data services](../data/create-data-controller-direct-prerequisites) and [Create custom locations](custom-locations#create-custom-location).
+
+## Azure Arc-enabled Machine Learning
+
+- **Supported distributions**: All CNCF-certified Kubernetes clusters. Not currently supported for Arm64 architectures.
+
+Use the Azure Machine Learning extension to deploy and run Azure Machine Learning on an Azure Arc-enabled Kubernetes cluster.
+
+For more information, see [Introduction to the Kubernetes compute target in Azure Machine Learning](/en-us/azure/machine-learning/how-to-attach-kubernetes-anywhere) and [Deploy the Azure Machine Learning extension on an AKS or Arc Kubernetes cluster](/en-us/azure/machine-learning/how-to-deploy-kubernetes-extension).
+
+## Azure Arc-enabled Open Service Mesh
+
+Warning
+
+Microsoft has announced the retirement of the [Open Service Mesh (OSM) add-on for AKS](https://azure.microsoft.com/updates?id=open-service-mesh-add-on-for-aks-will-be-retired-on-september-30-2027) on September 30, 2027. The upstream OSM project has also been retired by the [Cloud Native Computing Foundation (CNCF)](https://docs.openservicemesh.io/).
+
+- **Supported distributions**: AKS, AKS on Azure Local, AKS enabled by Azure Arc, Cluster API Azure, Google Kubernetes Engine, Canonical Kubernetes Distribution, Rancher Kubernetes Engine, OpenShift Kubernetes Distribution, Amazon Elastic Kubernetes Service, and VMware Tanzu Kubernetes Grid.
+
+[Open Service Mesh (OSM)](https://docs.openservicemesh.io/) is a lightweight, extensible, Cloud Native service mesh that allows users to uniformly manage, secure, and get out-of-the-box observability features for highly dynamic microservice environments.
+
+For more information, see [Azure Arc-enabled Open Service Mesh](tutorial-arc-enabled-open-service-mesh).
+
+## Azure Container Apps on Azure Arc and Azure Logic Apps Hybrid
+
+- **Supported distributions**: AKS, AKS on Azure Local, Azure Red Hat OpenShift, Google Kubernetes Engine, and OpenShift Container Platform.
+
+Use this extension to provision an Azure Container Apps connected environment and container apps on top of an Azure Arc-enabled Kubernetes cluster. This extension also enables the [Logic Apps Hybrid Deployment Model](/en-us/azure/logic-apps/set-up-standard-workflows-hybrid-deployment-requirements).
+
+For more information, see [Azure Container Apps on Azure Arc](/en-us/azure/container-apps/azure-arc-overview).
+
+## Azure Container Storage enabled by Azure Arc
+
+- **Supported distributions**: All CNCF-certified Kubernetes clusters.
+
+[Azure Container Storage enabled by Azure Arc](../container-storage/) is a first-party storage system that's designed for Azure Arc-connected Kubernetes clusters. You can deploy Azure Container Storage enabled by Azure Arc to write files to a 'ReadWriteMany' persistent volume claim (PVC), where they're transferred to Azure Blob Storage. Azure Container Storage enabled by Azure Arc offers a range of features to support Azure IoT operations and other Azure Arc features.
+
+For more information, see [What is Azure Container Storage enabled by Azure Arc?](../container-storage/overview).
+
+## Azure Event Grid on Kubernetes
+
+- **Supported distributions**: AKS, Red Hat OpenShift.
+
+Event Grid is an event broker you can use to integrate workloads that use event-driven architectures. Use this extension to create and manage Event Grid resources such as topics and event subscriptions with Azure Arc-enabled Kubernetes clusters.
+
+For more information, see [Event Grid on Kubernetes with Azure Arc (Preview)](/en-us/azure/event-grid/kubernetes/overview).
+
+Important
+
+Event Grid on Kubernetes with Azure Arc is currently in preview.
+
+See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.
+
+## Azure Key Vault Secret Store
+
+- **Supported distributions**: Arc-enabled Kubernetes clusters running Kubernetes 1.27 or later, including: AKS on Azure Local, AKS Edge Essentials, OpenShift Kubernetes Distribution, and VMware Tanzu Kubernetes Grid.
+
+The Azure Key Vault Secret Store extension for Kubernetes (Secret Store) automatically syncs secrets from an instance of Azure Key Vault to a Kubernetes cluster for offline access. You can use Azure Key Vault to store, maintain, and rotate your secrets, even when you run your Kubernetes cluster in a semi-disconnected state.
+
+For more information, see [Use the Secret Store extension to fetch secrets for offline access in Azure Arc-enabled Kubernetes clusters](secret-store-extension).
+
+## Azure Key Vault Secrets Provider
+
+Important
+
+The Azure Key Vault Secrets Provider extension retires on October 9, 2027. [Migrate to the Secret Store extension](secret-store-extension-migration) before then.
+
+- **Supported distributions**: AKS on Azure Local, AKS enabled by Azure Arc, Cluster API Azure, Google Kubernetes Engine, Canonical Kubernetes Distribution, OpenShift Kubernetes Distribution, Amazon Elastic Kubernetes Service, and VMware Tanzu Kubernetes Grid.
+
+Use the Azure Key Vault Provider for Secrets Store CSI Driver to integrate an instance of Azure Key Vault as a secrets store with a Kubernetes cluster via a CSI volume. For Azure Arc-enabled Kubernetes clusters, you can install the Azure Key Vault Secrets Provider extension to fetch secrets.
+
+For more information, see [Use the Azure Key Vault Secrets Provider extension to fetch secrets into Azure Arc-enabled Kubernetes clusters](tutorial-akv-secrets-provider).
+
+## Azure Kubernetes Fleet Manager
+
+- **Supported distributions**: AKS (Azure Kubernetes Service), K3s (Lightweight Kubernetes), OCP (Red Hat OpenShift), EKS (Amazon Elastic Kubernetes Service), GKE (Google Kubernetes Engine), and Rancher (RKE).
+
+Azure Kubernetes Fleet Manager is a comprehensive multicluster management solution that simplifies the process of managing clusters at scale and across hybrid environments. The extension is automatically installed when you join an Azure Arc-enabled Kubernetes cluster to a Fleet.
+
+For more information, see key concepts of [Azure Kubernetes Fleet Manager](/en-us/azure/kubernetes-fleet/concepts-fleet), and its [multicluster workload management](/en-us/azure/kubernetes-fleet/concepts-multi-cluster-workload-management), and supported [member cluster types](/en-us/azure/kubernetes-fleet/concepts-member-cluster-types).
+
+Important
+
+Azure Kubernetes Fleet Manager's extension for Azure Arc-enabled Kubernetes clusters is in preview. For more information, see [important considerations for Azure Arc-enabled Kubernetes cluster members](/en-us/azure/kubernetes-fleet/concepts-member-cluster-types#arc-enabled-kubernetes-clusters-important-considerations) for a complete list of requirements and considerations.
+
+See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.
+
+## Azure Policy
+
+The following Kubernetes distributions **have been validated in conformance testing**. This means we have explicitly validated that the **Azure Policy Extension installs correctly and functions as expected** on these platforms.
+
+- **Supported distributions with conformance validation**: AKS on Azure Local (AKS enabled by Azure Arc), Azure Red Hat OpenShift (ARO), Kind, Rancher Government (RKE2), Minikube, K3s, AKS Edge, TKG (VMware Tanzu Kubernetes Grid)
+
+The following Kubernetes distributions **have NOT been validated in conformance testing**. This means Azure Policy extension installation is supported, but **there is no guarantee of full functionality** or behavioral consistency until conformance validation is complete.
+
+- **Supported distributions without conformance validation**: EKS (Amazon Elastic Kubernetes Service), GKE (Google Kubernetes Engine), RKE (Rancher Kubernetes Engine)
+
+> 
+> kubeadm is currently not supported in Azure Policy extension. RKE (Rancher Kubernetes Engine) is now deprecated. Please use Rancher Government (RKE2) instead.
+
+Azure Policy extends [Gatekeeper](https://github.com/open-policy-agent/gatekeeper), an admission controller webhook for [Open Policy Agent](https://www.openpolicyagent.org/) (OPA). Use Gatekeeper with OPA to consistently apply centralized, at-scale enforcements and safeguards on your clusters.
+
+For more information, see [Understand Azure Policy for Kubernetes clusters](/en-us/azure/governance/policy/concepts/policy-for-kubernetes/#install-azure-policy-extension-for-azure-arc-enabled-kubernetes?toc=/azure/azure-arc/kubernetes/toc.json&amp;bc=/azure/azure-arc/kubernetes/breadcrumb/toc.json).
+
+### Azure Red Hat OpenShift (ARO) Considerations
+
+Azure Red Hat OpenShift (ARO) clusters ship with **Guardrails pre-installed**. These guardrails **conflict with the Azure Policy Extension** and must be disabled before installation.
+
+To disable ARO Guardrails, run the following commands in order after connecting ARO cluster to Azure:
+
+```bash
+kubectl patch cluster.aro.openshift.io cluster --type json -p '[{ "op": "replace", "path": "/spec/operatorflags/aro.guardrails.deploy.managed", "value":"false" }]'
+
+kubectl patch cluster.aro.openshift.io cluster --type json -p '[{ "op": "replace", "path": "/spec/operatorflags/aro.guardrails.enabled", "value":"false" }]'
+
+kubectl delete ns openshift-azure-guardrails
+
+kubectl get validatingwebhookconfiguration,mutatingwebhookconfiguration,clusterrole,clusterrolebinding,crd -o name | grep gatekeeper | xargs -r kubectl delete
+```
+
+Once guardrails are disabled, you may proceed with installing the Azure Policy Extension.
+
+To install the Azure Policy Extension:
+
+```bash
+az k8s-extension create --cluster-type connectedClusters --cluster-name <cluster name> --resource-group <resource group name> --extension-type Microsoft.PolicyInsights --name <extension name>
+```
+
+### Azure Policy Extension Release Notes
+
+#### 1.20.0
+
+Security improvements.
+
+- Released: Sep 2026
+- Kubernetes: 1.30+
+- Gatekeeper: 3.23.1
+
+#### 1.19.0
+
+Introducing Scoped Enforcement Action. Before this feature, the selected enforcement action applied to all enforcement points. Now, you can select which enforcement action happens in which enforcement points (`audit.gatekeeper.sh`, `validation.gatekeeper.sh`, `vap.k8s.io`).
+
+What each enforcement point represents:
+
+- `validation.gatekeeper.sh`: Gatekeeper Admission Webhook
+- `audit.gatekeeper.sh`: Gatekeeper Audit Controller (Compliance Result)
+- `vap.k8s.io`: Validating Admission Policy (VAP)
+
+Example 1: If you select `Enforcement Action: Deny` and `Enforcement Points: ["validation.gatekeeper.sh", "audit.gatekeeper.sh"]`, the Gatekeeper validating webhook enforces the violating resource and shows it in compliance. The resource isn't enforced by VAP because it's not one of the enforcement points.
+
+Example 2: If you select `Enforcement Action: Audit` and `Enforcement Points: ["vap.k8s.io"]`, VAP audits the violating resource but doesn't deny it because the enforcement action is `Audit`. Also, it doesn't show in compliance due to the absence of `audit.gatekeeper.sh` enforcement point.
+
+Introducing delete operation protection feature. This feature allows Gatekeeper to receive DELETE admission requests while preventing existing policies from automatically enforcing on deletions unless explicitly configured. Policies must opt in to DELETE enforcement by specifying `operations` in their constraint templates. The `operations` list can contain any combination of CREATE, UPDATE, DELETE, CONNECT, or \*.
+
+Example:
+
+```yaml
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8se2edeletedeny
+spec:`
+  crd:
+    spec:
+      names:
+        kind: K8sE2EDeleteDeny
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      operations:
+        - DELETE
+      rego: |
+        package k8se2edeletedeny
+
+        violation[{"msg": msg}] {
+          input.review.object.metadata.labels["e2e-delete-deny"] == "true"
+          msg := sprintf("Deletion of %v is denied by the delete-protection e2e policy", [input.review.object.metadata.name])
+        }
+
+        violation[{"msg": msg}] {
+          input.review.oldObject.metadata.labels["e2e-delete-deny"] == "true"
+          msg := sprintf("Deletion of %v is denied by the delete-protection e2e policy", [input.review.oldObject.metadata.name])
+        }
+```
+
+Security improvements.
+
+- Released: Aug 2026
+- Kubernetes: 1.30+
+- Gatekeeper: 3.23.0
+
+#### 1.18.1
+
+Introducing Validating Admission Policy (VAP) generation. Validating Admission Policies are Kubernetes-native validating policy resources that are evaluated in-process, allowing for reduced latency and fail-close evaluation. Azure Policies that contain Common Expression Language (CEL) will automatically generate VAPs for Kubernetes version 1.30+
+
+Security improvements.
+
+- Released: Jun 2026
+- Policy Image: v1.15.5-1
+- Gatekeeper Image: v3.22.2-1
+
+#### 1.17.1
+
+Security improvements.
+
+- Released: Apr 2026
+- Policy Image: v1.15.5
+- Gatekeeper Image: v3.22.0-1
+
+#### 1.16.1
+
+Fixed policy extension installation bug in AKS on Azure Local (AKS enabled by Azure Arc). Added RKE2 support. Enabled mutation. Enabled external data.
+
+Security improvements.
+
+- Released: Jan 2026
+- Policy Image: v1.15.4
+- Gatekeeper Image: v3.21.0-1
+
+## Certificate Management for Azure Arc
+
+The Certificate Management for Azure Arc extension provides a unified, automated solution for managing TLS certificates and trust bundles in Arc-connected Kubernetes clusters. It simplifies the process of issuing, renewing, and managing certificates across hybrid and edge environments, providing secure communication and compliance with organizational policies.
+
+For more information, see [What is Certificate Management for Azure Arc?](cert-manager-overview)
+
+## Connected registry on Azure Arc-enabled Kubernetes
+
+- **Supported distributions**: AKS enabled by Azure Arc, Kubernetes by using the kind tool.
+
+Use the connected registry extension for Azure Arc to sync container images between your instance of Azure Container Registry and your on-premises Azure Arc-enabled Kubernetes cluster. You can deploy this extension to either a local cluster or to a remote cluster. The extension uses a sync schedule and window to ensure seamless syncing of images between the on-premises connected registry and the cloud-based instance of Azure Container Registry.
+
+For more information, see [Connected registry for Azure Arc-enabled Kubernetes clusters](../../container-registry/quickstart-connected-registry-arc-cli).
+
+## Container insights in Azure Monitor
+
+- **Supported distributions**: All Cloud Native Computing Foundation (CNCF)-certified Kubernetes clusters.
+
+The Container insights feature in Azure Monitor gives you a view into the performance of workloads that are deployed on your Kubernetes cluster. Use this extension to collect memory and CPU utilization metrics from controllers, nodes, and containers.
+
+For more information, see [Container insights for Azure Arc-enabled Kubernetes clusters](/en-us/azure/azure-monitor/containers/container-insights-enable-arc-enabled-clusters?toc=/azure/azure-arc/kubernetes/toc.json&amp;bc=/azure/azure-arc/kubernetes/breadcrumb/toc.json).
+
+## Dapr extension for Azure Kubernetes Service (AKS) and Azure Arc-enabled Kubernetes
+
+[Dapr](https://dapr.io/) is a portable, event-driven runtime that simplifies building resilient, stateless, and stateful applications that run in the cloud and edge and embrace the diversity of languages and developer frameworks. The Dapr extension eliminates the overhead of downloading Dapr tooling and manually installing and managing the runtime on your clusters.
+
+For more information, see [Dapr extension for AKS and Azure Arc-enabled Kubernetes](/en-us/azure/aks/dapr).
+
+## Flux (GitOps)
+
+- **Supported distributions**: All CNCF-certified Kubernetes clusters.
+
+[GitOps on AKS and Azure Arc-enabled Kubernetes](conceptual-gitops-flux2) can be enabled through [Flux v2](https://fluxcd.io/docs/), a popular open-source tool set, to help manage cluster configuration and application deployment. With the Flux extension, GitOps is enabled in the cluster as a `Microsoft.KubernetesConfiguration/extensions/microsoft.flux` cluster extension resource.
+
+For more information, see [Tutorial: Deploy applications using GitOps with Flux v2](tutorial-use-gitops-flux2).
+
+The [most recent version of the Flux v2 extension](flux-gitops-release-notes) and the two previous versions (N-2) are supported. We generally recommend that you use the most recent version of the extension.
+
+## Foundry Local on Azure Local (preview)
+
+- **Supported distributions**: AKS enabled by Azure Arc
+
+Foundry Local on Azure Local brings AI inference to Azure Local environments. Deploy and run AI models on an Azure Arc-enabled Kubernetes cluster by using Kubernetes-native operations. Foundry Local supports generative AI inference (chat and text generation) through OpenAI-compatible request patterns, predictive AI inference, and multi-model serving. It supports CPU- and GPU-backed deployments and secures endpoints by using API keys, Microsoft Entra ID authentication, and TLS.
+
+You can also deploy Foundry Local on Azure Local in disconnected environments. In disconnected mode, model artifacts are pulled from a local container registry, certificate management uses locally installed cert-manager and trust-manager, and authentication integrates with local Active Directory infrastructure.
+
+For more information, see [What is Foundry Local on Azure Local?](/en-us/azure/azure-sovereign-clouds/private/foundry-local/what-is-foundry-local-on-azure-local).
+
+## Inspektor Gadget (preview)
+
+- **Supported distributions**: AKS
+
+[Inspektor Gadget](https://inspektor-gadget.io/) is a framework that makes it easy to monitor, troubleshoot, and secure workloads running on Linux and Kubernetes. It consists of tools (*Gadgets*) that leverage [eBPF](https://ebpf.io/) programs. Their primary goal is to gather low-level kernel data to provide insights into specific system scenarios. The Inspektor Gadget framework manages the association of the collected data by using high-level references, such as Kubernetes resources. This integration ensures that a seamless connection exists between low-level insights and their corresponding high-level context. The integration streamlines the troubleshooting process and the collection of relevant information.
+
+For more information, see [What is the Inspektor Gadget extension for AKS?](/en-us/azure/aks/inspektor-gadget-overview)
+
+Important
+
+Inspektor Gadget for Azure Arc-enabled Kubernetes is currently in preview.
+
+See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.
+
+## Microsoft Defender for Containers
+
+- **Supported distributions**: AKS enabled by Azure Arc, Cluster API Azure, Azure Red Hat OpenShift, Red Hat OpenShift (version 4.6 or later), Google Kubernetes Engine Standard, Amazon Elastic Kubernetes Service, VMware Tanzu Kubernetes Grid, Rancher Kubernetes Engine, and Canonical Kubernetes Distribution.
+
+Microsoft Defender for Containers is the cloud-native solution that is used to secure your containers so you can improve, monitor, and maintain the security of your clusters, containers, and their applications. Microsoft Defender for Containers gathers information related to security, such as audit log data, from the Kubernetes cluster. Then, it provides recommendations and threat alerts based on the gathered data.
+
+For more information, see [Enable Microsoft Defender for Containers](/en-us/azure/defender-for-cloud/defender-for-kubernetes-azure-arc?toc=/azure/azure-arc/kubernetes/toc.json&amp;bc=/azure/azure-arc/kubernetes/breadcrumb/toc.json).
+
+Important
+
+Defender for Containers support for Azure Arc-enabled Kubernetes clusters is currently in preview.
+
+See the [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/) for legal terms that apply to Azure features that are in beta, preview, or otherwise not yet released into general availability.

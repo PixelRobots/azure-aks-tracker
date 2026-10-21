@@ -1,0 +1,719 @@
+---
+layout: Conceptual
+title: Create and Manage Persistent Volumes with Azure Blob Storage in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/create-volume-azure-blob-storage
+breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
+feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
+feedback_help_link_type: get-help-at-qna
+feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
+feedback_system: Standard
+permissioned-type: public
+recommendations: true
+recommendation_types:
+- Training
+- Certification
+uhfHeaderId: azure
+ms.suite: office
+adobe-target: true
+manager: kumud
+learn_banner_products:
+- azure
+ms.service: azure-kubernetes-service
+description: Learn how to create and manage persistent volumes using Azure Blob storage with the Container Storage Interface (CSI) driver in Azure Kubernetes Service (AKS) to provide scalable and reliable storage for your containerized applications.
+ms.topic: how-to
+ms.subservice: aks-storage
+ms.date: 2026-08-05T00:00:00.0000000Z
+author: schaffererin
+ms.author: schaffererin
+locale: en-us
+document_id: 91b05414-0655-b027-a6a9-b91496d10d45
+document_version_independent_id: 3a69c60e-e13e-1ec0-fd37-396ca5cda4a1
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/aks/create-volume-azure-blob-storage.md
+site_name: Docs
+depot_name: Learn.azure-aks
+page_type: conceptual
+interactive_type: azurecli
+toc_rel: toc.json
+asset_id: aks/create-volume-azure-blob-storage
+moniker_range_name: 
+monikers: []
+item_type: Content
+source_path: articles/aks/create-volume-azure-blob-storage.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/ea957f26-244e-4bd1-9b19-105f0a0a73d6
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68cb9039-df60-49b0-8ef8-89ad96497f63
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/85dd85bb-c2e5-412e-96b2-f2765a3fe51c
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/725b6df3-93e8-472d-834e-e7e0d2953d35
+platformId: 19c8a79d-aca5-89b4-3143-2651f6b3931f
+---
+
+# Create and Manage Persistent Volumes with Azure Blob Storage in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
+
+If multiple pods need concurrent access to the same storage volume, you can use Azure Blob storage to connect using [blobfuse](https://github.com/Azure/azure-storage-fuse) or [Network File System (NFS)](https://en.wikipedia.org/wiki/Network_File_System).
+
+This article shows you how to dynamically and statically create Azure Blob storage containers for use by multiple pods in an Azure Kubernetes Service (AKS) cluster.
+
+## Prerequisites
+
+- The [Azure Blob storage CSI driver](csi-storage-drivers) enabled on your AKS cluster.
+- A storage account that's NFS v3 enabled so you can mount a persistent volume using the NFS protocol. You can't enable NFS v3 on an existing storage account. For more information, see [Create an NFS v3 account](/en-us/azure/storage/blobs/network-file-system-protocol-support-how-to).
+- To support an [Azure Data Lake Storage account](/en-us/azure/storage/blobs/upgrade-to-data-lake-storage-gen2-how-to) when using blobfuse mount, complete the following tasks:
+
+    - To create a Data Lake Storage account using the driver in dynamic provisioning, specify `isHnsEnabled: "true"` in the storage class parameters.
+    - To enable blobfuse access to a Data Lake Storage account in static provisioning, specify the mount option `--use-adls=true` in the persistent volume.
+    - If you're going to enable a storage account with Hierarchical Namespace, existing persistent volumes should be remounted with `--use-adls=true` mount option.
+- By default, the blobfuse cache is located in the `/mnt` directory. If the VM SKU provides a temporary disk, the `/mnt` directory is mounted on the temporary disk. However, if the VM SKU doesn't provide a temporary disk, the `/mnt` directory is mounted on the OS disk, you can set `--tmp-path=` mount option to specify a different cache directory.
+
+## Use built-in storage classes to create dynamic PVs with Azure Blob storage
+
+A storage class is used to define how an Azure Blob storage container is created. A storage account is automatically created in the node resource group for use with the storage class to hold the Azure Blob storage container. When you use storage CSI drivers on AKS, there are two extra built-in `StorageClasses` that use the Azure Blob storage CSI driver.
+
+The reclaim policy on both storage classes ensures that the underlying Azure Blob storage is deleted when the respective PV is deleted. The storage classes also configure the container to be expandable by default, as the `set allowVolumeExpansion` parameter is set to **true**.
+
+Note
+
+Shrinking persistent volumes isn't supported.
+
+You can select one of the following [Azure storage redundancy SKUs](/en-us/azure/storage/common/storage-redundancy) for the `skuname` parameter in the storage class definition:
+
+- **Standard\_LRS**: Standard locally redundant storage
+- **Premium\_LRS**: Premium locally redundant storage
+- **Standard\_ZRS**: Standard zone redundant storage
+- **Premium\_ZRS**: Premium zone redundant storage
+- **Standard\_GRS**: Standard geo-redundant storage
+- **Standard\_RAGRS**: Standard read-access geo-redundant storage
+
+## Create custom storage classes for dynamic PVs with Azure Blob storage
+
+The default storage classes are suitable for most scenarios. In some cases, you might want to have your own storage class customized with your own parameters. In this section, we provide two examples: one using NFS protocol and one using blobfuse.
+
+### Custom storage class example using NFS protocol
+
+The manifest in this example mounts a blob storage container using the NFS protocol. You can use it to add the `tags` parameter.
+
+1. Create a file named `blob-nfs-sc.yaml` and paste in the following example manifest:
+
+    ```yaml
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: blob-nfs
+    provisioner: blob.csi.azure.com
+    parameters:
+      protocol: nfs
+      tags: environment=Development
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    ```
+2. Create the storage class using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command:
+
+    ```bash
+    kubectl apply -f blob-nfs-sc.yaml
+    ```
+
+    Your output should resemble the following example output:
+
+    ```output
+    storageclass.storage.k8s.io/blob-nfs created
+    ```
+
+### Custom storage class example using blobfuse
+
+The manifest in this example uses blobfuse and mounts a Blob storage container. You can use it to update the `skuName` parameter.
+
+1. Create a file named `blobfuse-sc.yaml` and paste in the following example manifest:
+
+    ```yaml
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: blob-fuse
+    provisioner: blob.csi.azure.com
+    parameters:
+      skuName: Standard_GRS  # available values: Standard_LRS, Premium_LRS, Standard_GRS, Standard_RAGRS
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    mountOptions:
+      - -o allow_other
+      - --file-cache-timeout-in-seconds=120
+      - --use-attr-cache=true
+      - --cancel-list-on-mount-seconds=10  # prevent billing charges on mounting
+      - -o attr_timeout=120
+      - -o entry_timeout=120
+      - -o negative_timeout=120
+      - --log-level=LOG_WARNING  # LOG_WARNING, LOG_INFO, LOG_DEBUG
+      - --cache-size-mb=1000  # Default will be 80% of available memory, eviction will happen beyond that.
+    ```
+2. Create the storage class using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command:
+
+    ```bash
+    kubectl apply -f blobfuse-sc.yaml
+    ```
+
+    Your output should resemble the following example output:
+
+    ```output
+    storageclass.storage.k8s.io/blob-fuse created
+    ```
+
+## Storage class parameters for dynamic PVs with Azure Blob storage
+
+Use the following parameter groups to define a custom storage class for your persistent volume claims (PVCs) with Azure Blob storage:
+
+- **Storage account**: `skuName`, `location`, `resourceGroup`, `subscriptionID`, `storageAccount`, `networkEndpointType`, `accessTier`, `allowBlobPublicAccess`, `allowSharedKeyAccess`, `requireInfraEncryption`, `publicNetworkAccess`, `tags`, and `matchTags`.
+- **Container and endpoint**: `protocol`, `containerName`, `containerNamePrefix`, `server`, `storageEndpointSuffix`, `useDataPlaneAPI`, `softDeleteBlobs`, `softDeleteContainers`, and `enableBlobVersioning`.
+- **BlobFuse**: `storeAccountKey`, `getLatestAccountKey`, `secretName`, `secretNamespace`, and `isHnsEnabled`.
+- **NFS**: `mountPermissions` and `fsGroupChangePolicy`.
+- **Virtual network**: `vnetResourceGroup`, `vnetName`, `subnetName`, and `vnetLinkName`.
+
+## Configure storage account parameters for dynamic PVs with Azure Blob storage
+
+Use the following parameters to configure the Azure storage account for a dynamically provisioned PV:
+
+| Name | Meaning | Available values | Required | Default value |
+| --- | --- | --- | --- | --- |
+| `skuName` | Specify an Azure storage account type (alias: `storageAccountType`). | `Standard_LRS`, `Premium_LRS`, `Standard_GRS`, `Standard_RAGRS`, `Standard_ZRS`, `Premium_ZRS` | No | `Standard_LRS` |
+| `location` | Specify an Azure location. | `eastus` | No | If empty, driver uses the same location name as current cluster. |
+| `resourceGroup` | Specify an Azure resource group name. | myResourceGroup | No | If empty, driver uses the same resource group name as current cluster. |
+| `subscriptionID` | Specify Azure subscription ID where blob storage directory is created. | Azure subscription ID | No | If not empty, `resourceGroup` must be provided. |
+| `storageAccount` | Specify an Azure storage account name. | storageAccountName | No | When a specific storage account name isn't provided, the driver looks for a suitable storage account that matches the account settings within the same resource group. If it fails to find a matching storage account, it creates a new one. However, if a storage account name is specified, the storage account must already exist. |
+| `networkEndpointType` | Specify network endpoint type for the storage account created by driver. If you specify `privateEndpoint`, the driver creates a [private endpoint](/en-us/azure/storage/common/storage-private-endpoints) for the storage account. For other cases, the driver creates a service endpoint for NFS protocol. | `""`, `privateEndpoint` | No | `""`. For an AKS cluster, add the AKS cluster name to the Contributor role in the resource group hosting the virtual network. |
+| `accessTier` | Specify the access tier for the storage account. | `Hot`, `Cool`, `Premium` | No | Uses the default tier for the selected storage account type. Premium accounts support only `Premium`. |
+| `allowBlobPublicAccess` | Allow or disallow public access to all blobs or containers for a storage account created by the driver. | `true`, `false` | No | `false` |
+| `allowSharedKeyAccess` | Allow or disallow shared key access for a storage account created by the driver. This parameter applies to NFS mounts and BlobFuse mounts that use managed identity. | `true`, `false` | No | `true` |
+| `requireInfraEncryption` | Require a secondary layer of platform-managed encryption for data at rest in a storage account created by the driver. | `true`, `false` | No | `false` |
+| `publicNetworkAccess` | Set the public network access property for a storage account created by the driver. | `Enabled`, `Disabled`, `SecuredByPerimeter` | No | Uses the Azure Storage default. |
+| `tags` | Create [tags](/en-us/azure/azure-resource-manager/management/tag-resources) on a new storage account. | Tag format: `foo=aaa,bar=bbb` | No | `""` |
+| `matchTags` | Match tags when the driver searches for a suitable storage account. | `true`, `false` | No | `false` |
+
+## Configure container and endpoint parameters for dynamic PVs with Azure Blob storage
+
+Use the following parameters to configure the container, mount protocol, storage endpoint, and tags for a dynamically provisioned PV:
+
+| Name | Description | Available values | Required | Default value |
+| --- | --- | --- | --- | --- |
+| `protocol` | Specify BlobFuse, BlobFuse2, or NFS v3 mount. | `fuse`, `fuse2`, `nfs` | No | `fuse` |
+| `containerName` | Specify the existing container (directory) name. | container | No | If empty, driver creates a new container name, starting with `pvc-fuse` for blobfuse or `pvc-nfs` for NFS v3. |
+| `containerNamePrefix` | Specify Azure storage directory prefix created by driver. | Can only contain lowercase letters, numbers, and hyphens and must be fewer than 21 characters. | No |  |
+| `server` | Specify Azure storage account domain name. | Existing storage account DNS domain name, for example `<storage-account>.blob.core.windows.net`. | No | If empty, driver uses default `<storage-account>.blob.core.windows.net` or other sovereign cloud storage account DNS domain name. |
+| `storageEndpointSuffix` | Specify Azure storage endpoint suffix. | `core.windows.net` | No | If empty, driver uses default storage endpoint suffix according to cloud environment. |
+| `useDataPlaneAPI` | Use the Azure Storage data plane API to create and delete containers. This option can avoid storage resource provider throttling but fails when storage account firewall or virtual network rules block data plane access. | `true`, `false` | No | `false` |
+| `softDeleteBlobs` | Enable soft delete for blobs and specify the retention period in days. | A retention period, for example `7` | No | Disabled |
+| `softDeleteContainers` | Enable soft delete for containers and specify the retention period in days. | A retention period, for example `7` | No | Disabled |
+| `enableBlobVersioning` | Enable blob versioning. You can't enable versioning when `protocol` is `nfs` or `isHnsEnabled` is `true`. | `true`, `false` | No | `false` |
+
+## Configure BlobFuse parameters for dynamic PVs with Azure Blob storage
+
+The following parameters apply only when you use BlobFuse for a dynamically provisioned PV:
+
+| Name | Description | Available values | Required | Default value |
+| --- | --- | --- | --- | --- |
+| `storeAccountKey` | Specify store account key to Kubernetes secret.  Note: `false` means driver uses kubelet identity to get account key. | `true`,`false` | No | `true` |
+| `getLatestAccountKey` | Get the latest storage account key based on its creation time instead of using the first key. | `true`, `false` | No | `false` |
+| `secretName` | Specify secret name to store account key. |  | No |  |
+| `secretNamespace` | Specify the namespace of secret to store account key. | `default`,`kube-system`, etc. | No | PVC namespace |
+| `isHnsEnabled` | Enable `Hierarchical namespace` for an Azure Data Lake Storage account. | `true`,`false` | No | `false` |
+
+## Configure NFS parameters for dynamic PVs with Azure Blob storage
+
+The following parameter applies only when you use NFS for a dynamically provisioned PV:
+
+| Name | Description | Available values | Required | Default value |
+| --- | --- | --- | --- | --- |
+| `mountPermissions` | Specify mounted folder permissions. | The default is `0777`. If set to `0`, driver won't perform `chmod` after mount. | No | `0777` |
+| `fsGroupChangePolicy` | Specify how the driver changes volume ownership. The driver ignores `securityContext.fsGroupChangePolicy` in the pod specification. | `OnRootMismatch`, `Always`, `None` | No | `OnRootMismatch` |
+
+## Configure virtual network parameters for dynamic PVs with Azure Blob storage
+
+Use the following parameters when the driver configures virtual network access for a dynamically provisioned PV:
+
+| Name | Description | Available values | Required | Default value |
+| --- | --- | --- | --- | --- |
+| `vnetResourceGroup` | Specify the resource group that contains the virtual network. | Existing resource group name | No | Uses the `vnetResourceGroup` value in the Azure cloud configuration. |
+| `vnetName` | Specify the virtual network name. | Existing virtual network name | No | Uses the `vnetName` value in the Azure cloud configuration. |
+| `subnetName` | Specify one or more existing AKS node subnets. Separate multiple subnet names with commas. | Existing subnet names | No | Updates all subnets in the cluster virtual network. |
+| `vnetLinkName` | Specify the virtual network link associated with the private DNS zone. | Existing or new virtual network link name | No | `<vnetName>-vnetlink` |
+
+## Configure private endpoints for dynamic PVs with Azure Blob storage
+
+Note
+
+If the storage account is created by the driver, then you only need to specify `networkEndpointType: privateEndpoint` parameter in storage class. The CSI driver creates the private endpoint and private DNS zone (named `privatelink.blob.core.windows.net`) together with the account. If you bring your own storage account, then you need to [create the private endpoint](/en-us/azure/storage/common/storage-private-endpoints) for the storage account. If you're using Azure Blob storage in a network isolated cluster, you must create a custom storage class with "networkEndpointType: privateEndpoint". You can use the following example manifest as a reference:
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: blob-fuse
+provisioner: blob.csi.azure.com
+parameters:
+  skuName: Premium_LRS  # available values: Standard_LRS, Premium_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_ZRS
+  protocol: fuse2
+  networkEndpointType: privateEndpoint
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - -o allow_other
+  - --file-cache-timeout-in-seconds=120
+  - --use-attr-cache=true
+  - --cancel-list-on-mount-seconds=10  # prevent billing charges on mounting
+  - -o attr_timeout=120
+  - -o entry_timeout=120
+  - -o negative_timeout=120
+  - --log-level=LOG_WARNING  # LOG_WARNING, LOG_INFO, LOG_DEBUG
+  - --cache-size-mb=1000  # Default will be 80% of available memory, eviction will happen beyond that.
+```
+
+## Create a PVC for dynamic provisioning
+
+A PVC uses the storage class object to dynamically provision an Azure Blob storage. You can use the example YAML manifest in this section to create a PVC that's *5 GB* in size with *ReadWriteMany* access. For more information on access modes, see [Kubernetes PV access modes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes).
+
+1. Create a file named `blob-nfs-pvc.yaml` and paste in the following YAML manifest:
+
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: azure-blob-storage
+    spec:
+      accessModes:
+      - ReadWriteMany
+      storageClassName: azureblob-nfs-premium
+      resources:
+        requests:
+          storage: 5Gi
+    ```
+2. Create the PVC using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f blob-nfs-pvc.yaml
+    ```
+3. View the status of the PVC with the [`kubectl get`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) command:
+
+    ```bash
+    kubectl get pvc azure-blob-storage
+    ```
+
+    Your output should resemble the following example output, which shows that the PVC is in a `Bound` state:
+
+    ```bash
+    NAME                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                AGE
+    azure-blob-storage   Bound    pvc-aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb   5Gi        RWX            azureblob-nfs-premium       92m
+    ```
+
+## Mount a dynamically provisioned blob storage volume in a pod
+
+The following YAML creates a pod that uses the persistent volume claim **azure-blob-storage** to mount the Azure Blob storage at the `/mnt/blob` path.
+
+1. Create a file named `blob-nfs-pv` and paste the following YAML manifest. Make sure the `claimName` matches the PVC you created earlier (`azure-blob-storage`).
+
+    ```yaml
+    kind: Pod
+    apiVersion: v1
+    metadata:
+      name: mypod
+    spec:
+      containers:
+      - name: mypod
+        image: mcr.microsoft.com/oss/nginx/nginx:1.17.3-alpine
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: "/mnt/blob"
+          name: volume
+          readOnly: false
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: azure-blob-storage
+    ```
+2. Create the pod using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command:
+
+    ```bash
+    kubectl apply -f blob-nfs-pv.yaml
+    ```
+3. Once the pod is successfully running, create a new file named `test.txt` using the following command:
+
+    ```bash
+    kubectl exec mypod -- touch /mnt/blob/test.txt
+    ```
+4. Validate the disk is correctly mounted using the following command to list the files in the mounted directory:
+
+    ```bash
+    kubectl exec mypod -- ls /mnt/blob
+    ```
+
+    Your output should resemble the following example output, which shows the `test.txt` file you created in the mounted Azure Blob storage:
+
+    ```output
+    test.txt
+    ```
+
+## Use a StatefulSet to manage the lifecycle of a volume with Azure Blob storage
+
+To have a storage volume persist for your workload, you can use a StatefulSet. This state makes it easier to match existing volumes to new pods that replace any that have failed. The following examples demonstrate how to set up a StatefulSet for Blob storage using the NFS protocol or Blobfuse.
+
+# [NFS protocol](#tab/NFS)
+Note
+
+If you're using NFS protocol, your AKS cluster *control plane* identity (your AKS cluster name) needs to be added to the [Contributor](/en-us/azure/role-based-access-control/built-in-roles#contributor) role on the virtual network and network security group.
+
+1. Create a file named `azure-blob-nfs-ss.yaml` and paste in the following YAML manifest:
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: statefulset-blob-nfs
+      labels:
+        app: nginx
+    spec:
+      serviceName: statefulset-blob-nfs
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          nodeSelector:
+            "kubernetes.io/os": linux
+          containers:
+            - name: statefulset-blob-nfs
+              image: mcr.microsoft.com/azurelinux/base/nginx:1.25
+              volumeMounts:
+                - name: persistent-storage
+                  mountPath: /mnt/blob
+      updateStrategy:
+        type: RollingUpdate
+      selector:
+        matchLabels:
+          app: nginx
+      volumeClaimTemplates:
+        - metadata:
+            name: persistent-storage
+          spec:
+            storageClassName: azureblob-nfs-premium
+            accessModes: ["ReadWriteMany"]
+            resources:
+              requests:
+                storage: 100Gi
+    ```
+2. Create the StatefulSet using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f azure-blob-nfs-ss.yaml
+    ```
+
+# [Blobfuse](#tab/Blobfuse)
+1. Create a file named `azure-blobfuse-ss.yaml` and paste in the following YAML manifest:
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: statefulset-blob
+      labels:
+        app: nginx
+    spec:
+      serviceName: statefulset-blob
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          nodeSelector:
+            "kubernetes.io/os": linux
+          containers:
+            - name: statefulset-blob
+              image: mcr.microsoft.com/azurelinux/base/nginx:1.25
+              volumeMounts:
+                - name: persistent-storage
+                  mountPath: /mnt/blob
+      updateStrategy:
+        type: RollingUpdate
+      selector:
+        matchLabels:
+          app: nginx
+      volumeClaimTemplates:
+        - metadata:
+            name: persistent-storage
+          spec:
+            storageClassName: azureblob-fuse-premium
+            accessModes: ["ReadWriteMany"]
+            resources:
+              requests:
+                storage: 100Gi
+    ```
+2. Create the StatefulSet using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f azure-blobfuse-ss.yaml
+    ```
+
+---
+
+## Create a static PV with Azure Blob storage
+
+The following sections provide instructions for creating a static PV with Azure Blob storage. A static PV is a persistent volume that an administrator creates manually. This PV is available for use by pods in the cluster. To use a static PV, you create a PVC that references the PV, and then create a pod that references the PVC.
+
+### CSI volume parameters for static PVs with Azure Blob storage
+
+The following table lists parameters you can use in the CSI volume source for a static PV with Azure Blob storage:
+
+| Name | Meaning | Available values | Required | Default value |
+| --- | --- | --- | --- | --- |
+| `volumeHandle` | Specify a value the driver can use to uniquely identify the storage blob container in the cluster. | A recommended way to produce a unique value is to combine the globally unique storage account name and container name: `{account-name}_{container-name}`. Note: The `#`, `/` characters are reserved for internal use and can't be used in a volume handle. | Yes |  |
+| `volumeAttributes.subscriptionID` | Specify the Azure subscription ID where the storage account is located. | Azure subscription ID | No | If not empty, `volumeAttributes.resourceGroup` must be provided. |
+| `volumeAttributes.resourceGroup` | Specify Azure resource group name. | myResourceGroup | No | If empty, driver uses the same resource group name as current cluster. |
+| `volumeAttributes.storageAccount` | Specify an existing Azure storage account name. | storageAccountName | Yes |  |
+| `volumeAttributes.containerName` | Specify existing container name. | container | Yes |  |
+| `volumeAttributes.protocol` | Specify BlobFuse, BlobFuse2, or NFS v3 mount. | `fuse`, `fuse2`, `nfs` | No | `fuse` |
+| `volumeAttributes.server` | Specify the Azure storage account server address. | Existing server address, for example `<storage-account>.blob.core.windows.net` | No | Uses the default server address for the current cloud environment. |
+| `volumeAttributes.storageEndpointSuffix` | Specify the Azure storage endpoint suffix. | `core.windows.net` or the suffix for another Azure cloud | No | Uses the default suffix for the current cloud environment. |
+| --- | **The following parameters are only for blobfuse** | --- | --- | --- |
+| `volumeAttributes.secretName` | Secret name that stores storage account name and key (only applies for SMB). |  | No |  |
+| `volumeAttributes.secretNamespace` | Specify namespace of secret to store account key. | `default` | No | PVC namespace |
+| `volumeAttributes.getLatestAccountKey` | Get the latest storage account key based on its creation time instead of using the first key. | `true`, `false` | No | `false` |
+| `nodeStageSecretRef.name` | Specify the name of the Kubernetes secret that contains credentials for staging the volume. | Existing Kubernetes secret name. The secret must contain one of the following keys: `azurestorageaccountkey`, `azurestorageaccountsastoken`, `msisecret`, or `azurestoragespnclientsecret`. | No |  |
+| `nodeStageSecretRef.namespace` | Specify the namespace of secret. | Kubernetes namespace | Yes |  |
+| --- | **The following parameters are only for NFS protocol** | --- | --- | --- |
+| `volumeAttributes.mountPermissions` | Specify mounted folder permissions. | `0777` | No |  |
+| `volumeAttributes.fsGroupChangePolicy` | Specify how the driver changes volume ownership. The driver ignores `securityContext.fsGroupChangePolicy` in the pod specification. | `OnRootMismatch`, `Always`, `None` | No | `OnRootMismatch` |
+| --- | **The following parameters are only for feature: blobfuse[Managed Identity and Service Principal Name authentication](https://github.com/Azure/azure-storage-fuse#environment-variables)** | --- | --- | --- |
+| `volumeAttributes.AzureStorageAuthType` | Specify the authentication type. | `Key`, `SAS`, `MSI`, `SPN` | No | `Key` |
+| `volumeAttributes.AzureStorageIdentityClientID` | Specify the Identity Client ID. |  | No |  |
+| `volumeAttributes.AzureStorageIdentityObjectID` | Specify the identity object ID. This parameter is deprecated. |  | No |  |
+| `volumeAttributes.AzureStorageIdentityResourceID` | Specify the Identity Resource ID. |  | No |  |
+| `volumeAttributes.MSIEndpoint` | Specify the MSI endpoint. |  | No |  |
+| `volumeAttributes.AzureStorageSPNClientID` | Specify the Azure Service Principal Name (SPN) Client ID. |  | No |  |
+| `volumeAttributes.AzureStorageSPNTenantID` | Specify the Azure SPN Tenant ID. |  | No |  |
+| `volumeAttributes.AzureStorageAADEndpoint` | Specify the Microsoft Entra endpoint. |  | No |  |
+| --- | **The following parameters are only for blobfuse workload identity authentication** | --- | --- | --- |
+| `volumeAttributes.ClientID` | Specify the client ID of the managed identity used for workload identity authentication. | Managed identity client ID | No |  |
+| `volumeAttributes.mountWithWorkloadIdentityToken` | Mount BlobFuse with a workload identity token. This capability is in preview. Specify the value as a string. | `"true"`, `"false"` | No | `"false"` |
+| --- | **The following parameters are only for feature: blobfuse read account key or SAS token from key vault** | --- | --- | --- |
+| `volumeAttributes.keyVaultURL` | Specify Azure Key Vault DNS name. | {vault-name}.vault.azure.net | No |  |
+| `volumeAttributes.keyVaultSecretName` | Specify Azure Key Vault secret name. | Existing Azure Key Vault secret name. | No |  |
+| `volumeAttributes.keyVaultSecretVersion` | Azure Key Vault secret version. | Existing version | No | If empty, driver uses current version. |
+
+### Create a Blob storage container
+
+When you create an Azure Blob storage resource for use with AKS, you can create the resource in the node resource group. This approach allows the AKS cluster to access and manage the blob storage resource.
+
+1. Get the node resource group name of your AKS cluster using the [`az aks show`](/en-us/cli/azure/aks#az-aks-show) command with the `--query nodeResourceGroup` parameter.
+
+    ```azurecli
+    az aks show --resource-group myResourceGroup --name myAKSCluster --query nodeResourceGroup -o tsv
+    ```
+
+    The output of the command resembles the following example:
+
+    ```azurecli
+    MC_myResourceGroup_myAKSCluster_eastus
+    ```
+2. If you create the storage account in the node resource group, use the node resource group name returned in the previous step (for example, `MC_myResourceGroup_myAKSCluster_eastus`). Then, follow the steps in [Manage blob storage](/en-us/azure/storage/blobs/blob-containers-cli) to authorize access and create a container in that storage account.
+
+### Mount volume
+
+In this section, you mount the persistent volume using the NFS protocol or Blobfuse.
+
+# [NFS protocol](#tab/nfs)
+The storage account must have NFS v3 and hierarchical namespace enabled. Mounting Blob storage by using the NFS v3 protocol doesn't authenticate by using an account key. The AKS node subnet must have network access to the NFS-enabled storage account through a selected virtual network or private endpoint. Make sure network security groups allow NFS traffic on ports 111 and 2048. For more information about how to set up NFS access to your storage account, see [Mount Blob Storage by using the Network File System (NFS) 3.0 protocol](/en-us/azure/storage/blobs/network-file-system-protocol-support-how-to).
+
+The following example demonstrates how to mount a Blob storage container as a persistent volume using the NFS protocol.
+
+1. Create a file named `pv-blob-nfs.yaml` and paste the following YAML. Under `spec.csi.volumeAttributes`, update `resourceGroup`, `storageAccount`, and `containerName`.
+
+    Note
+
+    `volumeHandle` value should be a unique volumeID for every identical storage blob container in the cluster. The character `#` and `/` are reserved for internal use and can't be used.
+
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      annotations:
+        pv.kubernetes.io/provisioned-by: blob.csi.azure.com
+      name: pv-blob
+    spec:
+      capacity:
+        storage: 1Pi
+      accessModes:
+        - ReadWriteMany
+      persistentVolumeReclaimPolicy: Retain  # If set as "Delete" container would be removed after pvc deletion
+      storageClassName: azureblob-nfs-premium
+      csi:
+        driver: blob.csi.azure.com
+        # make sure volumeid is unique for every identical storage blob container in the cluster
+        # character `#` and `/` are reserved for internal use and cannot be used in volumehandle
+        volumeHandle: account-name_container-name
+        volumeAttributes:
+          resourceGroup: resourceGroupName
+          storageAccount: storageAccountName
+          containerName: containerName
+          protocol: nfs
+    ```
+
+    Note
+
+    While the [Kubernetes API](https://github.com/kubernetes/kubernetes/blob/release-1.26/pkg/apis/core/types.go#L303-L306)**capacity** attribute is mandatory, the Azure Blob storage CSI driver doesn't use this value because you can flexibly write data until you reach your storage account's capacity limit. The value is used only for size matching between PVs and PVCs. The example uses a fictitious value of `1Pi`; this value doesn't set the capacity of the Blob storage container.
+2. Create the PV using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f pv-blob-nfs.yaml
+    ```
+3. Create a file named `pvc-blob-nfs.yaml` and paste in the following YAML. Under `volumeName`, update the value to match the name of the PV created in the previous step.
+
+    ```yaml
+    kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: pvc-blob
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 10Gi
+      volumeName: pv-blob
+      storageClassName: azureblob-nfs-premium
+    ```
+4. Create the PVC using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f pvc-blob-nfs.yaml
+    ```
+
+# [Blobfuse](#tab/blobfuse)
+The following example uses an Azure access key or shared access signature (SAS) token stored in a Kubernetes secret to access the Blob storage container. The Azure Blob storage CSI driver also supports [managed identity and service principal authentication](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/deploy/example/pv-blobfuse-auth.yaml) and [workload identity authentication](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/docs/driver-parameters.md#static-provisioningbring-your-own-storage-container). Workload identity authentication is currently in preview. Use identity-based authentication instead of shared credentials where supported.
+
+1. Use the `kubectl create secret` command to create a secret that contains an account key or SAS token.
+
+    The first command creates a secret named `azure-secret` with the `azurestorageaccountname` and `azurestorageaccountkey` keys. The second command creates a secret named `azure-sas-token` with the `azurestorageaccountname` and `azurestorageaccountsastoken` keys. Both commands set `--type=Opaque`.
+
+    ```bash
+    # Create a Secret object named azure-secret and populate the azurestorageaccountname and azurestorageaccountkey. You need to provide the account name and key from an existing Azure storage account.
+    kubectl create secret generic azure-secret --from-literal azurestorageaccountname=NAME --from-literal azurestorageaccountkey="KEY" --type=Opaque
+    
+    # Create a Secret object named azure-sas-token and populate the azurestorageaccountname and azurestorageaccountsastoken. You need to provide the account name and shared access signature from an existing Azure storage account.
+    kubectl create secret generic azure-sas-token --from-literal azurestorageaccountname=NAME --from-literal azurestorageaccountsastoken="sastoken" --type=Opaque
+    ```
+2. Create a file named `pv-blobfuse.yaml` and paste the following YAML manifest. Under `volumeAttributes`, update `containerName`. Under `nodeStageSecretRef`, update `name` with the name of the Secret object created earlier. For example:
+
+    Note
+
+    `volumeHandle` value should be a unique volumeID for every identical storage blob container in the cluster. The character `#` and `/` are reserved for internal use and can't be used.
+
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      annotations:
+        pv.kubernetes.io/provisioned-by: blob.csi.azure.com
+      name: pv-blob
+    spec:
+      capacity:
+        storage: 10Gi
+      accessModes:
+        - ReadWriteMany
+      persistentVolumeReclaimPolicy: Retain  # If set as "Delete" container would be removed after pvc deletion
+      storageClassName: azureblob-fuse-premium
+      mountOptions:
+        - -o allow_other
+        - --file-cache-timeout-in-seconds=120
+      csi:
+        driver: blob.csi.azure.com
+        # volumeid has to be unique for every identical storage blob container in the cluster
+        # character `#`and `/` are reserved for internal use and cannot be used in volumehandle
+        volumeHandle: account-name_container-name
+        volumeAttributes:
+          containerName: containerName
+        nodeStageSecretRef:
+          name: azure-secret
+          namespace: default
+    ```
+3. Create the PV using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f pv-blobfuse.yaml
+    ```
+4. Create a file named `pvc-blobfuse.yaml` and paste in the following YAML manifest. Under `volumeName`, update the value to match the name of the PV created in the previous step.
+
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: pvc-blob
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 10Gi
+      volumeName: pv-blob
+      storageClassName: azureblob-fuse-premium
+    ```
+5. Create the PVC using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f pvc-blobfuse.yaml
+    ```
+
+---
+
+### Use the persistent volume
+
+The following YAML creates a pod that uses the PV or PVC named **pvc-blob** created earlier to mount the Azure Blob storage at the `/mnt/blob` path.
+
+1. Create a file named `nginx-pod-blob.yaml` and paste in the following YAML manifest. Make sure the `claimName` matches the PVC created earlier (`pvc-blob`).
+
+    ```yaml
+    kind: Pod
+    apiVersion: v1
+    metadata:
+      name: nginx-blob
+    spec:
+      nodeSelector:
+        "kubernetes.io/os": linux
+      containers:
+        - image: mcr.microsoft.com/oss/nginx/nginx:1.17.3-alpine
+          name: nginx-blob
+          volumeMounts:
+            - name: blob01
+              mountPath: "/mnt/blob"
+              readOnly: false
+      volumes:
+        - name: blob01
+          persistentVolumeClaim:
+            claimName: pvc-blob
+    ```
+2. Create the pod and mount the PVC using the [`kubectl create`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#create) command:
+
+    ```bash
+    kubectl create -f nginx-pod-blob.yaml
+    ```
+3. Create an interactive shell session with the pod to verify the Blob storage is mounted correctly using the following `kubectl exec` command:
+
+    ```bash
+    kubectl exec -it nginx-blob -- df -h
+    ```
+
+    Your output should resemble the following example output, which shows the Blob storage is mounted at the `/mnt/blob` path:
+
+    ```output
+    Filesystem      Size  Used Avail Use% Mounted on
+    ...
+    blobfuse         14G   41M   13G   1% /mnt/blob
+    ...
+    ```
