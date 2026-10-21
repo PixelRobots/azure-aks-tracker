@@ -45,7 +45,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
-platformId: 9ec0ec17-3f0d-0e7b-bcdb-9901f46e5580
+platformId: 395ddd5b-c6f1-5516-98cb-777abf443d43
 ---
 
 # Upgrade the Windows Server version on your node pools | Microsoft Learn
@@ -61,9 +61,9 @@ When a new version of the Windows Server operating system is released, AKS is co
 
 Important
 
-Windows Server 2019 is being retired in March 2026. Azure Local version 2510 will be the last release to include the Windows Server 2019 VHDs. The last Kubernetes version available on Windows Server 2019 is 1.32. Windows Server 2019 won't be supported on 1.33 and later. For more information, see [Windows Server 2019 node pool retirement](https://techcommunity.microsoft.com/blog/containers/announcing-the-3-year-retirement-of-windows-server-2019-on-azure-kubernetes-serv/3777341).
+Windows Server 2019 node pools are deprecated and no longer supported.
 
-Windows Server 2022 is being retired in October 2026. Azure Local version 2603 will be the last release to include the Windows Server 2022 VHDs. The last Kubernetes version available on Windows Server 2022 is 1.34. Windows Server 2022 won't be supported on 1.35 and later.
+AKS supports Windows Server 2022 node pools until support for Windows Server 2025 node pools becomes available alongside Kubernetes 1.35. Upgrade when support for Windows Server 2025 is released; this article will be updated with specific guidance at that time. Windows security patches and OS-level bug fixes follow the [Windows Server servicing and support lifecycle](/en-us/windows-server/get-started/windows-server-release-info), not the AKS support timeline.
 
 ## Before you begin
 
@@ -95,7 +95,7 @@ A node selector is the most common and recommended option for placement of Windo
 
     ```yaml
     nodeSelector:
-         "kubernetes.azure.com/os-sku": Windows2022
+      "kubernetes.azure.com/os-sku": Windows2022
     ```
 
     This enforces the placement of the pod on a Windows node that's running the latest OS version.

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-21T17:29:31.929Z",
+  "complete": true,
+  "errors": 0,
+  "unreached": 0,
+  "article_count": 1352,
+  "products": [
+    "ACR",
+    "AGC",
+    "AKS",
+    "AKS Arc",
+    "AKS Support",
+    "Application Network",
+    "Arc K8s",
+    "Fleet"
+  ],
+  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/39643339263"
+}
