@@ -59,7 +59,7 @@ function readArticle(repo, revision, file) {
   return null;
 }
 
-function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = false, maxAgeHours = 12 }) {
+function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = false, maxAgeHours = 12, production = false }) {
   if (git(repo, 'rev-parse', '--is-shallow-repository').trim() !== 'false') {
     throw new Error('Snapshot history is shallow; fetch the complete docs-snapshots branch.');
   }
@@ -69,8 +69,15 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
   const ancestor = spawnSync('git', ['-C', repo, 'merge-base', '--is-ancestor', baselineRevision, headRevision]);
   if (ancestor.status !== 0) throw new Error('Qualified baseline is not an ancestor of the snapshot head.');
   const headTime = git(repo, 'show', '-s', '--format=%cI', headRevision).trim();
+  let health = null;
+  if (production) {
+    if (demo) throw new Error('Synthetic changes cannot be published.');
+    // Require a committed heartbeat from a zero-error, complete pass, not just a recent article commit.
+    const { validateHealth } = require('./snapshot-health.cjs');
+    health = validateHealth(JSON.parse(git(repo, 'show', `${headRevision}:.learn-mirror/health.json`)), now, maxAgeHours);
+  }
   const age = (now - new Date(headTime)) / 3600000;
-  if (!Number.isFinite(age) || age < -1 || age > maxAgeHours) {
+  if (!production && (!Number.isFinite(age) || age < -1 || age > maxAgeHours)) {
     throw new Error(`Snapshot head is stale or future-dated (${headTime}); inspect the collector before previewing.`);
   }
   const since = new Date(now);
@@ -91,6 +98,13 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
     if (!entry.path || entry.aliasOf || entry.redirectedTo) continue;
     if (!new RegExp(config.include).test(url)) throw new Error(`Unexpected canonical URL in snapshot state: ${url}`);
     byPath.set(entry.path, url);
+  }
+  if (production) {
+    const paths = new Set(Object.values(state.pages).map(entry => entry.path).filter(Boolean));
+    const productScopes = new Set([...paths].map(file => routeFor(file).product));
+    if (paths.size !== health.article_count || productScopes.size !== 8) throw new Error('Collector health does not match snapshot state.');
+    const committedFiles = new Set(git(repo, 'ls-tree', '-r', '--name-only', '-z', headRevision).split('\0'));
+    for (const file of paths) if (!committedFiles.has(file)) throw new Error(`Snapshot file missing from committed history: ${file}`);
   }
   const files = git(repo, 'diff', '--name-only', '-z', '--no-renames', base, headRevision, '--', 'articles', 'support')
     .split('\0').filter(file => scope.test(file));
@@ -144,12 +158,13 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
   }
   changes.sort((a, b) => b.detected_at.localeCompare(a.detected_at) || a.filename.localeCompare(b.filename));
   return {
-    schema_version: 1, source: 'learn-snapshot', demo,
+    schema_version: 1, source: 'learn-snapshot', demo, production_ready: production,
+    collection_health: health,
     baseline_revision: baselineRevision, base_revision: base, head_revision: headRevision,
     since: since.toISOString(), generated_at: now.toISOString(), snapshot_at: headTime,
     baseline_only: headRevision === baselineRevision,
     warnings: [
-      'Preview only: collection freshness does not prove a complete crawl. Confirm the collector Actions summary before cutover.',
+      ...(production ? [] : ['Preview only: collection freshness does not prove a complete crawl. Confirm the collector Actions summary before cutover.']),
       ...(demo ? ['SYNTHETIC TEST DATA: not real Microsoft documentation changes.'] : [])
     ],
     suppressed, changes
@@ -209,7 +224,7 @@ function main() {
     const repo = temporary || args.repo;
     if (!repo || (!temporary && !args.baseline) || !args.output) throw new Error('Required: --repo, --baseline and --output (or --demo=true --output).');
     const baseline = temporary ? createDemo(repo) : args.baseline;
-    const result = buildChanges({ repo, baseline, head: args.head || 'HEAD', demo: Boolean(temporary) });
+    const result = buildChanges({ repo, baseline, head: args.head || 'HEAD', demo: Boolean(temporary), production: args.production === 'true' });
     fs.mkdirSync(path.dirname(path.resolve(args.output)), { recursive: true });
     fs.writeFileSync(args.output, JSON.stringify(result, null, 2) + '\n');
     console.log(`${result.demo ? 'SYNTHETIC' : 'Live'} preview: ${result.changes.length} content changes; ${result.suppressed.length} deletions held for review.`);

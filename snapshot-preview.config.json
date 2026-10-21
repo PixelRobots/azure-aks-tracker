@@ -2,5 +2,5 @@
   "baseline_revision": "43fdba110daf1c48eeff521cb4ed8d59ce94fd49",
   "baseline_run": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/39634558215",
   "baseline_article_count": 1352,
-  "publication_enabled": false
+  "baseline_qualified": true
 }

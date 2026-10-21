@@ -28,15 +28,12 @@ function render(data, mode = 'tracker') {
   const cards = items.map((item, index) => {
     const detected = new Date(item.detected_at);
     if (!Number.isFinite(detected.getTime())) throw new Error(`Invalid detection date: ${item.filename}`);
-    const evidence = input.demo
-      ? `<a href="#diff-${index}">View sample diff</a>`
-      : `<a href="${safeUrl(item.evidence_url, true)}" target="_blank" rel="noopener noreferrer">View change</a>`;
     return `<article data-product="${escape(item.product)}">
 <div class="badges"><span class="badge">${escape(item.product)}</span><span class="badge">${escape(item.category)}</span><span class="badge">${item.status === 'added' ? 'New page' : 'Updated'}</span><span class="badge">${escape(item.summary_method)}</span></div>
 <h2><a href="${safeUrl(item.canonical_url)}" target="_blank" rel="noopener noreferrer">${escape(item.title)}</a></h2>
 <p class="muted">Detected: <time datetime="${escape(detected.toISOString())}">${escape(detected.toISOString().replace('T', ' ').replace('.000Z', ' UTC'))}</time></p>
 <p>${escape(item.summary)}</p>
-<div class="links"><a href="${safeUrl(item.canonical_url)}" target="_blank" rel="noopener noreferrer">View documentation</a>${evidence}</div>
+<div class="links"><a href="${safeUrl(item.canonical_url)}" target="_blank" rel="noopener noreferrer">View documentation</a></div>
 <details id="diff-${index}"${input.demo ? ' open' : ''}><summary>${input.demo ? 'Synthetic test diff (not real product guidance)' : 'Captured article diff'}</summary><pre>${escape(item.patch)}</pre></details>
 </article>`;
   }).join('\n');

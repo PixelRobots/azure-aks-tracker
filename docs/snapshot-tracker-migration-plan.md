@@ -6,10 +6,12 @@
 - Published-page history: `docs-snapshots`, an orphan data branch.
 - Development and preview: `feature/snapshot-docs-tracker`.
 - Current PR/commit-based tracker and WordPress publishing remain unchanged.
-- The isolated adapter, existing-summary integration, HTML renderer and preview
-  workflow are implemented. Production switching remains disabled.
+- The adapter, health gates, existing-summary integration, production HTML/digest
+  rendering and preview workflow are implemented. Merging the branch enables
+  snapshot-based production publishing with documentation buttons only.
 - See [running and reviewing previews](snapshot-preview.md) for the current
-  test procedure and remaining cutover gates.
+  test procedure and merge/rollback behaviour. The sections below retain the
+  original design/checklist; the preview guide describes the implemented state.
 
 The collector covers AKS, AKS Arc, Fleet, Application Network, ACR, Arc Kubernetes,
 AGC and the nine existing AKS support categories. See
