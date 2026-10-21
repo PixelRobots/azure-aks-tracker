@@ -1,0 +1,203 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { execFileSync, spawnSync } = require('node:child_process');
+const { test } = require('node:test');
+const { buildChanges, body, createDemo, routeFor } = require('../snapshot-changes.cjs');
+const { render, compare } = require('../render-snapshot-preview.cjs');
+
+const now = new Date();
+const root = path.resolve(__dirname, '../../..');
+const article = 'articles/aks/what-is-aks.md';
+
+function fixture(run) {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'aks-snapshot-test-'));
+  const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
+  const commit = (message = 'Test content', date = now) => {
+    git('add', '-A');
+    const result = spawnSync('git', ['-C', repo, 'commit', '--allow-empty', '-m', message], {
+      encoding: 'utf8', env: { ...process.env, GIT_AUTHOR_DATE: date.toISOString(), GIT_COMMITTER_DATE: date.toISOString() }
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return git('rev-parse', 'HEAD');
+  };
+  try {
+    const baseline = createDemo(repo, now);
+    run({ repo, git, commit, baseline, build: options => buildChanges({ repo, baseline, now, ...options }) });
+  } finally {
+    fs.rmSync(repo, { recursive: true, force: true });
+  }
+}
+
+test('body normalization ignores front matter, CRLF and trailing whitespace', () => {
+  assert.equal(body('---\nupdated_at: today\ntitle: One\n---\n# Article  \r\n\r\nText  \r\n'),
+    body('---\nupdated_at: tomorrow\n---\n# Article\n\nText\n'));
+});
+
+test('all nine support routes retain the AKS Support product', () => {
+  for (const category of ['availability-performance', 'connectivity', 'create-upgrade-delete',
+    'error-codes', 'extensions', 'load-bal-ingress-c', 'logs', 'security', 'storage']) {
+    assert.equal(routeFor(`support/azure/azure-kubernetes/${category}/test.md`).product, 'AKS Support');
+  }
+});
+
+test('qualified baseline does not replay existing articles; demo changes cover all eight products', () => fixture(({ build, baseline }) => {
+  const initial = build({ head: baseline });
+  assert.equal(initial.changes.length, 0);
+  assert.equal(initial.baseline_only, true);
+  const changed = build();
+  assert.equal(changed.changes.length, 8);
+  assert.equal(new Set(changed.changes.map(item => item.product)).size, 8);
+  for (const item of changed.changes) {
+    assert.equal(item.status, 'modified');
+    assert.ok(item.additions > 0);
+    assert.ok(item.deletions > 0);
+    assert.ok(item.patch.includes('## Security and operations'));
+    assert.match(item.evidence_url, /\/commit\/[a-f0-9]{40}$/);
+    assert.equal(new Date(item.detected_at).getTime(), Math.floor(now.getTime() / 1000) * 1000);
+  }
+}));
+
+test('metadata-only/state changes do not emit articles; detection time follows content, not republish', () => fixture(({ repo, build, git, commit }) => {
+  const head = git('rev-parse', 'HEAD');
+  const file = path.join(repo, article);
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('title:', 'updated_at: later\ntitle:'));
+  const state = path.join(repo, '.learn-mirror/state.json');
+  fs.writeFileSync(state, JSON.stringify(JSON.parse(fs.readFileSync(state, 'utf8')), null, 2));
+  commit('Metadata only', new Date(now.getTime() + 1000));
+  const changed = build();
+  assert.equal(changed.changes.length, 8);
+  assert.equal(changed.changes.find(item => item.filename === article).sha, head);
+  const none = build({ baseline: head });
+  assert.equal(none.changes.length, 0);
+}));
+
+test('new articles emit once, net reverts disappear, deletions are held for review', () => fixture(({ repo, build, git, commit, baseline }) => {
+  const newFile = 'articles/aks/new-security-guide.md';
+  fs.writeFileSync(path.join(repo, newFile), '# New security guide\n\nRequire managed identity.\n');
+  const statePath = path.join(repo, '.learn-mirror/state.json');
+  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  state.pages['https://learn.microsoft.com/en-us/azure/aks/new-security-guide'] = { path: newFile };
+  fs.writeFileSync(statePath, JSON.stringify(state));
+  fs.writeFileSync(path.join(repo, article), git('show', `${baseline}:${article}`) + '\n');
+  fs.rmSync(path.join(repo, 'articles/application-network/overview.md'));
+  commit();
+  const result = build();
+  assert.equal(result.changes.find(item => item.filename === newFile).status, 'added');
+  assert.equal(result.changes.some(item => item.filename === article), false);
+  assert.equal(result.changes.some(item => item.product === 'Application Network'), false);
+  assert.equal(result.suppressed.length, 1);
+}));
+
+test('content-preserving moves are not reported as newly published pages', () => fixture(({ repo, build, commit, git }) => {
+  const baseline = git('rev-parse', 'HEAD');
+  const replacement = 'articles/aks/renamed-guide.md';
+  fs.renameSync(path.join(repo, article), path.join(repo, replacement));
+  const statePath = path.join(repo, '.learn-mirror/state.json');
+  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  state.pages['https://learn.microsoft.com/en-us/azure/aks/renamed-guide'] = { path: replacement };
+  fs.writeFileSync(statePath, JSON.stringify(state));
+  commit();
+  const result = build({ baseline });
+  assert.equal(result.changes.length, 0);
+  assert.equal(result.suppressed.length, 2);
+}));
+
+test('missing baseline, stale head, shallow history and missing canonical data fail explicitly', () => fixture(({ repo, build, commit }) => {
+  assert.throws(() => build({ baseline: 'missing-baseline' }));
+  assert.throws(() => build({ now: new Date(now.getTime() + 13 * 3600000) }), /stale/);
+  const statePath = path.join(repo, '.learn-mirror/state.json');
+  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  delete state.pages['https://learn.microsoft.com/en-us/azure/aks/what-is-aks'];
+  fs.writeFileSync(statePath, JSON.stringify(state));
+  commit();
+  assert.throws(() => build(), /no canonical URL/);
+  const shallow = path.join(repo, 'shallow-checkout');
+  execFileSync('git', ['clone', '--depth=1', new URL(`file:///${repo.replace(/\\/g, '/').replace(/^\//, '')}`).href, shallow], { stdio: 'pipe' });
+  assert.throws(() => buildChanges({ repo: shallow, baseline: 'HEAD', now }), /shallow/);
+}));
+
+test('UTC window includes a content edit exactly at midnight, excluding earlier edits', () => fixture(({ repo, build, git, baseline: originalBaseline }) => {
+  const since = new Date(now);
+  since.setUTCHours(0, 0, 0, 0);
+  since.setUTCDate(since.getUTCDate() - 7);
+  git('config', 'core.autocrlf', 'false');
+  // Re-date the fixture history to exercise the actual seven-day boundary.
+  const beforeTree = git('rev-parse', 'HEAD^{tree}');
+  const baselineTree = git('rev-parse', `${originalBaseline}^{tree}`);
+  const file = path.join(repo, article);
+  fs.appendFileSync(file, '\n## Midnight boundary\n\nRequire a new configuration version.\n');
+  git('add', '-A');
+  const boundaryTree = git('write-tree');
+  const old = new Date(since.getTime() - 3600000);
+  const envCommit = (date, tree, parent) => execFileSync('git', ['-C', repo, 'commit-tree', tree,
+    ...(parent ? ['-p', parent] : []), '-m', 'Window fixture'], {
+    encoding: 'utf8', env: { ...process.env, GIT_AUTHOR_DATE: date.toISOString(), GIT_COMMITTER_DATE: date.toISOString() }
+  }).trim();
+  const baseline = envCommit(old, baselineTree);
+  const before = envCommit(new Date(since.getTime() - 1000), beforeTree, baseline);
+  const boundary = envCommit(since, boundaryTree, before);
+  const recent = envCommit(now, boundaryTree, boundary);
+  const result = build({ baseline, head: recent });
+  assert.equal(result.base_revision, before);
+  assert.equal(result.changes.length, 1);
+  assert.equal(result.changes[0].filename, article);
+  assert.equal(result.changes[0].sha, boundary);
+  assert.equal(new Date(result.changes[0].detected_at).getTime(), since.getTime());
+}));
+
+test('renderer escapes content, rejects unsafe URLs, and uses detection/change labels in tracker and digest', () => fixture(({ build }) => {
+  const input = build({ demo: true });
+  const data = {
+    docs_source: 'snapshots', preview_only: true, input, ai_summary_count: 0,
+    items: input.changes.map(item => ({ ...item, summary: '<script>attack()</script>', summary_method: 'Heuristic', category: 'Security' }))
+  };
+  for (const mode of ['tracker', 'digest']) {
+    const html = render(data, mode);
+    assert.equal((html.match(/<article /g) || []).length, 8);
+    assert.ok(html.includes('SYNTHETIC TEST DATA'));
+    assert.ok(html.includes('Detected:'));
+    assert.ok(html.includes('View sample diff'));
+    assert.equal(html.includes('View PR'), false);
+    assert.equal(html.includes('<script>attack()'), false);
+    assert.ok(html.includes('&lt;script&gt;attack()'));
+    assert.equal(/@@[A-Z_]+@@/.test(html), false);
+  }
+  const comparison = compare(data, '<a href="https://learn.microsoft.com/azure/aks/what-is-aks">Live</a>');
+  assert.equal(comparison.articles.filter(item => item.also_linked_in_current_production_html).length, 1);
+  data.input.demo = false;
+  for (const item of data.items) item.evidence_url = `https://github.com/PixelRobots/azure-aks-tracker/commit/${'a'.repeat(40)}`;
+  assert.ok(render(data).includes('View change'));
+  data.items[0].canonical_url = 'javascript:alert(1)';
+  assert.throws(() => render(data), /Unsafe/);
+}));
+
+test('existing generator produces isolated no-AI summaries and matching HTML without network collection', () => fixture(({ repo, build }) => {
+  const input = path.join(repo, 'changes.json');
+  const output = path.join(repo, 'output');
+  fs.writeFileSync(input, JSON.stringify(build({ demo: true })));
+  const command = `$ErrorActionPreference='Stop'; & '${path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''")}' 1> '${path.join(repo, 'summaries.json').replace(/'/g, "''")}'`;
+  const result = spawnSync('pwsh', ['-NoProfile', '-Command', command], {
+    encoding: 'utf8', timeout: 120000,
+    env: {
+      ...process.env, DOCS_SOURCE: 'snapshots', DOCS_PREVIEW_ONLY: 'true',
+      SNAPSHOT_CHANGES_PATH: input, DOCS_PREVIEW_OUTPUT_DIR: output,
+      GITHUB_TOKEN: 'fixture-not-used', OpenAIKey: '', AZURE_OPENAI_APIURI: '',
+      DOCS_PREVIEW_REQUIRE_AI: 'false', CVE_ONLY: '', CVE_REFRESH_VHD: ''
+    }
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const data = JSON.parse(fs.readFileSync(path.join(repo, 'summaries.json'), 'utf8').replace(/^\uFEFF/, ''));
+  assert.equal(data.items.length, 8);
+  assert.equal(data.ai_summary_count, 0);
+  assert.equal(new Set(data.items.map(item => item.product)).size, 8);
+  assert.ok(fs.existsSync(path.join(output, 'docs-summary-cache.json')));
+  assert.equal(data.preview_only, true);
+  assert.ok(render(data).includes('8 updates'));
+  assert.ok(render(data, 'digest').includes('8 updates'));
+  assert.equal(result.stdout.includes('Processing AKS repository'), false);
+  assert.equal(result.stdout.includes('Fetching AKS CVE'), false);
+}));

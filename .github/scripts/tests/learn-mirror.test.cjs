@@ -80,7 +80,7 @@ test('sitemap scope includes only current English Azure and troubleshooting shar
 });
 
 test('committed seeds are sorted, unique and cover every configured route', () => {
-  const seeds = fs.readFileSync(path.join(root, 'learn-mirror-seed-urls.txt'), 'utf8').trim().split('\n');
+  const seeds = fs.readFileSync(path.join(root, 'learn-mirror-seed-urls.txt'), 'utf8').trim().split(/\r?\n/);
   assert.deepEqual(seeds, [...new Set(seeds)].sort());
   for (const url of seeds) assert.ok(include.test(url), url);
   for (const source of sources) {

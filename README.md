@@ -44,6 +44,11 @@ See [published documentation snapshots](docs/learn-snapshots.md) for coverage,
 setup, failure behaviour, seed refresh and local usage. The existing GitHub
 collector and WordPress workflow below are unchanged.
 
+On `feature/snapshot-docs-tracker`, a separate
+[end-to-end snapshot preview](docs/snapshot-preview.md) runs real and labelled
+synthetic changes through the existing summary pipeline and uploads standalone
+tracker/digest HTML for browser review. It cannot publish to WordPress.
+
 * **PowerShell script**
   `.github/scripts/generate-aks-updates.ps1` pulls data, runs optional AI summaries, and emits:
 

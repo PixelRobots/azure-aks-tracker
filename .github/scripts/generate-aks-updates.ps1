@@ -134,6 +134,16 @@ foreach ($repoConfig in $Repositories) {
   }
 }
 
+$DocsSource = if ($env:DOCS_SOURCE) { $env:DOCS_SOURCE } else { 'github' }
+if ($DocsSource -notin @('github', 'snapshots')) { throw "Invalid DOCS_SOURCE '$DocsSource'." }
+$SnapshotPreview = ($DocsSource -eq 'snapshots')
+if ($SnapshotPreview -and $env:DOCS_PREVIEW_ONLY -ne 'true') {
+  throw 'Snapshot mode is currently preview-only. Set DOCS_PREVIEW_ONLY=true; production publishing is not enabled.'
+}
+if ($SnapshotPreview -and (-not $env:SNAPSHOT_CHANGES_PATH -or -not $env:DOCS_PREVIEW_OUTPUT_DIR)) {
+  throw 'Snapshot preview requires SNAPSHOT_CHANGES_PATH and an isolated DOCS_PREVIEW_OUTPUT_DIR.'
+}
+$script:SnapshotAiFiles = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
@@ -162,6 +172,10 @@ $ghHeaders = @{
 $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 $DocsSummaryCachePath = 'docs-summary-cache.json'
+if ($SnapshotPreview) {
+  New-Item -ItemType Directory -Path $env:DOCS_PREVIEW_OUTPUT_DIR -Force | Out-Null
+  $DocsSummaryCachePath = Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'docs-summary-cache.json'
+}
 $DocsSummaryCacheMaxEntries = 2000
 $DocsSummaryCacheVersion = 'openai-responses-v1'
 $ReleasesSummaryCachePath = 'releases-summary-cache.json'
@@ -253,6 +267,7 @@ function Get-DocsSummaryCacheKey([string]$FilePath, $Items) {
   $patchSample = Get-GroupPatchSample -items $Items
   $payload = @(
     $DocsSummaryCacheVersion
+    if ($SnapshotPreview) { 'learn-snapshot-v1' }
     $FilePath
     [string]$adds
     [string]$dels
@@ -1732,6 +1747,7 @@ function Get-PerFileSummariesViaOpenAIResponses {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{ ordered = @(); byFile = @{} } }
   if ((Get-OAIProvider) -ne 'OpenAI') {
+    if ($SnapshotPreview) { throw 'Snapshot preview enrichment currently requires the OpenAI provider; Azure OpenAI support is not yet validated.' }
     Write-Warning "Responses API migration currently supports the OpenAI provider only; falling back to GitHub Models for docs."
     return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
   }
@@ -1752,6 +1768,7 @@ function Get-PerFileSummariesViaOpenAIResponses {
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
     Log "Docs vector store processing finished (status: $($vs.status), iterations: $vsWaitCount)"
     if ($vs.status -ne 'completed') {
+      if ($SnapshotPreview) { throw "Snapshot preview AI vector store did not complete: $($vs.status)" }
       Write-Warning "Vector store processing did not complete (status: $($vs.status)) — falling back to GitHub Models"
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
@@ -1811,6 +1828,7 @@ OUTPUT: JSON array of kept items:
     $clean = Remove-AIResponseArtifacts $last
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) {
+      if ($SnapshotPreview) { throw 'Snapshot preview AI returned no valid JSON array.' }
       $preview = if ($clean) { $clean.Substring(0, [Math]::Min($PreviewMaxLength, $clean.Length)) } else { '(empty response)' }
       Log "AI: No JSON array found in response — falling back to GitHub Models. Raw response (first $PreviewMaxLength chars): $preview"
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
@@ -1822,6 +1840,12 @@ OUTPUT: JSON array of kept items:
     $byFile = @{}
     foreach ($i in $arr) {
       if (-not $i.file) { continue }
+      if ($SnapshotPreview) {
+        if (-not $filteredGroups.ContainsKey([string]$i.file) -or [string]::IsNullOrWhiteSpace([string]$i.summary)) {
+          throw "Snapshot AI returned an unknown article or empty summary: $($i.file)"
+        }
+        [void]$script:SnapshotAiFiles.Add([string]$i.file)
+      }
       $ordered += $i
       $byFile[$i.file] = @{
         summary  = $i.summary
@@ -1833,6 +1857,7 @@ OUTPUT: JSON array of kept items:
     return @{ ordered = $ordered; byFile = $byFile }
   }
   catch {
+    if ($SnapshotPreview) { throw "Snapshot preview enrichment failed: $($_.Exception.Message)" }
     if (Test-IsRateLimitError $_) {
       Write-Warning "OpenAI rate limit reached for docs — falling back to GitHub Models. Error: $($_.Exception.Message)"
       New-GitHubIssueOnRateLimit -Context 'docs' -Details $_.Exception.Message
@@ -1901,11 +1926,14 @@ $PatchSample
         -Temperature 0.1
       $summary = (($text -replace '\s+', ' ').Trim())
       if (-not (Test-BadDocsSummary $summary)) {
+        if ($SnapshotPreview) { [void]$script:SnapshotAiFiles.Add($FilePath) }
         return $summary
       }
       Log "AI modified-file summary rejected for $FilePath; using heuristic summary."
     }
-    catch { }
+    catch {
+      if ($SnapshotPreview) { throw "Snapshot preview modified-page summary failed: $($_.Exception.Message)" }
+    }
   }
 
   # Enhanced heuristic summary with trivial filtering
@@ -2953,7 +2981,7 @@ $initTopRowsHtml
 # =========================
 
 # Initialize AI if provider is configured
-if ($PreferProvider) {
+if ($PreferProvider -and -not ($SnapshotPreview -and $PSAIReady)) {
   $PSAIReady = Initialize-AIProvider -Provider $PreferProvider
   if ($PSAIReady) { Log "AI provider ($PreferProvider) initialized." }
 } else {
@@ -2964,6 +2992,11 @@ if ($PreferProvider) {
 Log "Collecting GitHub data since $SINCE_ISO from $($Repositories.Count) repositories..."
 
 $allFiles = @()
+
+if ($SnapshotPreview -and $script:CveOnly) { throw 'Snapshot documentation preview cannot be combined with CVE_ONLY.' }
+if ($SnapshotPreview -and $env:DOCS_PREVIEW_REQUIRE_AI -eq 'true' -and -not $PSAIReady) {
+  throw 'AI enrichment was requested for the preview, but no AI provider is ready. Configure a provider or explicitly disable AI.'
+}
 
 if ($script:CveOnly) {
   Log "CVE_ONLY mode — skipping GitHub/docs/AI fetch."
@@ -2989,6 +3022,37 @@ if ($script:CveOnly) {
   return
 }
 
+if ($SnapshotPreview) {
+  $snapshotInput = Get-Content -LiteralPath $env:SNAPSHOT_CHANGES_PATH -Raw | ConvertFrom-Json -ErrorAction Stop
+  if ($snapshotInput.schema_version -ne 1 -or $snapshotInput.source -ne 'learn-snapshot' -or
+      $null -eq $snapshotInput.changes -or -not $snapshotInput.head_revision) {
+    throw 'Unsupported or malformed snapshot adapter input.'
+  }
+  foreach ($change in @($snapshotInput.changes)) {
+    if ($change.status -notin @('added', 'modified') -or -not $change.patch -or
+        -not $change.canonical_url -or -not $change.detected_at) {
+      throw "Malformed snapshot change: $($change.filename)"
+    }
+    $allFiles += [pscustomobject]@{
+      filename = $change.filename
+      status = $change.status
+      additions = $change.additions
+      deletions = $change.deletions
+      patch = $change.patch
+      pr_title = $change.title
+      pr_url = $change.evidence_url
+      sha = $change.sha
+      date = $change.detected_at
+      source = 'Snapshot'
+      repo_owner = 'MicrosoftDocs'
+      repo_name = $change.repo_name
+      repo_display = $change.product
+      canonical_url = $change.canonical_url
+    }
+  }
+  Log "Loaded $($allFiles.Count) published-page changes (demo: $($snapshotInput.demo))."
+}
+else {
 foreach ($repoConfig in $Repositories) {
   $Owner = $repoConfig.Owner
   $Repo = $repoConfig.Repo
@@ -3115,6 +3179,7 @@ foreach ($repoConfig in $Repositories) {
   }
   
   Log "  Collected files from $DisplayName repository"
+}
 }
 
 Log "Collected $($allFiles.Count) file changes"
@@ -3279,7 +3344,11 @@ foreach ($k in $filteredGroups.Keys) {
     $repoName = $firstItem.repo_name
     $repoBranch = if ($firstItem.repo_branch) { $firstItem.repo_branch } else { "main" }
     
-    $forcedSummary = Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName -Ref $repoBranch
+    $forcedSummary = if ($SnapshotPreview) {
+      "New documentation page: $($firstItem.pr_title). Review the published article and captured content diff."
+    } else {
+      Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName -Ref $repoBranch
+    }
     $forced.Add([pscustomobject]@{
         file     = $k
         summary  = $forcedSummary
@@ -3417,8 +3486,9 @@ function Apply-FinalTrivialFiltering {
       $fileBase = $file -replace '\d+$', '' -replace '-v\d+$', ''
       $existingBase = $existing.file -replace '\d+$', '' -replace '-v\d+$', ''
       
-      if ($fileBase -eq $existingBase -or 
-          [System.IO.Path]::GetFileNameWithoutExtension($file) -eq [System.IO.Path]::GetFileNameWithoutExtension($existing.file)) {
+      if (($SnapshotPreview -and $file -eq $existing.file) -or
+          (-not $SnapshotPreview -and ($fileBase -eq $existingBase -or
+          [System.IO.Path]::GetFileNameWithoutExtension($file) -eq [System.IO.Path]::GetFileNameWithoutExtension($existing.file)))) {
         
         # Similar files found - keep the one with better summary or newer date
         $existingItems = $filteredGroups[$existing.file]
@@ -3487,6 +3557,40 @@ foreach ($item in @($finalResults.ordered)) {
 
 Save-DocsSummaryCache -Cache $docsSummaryCache
 Log "Docs summary cache update complete."
+
+if ($SnapshotPreview) {
+  $previewItems = @(
+    foreach ($row in @($finalResults.ordered)) {
+      $file = [string]$row.file
+      $original = @($snapshotInput.changes | Where-Object filename -eq $file)[0]
+      if (-not $original) { throw "Preview result has no source article: $file" }
+      [pscustomobject]@{
+        filename = $file
+        title = $original.title
+        product = $original.product
+        status = $original.status
+        canonical_url = $original.canonical_url
+        evidence_url = $original.evidence_url
+        detected_at = $original.detected_at
+        summary = $finalResults.byFile[$file].summary
+        summary_method = if ($script:SnapshotAiFiles.Contains($file)) { 'AI' } else { 'Heuristic or isolated cache' }
+        category = Compute-Category -file $file -summary $finalResults.byFile[$file].summary -preferred $finalResults.byFile[$file].category
+        patch = $original.patch
+      }
+    }
+  )
+  [pscustomobject]@{
+    docs_source = 'snapshots'
+    preview_only = $true
+    ai_requested = [bool]$PreferProvider
+    ai_provider = [string]$PreferProvider
+    ai_summary_count = @($previewItems | Where-Object summary_method -eq 'AI').Count
+    input = $snapshotInput
+    items = $previewItems
+  } | ConvertTo-Json -Depth 12
+  Log "Snapshot preview completed: $($previewItems.Count) reader-facing updates. No releases, CVEs or publishing requested."
+  return
+}
 
 # Render DOCS sections — ONLY what passed final filtering, preserving order
 Log "Rendering docs cards for tracker page..."
