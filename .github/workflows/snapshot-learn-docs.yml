@@ -1,0 +1,108 @@
+name: Snapshot published Learn documentation
+
+on:
+  schedule:
+    - cron: '20 2,8,14,20 * * *'
+  workflow_dispatch:
+    inputs:
+      full:
+        description: 'Refetch pages without saved ETags'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: learn-docs-snapshots
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out tracker configuration
+        uses: actions/checkout@v7
+        with:
+          path: tracker
+
+      - name: Check out pinned Learn mirror tool
+        uses: actions/checkout@v7
+        with:
+          repository: merill/learn-mirror
+          ref: 4f6c802dd18d00a99397504b8872ae0841ac5c38 # v1
+          path: learn-mirror-tool
+          persist-credentials: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Test snapshot configuration
+        env:
+          LEARN_MIRROR_TOOL: ${{ github.workspace }}/learn-mirror-tool/learn-mirror.js
+        run: node --test tracker/.github/scripts/tests/learn-mirror.test.cjs
+
+      - name: Open snapshot branch
+        working-directory: tracker
+        shell: bash
+        run: |
+          set -euo pipefail
+          # An orphan branch keeps mirrored articles separate from application code.
+          if git ls-remote --exit-code --heads origin docs-snapshots > "$RUNNER_TEMP/snapshot-ref"; then
+            git fetch origin docs-snapshots
+            git worktree add -b docs-snapshots ../snapshots FETCH_HEAD
+          else
+            status=$?
+            if [ "$status" -ne 2 ]; then
+              echo "::error::Unable to check for the snapshot branch"
+              exit "$status"
+            fi
+            git worktree add --orphan -b docs-snapshots ../snapshots
+          fi
+
+      - name: Collect published Markdown
+        id: mirror
+        working-directory: snapshots
+        shell: bash
+        env:
+          FULL: ${{ inputs.full }}
+        run: |
+          set -euo pipefail
+          args=(
+            --config="$GITHUB_WORKSPACE/tracker/learn-mirror.config.json"
+            --seed-urls="$GITHUB_WORKSPACE/tracker/learn-mirror-seed-urls.txt"
+            --message-file="$RUNNER_TEMP/snapshot-message.txt"
+            --max-minutes=25
+          )
+          if [ "$FULL" = "true" ]; then args+=(--full); fi
+          node "$GITHUB_WORKSPACE/learn-mirror-tool/learn-mirror.js" "${args[@]}"
+
+      - name: Preserve snapshot provenance
+        shell: bash
+        run: |
+          cp tracker/learn-mirror.config.json snapshots/learn-mirror.config.json
+          cp tracker/learn-mirror-seed-urls.txt snapshots/learn-mirror-seed-urls.txt
+          cp tracker/docs/learn-snapshots.md snapshots/README.md
+
+      - name: Commit and push snapshots
+        working-directory: snapshots
+        shell: bash
+        env:
+          CONTENT_CHANGED: ${{ steps.mirror.outputs.content_changed }}
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No snapshot or state changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$CONTENT_CHANGED" != "true" ]; then
+            printf 'Refresh Learn snapshot state\n' > "$RUNNER_TEMP/snapshot-message.txt"
+          fi
+          printf '\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n' >> "$RUNNER_TEMP/snapshot-message.txt"
+          git commit -F "$RUNNER_TEMP/snapshot-message.txt"
+          git push origin HEAD:refs/heads/docs-snapshots

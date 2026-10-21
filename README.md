@@ -31,6 +31,19 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 
 ## How it works
 
+### Published documentation snapshots
+
+A separate Node.js workflow now snapshots the published Microsoft Learn pages
+for all tracked documentation sources, including Fleet and Application Network.
+It uses a pinned version of [merill/learn-mirror](https://github.com/merill/learn-mirror)
+and stores Markdown history and collection state on the `docs-snapshots` branch
+every six hours. The initial collection establishes a baseline; it does not
+report every page as new or change the live tracker or weekly digest.
+
+See [published documentation snapshots](docs/learn-snapshots.md) for coverage,
+setup, failure behaviour, seed refresh and local usage. The existing GitHub
+collector and WordPress workflow below are unchanged.
+
 * **PowerShell script**
   `.github/scripts/generate-aks-updates.ps1` pulls data, runs optional AI summaries, and emits:
 
