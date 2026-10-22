@@ -1063,6 +1063,30 @@ function CategoryToPillHtml([string]$category) {
 # =========================
 # KIND PILL HELPERS
 # =========================
+function Get-SnapshotChangesHtml($item) {
+  if ($item.status -eq 'added') {
+    return '<p class="aks-doc-new-notice">New article: no earlier snapshot to compare. Read the full article using View Documentation.</p>'
+  }
+  if ([string]::IsNullOrWhiteSpace($item.patch)) {
+    throw "Cannot display snapshot changes without a patch: $($item.filename)"
+  }
+  $lines = [System.Collections.Generic.List[string]]::new()
+  foreach ($line in @(([string]$item.patch -split "`n") | Select-Object -Skip 2)) {
+    $class = if ($line.StartsWith('+')) { 'aks-diff-added' }
+      elseif ($line.StartsWith('-')) { 'aks-diff-removed' }
+      elseif ($line.StartsWith('@@')) { 'aks-diff-hunk' }
+      else { 'aks-diff-context' }
+    $lines.Add("<span class=""$class"">$(Escape-Html $line)</span>")
+  }
+  return @"
+<details class="aks-doc-changes">
+  <summary>Show changes <span class="aks-diff-count">($($item.additions) added, $($item.deletions) removed lines)</span></summary>
+  <p class="aks-diff-help">Net changes between saved snapshots in this tracking window, shown as source Markdown. Publication metadata is excluded. + marks additions; - marks removals. Surrounding lines provide context.</p>
+  <div class="aks-diff-scroll" role="region" aria-label="Article changes: $(Escape-Html $item.pr_title)" tabindex="0"><pre><code>$($lines -join '')</code></pre></div>
+</details>
+"@
+}
+
 function Get-SessionKind($items, [string]$summary) {
   $hasAdded = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
@@ -3644,6 +3668,7 @@ foreach ($row in @($finalResults.ordered)) {
   $prButton = if (-not $SnapshotMode) {
     "<a class=""aks-doc-link aks-doc-link-pr"" href=""$prLink"" target=""_blank"" rel=""noopener"">View PR</a>"
   } else { '' }
+  $changesHtml = if ($SnapshotMode) { Get-SnapshotChangesHtml $arr[0] } else { '' }
 
   $display = Get-DocDisplayName $file
   $kind = Get-SessionKind -items $arr -summary ($summary ?? "")
@@ -3681,6 +3706,7 @@ foreach ($row in @($finalResults.ordered)) {
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
     $prButton
   </div>
+  $changesHtml
 </div>
 "@
   $sections.Add($section.Trim())
@@ -4352,7 +4378,32 @@ $updateCount = @($finalResults.ordered).Count
 
 $formShortcode = '[email-subscribers-form id="2"]'
 
+$snapshotDiffStyles = if ($SnapshotMode) {
+@'
+<style>
+.aks-doc-changes {
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  margin-top: 16px; border-top: 1px solid currentColor; padding-top: 12px; min-width: 0;
+}
+html[data-theme="dark"] .aks-doc-changes { --cp-success: #4ade80; --cp-danger: #f87171; }
+.aks-doc-changes summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.aks-doc-changes summary:focus-visible, .aks-diff-scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.aks-doc-changes .aks-diff-count { font-weight: 400; font-size: 0.85em; }
+.aks-doc-changes .aks-diff-help, .aks-doc-new-notice { font-size: 0.85em; margin: 12px 0; }
+.aks-diff-scroll { max-height: 24rem; overflow: auto; border: 1px solid currentColor; border-radius: 0.625rem; margin-top: 12px; }
+.aks-diff-scroll pre, .aks-diff-scroll code { font: 13px/1.6 Consolas, "Courier New", Courier, monospace; color: inherit; background: inherit; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+.aks-diff-scroll pre { margin: 0; padding: 12px; }
+.aks-diff-scroll code > span { display: block; min-height: 1.6em; padding: 0 8px; border-left: 3px solid transparent; }
+.aks-diff-scroll .aks-diff-added { border-left-color: var(--cp-success); }
+.aks-diff-scroll .aks-diff-removed { border-left-color: var(--cp-danger); }
+.aks-diff-scroll .aks-diff-hunk { font-weight: 700; margin-top: 8px; }
+</style>
+'@
+} else { '' }
+
 $html = @"
+$snapshotDiffStyles
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">

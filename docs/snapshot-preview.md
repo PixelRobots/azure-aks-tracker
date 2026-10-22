@@ -18,6 +18,16 @@ and weekly docs digest now:
 - Have **no View PR or View change button**.
 - Label the timestamp **Detected**, rather than implying a source merge time.
 
+Updated articles also have a collapsed **Show changes** disclosure below the
+documentation button. It shows the same net article-body diff used for the
+summary, as escaped source Markdown with surrounding context and line counts.
+Green/red edge markers and `+`/`-` prefixes distinguish additions/removals without
+relying on colour alone. Long diffs have a keyboard-focusable scrolling region;
+long lines wrap on mobile. No JavaScript or plugin update is required.
+New articles instead explain that there is no earlier snapshot to compare.
+Weekly email digests remain summary-only, with the documentation link and no
+embedded diff.
+
 The collector's Git history and change evidence remain available in the
 `docs-snapshots` branch and diagnostic JSON, not as reader-facing buttons.
 
@@ -119,6 +129,10 @@ zero updates.
   tracker; only the documentation PR button and date wording differ.
 - Each docs card/digest entry has exactly one documentation button and no PR or
   mirror-change button. Application Network uses `/azure/application-network/`.
+- Modified cards open their own **Show changes** disclosure by mouse or keyboard;
+  it starts collapsed, escapes HTML, retains the complete diff and has no
+  page-level horizontal overflow on mobile. New articles show a new-page notice,
+  not a full article masquerading as a modification. Emails contain no diff.
 - Tracker and digest have the same eligible article set and accurate counts.
 - Real timestamps are detection times; synthetic data is conspicuously labelled.
 - Metadata-only edits, the initial baseline, reversions and simple moves do not

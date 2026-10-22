@@ -222,6 +222,41 @@ test('production health requires a complete fresh pass and matches committed con
   assert.throws(() => validateHealth({ ...health, products: ['AKS'] }, now), /incomplete or failed/);
 }));
 
+test('production change disclosure escapes Markdown, keeps the complete diff and avoids full-page diffs for new articles', () => {
+  const script = path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''");
+  const result = spawnSync('pwsh', ['-NoProfile', '-Command', `
+    $ErrorActionPreference='Stop'
+    $ast=[System.Management.Automation.Language.Parser]::ParseFile('${script}',[ref]$null,[ref]$null)
+    $ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -in @('Escape-Html','Get-SnapshotChangesHtml')},$true) |
+      ForEach-Object { Invoke-Expression $_.Extent.Text }
+    $item=[pscustomobject]@{
+      status='modified'; filename='test.md'; pr_title='Test "article" <script>'
+      additions=1001; deletions=1
+      patch="--- before.md\`n+++ after.md\`n@@ -1 +1 @@\`n-Old text\`n+<script>alert(1)</script>\`n" + ((1..1000 | ForEach-Object { "+line $_" }) -join "\`n")
+    }
+    $modified=Get-SnapshotChangesHtml $item
+    $item.status='added'
+    $added=Get-SnapshotChangesHtml $item
+    $item.status='modified'; $item.patch=''
+    $failed=$false
+    try { Get-SnapshotChangesHtml $item } catch { $failed=$_.Exception.Message.Contains('without a patch') }
+    @{modified=$modified;added=$added;failed=$failed} | ConvertTo-Json -Compress
+  `], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const data = JSON.parse(result.stdout);
+  assert.match(data.modified, /<details class="aks-doc-changes">/);
+  assert.doesNotMatch(data.modified, /<details[^>]*\bopen\b/);
+  assert.match(data.modified, /1001 added, 1 removed lines/);
+  assert.match(data.modified, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.match(data.modified, /aria-label="Article changes: Test &quot;article&quot; &lt;script&gt;"/);
+  assert.match(data.modified, /class="aks-diff-added">\+line 1000<\/span>/);
+  assert.match(data.modified, /class="aks-diff-removed">-Old text<\/span>/);
+  assert.doesNotMatch(data.modified, /--- before\.md|\+\+\+ after\.md|<script>/);
+  assert.match(data.added, /New article: no earlier snapshot to compare/);
+  assert.doesNotMatch(data.added, /<details|<pre|<script>/);
+  assert.equal(data.failed, true);
+});
+
 test('production generator preserves layout, releases and CVEs and removes PR buttons in both docs surfaces', () => fixture(({ repo, build, commit }) => {
   const input = path.join(repo, 'changes.json');
   const output = path.join(repo, 'output');
@@ -263,6 +298,11 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.equal(/View PR|View change|aks-doc-link-pr/.test(data.html + data.digest_docs_html), false);
   assert.equal((data.html.match(/Detected:/g) || []).length, 8);
   assert.equal((data.html.match(/class="aks-doc-header" style="flex-wrap:wrap;"/g) || []).length, 8);
+  assert.equal((data.html.match(/<details class="aks-doc-changes">/g) || []).length, 8);
+  assert.ok(data.html.includes('class="aks-diff-added"'));
+  assert.ok(data.html.includes('class="aks-diff-removed"'));
+  assert.equal(data.digest_docs_html.includes('aks-doc-changes'), false);
+  assert.equal(data.digest_docs_html.includes('<details'), false);
   assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 8);
   assert.ok(data.html.includes('class="aks-tabs"'));
   assert.ok(data.html.includes('id="aks-tab-releases"'));
@@ -293,6 +333,7 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.equal(actual.status, 0, actual.stdout + actual.stderr);
   const production = JSON.parse(fs.readFileSync(path.join(output, 'production.json'), 'utf8').replace(/^\uFEFF/, ''));
   assert.equal(production.digest_docs_count, 8);
+  assert.equal((production.html.match(/<details class="aks-doc-changes">/g) || []).length, 8);
   assert.equal(/View PR|View change/.test(production.html + production.digest_docs_html), false);
   assert.ok(fs.existsSync(path.join(repo, 'snapshot-docs-summary-cache.json')));
 
