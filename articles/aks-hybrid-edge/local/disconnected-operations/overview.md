@@ -19,8 +19,8 @@ learn_banner_products:
 ms.service: azure-kubernetes-service-hybrid
 description: Learn about Azure Kubernetes Service (AKS) enabled by Azure Arc for Azure Local with disconnected operations, including supported scenarios, prerequisites, and limitations.
 ms.topic: overview
-author: davidsmatlak
-ms.author: davidsmatlak
+author: rishimody
+ms.author: rmody
 ms.date: 2026-10-06T00:00:00.0000000Z
 ms.custom: disconnected-operations
 ai-usage: ai-assisted
@@ -85,9 +85,7 @@ Limitations for disconnected operations with AKS include:
 
 - Support for disconnected operations begins with the 2408 release.
 - Supported Kubernetes versions: 1.33.4 and 1.33.5.
-- Windows node pools aren't supported.
 - Microsoft Entra ID (formerly Azure Active Directory) isn't supported for disconnected operations.
-- GPUs aren't supported.
 - Arc Gateway isn't supported for configuring outbound URLs.
 - Create logical networks by using the CLI only. The portal isn't supported.
 - Create SSH keys by using the CLI only. The portal isn't supported.
