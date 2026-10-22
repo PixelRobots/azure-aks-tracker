@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "checked_at": "2026-10-21T17:43:43.339Z",
+  "checked_at": "2026-10-22T07:04:53.812Z",
   "complete": true,
   "errors": 0,
   "unreached": 0,
-  "article_count": 1352,
+  "article_count": 1353,
   "products": [
     "ACR",
     "AGC",
@@ -15,5 +15,5 @@
     "Arc K8s",
     "Fleet"
   ],
-  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/39645461843"
+  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/39737372252"
 }

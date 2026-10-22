@@ -75,6 +75,10 @@ This feature is currently in preview, and some limitations apply. Previews are m
 - To use the Azure CLI steps in this article, Azure CLI version 2.3.1 or later is required. If you need to install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli). Or run in [Azure Cloud Shell](/en-us/azure/cloud-shell/quickstart).
 - If you don't already have a container registry, [create one](container-registry-get-started-azure-cli) (Premium tier required) in a preview region.
 
+Note
+
+For the upcoming agent pool permission update, the caller doesn't need a permission change if they already have effective agent pool read access, such as through **Container Registry Tasks Contributor** at registry scope. To check other roles and callers, see [Migrate ACR task agent pool permissions](tasks-agent-pools-permission-migration).
+
 ## Pool tiers
 
 Agent pool tiers provide the following resources per instance in the pool.
