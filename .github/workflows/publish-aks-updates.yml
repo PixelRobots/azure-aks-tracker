@@ -2,6 +2,13 @@
 name: Publish AKS updates to WordPress (PowerShell)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-aks-updates.yml'
+      - '.github/scripts/snapshot-changes.cjs'
+      - '.github/scripts/snapshot-health.cjs'
+      - 'snapshot-preview.config.json'
   schedule:
     - cron: '0 */6 * * *'   # Every 6 hours for page updates
     - cron: '30 6 * * *'    # Daily 06:30 UTC — includes VHD CVE refresh (offset from the 6-hourly slot)
@@ -40,7 +47,19 @@ permissions:
   issues: write    # Allow creating issues for rate-limit alerts
 
 jobs:
+  collect:
+    if: github.event.inputs.ssh_upload_only != 'true' && github.event.inputs.refresh_cve_data != 'true'
+    uses: ./.github/workflows/snapshot-learn-docs.yml
+    permissions:
+      contents: write
+
   publish:
+    needs: collect
+    if: >-
+      always() && !cancelled() &&
+      (needs.collect.result == 'success' ||
+       (needs.collect.result == 'skipped' &&
+        (github.event.inputs.ssh_upload_only == 'true' || github.event.inputs.refresh_cve_data == 'true')))
     runs-on: ubuntu-latest
     env:
       WP_USER_AGENT: azure-aks-tracker-action/1.0 (https://github.com/PixelRobots/azure-aks-tracker)
@@ -50,6 +69,31 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: actions/setup-node@v5
+        if: needs.collect.result == 'success'
+        with:
+          node-version: '22'
+
+      - name: Check out published documentation history
+        if: needs.collect.result == 'success'
+        uses: actions/checkout@v7
+        with:
+          ref: docs-snapshots
+          path: .snapshot-history
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prepare validated snapshot changes
+        if: needs.collect.result == 'success'
+        shell: pwsh
+        run: |
+          $config = Get-Content snapshot-preview.config.json -Raw | ConvertFrom-Json
+          if ($config.baseline_qualified -ne $true) { throw 'Snapshot baseline has not been qualified.' }
+          $output = Join-Path $env:RUNNER_TEMP 'snapshot-changes.json'
+          node .github/scripts/snapshot-changes.cjs --repo=.snapshot-history "--baseline=$($config.baseline_revision)" --production=true "--output=$output"
+          if ($LASTEXITCODE -ne 0) { throw 'Snapshot health/history validation failed; existing published content is unchanged.' }
+          "SNAPSHOT_CHANGES_PATH=$output" >> $env:GITHUB_ENV
+
       - name: PowerShell 7 is preinstalled
         run: pwsh -v
 
@@ -58,6 +102,7 @@ jobs:
         id: gen
         shell: pwsh
         env:
+          DOCS_SOURCE: snapshots
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OpenAIKey: ${{ secrets.OPENAI_API_KEY }}
           AZURE_OPENAI_APIURI:       ${{ secrets.AZURE_OPENAI_APIURI }}
@@ -109,6 +154,10 @@ jobs:
           else
             echo "No docs-summary-cache.json produced."
           fi
+          if [ -f snapshot-docs-summary-cache.json ]; then
+            cp snapshot-docs-summary-cache.json "$TMP_CACHE_DIR/snapshot-docs-summary-cache.json"
+            FILES_TO_ADD="$FILES_TO_ADD snapshot-docs-summary-cache.json"
+          fi
           if [ -f releases-summary-cache.json ]; then
             cp releases-summary-cache.json "$TMP_CACHE_DIR/releases-summary-cache.json"
             FILES_TO_ADD="$FILES_TO_ADD releases-summary-cache.json"
@@ -128,6 +177,9 @@ jobs:
           fi
           if [ -f "$TMP_CACHE_DIR/docs-summary-cache.json" ]; then
             cp "$TMP_CACHE_DIR/docs-summary-cache.json" docs-summary-cache.json
+          fi
+          if [ -f "$TMP_CACHE_DIR/snapshot-docs-summary-cache.json" ]; then
+            cp "$TMP_CACHE_DIR/snapshot-docs-summary-cache.json" snapshot-docs-summary-cache.json
           fi
           if [ -f "$TMP_CACHE_DIR/releases-summary-cache.json" ]; then
             cp "$TMP_CACHE_DIR/releases-summary-cache.json" releases-summary-cache.json
