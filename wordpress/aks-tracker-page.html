@@ -45,7 +45,7 @@
       <p>Latest 5 AKS and App Net release notes with AI-generated summaries, breaking changes, and Good to Know information.</p>
       <div class="aks-rel-header">
           <div class="aks-rel-title-row">
-              <span class="aks-pill aks-pill-updated">updated: 22/10/2026, 00:16:06</span>
+              <span class="aks-pill aks-pill-updated">updated: 22/10/2026, 06:12:04</span>
           </div>
       </div>
         <div class="aks-rel-card">
@@ -166,58 +166,83 @@
       <h2>Documentation Updates</h2>
       <div class="aks-docs-desc">Meaningful updates to AKS, App Net, Arc K8s, AKS Arc, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
-        <span class="aks-pill aks-pill-updated">updated: 22/10/2026, 00:16:06</span>
-        <span class="aks-pill aks-pill-count">44 updates</span>
+        <span class="aks-pill aks-pill-updated">updated: 22/10/2026, 06:12:04</span>
+        <span class="aks-pill aks-pill-count">46 updates</span>
       </div>
       <div class="aks-docs-list">
         <div class="aks-doc-update"
-     data-category="Compute"
+     data-category="Operations"
+     data-kind="Rework"
+     data-product="AKS Support"
+     data-updated="2026-10-19T18:03:26.0000000"
+     data-title="Upgrade Fails Because of Nsg Rules">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/upgrade-fails-because-of-nsg-rules">AKS Support - Upgrade Fails Because of Nsg Rules</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 18:03</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The document has been updated to clarify troubleshooting steps for Azure Kubernetes Service (AKS) cluster upgrades that fail due to network security group (NSG) rules. It emphasizes the need for outbound connectivity to specific endpoints and provides detailed commands for checking NSG rules and connectivity analysis. Additionally, it includes new sections on identifying NSGs and fixing blocking rules, enhancing the overall troubleshooting guidance.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/upgrade-fails-because-of-nsg-rules" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/e839db474d5a1625f669d75c3bd1e8e1383e19c9" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="General"
      data-kind="Rework"
      data-product="AKS"
      data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Node Resource Reservations">
+     data-title="Kueue Overview">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/node-resource-reservations">AKS - Node Resource Reservations</a>
+    <a href="https://learn.microsoft.com/azure/aks/kueue-overview">AKS - Kueue Overview</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
     <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
     <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now includes details on enabling Node Hardening for Azure Kubernetes Service (AKS) by registering the `CustomNodeConfigPreview` feature flag and using the `--enable-node-hardening` parameter. Users can also customize `kubeReserved` CPU and memory values or eviction thresholds on Linux node pools through the preview custom node configuration settings. This enhances the ability to manage resource reservations and improve node performance.</p>
+    <p>The documentation for the Kueue installation guide on AKS has been revised to clarify that users must add the `kueue.x-k8s.io/queue-name: &lt;local-queue-name&gt;` label to workloads for proper routing to the appropriate ClusterQueue. Additionally, it now specifies that uninstalling Managed Kueue will delete all associated custom resources, and users should export their configurations beforehand to reapply them after reinstallation. The supported and unsupported workload integrations have also been updated, providing clearer guidance on compatibility.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/node-resource-reservations" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/kueue-overview" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Storage"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Create Volume Azure Disk">
+     data-category="Compliance"
+     data-kind="Update"
+     data-product="ACR"
+     data-updated="2026-10-16T17:04:21.0000000"
+     data-title="Container Registry Skus">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/create-volume-azure-disk">AKS - Create Volume Azure Disk</a>
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-skus">ACR - Container Registry Skus</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Storage</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fce7f3;color:#be185d;border:1px solid #f9a8d4;">Compliance</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-16 17:04</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now includes an important note regarding the expansion of Azure disks beyond 4 TiB. Users must unmount and detach **Standard HDD**, **Standard SSD**, or **Premium SSD** volumes from the AKS node before updating the `PersistentVolumeClaim` (PVC) and scaling the workload down to zero replicas. In contrast, **Premium SSD v2** and **Ultra Disk** volumes can be expanded online without this limitation.</p>
+    <p>The documentation now includes expanded guidance on monitoring Azure Container Registry metrics, specifically addressing how to audit throttling and bandwidth issues. Users can utilize Azure Monitor metrics to filter and split transactions by response type, API name, and region to identify affected operations. Additionally, the section on mitigating throttling now emphasizes the importance of updating the registry's SKU or contacting Azure support for limit increases if persistent issues occur.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/create-volume-azure-disk" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-skus" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/0b79b52653a18e28dd91c5b5471501076363b590" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
@@ -242,31 +267,6 @@
   <ul></ul>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-create-cluster-ubuntu-cli" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Storage"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Create Volume Azure Files">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/create-volume-azure-files">AKS - Create Volume Azure Files</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Storage</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The article clarifies the use of NFS mount options for Azure Files CSI volumes, emphasizing the need to disable the Secure transfer required setting for NFS volumes. It also provides guidance on recommended mount options and their behavior.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/create-volume-azure-files" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
@@ -296,381 +296,6 @@
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="General"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Kueue Overview">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/kueue-overview">AKS - Kueue Overview</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation for the Kueue installation guide on AKS has been revised to clarify that users must add the `kueue.x-k8s.io/queue-name: &lt;local-queue-name&gt;` label to workloads for proper routing to the appropriate ClusterQueue. Additionally, it now specifies that uninstalling Managed Kueue will delete all associated custom resources, and users should export their configurations beforehand to reapply them after reinstallation. The supported and unsupported workload integrations have also been updated, providing clearer guidance on compatibility.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/kueue-overview" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="General"
-     data-kind="Rework"
-     data-product="AKS Arc"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="AKS Bare Metal Preview Limitations">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="AKS Hybrid and Edge" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-preview-limitations">AKS Arc - AKS Bare Metal Preview Limitations</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now reflects that Kubernetes 1.35.5 is the default version for deployment on AKS on bare metal Ubuntu, replacing the previous default of Kubernetes 1.33.3. Users should refer to the &quot;Supported Kubernetes versions&quot; section for the updated list of available versions and parameter values during deployment. This change allows users to take advantage of the latest features and improvements in Kubernetes 1.35.5.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-preview-limitations" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Networking"
-     data-kind="Update"
-     data-product="AGC"
-     data-updated="2026-10-15T22:15:41.0000000"
-     data-title="Container Networking">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking">AGC - Container Networking</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
-    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 22:15</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now clarifies that Application Gateway for Containers deployed in a virtual network in region A cannot connect to AKS cluster nodes in a separate virtual network within the same region. Additionally, it confirms that Application Gateway for Containers can proxy traffic to clusters using CNI Overlay with Cilium and WireGuard, although WireGuard does not encrypt traffic between the gateway and destination pods. It also states that while VNet encryption can be enabled for the virtual network, it is not utilized for traffic between the gateway and AKS.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-docs/commit/22523cd11a90bc63c79206e43911da21d2b88fb1" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Security"
-     data-kind="Rework"
-     data-product="Arc K8s"
-     data-updated="2026-10-20T22:07:10.0000000"
-     data-title="Flux Gitops Release Notes">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="Azure Arc-enabled Kubernetes" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/azure-arc/kubernetes/flux-gitops-release-notes">Arc K8s - Flux Gitops Release Notes</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-20 22:07</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The release notes for `microsoft.flux` version 1.26.2 have been updated to reflect the resolution of security vulnerabilities in several components, including `fluxconfig-agent`, `fluxconfig-controller`, and others, through updates to Go packages and base images. Additionally, upstream controllers are now pinned to Go version 1.26, enhancing stability and security for users.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/azure-arc/kubernetes/flux-gitops-release-notes" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/09b0dc7694e9546544b919a464ae135627a899fe" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="General"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Ray Overview">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/ray-overview">AKS - Ray Overview</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>Documentation now includes detailed instructions for installing the managed KubeRay and Kueue extensions on AKS, providing users with clear guidance on how to perform these installations outside of the Terraform workflow. Users can refer to the newly added links for both extensions to access the relevant installation procedures.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/ray-overview" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Security"
-     data-kind="Rework"
-     data-product="ACR"
-     data-updated="2026-10-19T22:11:21.0000000"
-     data-title="Container Registry Webhook Reference">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook-reference">ACR - Container Registry Webhook Reference</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 22:11</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now includes guidance on securely sending credentials in Azure Container Registry webhooks, specifying that credentials should only be sent in the `Authorization` custom header and not in the URL or other custom headers. Additionally, the webhook behavior for when a Helm chart or repository is deleted has been clarified.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook-reference" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/af7b383138341be7036571c409573c8832bb0464" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Security"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Kms Data Encryption">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/kms-data-encryption">AKS - Kms Data Encryption</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now specifies that after rotating a key in Azure Key Vault, users should wait at least seven days before deleting the old key version. Additionally, it emphasizes that users should not delete or expire the old key version immediately after creating the new one, ensuring a smoother key management process.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/kms-data-encryption" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Update"
-     data-product="Arc K8s"
-     data-updated="2026-10-21T11:02:36.0000000"
-     data-title="Cert Manager Monitor Troubleshoot">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="Azure Arc-enabled Kubernetes" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/azure-arc/kubernetes/cert-manager-monitor-troubleshoot">Arc K8s - Cert Manager Monitor Troubleshoot</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 11:02</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>Added a command to retrieve logs from the cert-manager-cainjector deployment, improving troubleshooting guidance for users managing cert-manager in Kubernetes.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/azure-arc/kubernetes/cert-manager-monitor-troubleshoot" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/63012b997dca6569194042a83180cfa103572809" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Networking"
-     data-kind="Update"
-     data-product="AGC"
-     data-updated="2026-10-15T22:15:41.0000000"
-     data-title="Quickstart Deploy Application Gateway for Containers Alb Controller Helm">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm">AGC - Quickstart Deploy Application Gateway for Containers Alb Controller Helm</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
-    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 22:15</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation has been updated to reflect the use of version 1.12.2 of the application gateway for containers, replacing the previous version 1.12.1 in the commands. Users should now reference the updated version when deploying the application gateway using the Helm chart.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-docs/commit/22523cd11a90bc63c79206e43911da21d2b88fb1" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Monitor AKS Reference">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/monitor-aks-reference">AKS - Monitor AKS Reference</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now includes an important announcement regarding the retirement of the `pod` dimension for the AKS platform metrics `kube_pod_status_ready` and `kube_pod_status_phase`, effective September 30, 2027. Users are advised to transition to the Azure Monitor managed service for Prometheus to continue utilizing the `pod` dimension in these metrics after the retirement date.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/monitor-aks-reference" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Security"
-     data-kind="Rework"
-     data-product="ACR"
-     data-updated="2026-10-19T22:11:21.0000000"
-     data-title="Container Registry Webhook">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook">ACR - Container Registry Webhook</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 22:11</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>Updated guidelines for protecting webhook credentials in Azure Container Registry. Emphasizes the use of HTTPS and the importance of sending credentials only in the Authorization header. It also clarifies that credentials should not be included in the service URI or other custom headers.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/af7b383138341be7036571c409573c8832bb0464" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Storage"
-     data-kind="Rework"
-     data-product="AKS Support"
-     data-updated="2026-10-15T18:04:41.0000000"
-     data-title="Fail to Mount Azure File Share">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share">AKS Support - Fail to Mount Azure File Share</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Storage</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 18:04</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now includes a new troubleshooting section for the &quot;Mount error(22): Invalid argument&quot; related to Azure Files in Kubernetes. It clarifies that this error often arises when the Kubernetes secret's `data` field values for `azurestorageaccountname` or `azurestorageaccountkey` are not base64 encoded, leading to a corrupted value during the mounting operation. Users are advised to either base64 encode these values or use the `stringData` field, which automatically handles encoding, to prevent this issue.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/7f84c94e9de03a7f955fdb6fcf548e744eadfa65" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="General"
-     data-kind="Rework"
-     data-product="AKS Arc"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="AKS Bare Metal Connect to Cluster">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="AKS Hybrid and Edge" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-connect-to-cluster">AKS Arc - AKS Bare Metal Connect to Cluster</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now reflects the updated supported Kubernetes version for AKS on bare metal Ubuntu, changing from v1.34.2 to v1.34.3. Users can now utilize the latest features and improvements available in this newer Kubernetes version when connecting to their clusters.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-connect-to-cluster" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Compute"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Custom Node Configuration">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/custom-node-configuration">AKS - Custom Node Configuration</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>This document discusses the custom node configuration settings for AKS, including the Node Hardening feature. It provides details on how to install the aks-preview extension and the prerequisites for using kubeReserved and hardEvictionThreshold settings.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/custom-node-configuration" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Compute"
-     data-kind="New"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Node Hardening">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/node-hardening">AKS - Node Hardening</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
-    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>This article introduces the Node Hardening feature in Azure Kubernetes Service (AKS), which enhances node stability under resource pressure by modifying resource reservations and eviction thresholds. It details the benefits, including enforced reservations and graceful eviction, and provides guidance on enabling and customizing the feature.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/node-hardening" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
      data-category="Operations"
      data-kind="Rework"
      data-product="AKS Arc"
@@ -696,39 +321,14 @@
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Networking"
-     data-kind="Update"
-     data-product="AKS"
-     data-updated="2026-10-15T11:02:29.0000000"
-     data-title="Ingress Nginx Retirement">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/includes/ingress-nginx-retirement">AKS - Ingress Nginx Retirement</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
-    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 11:02</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The document has been updated to reflect the retirement of the Ingress NGINX project, with maintenance ending in March 2026. It emphasizes the need for users to migrate to the Gateway API for ingress and L7 traffic management, providing critical timelines and support details.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/includes/ingress-nginx-retirement" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/28fa17d50b29b1d08ec9906431313b732e99e989" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
      data-category="Operations"
      data-kind="Update"
      data-product="ACR"
      data-updated="2026-10-16T17:04:21.0000000"
-     data-title="Monitor Container Registry">
+     data-title="Container Registry Troubleshoot Performance">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/container-registry/monitor-container-registry">ACR - Monitor Container Registry</a>
+    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-troubleshoot-performance">ACR - Container Registry Troubleshoot Performance</a>
   </h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
@@ -737,112 +337,62 @@
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The article has been updated to include enhanced guidance on Azure Container Registry monitoring metrics, including new Grafana dashboard capabilities for transaction trends and data transfer analysis.</p>
+    <p>The article has been updated to improve guidance on monitoring performance issues in Azure Container Registry, including new metrics and troubleshooting steps for identifying throttling and performance differences.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/monitor-container-registry" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-troubleshoot-performance" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/0b79b52653a18e28dd91c5b5471501076363b590" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Security"
-     data-kind="New"
+     data-category="Networking"
+     data-kind="Rework"
      data-product="AKS Support"
-     data-updated="2026-10-15T18:04:41.0000000"
-     data-title="Application Routing Default Domain">
+     data-updated="2026-10-20T18:04:51.0000000"
+     data-title="Troubleshoot Localdns">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/extensions/application-routing-default-domain">AKS Support - Application Routing Default Domain</a>
+    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/dns/troubleshoot-localdns">AKS Support - Troubleshoot Localdns</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
-    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 18:04</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-20 18:04</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>Learn how to troubleshoot the application routing default domain feature in AKS. Fix a certificate that isn't ready or a domain that doesn't resolve.</p>
+    <p>The troubleshooting guide for LocalDNS on AKS has been revised to include clearer steps for confirming LocalDNS is enabled and running, as well as detailed instructions for deploying a test dnsutils pod. It emphasizes the importance of checking service health and provides a structured approach to diagnosing DNS issues.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/extensions/application-routing-default-domain" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/7f84c94e9de03a7f955fdb6fcf548e744eadfa65" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/dns/troubleshoot-localdns" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/2cfae2b375860366506f5497eaca74503382dccf" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="General"
-     data-kind="New"
+     data-category="Compute"
+     data-kind="Rework"
      data-product="AKS"
      data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Kuberay Overview">
+     data-title="Custom Node Configuration Reference">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/kuberay-overview">AKS - Kuberay Overview</a>
+    <a href="https://learn.microsoft.com/azure/aks/custom-node-configuration-reference">AKS - Custom Node Configuration Reference</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
-    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
     <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>Learn how to install, verify, update, and remove the managed KubeRay extension on Azure Kubernetes Service (AKS).</p>
+    <p>The documentation now includes details on the AKS Node Hardening preview, specifically for Linux node pools. Users can configure settings such as `kubeReserved`, `hardEvictionThreshold`, `softEvictionThreshold`, `softEvictionGracePeriod`, and `evictionMaxPodGracePeriodInSeconds`, with specific values and requirements outlined for each parameter. Additionally, users must register the `CustomNodeConfigPreview` feature flag to utilize these settings effectively.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/kuberay-overview" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/custom-node-configuration-reference" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Rework"
-     data-product="AKS Support"
-     data-updated="2026-10-19T18:03:26.0000000"
-     data-title="Upgrade Fails Because of Nsg Rules">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/upgrade-fails-because-of-nsg-rules">AKS Support - Upgrade Fails Because of Nsg Rules</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 18:03</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The document has been updated to clarify troubleshooting steps for Azure Kubernetes Service (AKS) cluster upgrades that fail due to network security group (NSG) rules. It emphasizes the need for outbound connectivity to specific endpoints and provides detailed commands for checking NSG rules and connectivity analysis. Additionally, it includes new sections on identifying NSGs and fixing blocking rules, enhancing the overall troubleshooting guidance.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/upgrade-fails-because-of-nsg-rules" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/e839db474d5a1625f669d75c3bd1e8e1383e19c9" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Networking"
-     data-kind="Update"
-     data-product="AGC"
-     data-updated="2026-10-15T22:15:41.0000000"
-     data-title="Alb Controller Release Notes">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes">AGC - Alb Controller Release Notes</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
-    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 22:15</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>This document includes the latest release notes for the Application Gateway for Containers add-on, detailing version compatibility with AKS and highlighting security patches and bug fixes. It emphasizes the importance of keeping the add-on updated to ensure functionality and security.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-docs/commit/22523cd11a90bc63c79206e43911da21d2b88fb1" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
@@ -872,6 +422,156 @@
 </div>
 <div class="aks-doc-update"
      data-category="Operations"
+     data-kind="Update"
+     data-product="Arc K8s"
+     data-updated="2026-10-21T11:02:36.0000000"
+     data-title="Cert Manager Monitor Troubleshoot">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="Azure Arc-enabled Kubernetes" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/azure-arc/kubernetes/cert-manager-monitor-troubleshoot">Arc K8s - Cert Manager Monitor Troubleshoot</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 11:02</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>Added a command to retrieve logs from the cert-manager-cainjector deployment, improving troubleshooting guidance for users managing cert-manager in Kubernetes.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/azure-arc/kubernetes/cert-manager-monitor-troubleshoot" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/63012b997dca6569194042a83180cfa103572809" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="General"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Ray Overview">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/ray-overview">AKS - Ray Overview</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>Documentation now includes detailed instructions for installing the managed KubeRay and Kueue extensions on AKS, providing users with clear guidance on how to perform these installations outside of the Terraform workflow. Users can refer to the newly added links for both extensions to access the relevant installation procedures.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/ray-overview" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="General"
+     data-kind="Rework"
+     data-product="AKS Arc"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="AKS Bare Metal Preview Limitations">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="AKS Hybrid and Edge" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-preview-limitations">AKS Arc - AKS Bare Metal Preview Limitations</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now reflects that Kubernetes 1.35.5 is the default version for deployment on AKS on bare metal Ubuntu, replacing the previous default of Kubernetes 1.33.3. Users should refer to the &quot;Supported Kubernetes versions&quot; section for the updated list of available versions and parameter values during deployment. This change allows users to take advantage of the latest features and improvements in Kubernetes 1.35.5.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-preview-limitations" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="General"
+     data-kind="New"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Kuberay Overview">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/kuberay-overview">AKS - Kuberay Overview</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
+    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>Learn how to install, verify, update, and remove the managed KubeRay extension on Azure Kubernetes Service (AKS).</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/kuberay-overview" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Compute"
+     data-kind="New"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Node Hardening">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/node-hardening">AKS - Node Hardening</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
+    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>This article introduces the Node Hardening feature in Azure Kubernetes Service (AKS), which enhances node stability under resource pressure by modifying resource reservations and eviction thresholds. It details the benefits, including enforced reservations and graceful eviction, and provides guidance on enabling and customizing the feature.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/node-hardening" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Networking"
+     data-kind="Update"
+     data-product="AKS"
+     data-updated="2026-10-15T08:16:03.0000000"
+     data-title="Concepts Network Azure Cni Pod Subnet">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet">AKS - Concepts Network Azure Cni Pod Subnet</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 08:16</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes detailed guidance on pod startup behavior for workloads with high pod churn, explaining that pods may wait for an IP address if their node has none available. Users are advised to plan for this by allowing extra time for pod startup, staggering schedules for CronJobs, and considering alternative IP allocation methods like Static Block Allocation for high-churn workloads. Additionally, the section emphasizes the importance of monitoring IP subnet usage and adjusting configurations accordingly to prevent delays in pod initialization.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/3dd2f639f86f22bf5111b81b6aa09e2459233448" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Operations"
      data-kind="Rework"
      data-product="ACR"
      data-updated="2026-10-16T17:04:21.0000000"
@@ -896,128 +596,53 @@
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Rework"
-     data-product="AKS Arc"
-     data-updated="2026-10-21T17:10:34.0000000"
-     data-title="Howto Upgrade Windows Os">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="AKS Hybrid and Edge" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks-hybrid-edge/local/hyperconverged/howto-upgrade-windows-os">AKS Arc - Howto Upgrade Windows Os</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 17:10</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now indicates that Windows Server 2019 node pools are deprecated and no longer supported, with users advised to transition to newer versions. Additionally, it clarifies that Windows Server 2022 node pools will remain supported until Windows Server 2025 node pool support is introduced alongside Kubernetes 1.35, prompting users to plan upgrades accordingly. Users should also note that Windows security patches and OS-level bug fixes will follow the Windows Server servicing lifecycle, separate from the AKS support timeline.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/local/hyperconverged/howto-upgrade-windows-os" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/e395364c4fa25499c042de0def4a70f576d9b9f6" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Planned Maintenance">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/planned-maintenance">AKS - Planned Maintenance</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now includes a new section on using shared maintenance windows (preview) for Azure Kubernetes Service (AKS). Users can apply a consistent maintenance window schedule across multiple AKS configurations and managed clusters in the same region, streamlining cluster auto-upgrades and node OS upgrades. To utilize this feature, users must install specific versions of the Azure CLI and the aks-preview extension, register the `AKSSharedMaintenanceWindowPreview` feature flag, and follow the provided commands to create and link shared maintenance windows to their configurations.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/planned-maintenance" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Compute"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Custom Node Configuration Reference">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/custom-node-configuration-reference">AKS - Custom Node Configuration Reference</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now includes details on the AKS Node Hardening preview, specifically for Linux node pools. Users can configure settings such as `kubeReserved`, `hardEvictionThreshold`, `softEvictionThreshold`, `softEvictionGracePeriod`, and `evictionMaxPodGracePeriodInSeconds`, with specific values and requirements outlined for each parameter. Additionally, users must register the `CustomNodeConfigPreview` feature flag to utilize these settings effectively.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/custom-node-configuration-reference" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Networking"
+     data-category="Security"
      data-kind="Rework"
      data-product="ACR"
      data-updated="2026-10-19T22:11:21.0000000"
-     data-title="Container Registry Service Tag">
+     data-title="Container Registry Webhook">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-service-tag">ACR - Container Registry Service Tag</a>
+    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook">ACR - Container Registry Webhook</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
     <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
     <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 22:11</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now includes guidance on securing credentials for Azure Container Registry webhooks, emphasizing that service tag rules only filter network traffic and do not protect the credentials configured for the webhook. Users are directed to a new section on how to safely send webhook credentials, enhancing the security of their webhook configurations.</p>
+    <p>Updated guidelines for protecting webhook credentials in Azure Container Registry. Emphasizes the use of HTTPS and the importance of sending credentials only in the Authorization header. It also clarifies that credentials should not be included in the service URI or other custom headers.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-service-tag" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/af7b383138341be7036571c409573c8832bb0464" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Networking"
+     data-category="Operations"
      data-kind="Rework"
      data-product="AKS"
-     data-updated="2026-10-21T17:10:34.0000000"
-     data-title="App Routing Nginx to Gateway API Migration">
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Cluster Extensions">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/app-routing-nginx-to-gateway-api-migration">AKS - App Routing Nginx to Gateway API Migration</a>
+    <a href="https://learn.microsoft.com/azure/aks/cluster-extensions">AKS - Cluster Extensions</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
     <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 17:10</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now clarifies that the application routing add-on can support multiple ingress-nginx controllers, each with its own ingress class and load balancer IP, requiring users to inventory all controllers rather than just the default. Additionally, the steps for configuring TLS on the new Gateway have been updated to streamline the process by allowing the Application Routing operator to sync the certificate from Azure Key Vault directly, rather than relying solely on the Secrets Store CSI driver. Users are also instructed to adjust the commands for listing ingress resources and setting the ingress controller IP accordingly.</p>
+    <p>The documentation now includes details on the installation and management of the Managed KubeRay extension for Ray workloads on AKS, allowing users to leverage this functionality. Additionally, the AKS cluster extensions table has been updated to reflect the inclusion of the Kueue extension, which provides managed job queuing and resource-aware workload admission for batch and AI workloads. Changes to the Azure Monitor extensions clarify their core status and monitoring capabilities for AKS clusters and applications.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/app-routing-nginx-to-gateway-api-migration" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/e395364c4fa25499c042de0def4a70f576d9b9f6" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/cluster-extensions" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
@@ -1047,27 +672,27 @@
 </div>
 <div class="aks-doc-update"
      data-category="Networking"
-     data-kind="Rework"
-     data-product="AKS Support"
-     data-updated="2026-10-20T18:04:51.0000000"
-     data-title="Troubleshoot Localdns">
+     data-kind="Update"
+     data-product="AGC"
+     data-updated="2026-10-15T22:15:41.0000000"
+     data-title="Alb Controller Release Notes">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/dns/troubleshoot-localdns">AKS Support - Troubleshoot Localdns</a>
+    <img class="aks-doc-icon" src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes">AGC - Alb Controller Release Notes</a>
   </h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-20 18:04</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 22:15</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The troubleshooting guide for LocalDNS on AKS has been revised to include clearer steps for confirming LocalDNS is enabled and running, as well as detailed instructions for deploying a test dnsutils pod. It emphasizes the importance of checking service health and provides a structured approach to diagnosing DNS issues.</p>
+    <p>This document includes the latest release notes for the Application Gateway for Containers add-on, detailing version compatibility with AKS and highlighting security patches and bug fixes. It emphasizes the importance of keeping the add-on updated to ensure functionality and security.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/dns/troubleshoot-localdns" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/2cfae2b375860366506f5497eaca74503382dccf" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/application-gateway/for-containers/alb-controller-release-notes" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-docs/commit/22523cd11a90bc63c79206e43911da21d2b88fb1" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
@@ -1075,10 +700,10 @@
      data-kind="Update"
      data-product="ACR"
      data-updated="2026-10-16T17:04:21.0000000"
-     data-title="Container Registry Troubleshoot Performance">
+     data-title="Monitor Container Registry">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-troubleshoot-performance">ACR - Container Registry Troubleshoot Performance</a>
+    <a href="https://learn.microsoft.com/azure/container-registry/monitor-container-registry">ACR - Monitor Container Registry</a>
   </h2>
   <div class="aks-doc-header">
     <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
@@ -1087,37 +712,387 @@
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The article has been updated to improve guidance on monitoring performance issues in Azure Container Registry, including new metrics and troubleshooting steps for identifying throttling and performance differences.</p>
+    <p>The article has been updated to include enhanced guidance on Azure Container Registry monitoring metrics, including new Grafana dashboard capabilities for transaction trends and data transfer analysis.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-troubleshoot-performance" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/monitor-container-registry" target="_blank" rel="noopener">View Documentation</a>
     <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/0b79b52653a18e28dd91c5b5471501076363b590" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Compliance"
+     data-category="Networking"
      data-kind="Update"
-     data-product="ACR"
-     data-updated="2026-10-16T17:04:21.0000000"
-     data-title="Container Registry Skus">
+     data-product="AKS"
+     data-updated="2026-10-15T11:02:29.0000000"
+     data-title="Ingress Nginx Retirement">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-skus">ACR - Container Registry Skus</a>
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/includes/ingress-nginx-retirement">AKS - Ingress Nginx Retirement</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fce7f3;color:#be185d;border:1px solid #f9a8d4;">Compliance</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
     <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-16 17:04</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 11:02</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now includes expanded guidance on monitoring Azure Container Registry metrics, specifically addressing how to audit throttling and bandwidth issues. Users can utilize Azure Monitor metrics to filter and split transactions by response type, API name, and region to identify affected operations. Additionally, the section on mitigating throttling now emphasizes the importance of updating the registry's SKU or contacting Azure support for limit increases if persistent issues occur.</p>
+    <p>The document has been updated to reflect the retirement of the Ingress NGINX project, with maintenance ending in March 2026. It emphasizes the need for users to migrate to the Gateway API for ingress and L7 traffic management, providing critical timelines and support details.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-skus" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/0b79b52653a18e28dd91c5b5471501076363b590" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/includes/ingress-nginx-retirement" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/28fa17d50b29b1d08ec9906431313b732e99e989" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Compute"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Node Resource Reservations">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/node-resource-reservations">AKS - Node Resource Reservations</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes details on enabling Node Hardening for Azure Kubernetes Service (AKS) by registering the `CustomNodeConfigPreview` feature flag and using the `--enable-node-hardening` parameter. Users can also customize `kubeReserved` CPU and memory values or eviction thresholds on Linux node pools through the preview custom node configuration settings. This enhances the ability to manage resource reservations and improve node performance.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/node-resource-reservations" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Storage"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Create Volume Azure Files">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/create-volume-azure-files">AKS - Create Volume Azure Files</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Storage</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The article clarifies the use of NFS mount options for Azure Files CSI volumes, emphasizing the need to disable the Secure transfer required setting for NFS volumes. It also provides guidance on recommended mount options and their behavior.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/create-volume-azure-files" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Operations"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T22:06:42.0000000"
+     data-title="Supported Kubernetes Versions">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/supported-kubernetes-versions">AKS - Supported Kubernetes Versions</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 22:06</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes the preview and general availability dates for Kubernetes version 1.38 in Azure Kubernetes Service (AKS), indicating that users can expect this version to be available in November 2026 and generally available by February 2027. This update allows users to plan their upgrades and deployments accordingly.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/supported-kubernetes-versions" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/d2026b89ed8af3eebfdcd6d3a4e93ddb5a1bf0db" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Operations"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Planned Maintenance">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/planned-maintenance">AKS - Planned Maintenance</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes a new section on using shared maintenance windows (preview) for Azure Kubernetes Service (AKS). Users can apply a consistent maintenance window schedule across multiple AKS configurations and managed clusters in the same region, streamlining cluster auto-upgrades and node OS upgrades. To utilize this feature, users must install specific versions of the Azure CLI and the aks-preview extension, register the `AKSSharedMaintenanceWindowPreview` feature flag, and follow the provided commands to create and link shared maintenance windows to their configurations.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/planned-maintenance" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Operations"
+     data-kind="Rework"
+     data-product="AKS Arc"
+     data-updated="2026-10-21T17:10:34.0000000"
+     data-title="Howto Upgrade Windows Os">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="AKS Hybrid and Edge" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks-hybrid-edge/local/hyperconverged/howto-upgrade-windows-os">AKS Arc - Howto Upgrade Windows Os</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 17:10</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now indicates that Windows Server 2019 node pools are deprecated and no longer supported, with users advised to transition to newer versions. Additionally, it clarifies that Windows Server 2022 node pools will remain supported until Windows Server 2025 node pool support is introduced alongside Kubernetes 1.35, prompting users to plan upgrades accordingly. Users should also note that Windows security patches and OS-level bug fixes will follow the Windows Server servicing lifecycle, separate from the AKS support timeline.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/local/hyperconverged/howto-upgrade-windows-os" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/e395364c4fa25499c042de0def4a70f576d9b9f6" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="General"
+     data-kind="Rework"
+     data-product="AKS Arc"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="AKS Bare Metal Connect to Cluster">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="AKS Hybrid and Edge" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-connect-to-cluster">AKS Arc - AKS Bare Metal Connect to Cluster</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#e5e7eb;color:#374151;border:1px solid #d1d5db;">General</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now reflects the updated supported Kubernetes version for AKS on bare metal Ubuntu, changing from v1.34.2 to v1.34.3. Users can now utilize the latest features and improvements available in this newer Kubernetes version when connecting to their clusters.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-connect-to-cluster" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Operations"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Monitor AKS Reference">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/monitor-aks-reference">AKS - Monitor AKS Reference</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes an important announcement regarding the retirement of the `pod` dimension for the AKS platform metrics `kube_pod_status_ready` and `kube_pod_status_phase`, effective September 30, 2027. Users are advised to transition to the Azure Monitor managed service for Prometheus to continue utilizing the `pod` dimension in these metrics after the retirement date.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/monitor-aks-reference" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Storage"
+     data-kind="Rework"
+     data-product="AKS Support"
+     data-updated="2026-10-15T18:04:41.0000000"
+     data-title="Fail to Mount Azure File Share">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share">AKS Support - Fail to Mount Azure File Share</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Storage</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 18:04</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes a new troubleshooting section for the &quot;Mount error(22): Invalid argument&quot; related to Azure Files in Kubernetes. It clarifies that this error often arises when the Kubernetes secret's `data` field values for `azurestorageaccountname` or `azurestorageaccountkey` are not base64 encoded, leading to a corrupted value during the mounting operation. Users are advised to either base64 encode these values or use the `stringData` field, which automatically handles encoding, to prevent this issue.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/7f84c94e9de03a7f955fdb6fcf548e744eadfa65" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Security"
+     data-kind="Rework"
+     data-product="Arc K8s"
+     data-updated="2026-10-20T22:07:10.0000000"
+     data-title="Flux Gitops Release Notes">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="Azure Arc-enabled Kubernetes" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/azure-arc/kubernetes/flux-gitops-release-notes">Arc K8s - Flux Gitops Release Notes</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-20 22:07</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The release notes for `microsoft.flux` version 1.26.2 have been updated to reflect the resolution of security vulnerabilities in several components, including `fluxconfig-agent`, `fluxconfig-controller`, and others, through updates to Go packages and base images. Additionally, upstream controllers are now pinned to Go version 1.26, enhancing stability and security for users.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/azure-arc/kubernetes/flux-gitops-release-notes" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/09b0dc7694e9546544b919a464ae135627a899fe" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Compute"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Custom Node Configuration">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/custom-node-configuration">AKS - Custom Node Configuration</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;">Compute</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>This document discusses the custom node configuration settings for AKS, including the Node Hardening feature. It provides details on how to install the aks-preview extension and the prerequisites for using kubeReserved and hardEvictionThreshold settings.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/custom-node-configuration" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Security"
+     data-kind="New"
+     data-product="AKS Support"
+     data-updated="2026-10-15T18:04:41.0000000"
+     data-title="Application Routing Default Domain">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="AKS Support Articles" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/extensions/application-routing-default-domain">AKS Support - Application Routing Default Domain</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
+    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 18:04</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>Learn how to troubleshoot the application routing default domain feature in AKS. Fix a certificate that isn't ready or a domain that doesn't resolve.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/extensions/application-routing-default-domain" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/SupportArticles-docs/commit/7f84c94e9de03a7f955fdb6fcf548e744eadfa65" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Networking"
+     data-kind="Update"
+     data-product="AKS"
+     data-updated="2026-10-15T08:16:03.0000000"
+     data-title="Configure Azure Cni Dynamic IP Allocation">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/configure-azure-cni-dynamic-ip-allocation">AKS - Configure Azure Cni Dynamic IP Allocation</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 08:16</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now highlights that if workloads frequently create and delete short-lived pods, such as CronJobs running every minute, some pods may experience delays waiting for an IP address before starting. Additionally, users are directed to a new section on pod startup for workloads with high pod churn, providing further insights into managing IP allocation effectively.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/configure-azure-cni-dynamic-ip-allocation" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/3dd2f639f86f22bf5111b81b6aa09e2459233448" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Networking"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T17:10:34.0000000"
+     data-title="App Routing Nginx to Gateway API Migration">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/app-routing-nginx-to-gateway-api-migration">AKS - App Routing Nginx to Gateway API Migration</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 17:10</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now clarifies that the application routing add-on can support multiple ingress-nginx controllers, each with its own ingress class and load balancer IP, requiring users to inventory all controllers rather than just the default. Additionally, the steps for configuring TLS on the new Gateway have been updated to streamline the process by allowing the Application Routing operator to sync the certificate from Azure Key Vault directly, rather than relying solely on the Secrets Store CSI driver. Users are also instructed to adjust the commands for listing ingress resources and setting the ingress controller IP accordingly.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/app-routing-nginx-to-gateway-api-migration" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/e395364c4fa25499c042de0def4a70f576d9b9f6" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Networking"
+     data-kind="Update"
+     data-product="AGC"
+     data-updated="2026-10-15T22:15:41.0000000"
+     data-title="Container Networking">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking">AGC - Container Networking</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 22:15</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now clarifies that Application Gateway for Containers deployed in a virtual network in region A cannot connect to AKS cluster nodes in a separate virtual network within the same region. Additionally, it confirms that Application Gateway for Containers can proxy traffic to clusters using CNI Overlay with Cilium and WireGuard, although WireGuard does not encrypt traffic between the gateway and destination pods. It also states that while VNet encryption can be enabled for the virtual network, it is not utilized for traffic between the gateway and AKS.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/application-gateway/for-containers/container-networking" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-docs/commit/22523cd11a90bc63c79206e43911da21d2b88fb1" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
@@ -1148,6 +1123,131 @@
 <div class="aks-doc-update"
      data-category="Security"
      data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Kms Data Encryption">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/kms-data-encryption">AKS - Kms Data Encryption</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now specifies that after rotating a key in Azure Key Vault, users should wait at least seven days before deleting the old key version. Additionally, it emphasizes that users should not delete or expire the old key version immediately after creating the new one, ensuring a smoother key management process.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/kms-data-encryption" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Security"
+     data-kind="Rework"
+     data-product="ACR"
+     data-updated="2026-10-19T22:11:21.0000000"
+     data-title="Container Registry Webhook Reference">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook-reference">ACR - Container Registry Webhook Reference</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 22:11</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes guidance on securely sending credentials in Azure Container Registry webhooks, specifying that credentials should only be sent in the `Authorization` custom header and not in the URL or other custom headers. Additionally, the webhook behavior for when a Helm chart or repository is deleted has been clarified.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-webhook-reference" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/af7b383138341be7036571c409573c8832bb0464" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Networking"
+     data-kind="Rework"
+     data-product="ACR"
+     data-updated="2026-10-19T22:11:21.0000000"
+     data-title="Container Registry Service Tag">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/container-registry/container-registry-service-tag">ACR - Container Registry Service Tag</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-19 22:11</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes guidance on securing credentials for Azure Container Registry webhooks, emphasizing that service tag rules only filter network traffic and do not protect the credentials configured for the webhook. Users are directed to a new section on how to safely send webhook credentials, enhancing the security of their webhook configurations.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/container-registry-service-tag" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/af7b383138341be7036571c409573c8832bb0464" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Storage"
+     data-kind="Rework"
+     data-product="AKS"
+     data-updated="2026-10-21T12:14:06.0000000"
+     data-title="Create Volume Azure Disk">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/aks/create-volume-azure-disk">AKS - Create Volume Azure Disk</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #86efac;">Storage</span>
+    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation now includes an important note regarding the expansion of Azure disks beyond 4 TiB. Users must unmount and detach **Standard HDD**, **Standard SSD**, or **Premium SSD** volumes from the AKS node before updating the `PersistentVolumeClaim` (PVC) and scaling the workload down to zero replicas. In contrast, **Premium SSD v2** and **Ultra Disk** volumes can be expanded online without this limitation.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/create-volume-azure-disk" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Networking"
+     data-kind="Update"
+     data-product="AGC"
+     data-updated="2026-10-15T22:15:41.0000000"
+     data-title="Quickstart Deploy Application Gateway for Containers Alb Controller Helm">
+  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
+    <img class="aks-doc-icon" src="https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png" alt="Application Gateway for Containers" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm">AGC - Quickstart Deploy Application Gateway for Containers Alb Controller Helm</a>
+  </h2>
+  <div class="aks-doc-header">
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 22:15</span>
+  </div>
+  <div class="aks-doc-summary">
+    <strong>Summary</strong>
+    <p>The documentation has been updated to reflect the use of version 1.12.2 of the application gateway for containers, replacing the previous version 1.12.1 in the commands. Users should now reference the updated version when deploying the application gateway using the Helm chart.</p>
+  </div>
+  <ul></ul>
+  <div class="aks-doc-buttons">
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-docs/commit/22523cd11a90bc63c79206e43911da21d2b88fb1" target="_blank" rel="noopener">View PR</a>
+  </div>
+</div>
+<div class="aks-doc-update"
+     data-category="Security"
+     data-kind="Rework"
      data-product="Arc K8s"
      data-updated="2026-10-15T17:04:19.0000000"
      data-title="Secret Store Extension Migration">
@@ -1171,103 +1271,53 @@
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T12:14:06.0000000"
-     data-title="Cluster Extensions">
+     data-category="Security"
+     data-kind="New"
+     data-product="ACR"
+     data-updated="2026-10-22T06:02:43.0000000"
+     data-title="Tasks Agent Pools Permission Migration">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/cluster-extensions">AKS - Cluster Extensions</a>
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/container-registry/tasks-agent-pools-permission-migration">ACR - Tasks Agent Pools Permission Migration</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 12:14</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
+    <span class="aks-pill-kind aks-pill-new">🆕 New</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-22 06:02</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now includes details on the installation and management of the Managed KubeRay extension for Ray workloads on AKS, allowing users to leverage this functionality. Additionally, the AKS cluster extensions table has been updated to reflect the inclusion of the Kueue extension, which provides managed job queuing and resource-aware workload admission for batch and AI workloads. Changes to the Azure Monitor extensions clarify their core status and monitoring capabilities for AKS clusters and applications.</p>
+    <p>This document introduces the migration of Azure Container Registry (ACR) task agent pool permissions, effective June 1, 2027. It details the new requirement for callers to have specific permissions on agent pools and provides guidance on identifying affected requests, updating permissions, and troubleshooting authorization failures.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/cluster-extensions" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/5af56374c4e1000c74832e8b79ed01cd9395b1cb" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/tasks-agent-pools-permission-migration" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/7fa934ff542c041786c15d3126c7428628076293" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
 <div class="aks-doc-update"
-     data-category="Operations"
-     data-kind="Rework"
-     data-product="AKS"
-     data-updated="2026-10-21T22:06:42.0000000"
-     data-title="Supported Kubernetes Versions">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/supported-kubernetes-versions">AKS - Supported Kubernetes Versions</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;border:1px solid #d1d5db;">Operations</span>
-    <span class="aks-pill-kind aks-pill-rework">♻️ Rework</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-21 22:06</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now includes the preview and general availability dates for Kubernetes version 1.38 in Azure Kubernetes Service (AKS), indicating that users can expect this version to be available in November 2026 and generally available by February 2027. This update allows users to plan their upgrades and deployments accordingly.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/supported-kubernetes-versions" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/d2026b89ed8af3eebfdcd6d3a4e93ddb5a1bf0db" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Networking"
+     data-category="Security"
      data-kind="Update"
-     data-product="AKS"
-     data-updated="2026-10-15T08:16:03.0000000"
-     data-title="Concepts Network Azure Cni Pod Subnet">
+     data-product="ACR"
+     data-updated="2026-10-22T06:02:43.0000000"
+     data-title="Tasks Agent Pools">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet">AKS - Concepts Network Azure Cni Pod Subnet</a>
+    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="Azure Container Registry" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
+    <a href="https://learn.microsoft.com/azure/container-registry/tasks-agent-pools">ACR - Tasks Agent Pools</a>
   </h2>
   <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
+    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Security</span>
     <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 08:16</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-22 06:02</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
-    <p>The documentation now includes detailed guidance on pod startup behavior for workloads with high pod churn, explaining that pods may wait for an IP address if their node has none available. Users are advised to plan for this by allowing extra time for pod startup, staggering schedules for CronJobs, and considering alternative IP allocation methods like Static Block Allocation for high-churn workloads. Additionally, the section emphasizes the importance of monitoring IP subnet usage and adjusting configurations accordingly to prevent delays in pod initialization.</p>
+    <p>The article has been updated to include important notes regarding the upcoming agent pool permission changes, clarifying that no action is needed for callers who already have effective agent pool read access. It directs users to the migration guide for further details.</p>
   </div>
   <ul></ul>
   <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/concepts-network-azure-cni-pod-subnet" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/3dd2f639f86f22bf5111b81b6aa09e2459233448" target="_blank" rel="noopener">View PR</a>
-  </div>
-</div>
-<div class="aks-doc-update"
-     data-category="Networking"
-     data-kind="Update"
-     data-product="AKS"
-     data-updated="2026-10-15T08:16:03.0000000"
-     data-title="Configure Azure Cni Dynamic IP Allocation">
-  <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
-    <img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="Azure Kubernetes Service" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="https://learn.microsoft.com/azure/aks/configure-azure-cni-dynamic-ip-allocation">AKS - Configure Azure Cni Dynamic IP Allocation</a>
-  </h2>
-  <div class="aks-doc-header">
-    <span class="aks-doc-category" style="display:inline-block;padding:4px 10px;margin-right:6px;border-radius:999px;font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;">Networking</span>
-    <span class="aks-pill-kind aks-pill-update">✨ Update</span>
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: 2026-10-15 08:16</span>
-  </div>
-  <div class="aks-doc-summary">
-    <strong>Summary</strong>
-    <p>The documentation now highlights that if workloads frequently create and delete short-lived pods, such as CronJobs running every minute, some pods may experience delays waiting for an IP address before starting. Additionally, users are directed to a new section on pod startup for workloads with high pod churn, providing further insights into managing IP allocation effectively.</p>
-  </div>
-  <ul></ul>
-  <div class="aks-doc-buttons">
-    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/aks/configure-azure-cni-dynamic-ip-allocation" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-aks-docs/commit/3dd2f639f86f22bf5111b81b6aa09e2459233448" target="_blank" rel="noopener">View PR</a>
+    <a class="aks-doc-link" href="https://learn.microsoft.com/azure/container-registry/tasks-agent-pools" target="_blank" rel="noopener">View Documentation</a>
+    <a class="aks-doc-link aks-doc-link-pr" href="https://github.com/MicrosoftDocs/azure-management-docs/commit/7fa934ff542c041786c15d3126c7428628076293" target="_blank" rel="noopener">View PR</a>
   </div>
 </div>
       </div>
