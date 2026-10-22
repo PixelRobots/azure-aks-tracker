@@ -13,10 +13,11 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Troubleshoot Azure file share mount errors in AKS by identifying common causes, fixing connectivity and permission issues, and restoring pod startup. Start now.
-ms.date: 2026-06-10T00:00:00.0000000Z
-ms.reviewer: chiragpa, akscsscic, shoguo, v-weizhu, v-rekhanain
+ms.date: 2026-10-22T00:00:00.0000000Z
+ms.reviewer: chiragpa, akscsscic, shoguo, v-weizhu, v-rekhanain, fabioluisf
 ms.service: azure-kubernetes-service
 ms.custom: sap:Storage
+ai-usage: ai-assisted
 locale: en-us
 document_id: 77b1d9d1-ae1c-ce21-75b3-2a7e54d1be46
 document_version_independent_id: 77b1d9d1-ae1c-ce21-75b3-2a7e54d1be46
@@ -36,9 +37,11 @@ source_path: support/azure/azure-kubernetes/storage/fail-to-mount-azure-file-sha
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/20ed8455-bc18-4537-87a4-83784e7b2a39
+- https://authoring-docs-microsoft.poolparty.biz/devrel/01a89bec-e73f-4ce0-a00a-ae34ad62e5fe
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
+- https://authoring-docs-microsoft.poolparty.biz/devrel/50038ab9-5431-4515-9dfc-c24291ef4fce
 platformId: 4b0d46b6-f642-4f7b-92a2-30569c8057ab
 ---
 
@@ -46,17 +49,18 @@ platformId: 4b0d46b6-f642-4f7b-92a2-30569c8057ab
 
 ## Summary
 
-This article provides possible causes and solutions for errors that cause the mounting of an Azure file share to fail.
+This article provides possible causes and solutions for errors that cause the mounting of an Azure file share to fail in Azure Kubernetes Service (AKS).
 
 ## Symptoms
 
-When you deploy a Kubernetes resource such as a Deployment or a StatefulSet in an Azure Kubernetes Service (AKS) environment, the deployment creates a pod that mounts a PersistentVolumeClaim (PVC) that references an Azure file share.
+When you deploy a Kubernetes resource such as a Deployment or a StatefulSet in an AKS environment, the deployment creates a pod that mounts a PersistentVolumeClaim (PVC) that references an Azure file share.
 
 However, the pod stays in the **ContainerCreating** status. When you run the `kubectl describe pods` command, you might see one of the following errors in the command output that causes the mounting operation to fail:
 
 - Mount error(2): No such file or directory
 - Mount error(13): Permission denied
 - Mount error(22): Invalid argument
+- `AuthorizationFailed` error during Azure Files share provisioning
 
 Refer to the following output as an example:
 
@@ -114,7 +118,7 @@ telnet <storage-account-name>.file.core.windows.net 445
 - Cause 1: File share doesn't exist
 - Cause 2: NSG blocks traffic between AKS and storage account
 - Cause 3: Virtual Appliance blocks traffic between AKS and storage account
-- Cause 4: FIPS enabled node pool is used
+- Cause 4: FIPS-enabled node pool is used
 
 Note
 
@@ -127,7 +131,7 @@ To check whether the file share exists, follow these steps:
 
 1. Search **Storage accounts** in the Azure portal and access your storage account.
 
-    [![Screenshot of storage accounts list in Azure portal.](media/fail-to-mount-azure-file-share/storage-account-lists.png)](media/fail-to-mount-azure-file-share/storage-account-lists.png#lightbox)
+    [![Screenshot of the storage accounts list in the Azure portal.](media/fail-to-mount-azure-file-share/storage-account-lists.png)](media/fail-to-mount-azure-file-share/storage-account-lists.png#lightbox)
 2. Select **File shares** under **Data storage** in the storage account and check whether the associated `PersistentVolumeClaim` (PVC) in the YAML file of the pod, deployment, or statefulset exists in **File shares**.
 
     [![Screenshot of selecting file shares in the storage account.](media/fail-to-mount-azure-file-share/file-shares.png)](media/fail-to-mount-azure-file-share/file-shares.png#lightbox)
@@ -186,7 +190,7 @@ If the mounting operation succeeds, consult your networking team to make sure th
 
 ### Cause 4: FIPS-enabled node pool is used
 
-If you use a [Federal Information Processing Standard (FIPS) enabled node pool](/en-us/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool), the mounting operation fails because FIPS disables some authentication modules. This limitation prevents the mounting of a CIFS share. This behavior is expected and isn't specific to AKS.
+If you use a [Federal Information Processing Standard (FIPS) enabled node pool](/en-us/azure/aks/use-multiple-node-pools#add-a-fips-enabled-node-pool), the mounting operation fails because FIPS disables some authentication modules. This limitation prevents the mounting of a Common Internet File System (CIFS) share. This behavior is expected and isn't specific to AKS.
 
 To resolve the issue, use one of the following solutions:
 
@@ -332,7 +336,7 @@ If you don't have access to the AKS cluster in the Azure portal, perform Step 2 
     echo -n '<storage account name>' | base64 --decode ;echo
     ```
 
-    ![Screenshot of command that decodes storage account name.](media/fail-to-mount-azure-file-share/command-decode-storage-account-name.png)
+    [![Screenshot of command that decodes storage account name.](media/fail-to-mount-azure-file-share/command-decode-storage-account-name.png)](media/fail-to-mount-azure-file-share/command-decode-storage-account-name.png#lightbox)
 
 #### Solution: Adjust the Kubernetes secret and re-create the pods
 
@@ -368,27 +372,27 @@ If firewall rules limit the storage account's network to **selected networks**, 
 
     Check the node from the command output:
 
-    ![Screenshot of command that can identity node and output.](media/fail-to-mount-azure-file-share/command-identify-node.png)
+    [![Screenshot of command that can identity node and output.](media/fail-to-mount-azure-file-share/command-identify-node.png)](media/fail-to-mount-azure-file-share/command-identify-node.png#lightbox)
 2. Go to the AKS cluster in the Azure portal, select **Properties** &gt; **Infrastructure resource group**, access the VMSS associated with the node, and then check **Virtual network/subnet** to identify the virtual network and subnet.
 
-    ![Screenshot of virtual network/subnet value.](media/fail-to-mount-azure-file-share/virtual-network-subnet-value.png)
+    [![Screenshot of virtual network/subnet value.](media/fail-to-mount-azure-file-share/virtual-network-subnet-value.png)](media/fail-to-mount-azure-file-share/virtual-network-subnet-value.png#lightbox)
 3. Access the storage account in the Azure portal. Select **Networking**. If **Allow access from** is set to **Selected networks**, check whether the virtual network and subnet of the AKS cluster are added.
 
     [![Screenshot of empty selected networks list.](media/fail-to-mount-azure-file-share/check-virtual-network-added.png)](media/fail-to-mount-azure-file-share/check-virtual-network-added.png#lightbox)
 
     If you didn't add the virtual network and subnet of the AKS cluster, select **Add existing virtual network**. On the **Add networks** page, type the virtual network and subnet of the AKS cluster, and then select **Add** &gt; **Save**.
 
-    ![Screenshot of adding networks to storage account.](media/fail-to-mount-azure-file-share/add-networks.png)
+    [![Screenshot of adding networks to storage account.](media/fail-to-mount-azure-file-share/add-networks.png)](media/fail-to-mount-azure-file-share/add-networks.png#lightbox)
 
     It might take a few moments for the changes to take effect. After you add the virtual network and subnet, check whether the pod status changes from **ContainerCreating** to **Running**.
 
-    ![Screenshot of command output that shows current pod status.](media/fail-to-mount-azure-file-share/verify-pod-status.png)
+    [![Screenshot of command output that shows current pod status.](media/fail-to-mount-azure-file-share/verify-pod-status.png)](media/fail-to-mount-azure-file-share/verify-pod-status.png#lightbox)
 
 ### Cause 3: Connectivity is via private link but nodes and private endpoint are in different virtual networks
 
-When you connect the AKS cluster and storage account through a private link, you use an approved private endpoint connection.
+When you connect the AKS cluster and storage account through a private link, use an approved private endpoint connection.
 
-![Screenshot of private endpoint connection.](media/fail-to-mount-azure-file-share/private-endpoint-connections.png)
+[![Screenshot of private endpoint connection.](media/fail-to-mount-azure-file-share/private-endpoint-connections.png)](media/fail-to-mount-azure-file-share/private-endpoint-connections.png#lightbox)
 
 In this scenario, if the private endpoint and AKS node are in the same virtual network, you can mount an Azure file share.
 
@@ -396,40 +400,40 @@ If the private endpoint and your AKS cluster are in different virtual networks, 
 
 #### Solution: Create virtual network link for virtual network of AKS cluster at private DNS zone
 
-[Get inside the node](/en-us/azure/aks/node-access) and check whether the fully qualified domain name (FQDN) is resolved through a public or private IP address. To do this, run the following command:
+[Get inside the node](/en-us/azure/aks/node-access) and check whether the fully qualified domain name (FQDN) resolves through a public or private IP address. To do this, run the following command:
 
 ```console
 nslookup <storage-account-name>.privatelink.file.core.windows.net
 ```
 
-If the FQDN is resolved through a public IP address (see the following screenshot), create a virtual network link for the virtual network of the AKS cluster at the private DNS zone ("privatelink.file.core.windows.net") level. A virtual network link is already automatically created for the virtual network of the storage account's private endpoint.
+If the FQDN resolves through a public IP address (see the following screenshot), create a virtual network link for the virtual network of the AKS cluster at the private DNS zone ("privatelink.file.core.windows.net") level. A virtual network link is already automatically created for the virtual network of the storage account's private endpoint.
 
-![Screenshot of nslookup output where the storage account FQDN resolves to a public IP address.](media/fail-to-mount-azure-file-share/verify-fqdn-resolved.png)
+[![Screenshot of nslookup output where the storage account FQDN resolves to a public IP address.](media/fail-to-mount-azure-file-share/verify-fqdn-resolved.png)](media/fail-to-mount-azure-file-share/verify-fqdn-resolved.png#lightbox)
 
 To create the virtual network link, follow these steps:
 
 1. Access the Private DNS zone and select **Virtual network links** &gt; **Add**.
 
     [![Screenshot of the private DNS zone showing a virtual network link for the storage account.](media/fail-to-mount-azure-file-share/storage-account-virtual-network-link.png)](media/fail-to-mount-azure-file-share/storage-account-virtual-network-link.png#lightbox)
-2. Fill in the fields and select the virtual network of the AKS cluster for **Virtual networks**. For how to identify the virtual network of the AKS cluster, see the Solution: Allow AKS virtual network and subnet for storage account section.
+2. Fill in the fields and select the virtual network of the AKS cluster for **Virtual networks**. To identify the virtual network of the AKS cluster, see the Solution: Allow AKS virtual network and subnet for storage account section.
 
-    ![Screenshot of the Add virtual network link pane used to select an AKS virtual network.](media/fail-to-mount-azure-file-share/add-virtual-network-link.png)
+    [![Screenshot of the Add virtual network link pane used to select an AKS virtual network.](media/fail-to-mount-azure-file-share/add-virtual-network-link.png)](media/fail-to-mount-azure-file-share/add-virtual-network-link.png#lightbox)
 3. Select **OK**.
 
 After you add the virtual network link, the FQDN resolves through a private IP address, and the mounting operation succeeds. See the following screenshot for an example:
 
-![Screenshot of nslookup output where the storage account FQDN resolves to a private IP address.](media/fail-to-mount-azure-file-share/private-ip-address-resolved.png)
+[![Screenshot of nslookup output where the storage account FQDN resolves to a private IP address.](media/fail-to-mount-azure-file-share/private-ip-address-resolved.png)](media/fail-to-mount-azure-file-share/private-ip-address-resolved.png#lightbox)
 
 ### Cause 4: Storage account requires encryption that the client doesn't support
 
-[Azure Files Security Settings](/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal#smb-security-settings) contain a number of options for controlling the security and encryption settings on storage accounts. Restricting allowed methods and algorithms can prevent clients from connecting.
+The [Azure Files Security Settings](/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal#smb-security-settings) include options for controlling the security and encryption settings on storage accounts. If you restrict the allowed methods and algorithms, clients might not be able to connect.
 
 The supported SMB encryption algorithm depends on the node operating system and Linux kernel version:
 
-- AKS versions earlier than 1.25 are based on Ubuntu 18.04 LTS, which uses the Linux 5.4 kernel and supports only the AES-128-CCM and AES-128-GCM encryption algorithms. On these versions, the **Maximum security** profile (or a **Custom** profile that disables AES-128-GCM) causes share mapping failures. These AKS versions are out of support, so upgrade to a supported version.
-- AKS versions 1.25 and later are based on Ubuntu 22.04 or a later version, which uses the Linux 5.15 kernel or a later version and supports AES-256-GCM.
+- AKS versions earlier than 1.25 use Ubuntu 18.04 LTS, which runs the Linux 5.4 kernel and supports only the AES-128-CCM and AES-128-GCM encryption algorithms. On these versions, the **Maximum security** profile (or a **Custom** profile that disables AES-128-GCM) causes share mapping failures. These AKS versions are out of support, so upgrade to a supported version.
+- AKS versions 1.25 and later use Ubuntu 22.04 or a later version, which runs the Linux 5.15 kernel or a later version and supports AES-256-GCM.
 
-#### Solution: Allow AES-128-GCM encryption algorithm to be used
+#### Solution: Allow AES-128-GCM encryption algorithm
 
 Enable the AES-128-GCM algorithm by using the **Maximum compatibility** profile or a **Custom** profile that enables AES-128-GCM. For more information, see [Azure Files Security Settings](/en-us/azure/storage/files/files-smb-protocol?tabs=azure-portal#smb-security-settings).
 
@@ -527,6 +531,132 @@ stringData:
 ```
 
 After you correct the secret, re-create the pods so they pick up the updated values.
+
+## `AuthorizationFailed` error during Azure Files share provisioning
+
+### Symptoms
+
+The PersistentVolumeClaim (PVC) stays in a `Pending` state, and volume provisioning fails with an `AuthorizationFailed` error.
+
+The following example shows event output.
+
+```text
+Events:
+  Type     Reason                Age                From                         Message
+  ----     ------                ----               ----                         -------
+  Normal   ExternalProvisioning  6s                 persistentvolume-controller  Waiting for a volume to be created by the external provisioner 'file.csi.azure.com' or manually by the system administrator.
+  Normal   Provisioning          3s (x3 over 6s)   file.csi.azure.com           External provisioner is provisioning volume for claim "<NAMESPACE>/<PVC_NAME>"
+  Warning  ProvisioningFailed    2s (x3 over 6s)   file.csi.azure.com           rpc error: code = Internal desc =
+
+  GET /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.Storage/storageAccounts/<STORAGE_ACCOUNT>/fileServices/default/shares/<FILE_SHARE>
+
+  RESPONSE 403: 403 Forbidden
+
+  ERROR CODE: AuthorizationFailed
+
+  {
+    "error": {
+      "code": "AuthorizationFailed",
+      "message": "The client '<CLIENT_ID>' with object id '<OBJECT_ID>' does not have authorization to perform action 'Microsoft.Storage/storageAccounts/fileServices/shares/read' over scope '/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.Storage/storageAccounts/<STORAGE_ACCOUNT>/fileServices/default/shares/<FILE_SHARE>' or the scope is invalid. If access was recently granted, please refresh your credentials."
+    }
+  }
+```
+
+### Cause
+
+This error happens when the identity that the Azure Files CSI driver uses doesn't have enough Azure role-based access control (Azure RBAC) permissions to perform file share operations on the target storage account.
+
+Common causes include the following:
+
+- The AKS cluster identity is missing Azure RBAC role assignments.
+- Role assignments are configured at an incorrect scope.
+- A custom role doesn't include Azure Files management permissions.
+- Recent permission changes didn't propagate through Azure RBAC yet.
+- You granted the role to the wrong identity. For dynamic provisioning, the identity in the error is the AKS cluster (control plane) identity, not the kubelet identity.
+
+### Troubleshooting
+
+The following steps can help you troubleshoot the `AuthorizationFailed` error during Azure Files share provisioning.
+
+#### Step 1: Identify the principal reported in the error
+
+Review the PVC events and note the `<CLIENT_ID>` and `<OBJECT_ID>` values. These values identify the principal that's trying to access the Azure file share.
+
+#### Step 2: Determine which AKS identity you're using
+
+Check the AKS cluster configuration to identify whether the cluster uses a system-assigned managed identity, a user-assigned managed identity, or a service principal.
+
+Retrieve the cluster identity information. Run the following command.
+
+```azurecli
+az aks show \
+  --resource-group <AKS_RESOURCE_GROUP> \
+  --name <AKS_CLUSTER_NAME> \
+  --query identity
+```
+
+For clusters that use managed identities, verify the kubelet identity. Run the following command.
+
+```azurecli
+az aks show \
+  --resource-group <AKS_RESOURCE_GROUP> \
+  --name <AKS_CLUSTER_NAME> \
+  --query identityProfile
+```
+
+Confirm that the client ID reported in the provisioning error matches the AKS cluster identity (`identity`) that you're using. For file share provisioning, the error usually reports the cluster (control plane) identity, not the kubelet identity (`identityProfile`)
+
+#### Step 3: Verify role assignments
+
+Check whether the identified principal has role assignments on the target storage account. Run the following command.
+
+```azurecli
+az role assignment list \
+  --assignee <CLIENT_ID> \
+  --scope /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.Storage/storageAccounts/<STORAGE_ACCOUNT> \
+  --include-inherited
+```
+
+Review the assigned roles and scopes. The `--include-inherited` parameter is required to list role assignments that are inherited from the resource group or subscription scope. Without it, the command doesn't return those assignments.
+
+#### Step 4: Validate required permissions
+
+The Azure Files CSI driver must be able to perform Azure Files management operations through Azure Resource Manager. At a minimum, the assigned role must allow the following operations.
+
+```text
+Microsoft.Storage/storageAccounts/fileServices/shares/read
+Microsoft.Storage/storageAccounts/fileServices/shares/write
+Microsoft.Storage/storageAccounts/fileServices/shares/delete
+```
+
+For most scenarios, assigning the built-in **Contributor** role at the storage account scope is sufficient.
+
+#### Step 5: Verify the role assignment scope
+
+Make sure that the role assignment applies to a scope that includes the target storage account:
+
+- Storage account (recommended)
+- Resource group
+- Subscription
+
+A role assignment on another resource or scope doesn't grant access to the storage account that the StorageClass references.
+
+#### Step 6: Allow time for Azure RBAC propagation
+
+If you recently granted or changed permissions, wait for Azure RBAC propagation, and then retry the operation. Role assignment changes can take several minutes to take effect. Follow these steps:
+
+1. Re-create the PVC or retry provisioning.
+2. Monitor the PVC events.
+3. Verify that the Azure file share is created.
+4. Confirm that the PVC transitions to the `Bound` state.
+
+### Solution
+
+Grant the required Azure RBAC permissions to the identity that the Azure Files CSI driver uses on the target storage account. After the role assignment propagates, retry provisioning and verify that the Azure file share can be accessed.
+
+Note
+
+An `AuthorizationFailed` error indicates an Azure Resource Manager (ARM) authorization issue, not a network connectivity or mounting issue. Focus your troubleshooting on identity configuration, Azure RBAC permissions, and role assignment scope.
 
 ## References
 

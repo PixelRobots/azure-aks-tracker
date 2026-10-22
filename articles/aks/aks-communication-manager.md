@@ -64,7 +64,7 @@ By following the steps in this article, you can set up alerts for upgrade events
 ## Prerequisites
 
 - Configure your cluster for either the [automatic upgrade channel](auto-upgrade-cluster) or the [automatic upgrade channel for nodes](auto-upgrade-node-os-image).
-- Create a [planned maintenance window](planned-maintenance) for your configuration of automatic upgrades.
+- Create a [planned maintenance window](planned-maintenance) for your configuration of automatic upgrades. The schedule can be defined inline on the cluster's maintenance configuration or linked from a shared maintenance window.
 
 ## Set up the communication manager
 

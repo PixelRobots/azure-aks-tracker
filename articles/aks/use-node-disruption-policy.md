@@ -42,8 +42,10 @@ item_type: Content
 source_path: articles/aks/use-node-disruption-policy.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/bcbcbad5-4208-4783-8035-8481272c98b8
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 platformId: 6d73ab9e-7b31-7565-0b0a-9e9a171725b2
 ---
 
@@ -114,7 +116,7 @@ az aks create \
 
 Important
 
-When you use `AllowDuringMaintenanceWindow`, ensure you configure an `aksManagedNodeOSUpgradeSchedule` maintenance window. Otherwise, disruptive operations are allowed indefinitely. For more information, see [Use planned maintenance to schedule and control upgrades for your Azure Kubernetes Service cluster](planned-maintenance).
+When you use `AllowDuringMaintenanceWindow`, ensure you configure an `aksManagedNodeOSUpgradeSchedule` maintenance window. The maintenance configuration can define the schedule inline or link to a shared maintenance window. Otherwise, disruptive operations are allowed indefinitely. For more information, see [Use planned maintenance to schedule and control upgrades for your Azure Kubernetes Service cluster](planned-maintenance).
 
 ### Block all disruptive operations
 
@@ -263,7 +265,7 @@ If an operation is blocked unexpectedly, use the following steps to troubleshoot
 
 If you set the policy to `AllowDuringMaintenanceWindow` but don't configure a maintenance window, all disruptive operations are **allowed**.
 
-Configure a maintenance window by using the [`az aks maintenanceconfiguration add`](/en-us/cli/azure/aks/maintenanceconfiguration#az-aks-maintenanceconfiguration-add) command.
+Configure a maintenance window by using the [`az aks maintenanceconfiguration add`](/en-us/cli/azure/aks/maintenanceconfiguration#az-aks-maintenanceconfiguration-add) command. To reuse the same schedule across multiple clusters, link `aksManagedNodeOSUpgradeSchedule` to a [shared maintenance window](/en-us/azure/aks/planned-maintenance?pivots=azure-cli#use-a-shared-maintenance-window-preview).
 
 ```azurecli
 az aks maintenanceconfiguration add \
@@ -274,5 +276,5 @@ az aks maintenanceconfiguration add \
     --day-of-week Sunday \
     --interval-weeks 1 \
     --duration 4 \
-    --start-hour 2
+    --start-time 02:00
 ```

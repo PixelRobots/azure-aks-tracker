@@ -230,6 +230,8 @@ Note
 
 To ensure proper functionality, use a maintenance window of *four hours or more*.
 
+If you manage the same cluster autoupgrade schedule across multiple clusters, you can link each cluster's `aksManagedAutoUpgradeSchedule` maintenance configuration to a shared maintenance window. For more information, see [Use a shared maintenance window](/en-us/azure/aks/planned-maintenance?pivots=azure-cli#use-a-shared-maintenance-window-preview).
+
 For more information on how to set a maintenance window with Planned Maintenance, see [Use Planned Maintenance to schedule maintenance windows for your Azure Kubernetes Service (AKS) cluster](planned-maintenance).
 
 ## Best practices for cluster autoupgrade
