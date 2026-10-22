@@ -1,9 +1,8 @@
 # Published Microsoft Learn snapshots
 
-This is a history of the **published English documentation** used by
-[Azure AKS Tracker](https://github.com/PixelRobots/azure-aks-tracker).
-The publishing workflow consumes this history for documentation updates;
-GitHub releases and CVE data keep their existing sources.
+This is a parallel history of the **published English documentation** used by
+[Azure AKS Tracker](https://github.com/PixelRobots/azure-aks-tracker). It does not
+replace the existing GitHub-based tracker or change WordPress publishing yet.
 
 ## Collector and storage
 
@@ -18,8 +17,6 @@ run. That branch contains published Markdown at the original `articles/...` and
 `support/...` paths, plus `.learn-mirror/state.json` with ETags, page metadata and
 the rotation cursor. Git commits preserve previous versions. Nothing is pushed
 to the source branch and no WordPress page or digest is updated.
-The existing publishing workflow calls collection as a prerequisite before
-generating and publishing its usual HTML. Merging the data branch is never needed.
 
 The first pass is a baseline, not evidence that every article is newly published.
 A time-limited pass may need subsequent runs to finish discovery and collection.
@@ -59,17 +56,13 @@ not generate an article diff.
 Requests are limited to four per second across four workers, with adaptive
 throttling and retries. Each collection has a 25-minute budget and continues
 from the saved cursor next time. Fetch errors are reported in logs and the
-Actions summary; previous content is retained for failed requests. A committed
-`.learn-mirror/health.json` heartbeat records completeness, zero-error status,
-coverage and the check time. Production validates this marker and requires a
-fresh, complete pass; partial collection is saved but blocks publishing.
+Actions summary; previous content is retained for failed requests.
 
 An article disappearing from discovery alone does not remove its snapshot.
 The pinned tool handles 404/410 responses and redirects, and refuses unusually
 large deletion sets (more than the greater of 25 files or 10% of mirrored files).
 It also refuses writes when errors exceed the greater of 10 requests or half the
-checked pages. Smaller partial failures are saved, but our workflow then fails
-its publication gate rather than allowing an incomplete run to publish.
+checked pages. Smaller partial failures are reported but do not fail the run.
 It does **not** require a second 404 confirmation before removal; Git history
 retains removed content.
 
@@ -112,12 +105,6 @@ history. Avoid concurrent local and workflow pushes: the workflow deliberately
 uses a normal push, not a force push, so a conflicting push fails visibly.
 Use the manual workflow's `full` option to ignore saved ETags when diagnosing
 missing/stale content.
-
-## Testing the replacement tracker
-
-See [the end-to-end preview and cutover guide](snapshot-preview.md). The same
-production tracker markup/styles and docs digest layout are reused; snapshot
-entries have a documentation link only, not a PR/change button.
 
 ## Attribution
 
