@@ -4381,6 +4381,7 @@ $formShortcode = '[email-subscribers-form id="2"]'
 $snapshotDiffStyles = if ($SnapshotMode) {
 @'
 <style>
+.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }
 .aks-doc-changes {
   --cp-success: #16a34a;
   --cp-danger: #dc2626;

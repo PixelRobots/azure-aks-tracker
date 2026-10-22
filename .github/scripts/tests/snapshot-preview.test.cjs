@@ -301,6 +301,7 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.equal((data.html.match(/<details class="aks-doc-changes">/g) || []).length, 8);
   assert.ok(data.html.includes('class="aks-diff-added"'));
   assert.ok(data.html.includes('class="aks-diff-removed"'));
+  assert.ok(data.html.includes('.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }'));
   assert.equal(data.digest_docs_html.includes('aks-doc-changes'), false);
   assert.equal(data.digest_docs_html.includes('<details'), false);
   assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 8);
