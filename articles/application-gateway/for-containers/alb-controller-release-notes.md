@@ -24,7 +24,7 @@ services: application-gateway
 author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.topic: release-notes
-ms.date: 2026-10-01T00:00:00.0000000Z
+ms.date: 2026-10-23T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: e5385f2c-ab07-4af4-84d5-8f03b90be2be
@@ -70,7 +70,7 @@ If using the AKS add-on, updates are automatically applied to the cluster.
 
 | ALB Controller Version | Gateway API Version | Gateway API Inference Extension Version | Minimum Kubernetes Version | Release notes |
 | --- | --- | --- | --- | --- |
-| 1.12.2 | v1.5.1 | v1.3.1 | v1.32 | Security patches |
+| 1.12.4 | v1.5.1 | v1.3.1 | v1.32 | Security patches |
 
 ## AKS add-on releases
 
@@ -87,11 +87,14 @@ Reference: [AKS Managed Gateway API installation](/en-us/azure/aks/managed-gatew
 
 | ALB Controller Version | Gateway API Version | Gateway API Inference Extension Version | Minimum Kubernetes Version | Release Notes |
 | --- | --- | --- | --- | --- |
+| 1.12.2 | v1.5.1 | v1.3.1 | v1.32 | Security patches |
 | 1.12.1 | v1.5.1 | v1.3.1 | v1.32 | Security patches, bug fixes [helm chart pre-delete tolerations](https://github.com/Azure/AKS/issues/5729)[session affinity cookie fix](https://github.com/Azure/AKS/issues/5805), request mirror |
+| 1.11.7 | v1.5.1 | v1.3.1 | v1.27 | Security patches |
 | 1.11.6 | v1.5.1 | v1.3.1 | v1.27 | Security patches |
 | 1.11.5 | v1.5.1 | v1.3.1 | v1.27 | Security patches, bug fix for AKS automatic |
 | 1.11.3 | v1.5.1 | v1.3.1 | v1.27 | Security patches, WAF fixes, Istio service mesh integration - cert-rotation fix |
 | 1.11.1 | v1.5.1 | v1.3.1 | v1.27 | Implement Gateway API v1.5.1, Gateway API Inference Extension support, ALB Controller on Arm64 node support, support for CORS, Gateway API HTTPRoute timeouts (succeed RoutePolicy timeouts), HTTP redirect 307/308 support, helm subcharts fix [GitHub Issue: #5475](https://github.com/Azure/AKS/issues/5475), Helm logging enum fix [GitHub Issue: #5480](https://github.com/Azure/AKS/issues/5480) |
+| 1.10.40 | v1.2.1 | - | v1.27 | Security patches |
 | 1.10.39 | v1.2.1 | - | v1.27 | Security patches |
 | 1.10.37 | v1.2.1 | - | v1.27 | Security patches + bug fixes |
 | 1.10.32 | v1.2.1 | - | v1.27 | Security patches, Istio service mesh integration - cert-rotation fix |

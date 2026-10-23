@@ -24,7 +24,7 @@ services: application-gateway
 author: JackStromberg
 ms.service: azure-application-gateway-containers
 ms.topic: how-to
-ms.date: 2026-09-09T00:00:00.0000000Z
+ms.date: 2026-10-23T00:00:00.0000000Z
 ms.author: jstrom
 locale: en-us
 document_id: 7afd4972-9d58-f27d-85c4-42257fe0b228
@@ -90,7 +90,7 @@ az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME
 
 helm install alb-controller-servicemesh-extension oci://mcr.microsoft.com/application-lb/charts/alb-controller-servicemesh-extension \
      --namespace $HELM_NAMESPACE \
-     --version 1.12.1
+     --version 1.12.4
 ```
 
 ### Verify the ALB Controller installation

@@ -25,7 +25,7 @@ author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.custom: devx-track-azurecli
 ms.topic: quickstart
-ms.date: 2026-10-01T00:00:00.0000000Z
+ms.date: 2026-10-23T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: c8d6cc55-c505-12ff-02b9-29f8ad387cf6
@@ -297,7 +297,7 @@ Assignment of the managed identity immediately after creation may result in an e
     az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME
     helm install alb-controller oci://mcr.microsoft.com/application-lb/charts/alb-controller \
          --namespace $HELM_NAMESPACE \
-         --version 1.12.2 \
+         --version 1.12.4 \
          --set albController.namespace=$CONTROLLER_NAMESPACE \
          --set albController.podIdentity.clientID=$(az identity show -g $RESOURCE_GROUP -n $IDENTITY_RESOURCE_NAME --query clientId -o tsv)
     ```
@@ -317,7 +317,7 @@ Assignment of the managed identity immediately after creation may result in an e
     # Install Helm chart
     helm install alb-controller oci://mcr.microsoft.com/application-lb/charts/alb-controller `
         --namespace $HELM_NAMESPACE `
-        --version 1.12.2 `
+        --version 1.12.4 `
         --set albController.namespace=$CONTROLLER_NAMESPACE `
         --set albController.podIdentity.clientID=$clientId
     ```
@@ -339,7 +339,7 @@ Assignment of the managed identity immediately after creation may result in an e
     az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME
     helm upgrade alb-controller oci://mcr.microsoft.com/application-lb/charts/alb-controller \
         --namespace $HELM_NAMESPACE \
-        --version 1.12.2 \
+        --version 1.12.4 \
         --set albController.namespace=$CONTROLLER_NAMESPACE \
         --set albController.podIdentity.clientID=$(az identity show -g $RESOURCE_GROUP -n $IDENTITY_RESOURCE_NAME --query clientId -o tsv)
     ```
@@ -359,7 +359,7 @@ Assignment of the managed identity immediately after creation may result in an e
     # Upgrade Helm chart
     helm upgrade alb-controller oci://mcr.microsoft.com/application-lb/charts/alb-controller `
         --namespace $HELM_NAMESPACE `
-        --version 1.12.2 `
+        --version 1.12.4 `
         --set albController.namespace=$CONTROLLER_NAMESPACE `
         --set albController.podIdentity.clientID=$clientId
     ```
