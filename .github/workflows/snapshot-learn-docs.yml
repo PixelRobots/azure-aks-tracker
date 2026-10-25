@@ -1,6 +1,7 @@
 name: Snapshot published Learn documentation
 
 on:
+  workflow_call:
   schedule:
     - cron: '20 2,8,14,20 * * *'
   workflow_dispatch:
@@ -86,6 +87,12 @@ jobs:
           cp tracker/learn-mirror-seed-urls.txt snapshots/learn-mirror-seed-urls.txt
           cp tracker/docs/learn-snapshots.md snapshots/README.md
 
+      - name: Record collection health and heartbeat
+        env:
+          ERRORS: ${{ steps.mirror.outputs.errors }}
+          UNREACHED: ${{ steps.mirror.outputs.unreached }}
+        run: node tracker/.github/scripts/snapshot-health.cjs snapshots "$ERRORS" "$UNREACHED"
+
       - name: Commit and push snapshots
         working-directory: snapshots
         shell: bash
@@ -106,3 +113,13 @@ jobs:
           printf '\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\n' >> "$RUNNER_TEMP/snapshot-message.txt"
           git commit -F "$RUNNER_TEMP/snapshot-message.txt"
           git push origin HEAD:refs/heads/docs-snapshots
+
+      - name: Require a complete collection
+        env:
+          ERRORS: ${{ steps.mirror.outputs.errors }}
+          UNREACHED: ${{ steps.mirror.outputs.unreached }}
+        run: |
+          if [ "$ERRORS" != "0" ] || [ "$UNREACHED" != "0" ]; then
+            echo "::error::Snapshots saved for continuation, but collection is incomplete. Publication must wait for a complete pass."
+            exit 1
+          fi

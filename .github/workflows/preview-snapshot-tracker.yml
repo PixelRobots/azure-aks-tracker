@@ -1,0 +1,148 @@
+name: Preview snapshot documentation tracker
+
+on:
+  push:
+    branches: [feature/snapshot-docs-tracker]
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/preview-snapshot-tracker.yml'
+      - 'snapshot-preview.config.json'
+  workflow_dispatch:
+    inputs:
+      enrich_with_ai:
+        description: 'Use the existing OpenAI summaries (requires OPENAI_API_KEY; incurs API usage)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: snapshot-tracker-preview-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: actions/checkout@v7
+        with:
+          repository: merill/learn-mirror
+          ref: 4f6c802dd18d00a99397504b8872ae0841ac5c38
+          path: .upstream-learn-mirror
+          persist-credentials: false
+      - name: Test collector configuration and snapshot preview
+        env:
+          LEARN_MIRROR_TOOL: ${{ github.workspace }}/.upstream-learn-mirror/learn-mirror.js
+        run: node --test .github/scripts/tests/*.test.cjs
+      - name: Validate generator PowerShell syntax
+        shell: pwsh
+        run: |
+          $parseErrors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "$env:GITHUB_WORKSPACE/.github/scripts/generate-aks-updates.ps1",
+            [ref]$null, [ref]$parseErrors)
+          if ($parseErrors) { throw ($parseErrors | Out-String) }
+
+  collect:
+    uses: ./.github/workflows/snapshot-learn-docs.yml
+    permissions:
+      contents: write
+
+  preview:
+    needs: [test, collect]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [live, demo]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          ref: docs-snapshots
+          path: .snapshot-history
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Generate live or synthetic content diffs
+        shell: pwsh
+        env:
+          PREVIEW_MODE: ${{ matrix.mode }}
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP "snapshot-preview-$env:PREVIEW_MODE"
+          New-Item -ItemType Directory -Path $output -Force | Out-Null
+          $config = Get-Content snapshot-preview.config.json -Raw | ConvertFrom-Json
+          if ($config.baseline_qualified -ne $true) { throw 'Snapshot baseline has not been qualified.' }
+          if ($env:PREVIEW_MODE -eq 'demo') {
+            node .github/scripts/snapshot-changes.cjs --demo=true "--output=$output/changes.json"
+          } else {
+            node .github/scripts/snapshot-changes.cjs --repo=.snapshot-history "--baseline=$($config.baseline_revision)" --production=true "--output=$output/changes.json"
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Snapshot diff adapter failed.' }
+          "PREVIEW_OUTPUT=$output" >> $env:GITHUB_ENV
+      - name: Enrich with the existing documentation summary pipeline
+        shell: pwsh
+        env:
+          DOCS_SOURCE: snapshots
+          DOCS_PREVIEW_ONLY: 'true'
+          DOCS_PREVIEW_RENDER_PRODUCTION: 'true'
+          DOCS_PREVIEW_REQUIRE_AI: ${{ (github.event_name == 'push' || inputs.enrich_with_ai) && 'true' || 'false' }}
+          GITHUB_TOKEN: ${{ github.token }}
+          OpenAIKey: ${{ (github.event_name == 'push' || inputs.enrich_with_ai) && secrets.OPENAI_API_KEY || '' }}
+        run: |
+          $env:SNAPSHOT_CHANGES_PATH = Join-Path $env:PREVIEW_OUTPUT 'changes.json'
+          $env:DOCS_PREVIEW_OUTPUT_DIR = $env:PREVIEW_OUTPUT
+          Set-Location -LiteralPath $env:PREVIEW_OUTPUT
+          & "$env:GITHUB_WORKSPACE/.github/scripts/generate-aks-updates.ps1" 1> (Join-Path $env:PREVIEW_OUTPUT 'production.json')
+      - name: Render tracker, digest and comparison artifacts
+        shell: pwsh
+        run: |
+          node .github/scripts/render-snapshot-preview.cjs "$env:PREVIEW_OUTPUT/summaries.json" "$env:PREVIEW_OUTPUT" wordpress/aks-tracker-page.html
+          if ($LASTEXITCODE -ne 0) { throw 'Preview rendering failed.' }
+          node .github/scripts/production-preview.cjs "$env:PREVIEW_OUTPUT"
+          if ($LASTEXITCODE -ne 0) { throw 'Production-layout preview failed.' }
+          $data = Get-Content "$env:PREVIEW_OUTPUT/summaries.json" -Raw | ConvertFrom-Json
+          if ($data.ai_requested -and @($data.items).Count -gt 0 -and $data.ai_summary_count -eq 0) {
+            throw 'AI enrichment requested but no AI summaries were produced.'
+          }
+          if ($data.input.demo -and @($data.items).Count -ne 8) {
+            throw 'The synthetic all-product test must produce eight preview cards.'
+          }
+          @"
+          ### Snapshot preview: ${{ matrix.mode }}
+          - Input content changes: $(@($data.input.changes).Count)
+          - Included updates: $(@($data.items).Count)
+          - AI summaries: $($data.ai_summary_count)
+          - Synthetic data: $($data.input.demo)
+          - Download **snapshot-preview-${{ matrix.mode }}** below; open **production-tracker.html** and **production-digest.html** for the existing site layout.
+          - **wordpress-fragment.html** is the exact generated fragment (no new plugin needed).
+          - No WordPress calls, uploads, cache purges or emails.
+          "@ >> $env:GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-preview-${{ matrix.mode }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            ${{ env.PREVIEW_OUTPUT }}/tracker.html
+            ${{ env.PREVIEW_OUTPUT }}/digest.html
+            ${{ env.PREVIEW_OUTPUT }}/changes.json
+            ${{ env.PREVIEW_OUTPUT }}/summaries.json
+            ${{ env.PREVIEW_OUTPUT }}/comparison.json
+            ${{ env.PREVIEW_OUTPUT }}/production-tracker.html
+            ${{ env.PREVIEW_OUTPUT }}/production-digest.html
+            ${{ env.PREVIEW_OUTPUT }}/wordpress-fragment.html
+            ${{ env.PREVIEW_OUTPUT }}/production.json

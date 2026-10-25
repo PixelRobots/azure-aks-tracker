@@ -8,8 +8,9 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 
 ## What it does
 
-* **Multi-repository docs updates**
-  Pulls the last 7 days of activity from multiple Microsoft documentation repositories:
+* **Published documentation updates**
+  Tracks the last 7 days of meaningful article-body changes on Microsoft Learn,
+  using snapshots for the product scopes previously collected from:
   - `MicrosoftDocs/azure-aks-docs` (AKS and Fleet Manager)
   - `MicrosoftDocs/azure-management-docs` (Azure Container Registry)
   - `MicrosoftDocs/azure-management-docs` (Azure Arc-enabled Kubernetes)
@@ -18,6 +19,7 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
   - `MicrosoftDocs/SupportArticles-docs` (AKS support and troubleshooting articles)
   
   Groups changes by page, filters trivial edits, and writes AI summaries with intelligent product categorization.
+  It does not require public GitHub documentation repositories to remain available.
 
 * **AKS and App Net releases**
   Fetches the latest AKS releases from `Azure/AKS`, merges in dated App Net release notes from `Azure/AKS/appnet-notes`, and generates short summaries with highlights.
@@ -37,12 +39,18 @@ A separate Node.js workflow now snapshots the published Microsoft Learn pages
 for all tracked documentation sources, including Fleet and Application Network.
 It uses a pinned version of [merill/learn-mirror](https://github.com/merill/learn-mirror)
 and stores Markdown history and collection state on the `docs-snapshots` branch
-every six hours. The initial collection establishes a baseline; it does not
-report every page as new or change the live tracker or weekly digest.
+every six hours and before full publishing runs. The initial collection
+establishes a baseline; it does not report every page as new.
 
 See [published documentation snapshots](docs/learn-snapshots.md) for coverage,
-setup, failure behaviour, seed refresh and local usage. The existing GitHub
-collector and WordPress workflow below are unchanged.
+setup, failure behaviour, seed refresh and local usage. The publishing workflow
+uses validated snapshot diffs for docs, with the same WordPress layout and
+documentation buttons only. Releases/CVEs keep their existing acquisition paths.
+
+A separate [end-to-end snapshot preview](docs/snapshot-preview.md) runs real and
+labelled synthetic changes through the existing summary pipeline and uploads
+production-layout tracker/digest HTML for browser review. The preview itself
+cannot publish to WordPress.
 
 * **PowerShell script**
   `.github/scripts/generate-aks-updates.ps1` pulls data, runs optional AI summaries, and emits:

@@ -134,6 +134,17 @@ foreach ($repoConfig in $Repositories) {
   }
 }
 
+$DocsSource = if ($env:DOCS_SOURCE) { $env:DOCS_SOURCE } else { 'github' }
+if ($DocsSource -notin @('github', 'snapshots')) { throw "Invalid DOCS_SOURCE '$DocsSource'." }
+$SnapshotMode = ($DocsSource -eq 'snapshots')
+$SnapshotPreview = ($SnapshotMode -and $env:DOCS_PREVIEW_ONLY -eq 'true')
+if ($SnapshotMode -and $env:CVE_ONLY -ne 'true' -and -not $env:SNAPSHOT_CHANGES_PATH) {
+  throw 'Snapshot mode requires SNAPSHOT_CHANGES_PATH from the validated snapshot adapter.'
+}
+if ($SnapshotPreview -and -not $env:DOCS_PREVIEW_OUTPUT_DIR) {
+  throw 'Snapshot preview requires an isolated DOCS_PREVIEW_OUTPUT_DIR.'
+}
+$script:SnapshotAiFiles = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $GitHubToken = $env:GITHUB_TOKEN
 if (-not $GitHubToken) { Write-Error "GITHUB_TOKEN not set"; exit 1 }
 
@@ -162,9 +173,15 @@ $ghHeaders = @{
 $script:CveOnly       = ($env:CVE_ONLY       -eq 'true')
 $script:RefreshVhdCve = ($env:CVE_REFRESH_VHD -eq 'true')
 $DocsSummaryCachePath = 'docs-summary-cache.json'
+if ($SnapshotPreview) {
+  New-Item -ItemType Directory -Path $env:DOCS_PREVIEW_OUTPUT_DIR -Force | Out-Null
+  $DocsSummaryCachePath = Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'docs-summary-cache.json'
+}
+elseif ($SnapshotMode) { $DocsSummaryCachePath = 'snapshot-docs-summary-cache.json' }
 $DocsSummaryCacheMaxEntries = 2000
 $DocsSummaryCacheVersion = 'openai-responses-v1'
 $ReleasesSummaryCachePath = 'releases-summary-cache.json'
+if ($SnapshotPreview) { $ReleasesSummaryCachePath = Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'releases-summary-cache.json' }
 $ReleasesSummaryCacheMaxEntries = 100
 $ReleasesSummaryCacheVersion = 'openai-responses-v1'
 # The CVE section is served as remote HTML by the WordPress plugin. Keep a guardrail,
@@ -253,6 +270,7 @@ function Get-DocsSummaryCacheKey([string]$FilePath, $Items) {
   $patchSample = Get-GroupPatchSample -items $Items
   $payload = @(
     $DocsSummaryCacheVersion
+    if ($SnapshotMode) { 'learn-snapshot-v1' }
     $FilePath
     [string]$adds
     [string]$dels
@@ -1045,6 +1063,30 @@ function CategoryToPillHtml([string]$category) {
 # =========================
 # KIND PILL HELPERS
 # =========================
+function Get-SnapshotChangesHtml($item) {
+  if ($item.status -eq 'added') {
+    return '<p class="aks-doc-new-notice">New article: no earlier snapshot to compare. Read the full article using View Documentation.</p>'
+  }
+  if ([string]::IsNullOrWhiteSpace($item.patch)) {
+    throw "Cannot display snapshot changes without a patch: $($item.filename)"
+  }
+  $lines = [System.Collections.Generic.List[string]]::new()
+  foreach ($line in @(([string]$item.patch -split "`n") | Select-Object -Skip 2)) {
+    $class = if ($line.StartsWith('+')) { 'aks-diff-added' }
+      elseif ($line.StartsWith('-')) { 'aks-diff-removed' }
+      elseif ($line.StartsWith('@@')) { 'aks-diff-hunk' }
+      else { 'aks-diff-context' }
+    $lines.Add("<span class=""$class"">$(Escape-Html $line)</span>")
+  }
+  return @"
+<details class="aks-doc-changes">
+  <summary>Show changes <span class="aks-diff-count">($($item.additions) added, $($item.deletions) removed lines)</span></summary>
+  <p class="aks-diff-help">Net changes between saved snapshots in this tracking window, shown as source Markdown. Publication metadata is excluded. + marks additions; - marks removals. Surrounding lines provide context.</p>
+  <div class="aks-diff-scroll" role="region" aria-label="Article changes: $(Escape-Html $item.pr_title)" tabindex="0"><pre><code>$($lines -join '')</code></pre></div>
+</details>
+"@
+}
+
 function Get-SessionKind($items, [string]$summary) {
   $hasAdded = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
@@ -1732,6 +1774,7 @@ function Get-PerFileSummariesViaOpenAIResponses {
   param([string]$JsonPath, [string]$Model = "gpt-4o-mini")
   if (-not $PSAIReady) { return @{ ordered = @(); byFile = @{} } }
   if ((Get-OAIProvider) -ne 'OpenAI') {
+    if ($SnapshotMode) { throw 'Snapshot enrichment requires the OpenAI provider; do not summarize published diffs using metadata-only fallbacks.' }
     Write-Warning "Responses API migration currently supports the OpenAI provider only; falling back to GitHub Models for docs."
     return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
   }
@@ -1752,6 +1795,7 @@ function Get-PerFileSummariesViaOpenAIResponses {
     } while ($vs.status -ne 'completed' -and $vs.status -ne 'failed' -and $vs.status -ne 'cancelled' -and $vsWaitCount -lt $vsMaxIterations)
     Log "Docs vector store processing finished (status: $($vs.status), iterations: $vsWaitCount)"
     if ($vs.status -ne 'completed') {
+      if ($SnapshotMode) { throw "Snapshot AI vector store did not complete: $($vs.status)" }
       Write-Warning "Vector store processing did not complete (status: $($vs.status)) — falling back to GitHub Models"
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
     }
@@ -1811,6 +1855,7 @@ OUTPUT: JSON array of kept items:
     $clean = Remove-AIResponseArtifacts $last
     $match = [regex]::Match($clean, '\[(?:[^][]|(?<open>\[)|(?<-open>\]))*\](?(open)(?!))', 'Singleline')
     if (-not $match.Success) {
+      if ($SnapshotMode) { throw 'Snapshot AI returned no valid JSON array.' }
       $preview = if ($clean) { $clean.Substring(0, [Math]::Min($PreviewMaxLength, $clean.Length)) } else { '(empty response)' }
       Log "AI: No JSON array found in response — falling back to GitHub Models. Raw response (first $PreviewMaxLength chars): $preview"
       return Get-PerFileSummariesViaGitHubModels -JsonPath $JsonPath -Model $Model
@@ -1822,6 +1867,12 @@ OUTPUT: JSON array of kept items:
     $byFile = @{}
     foreach ($i in $arr) {
       if (-not $i.file) { continue }
+      if ($SnapshotMode) {
+        if (-not $filteredGroups.ContainsKey([string]$i.file) -or [string]::IsNullOrWhiteSpace([string]$i.summary)) {
+          throw "Snapshot AI returned an unknown article or empty summary: $($i.file)"
+        }
+        [void]$script:SnapshotAiFiles.Add([string]$i.file)
+      }
       $ordered += $i
       $byFile[$i.file] = @{
         summary  = $i.summary
@@ -1833,6 +1884,7 @@ OUTPUT: JSON array of kept items:
     return @{ ordered = $ordered; byFile = $byFile }
   }
   catch {
+    if ($SnapshotMode) { throw "Snapshot enrichment failed: $($_.Exception.Message)" }
     if (Test-IsRateLimitError $_) {
       Write-Warning "OpenAI rate limit reached for docs — falling back to GitHub Models. Error: $($_.Exception.Message)"
       New-GitHubIssueOnRateLimit -Context 'docs' -Details $_.Exception.Message
@@ -1901,11 +1953,14 @@ $PatchSample
         -Temperature 0.1
       $summary = (($text -replace '\s+', ' ').Trim())
       if (-not (Test-BadDocsSummary $summary)) {
+        if ($SnapshotMode) { [void]$script:SnapshotAiFiles.Add($FilePath) }
         return $summary
       }
       Log "AI modified-file summary rejected for $FilePath; using heuristic summary."
     }
-    catch { }
+    catch {
+      if ($SnapshotMode) { throw "Snapshot modified-page summary failed: $($_.Exception.Message)" }
+    }
   }
 
   # Enhanced heuristic summary with trivial filtering
@@ -2953,7 +3008,7 @@ $initTopRowsHtml
 # =========================
 
 # Initialize AI if provider is configured
-if ($PreferProvider) {
+if ($PreferProvider -and -not ($SnapshotMode -and $PSAIReady)) {
   $PSAIReady = Initialize-AIProvider -Provider $PreferProvider
   if ($PSAIReady) { Log "AI provider ($PreferProvider) initialized." }
 } else {
@@ -2964,6 +3019,14 @@ if ($PreferProvider) {
 Log "Collecting GitHub data since $SINCE_ISO from $($Repositories.Count) repositories..."
 
 $allFiles = @()
+
+if ($SnapshotPreview -and $script:CveOnly) { throw 'Snapshot documentation preview cannot be combined with CVE_ONLY.' }
+if ($SnapshotPreview -and $env:DOCS_PREVIEW_REQUIRE_AI -eq 'true' -and -not $PSAIReady) {
+  throw 'AI enrichment was requested for the preview, but no AI provider is ready. Configure a provider or explicitly disable AI.'
+}
+if ($SnapshotMode -and -not $script:CveOnly -and $PreferProvider -and -not $PSAIReady) {
+  throw 'Configured AI provider could not be initialized; refusing to silently replace production summaries with fallback output.'
+}
 
 if ($script:CveOnly) {
   Log "CVE_ONLY mode — skipping GitHub/docs/AI fetch."
@@ -2989,6 +3052,48 @@ if ($script:CveOnly) {
   return
 }
 
+if ($SnapshotMode) {
+  $snapshotInput = Get-Content -LiteralPath $env:SNAPSHOT_CHANGES_PATH -Raw | ConvertFrom-Json -ErrorAction Stop
+  if ($snapshotInput.schema_version -ne 1 -or $snapshotInput.source -ne 'learn-snapshot' -or
+      $null -eq $snapshotInput.changes -or -not $snapshotInput.head_revision) {
+    throw 'Unsupported or malformed snapshot adapter input.'
+  }
+  if (-not $SnapshotPreview -and ($snapshotInput.demo -or $snapshotInput.production_ready -ne $true)) {
+    throw 'Production requires non-synthetic adapter input validated against a fresh, complete collection.'
+  }
+  foreach ($change in @($snapshotInput.changes)) {
+    if ($change.status -notin @('added', 'modified') -or -not $change.patch -or
+        -not $change.canonical_url -or -not $change.detected_at) {
+      throw "Malformed snapshot change: $($change.filename)"
+    }
+    $detectedAt = if ($change.detected_at -is [DateTime]) {
+      $change.detected_at.ToUniversalTime().ToString('o')
+    } else {
+      [DateTimeOffset]::Parse([string]$change.detected_at, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime.ToString('o')
+    }
+    $allFiles += [pscustomobject]@{
+      filename = $change.filename
+      status = $change.status
+      additions = $change.additions
+      deletions = $change.deletions
+      patch = $change.patch
+      pr_title = $change.title
+      pr_url = $change.evidence_url
+      sha = $change.sha
+      date = $detectedAt
+      source = 'Snapshot'
+      repo_owner = 'MicrosoftDocs'
+      repo_name = $change.repo_name
+      repo_display = $change.product
+      canonical_url = $change.canonical_url
+    }
+    $SINCE_ISO = if ($snapshotInput.since -is [DateTime]) {
+      $snapshotInput.since.ToUniversalTime().ToString('o')
+    } else { [string]$snapshotInput.since }
+  }
+  Log "Loaded $($allFiles.Count) published-page changes (demo: $($snapshotInput.demo))."
+}
+else {
 foreach ($repoConfig in $Repositories) {
   $Owner = $repoConfig.Owner
   $Repo = $repoConfig.Repo
@@ -3115,6 +3220,7 @@ foreach ($repoConfig in $Repositories) {
   }
   
   Log "  Collected files from $DisplayName repository"
+}
 }
 
 Log "Collected $($allFiles.Count) file changes"
@@ -3279,7 +3385,11 @@ foreach ($k in $filteredGroups.Keys) {
     $repoName = $firstItem.repo_name
     $repoBranch = if ($firstItem.repo_branch) { $firstItem.repo_branch } else { "main" }
     
-    $forcedSummary = Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName -Ref $repoBranch
+    $forcedSummary = if ($SnapshotMode) {
+      "New documentation page: $($firstItem.pr_title). Review the published article and captured content diff."
+    } else {
+      Summarize-NewMarkdown -path $k -Owner $repoOwner -Repo $repoName -Ref $repoBranch
+    }
     $forced.Add([pscustomobject]@{
         file     = $k
         summary  = $forcedSummary
@@ -3417,8 +3527,9 @@ function Apply-FinalTrivialFiltering {
       $fileBase = $file -replace '\d+$', '' -replace '-v\d+$', ''
       $existingBase = $existing.file -replace '\d+$', '' -replace '-v\d+$', ''
       
-      if ($fileBase -eq $existingBase -or 
-          [System.IO.Path]::GetFileNameWithoutExtension($file) -eq [System.IO.Path]::GetFileNameWithoutExtension($existing.file)) {
+      if (($SnapshotMode -and $file -eq $existing.file) -or
+          (-not $SnapshotMode -and ($fileBase -eq $existingBase -or
+          [System.IO.Path]::GetFileNameWithoutExtension($file) -eq [System.IO.Path]::GetFileNameWithoutExtension($existing.file)))) {
         
         # Similar files found - keep the one with better summary or newer date
         $existingItems = $filteredGroups[$existing.file]
@@ -3488,6 +3599,43 @@ foreach ($item in @($finalResults.ordered)) {
 Save-DocsSummaryCache -Cache $docsSummaryCache
 Log "Docs summary cache update complete."
 
+if ($SnapshotPreview) {
+  $previewItems = @(
+    foreach ($row in @($finalResults.ordered)) {
+      $file = [string]$row.file
+      $original = @($snapshotInput.changes | Where-Object filename -eq $file)[0]
+      if (-not $original) { throw "Preview result has no source article: $file" }
+      [pscustomobject]@{
+        filename = $file
+        title = $original.title
+        product = $original.product
+        status = $original.status
+        canonical_url = $original.canonical_url
+        evidence_url = $original.evidence_url
+        detected_at = $original.detected_at
+        summary = $finalResults.byFile[$file].summary
+        summary_method = if ($script:SnapshotAiFiles.Contains($file)) { 'AI' } else { 'Heuristic or isolated cache' }
+        category = Compute-Category -file $file -summary $finalResults.byFile[$file].summary -preferred $finalResults.byFile[$file].category
+        patch = $original.patch
+      }
+    }
+  )
+  [pscustomobject]@{
+    docs_source = 'snapshots'
+    preview_only = $true
+    ai_requested = [bool]$PreferProvider
+    ai_provider = [string]$PreferProvider
+    ai_summary_count = @($previewItems | Where-Object summary_method -eq 'AI').Count
+    input = $snapshotInput
+    items = $previewItems
+  } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'summaries.json') -Encoding UTF8
+  Log "Snapshot preview completed: $($previewItems.Count) reader-facing updates. No releases, CVEs or publishing requested."
+  if ($env:DOCS_PREVIEW_RENDER_PRODUCTION -ne 'true') {
+    Get-Content -LiteralPath (Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'summaries.json') -Raw
+    return
+  }
+}
+
 # Render DOCS sections — ONLY what passed final filtering, preserving order
 Log "Rendering docs cards for tracker page..."
 $sections = New-Object System.Collections.Generic.List[string]
@@ -3502,15 +3650,25 @@ foreach ($row in @($finalResults.ordered)) {
   $repoName = $arr[0].repo_name
   $repoDisplay = $arr[0].repo_display
   
-  $fileUrl = Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
+  $fileUrl = if ($SnapshotMode) { Escape-Html $arr[0].canonical_url } else {
+    Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
+  }
   $summary = $finalResults.byFile[$file].summary
   $category = Compute-Category -file $file -summary $summary -preferred $finalResults.byFile[$file].category
   $categoryPill = CategoryToPillHtml $category
   
   # Handle both PR merged_at and commit date
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
-  $lastUpdated = [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm')
+  $lastUpdated = if ($SnapshotMode) {
+    [DateTimeOffset]::Parse($lastUpdatedDate, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime.ToString('yyyy-MM-dd HH:mm') + ' UTC'
+  } else { [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm') }
   $prLink = $arr[0].pr_url
+  $dateLabel = if ($SnapshotMode) { 'Detected' } else { 'Modified' }
+  $headerStyle = if ($SnapshotMode) { ' style="flex-wrap:wrap;"' } else { '' }
+  $prButton = if (-not $SnapshotMode) {
+    "<a class=""aks-doc-link aks-doc-link-pr"" href=""$prLink"" target=""_blank"" rel=""noopener"">View PR</a>"
+  } else { '' }
+  $changesHtml = if ($SnapshotMode) { Get-SnapshotChangesHtml $arr[0] } else { '' }
 
   $display = Get-DocDisplayName $file
   $kind = Get-SessionKind -items $arr -summary ($summary ?? "")
@@ -3521,7 +3679,7 @@ foreach ($row in @($finalResults.ordered)) {
   $cardTitle = "$($product.label) - $display"
   $cardTitle = "$($product.label) - $display"
 
-  $summary = if ($summary) { $summary } else { "Unable to summarize but a meaningful update was detected (details in linked PR/doc)." }
+  $summary = if ($summary) { $summary } else { "Unable to summarize but a meaningful update was detected (details in linked documentation)." }
 
   $section = @"
 <div class="aks-doc-update"
@@ -3534,10 +3692,10 @@ foreach ($row in @($finalResults.ordered)) {
     <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
     <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
   </h2>
-  <div class="aks-doc-header">
+  <div class="aks-doc-header"$headerStyle>
     $categoryPill
     $kindPill
-    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">Modified: $lastUpdated</span>
+    <span class="aks-doc-updated-pill" style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;">${dateLabel}: $lastUpdated</span>
   </div>
   <div class="aks-doc-summary">
     <strong>Summary</strong>
@@ -3546,13 +3704,17 @@ foreach ($row in @($finalResults.ordered)) {
   <ul></ul>
   <div class="aks-doc-buttons">
     <a class="aks-doc-link" href="$fileUrl" target="_blank" rel="noopener">View Documentation</a>
-    <a class="aks-doc-link aks-doc-link-pr" href="$prLink" target="_blank" rel="noopener">View PR</a>
+    $prButton
   </div>
+  $changesHtml
 </div>
 "@
   $sections.Add($section.Trim())
 }
 Log "Rendered $($sections.Count) docs cards."
+if ($SnapshotMode -and $sections.Count -eq 0) {
+  $sections.Add('<p class="aks-docs-empty">No meaningful published documentation changes detected in this tracking window. The initial snapshot is a baseline, not a list of new pages.</p>')
+}
 
 # =========================
 # RELEASES HANDLING
@@ -4216,7 +4378,33 @@ $updateCount = @($finalResults.ordered).Count
 
 $formShortcode = '[email-subscribers-form id="2"]'
 
+$snapshotDiffStyles = if ($SnapshotMode) {
+@'
+<style>
+.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }
+.aks-doc-changes {
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  margin-top: 16px; border-top: 1px solid currentColor; padding-top: 12px; min-width: 0;
+}
+html[data-theme="dark"] .aks-doc-changes { --cp-success: #4ade80; --cp-danger: #f87171; }
+.aks-doc-changes summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.aks-doc-changes summary:focus-visible, .aks-diff-scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.aks-doc-changes .aks-diff-count { font-weight: 400; font-size: 0.85em; }
+.aks-doc-changes .aks-diff-help, .aks-doc-new-notice { font-size: 0.85em; margin: 12px 0; }
+.aks-diff-scroll { max-height: 24rem; overflow: auto; border: 1px solid currentColor; border-radius: 0.625rem; margin-top: 12px; }
+.aks-diff-scroll pre, .aks-diff-scroll code { font: 13px/1.6 Consolas, "Courier New", Courier, monospace; color: inherit; background: inherit; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+.aks-diff-scroll pre { margin: 0; padding: 12px; }
+.aks-diff-scroll code > span { display: block; min-height: 1.6em; padding: 0 8px; border-left: 3px solid transparent; }
+.aks-diff-scroll .aks-diff-added { border-left-color: var(--cp-success); }
+.aks-diff-scroll .aks-diff-removed { border-left-color: var(--cp-danger); }
+.aks-diff-scroll .aks-diff-hunk { font-weight: 700; margin-top: 8px; }
+</style>
+'@
+} else { '' }
+
 $html = @"
+$snapshotDiffStyles
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
@@ -4285,7 +4473,8 @@ $html = @"
 $sortedDocs = @($finalResults.ordered) | Sort-Object {
   $file = $_.file
   if ($filteredGroups.ContainsKey($file)) {
-    ($filteredGroups[$file] | Sort-Object merged_at -Descending | Select-Object -First 1).merged_at
+    ($filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending | Select-Object -First 1) |
+      ForEach-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } }
   }
   else { Get-Date 0 }
 } -Descending
@@ -4316,13 +4505,17 @@ foreach ($row in $sortedDocs) {
   $arr = $filteredGroups[$file] | Sort-Object { if ($_.merged_at) { $_.merged_at } else { $_.date } } -Descending
   $repoOwner = $arr[0].repo_owner
   $repoName = $arr[0].repo_name
-  $fileUrl = Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
+  $fileUrl = if ($SnapshotMode) { Escape-Html $arr[0].canonical_url } else {
+    Get-LiveDocsUrl -FilePath $file -RepoName $repoName -Owner $repoOwner -Repo $repoName
+  }
   $summary = $finalResults.byFile[$file].summary
   $category = if ($finalResults.byFile[$file].category) { $finalResults.byFile[$file].category } else { Compute-Category $file }
   
   # Handle both PR merged_at and commit date
   $lastUpdatedDate = if ($arr[0].merged_at) { $arr[0].merged_at } else { $arr[0].date }
-  $lastUpdated = [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm')
+  $lastUpdated = if ($SnapshotMode) {
+    [DateTimeOffset]::Parse($lastUpdatedDate, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime.ToString('yyyy-MM-dd HH:mm') + ' UTC'
+  } else { [DateTime]::Parse($lastUpdatedDate).ToString('yyyy-MM-dd HH:mm') }
   $product = (Get-ProductIconMeta -FilePath $file -RepoName $repoName).label
   $productMeta = Get-ProductIconMeta -FilePath $file -RepoName $repoName
   $iconUrl = $productMeta.url
@@ -4330,6 +4523,14 @@ foreach ($row in $sortedDocs) {
   $display = Get-DocDisplayName $file
   $title = "$(Escape-Html ($product + ' - ' + $display))"
   $prLink = $arr[0].pr_url
+  $dateLabel = if ($SnapshotMode) { 'Detected' } else { 'Modified' }
+  $digestPrButton = if (-not $SnapshotMode) {
+    @"
+            <td>
+              <a href="$prLink" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
+            </td>
+"@
+  } else { '' }
   $kind = Get-SessionKind -items $arr -summary $summary
   $kindEmoji = switch ($kind) {
     "New" { "&#127381;" }
@@ -4360,7 +4561,7 @@ foreach ($row in $sortedDocs) {
       <td style="padding: 8px 0;">
         <span style="display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #f3f4f6; color: #374151; border-radius: 4px; font-size: 12px; font-weight: 500;">$category</span>
         $kindPill
-        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">Modified: $lastUpdated</span>
+        <span style="display: inline-block; padding: 4px 10px; background-color: #fef3c7; color: #92400e; border-radius: 4px; font-size: 12px; font-weight: 500;">${dateLabel}: $lastUpdated</span>
       </td>
     </tr>
     <tr>
@@ -4376,9 +4577,7 @@ foreach ($row in $sortedDocs) {
             <td style="padding-right: 10px;">
               <a href="$fileUrl" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #2563eb; color: #ffffff;">📖 View Documentation</a>
             </td>
-            <td>
-              <a href="$prLink" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 18px; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 6px; background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">🔗 View PR</a>
-            </td>
+            $digestPrButton
           </tr>
         </table>
       </td>
@@ -4390,6 +4589,7 @@ foreach ($row in $sortedDocs) {
 }
 
 $weekStart = (Get-Date -Date ((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')) -AsUTC).AddDays(-7)
+if ($SnapshotMode) { $weekStart = [DateTimeOffset]::Parse($SINCE_ISO, [Globalization.CultureInfo]::InvariantCulture).UtcDateTime }
 $weekEnd = (Get-Date).ToUniversalTime()
 $weekRange = $weekStart.ToString('yyyy-MM-dd') + " to " + $weekEnd.ToString('yyyy-MM-dd')
 
