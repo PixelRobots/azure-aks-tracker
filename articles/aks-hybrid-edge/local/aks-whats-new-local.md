@@ -19,7 +19,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service-hybrid
 description: Learn about what's new in AKS Hybrid and Edge on Azure Local.
 ms.topic: overview
-ms.date: 2026-09-01T00:00:00.0000000Z
+ms.date: 2026-10-24T00:00:00.0000000Z
 author: davidsmatlak
 ms.author: davidsmatlak
 ms.lastreviewed: 2026-08-13T00:00:00.0000000Z
@@ -37,6 +37,14 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/aks-whats-new-local.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/289b8734-3abd-4162-bc19-e661c3f4c940
+- https://authoring-docs-microsoft.poolparty.biz/devrel/5287f575-02f0-405f-92b7-800456526b0c
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
+- https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 platformId: 7bafb93b-a36b-b5c2-0634-d08e5e2b502f
 ---
 
@@ -54,6 +62,12 @@ AKS on Azure Local requires Azure Local version 23H2 or later.
 ## AKS Hybrid and Edge releases
 
 This section lists the new features and improvements in AKS in each release of Azure Local.
+
+### Release 2610
+
+#### Kubernetes versions in 2610
+
+The Kubernetes versions included in the 2610 release are: 1.32.10, 1.32.11, 1.33.6, 1.33.7, 1.34.3, and 1.34.4.
 
 ### Release 2607
 

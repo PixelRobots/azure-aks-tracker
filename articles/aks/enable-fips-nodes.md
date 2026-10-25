@@ -1032,7 +1032,7 @@ Existing Linux node pools can be updated to enable or disable FIPS. If you're pl
 
 Note
 
-When updating an existing Linux node pool to enable or disable FIPS, the node pool update moves between the fips and nonfips image. This node pool update triggers a reimage to complete the update. This can cause the node pool update to take a few minutes to complete.
+When updating an existing Linux node pool to enable or disable FIPS, the node pool update moves between the FIPS and non-FIPS image. This node pool update triggers a reimage to complete the update. This can cause the node pool update to take a few minutes to complete.
 
 ::: zone pivot="azure-cli"
 
