@@ -1,41 +1,14 @@
 {
-  "generated_at": "2026-10-26T13:38:05.6028249+00:00",
+  "generated_at": "2026-10-26T18:14:56.5382560+00:00",
   "entries": [
     {
-      "cache_key": "5b1e94189fe7d39181f1b09efebf7089b735a4be27b2b31194f30d13c5c9fb1e",
+      "cache_key": "88d8f0b6df9b014f967059657325a895e98c0e164d4d4df86b1a886a8e23d085",
       "cache_version": "openai-responses-v1",
-      "file": "articles/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm.md",
-      "summary": "The documentation has been updated to reflect the use of version 1.12.4 of the Application Gateway for Containers ALB Controller in the Helm commands. Users should now reference this updated version when deploying the Application Gateway for Containers to ensure they are using the latest features and fixes.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5977945+00:00"
-    },
-    {
-      "cache_key": "4cf9e6ac6c573d1e348f4d4fe8d8a38afa30a74eef8d3e842fcfb49840059e7b",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/extensions/troubleshoot-kuberay-extension-errors.md",
-      "summary": "This article assists in troubleshooting the managed KubeRay extension on Azure Kubernetes Service (AKS), providing guidance on common issues and resolutions.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "2026-10-26T13:38:05.5977774+00:00"
-    },
-    {
-      "cache_key": "c49c6936cc8e31eb2f2771815a00d9f6d44c872fdbafb34599ace6cc571004fe",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/app-routing-nginx-to-gateway-api-migration.md",
-      "summary": "This document outlines the migration process from Ingress-Nginx to the Gateway API implementation on AKS, detailing necessary steps and considerations for users.",
+      "file": "articles/container-registry/tasks-agent-pools.md",
+      "summary": "The documentation now clarifies that users with effective agent pool read access, such as those assigned the **Container Registry Tasks Contributor** role at the registry scope, will not require a permission change for the upcoming agent pool permission update. Users can refer to the section on \"Migrate ACR task agent pool permissions\" for additional details on roles and permissions.",
       "category": "General",
-      "score": 0.8,
-      "cached_at": "2026-10-26T13:38:05.5977594+00:00"
-    },
-    {
-      "cache_key": "40c67c4d201a6ee31efb131b541fc9eca75e3fe2fa92a0e04290853f9a0e8a75",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/extensions/troubleshoot-kueue-extension-errors.md",
-      "summary": "This article helps troubleshoot managed Kueue extension errors on Azure Kubernetes Service (AKS) and restore workload admission. It includes detailed diagnostic steps and information to include in support requests.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "2026-10-26T13:38:05.5977418+00:00"
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5328419+00:00"
     },
     {
       "cache_key": "221e141eeda6a54f14cb542e91da07033864474f3d9037428f33c32e9753d5b9",
@@ -44,70 +17,7 @@
       "summary": "The documentation for Azure Kubernetes Service (AKS) production upgrade strategies has been updated to clarify that AKS Automatic now includes managed upgrade defaults alongside preconfigured automatic upgrade channels. Users can also link multiple clusters to a shared maintenance window for consistent emergency patching schedules, enhancing management efficiency. Additionally, the guidance on architectural patterns has been refined to emphasize the importance of workload design and resilience during upgrades.",
       "category": "Operations",
       "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5977220+00:00"
-    },
-    {
-      "cache_key": "50280a7052494bfef70a4901f1dfb9eff5bcc8041bdc39858eb03aac613fdc8a",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/application-gateway/for-containers/alb-controller-release-notes.md",
-      "summary": "This document provides release notes for the ALB Controller, detailing version updates and security patches.",
-      "category": "General",
-      "score": 0.5,
-      "cached_at": "2026-10-26T13:38:05.5977017+00:00"
-    },
-    {
-      "cache_key": "2e06439e4f5b7a728aeacd3180f525f1886b6b188aad06b1f4048a0364030d6d",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-auto-provisioning-node-pools.md",
-      "summary": "This article provides guidance on configuring Node Pools for Node Auto-Provisioning (NAP) in Azure Kubernetes Service (AKS), including detailed steps and examples.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5976750+00:00"
-    },
-    {
-      "cache_key": "01b9889751abc4f200affefa74b6fa19846d6519f163a0c9b0f6d4745aba94ca",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/application-gateway/for-containers/service-mesh-integration.md",
-      "summary": "This article discusses service mesh integration with Application Gateway for Containers, including version updates and configuration details.",
-      "category": "General",
-      "score": 0.5,
-      "cached_at": "2026-10-26T13:38:05.5976508+00:00"
-    },
-    {
-      "cache_key": "b8aa80cc42d7207bf39f5a87a5c0c9dddba995fe46f8a16136681b77297c35c4",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/enable-fips-cluster.md",
-      "summary": "Added a comprehensive guide on enabling Federal Information Processing Standard (FIPS) for AKS clusters, detailing prerequisites, limitations, and the implications of FIPS mode on node pools and AKS-managed components.",
-      "category": "Security",
-      "score": 1.0,
-      "cached_at": "2026-10-26T13:38:05.5976266+00:00"
-    },
-    {
-      "cache_key": "c3a7b86140b2bfa45638a70aad5f63027dd46a0ee804438a0ebc5e844d843e59",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks-hybrid-edge/local/disconnected-operations/overview.md",
-      "summary": "The documentation now clarifies that Windows node pools and GPUs are not supported in AKS on Azure Local with disconnected operations. This update informs users about the limitations they may encounter when configuring their environments.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5975991+00:00"
-    },
-    {
-      "cache_key": "a4bcb078d2a65217a5c9ad001174073a1861dce8a8e42fb76072b52881973417",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/use-node-disruption-policy.md",
-      "summary": "Updated the configuration details for the Node Disruption Policy in Azure Kubernetes Service (AKS). The maintenance configuration can now define the schedule inline or link to a shared maintenance window, enhancing clarity on how to manage disruptive operations during maintenance windows.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5975760+00:00"
-    },
-    {
-      "cache_key": "51a430292ffef0b6ecf01ac6d59b9653cdf0d0666d6cfee472b03181d800e5fc",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/security-bulletins/overview.md",
-      "summary": "The documentation now includes a new section detailing the security bulletin AKS-2026-0006, which addresses OpenSSL end-of-life findings in AKS-managed add-on images. Users are informed that while some vulnerability scanners may report OpenSSL 3.3 as end-of-life, Azure Linux continues to provide security fixes through backports, and they should verify package versions using the image's SBOM or RPM metadata rather than relying solely on the upstream version. Additionally, guidance is provided on how to handle EOL warnings and CVEs, emphasizing the importance of using distribution-aware matching for accurate vulnerability assessments.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5975433+00:00"
+      "cached_at": "2026-10-26T18:14:56.5328161+00:00"
     },
     {
       "cache_key": "ebda8aae98e7a82d1776cb2cc83d75775bc93e8b807d20a741abcedd5432c671",
@@ -116,7 +26,7 @@
       "summary": "New documentation page: Migrate ACR task agent pool permissions - Azure Container Registry | Microsoft Learn. Review the published article and captured content diff.",
       "category": "General",
       "score": 1.0,
-      "cached_at": "2026-10-26T13:38:05.5975253+00:00"
+      "cached_at": "2026-10-26T18:14:56.5327885+00:00"
     },
     {
       "cache_key": "71312c408d0884a7b273d82c7106ca9e3b02628d7fecf42fa76b6d8fce140943",
@@ -125,25 +35,7 @@
       "summary": "Introduced new Kubernetes versions included in the 2610 release for AKS Hybrid and Edge, providing users with updated version information for better planning and deployment.",
       "category": "General",
       "score": 0.7,
-      "cached_at": "2026-10-26T13:38:05.5975063+00:00"
-    },
-    {
-      "cache_key": "7da72de62cb4e77a9615beb7558da9753f3164d089bfecda674165fb54d08bb1",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/aks-communication-manager.md",
-      "summary": "The documentation now specifies that when creating a planned maintenance window for automatic upgrades in AKS, users can define the schedule inline on the cluster's maintenance configuration or link it from a shared maintenance window. This enhancement provides greater flexibility in managing maintenance schedules.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5974805+00:00"
-    },
-    {
-      "cache_key": "88d8f0b6df9b014f967059657325a895e98c0e164d4d4df86b1a886a8e23d085",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/container-registry/tasks-agent-pools.md",
-      "summary": "The documentation now clarifies that users with effective agent pool read access, such as those assigned the **Container Registry Tasks Contributor** role at the registry scope, will not require a permission change for the upcoming agent pool permission update. Users can refer to the section on \"Migrate ACR task agent pool permissions\" for additional details on roles and permissions.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5974425+00:00"
+      "cached_at": "2026-10-26T18:14:56.5327625+00:00"
     },
     {
       "cache_key": "ae9684be38746d9e62307893532186d3b133015f387ffae5d37473f4b93f8e2e",
@@ -152,34 +44,7 @@
       "summary": "Updated the supported Kubernetes versions for AKS Hybrid and Edge, including new version details and emphasizing the importance of sequential upgrade paths for clusters.",
       "category": "General",
       "score": 0.8,
-      "cached_at": "2026-10-26T13:38:05.5974243+00:00"
-    },
-    {
-      "cache_key": "0e68912d70038800d9b2777b8ca4801a048f35b66d8d4b440516fbe6d52b5696",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/auto-upgrade-cluster.md",
-      "summary": "This article describes how to automatically upgrade an Azure Kubernetes Service (AKS) cluster, including linking multiple clusters to a shared maintenance window.",
-      "category": "Operations",
-      "score": 0.8,
-      "cached_at": "2026-10-26T13:38:05.5974055+00:00"
-    },
-    {
-      "cache_key": "806bdd13e13a572b0c324f88f37964a894271537f766e150bdf5adad5f983cdc",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/upgrade-cluster-components.md",
-      "summary": "This document provides an overview of upgrading Azure Kubernetes Service (AKS) clusters and components, including managed reliability defaults and upgrade cadence.",
-      "category": "Operations",
-      "score": 0.7,
-      "cached_at": "2026-10-26T13:38:05.5973861+00:00"
-    },
-    {
-      "cache_key": "de6537b73933ad63f76c276e5861455a848fe7ef7941e1b8d4065436f68a05a5",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-disruption-policy.md",
-      "summary": "This article explains the Node Disruption Policy in Azure Kubernetes Service (AKS), detailing how to manage disruptions during maintenance windows.",
-      "category": "Operations",
-      "score": 0.7,
-      "cached_at": "2026-10-26T13:38:05.5973677+00:00"
+      "cached_at": "2026-10-26T18:14:56.5327373+00:00"
     },
     {
       "cache_key": "296fa497b377eaac8b0121af1b272f709a88a8cc214e9b97f7a5238a006cf0c9",
@@ -188,7 +53,25 @@
       "summary": "New documentation page: Troubleshoot Microsoft Entra SSH access to AKS nodes - Azure | Microsoft Learn. Review the published article and captured content diff.",
       "category": "Security",
       "score": 1.0,
-      "cached_at": "2026-10-26T13:38:05.5973492+00:00"
+      "cached_at": "2026-10-26T18:14:56.5327095+00:00"
+    },
+    {
+      "cache_key": "b8aa80cc42d7207bf39f5a87a5c0c9dddba995fe46f8a16136681b77297c35c4",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/enable-fips-cluster.md",
+      "summary": "Added a comprehensive guide on enabling Federal Information Processing Standard (FIPS) for AKS clusters, detailing prerequisites, limitations, and the implications of FIPS mode on node pools and AKS-managed components.",
+      "category": "Security",
+      "score": 1.0,
+      "cached_at": "2026-10-26T18:14:56.5326830+00:00"
+    },
+    {
+      "cache_key": "0e68912d70038800d9b2777b8ca4801a048f35b66d8d4b440516fbe6d52b5696",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/auto-upgrade-cluster.md",
+      "summary": "This article describes how to automatically upgrade an Azure Kubernetes Service (AKS) cluster, including linking multiple clusters to a shared maintenance window.",
+      "category": "Operations",
+      "score": 0.8,
+      "cached_at": "2026-10-26T18:14:56.5326573+00:00"
     },
     {
       "cache_key": "4392761ef2c3b8d342f179c2facba70cb261ec2de1119f67e204ac3eab3c60f2",
@@ -197,25 +80,7 @@
       "summary": "The documentation now includes the OpenShift Cloud Platform (OCP) as a supported distribution with conformance validation for Azure Arc-enabled Kubernetes clusters. Additionally, Nexus Baremetal has been added to the list of supported distributions without conformance validation, expanding the options available for users managing their Kubernetes environments.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5973299+00:00"
-    },
-    {
-      "cache_key": "fbabcef5a368236ad4fc35041164a9a72553e76ecac3ab85497b215511ede750",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks-hybrid-edge/local/hyperconverged/howto-upgrade-windows-os.md",
-      "summary": "The documentation now indicates that Windows Server 2019 node pools are deprecated and no longer supported, meaning users must upgrade to a newer version to maintain support. Additionally, it clarifies that Windows Server 2022 will continue to be supported until the introduction of Windows Server 2025 node pools with Kubernetes 1.35, prompting users to plan their upgrades accordingly. Users are advised to refer to the Windows Server servicing and support lifecycle for security patches and OS-level bug fixes.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5973112+00:00"
-    },
-    {
-      "cache_key": "0a66d50ef8e42b7123176ad9ab8fe5c73383f4b2299b61f60b53a4100493b13e",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/supported-kubernetes-versions.md",
-      "summary": "This article lists the supported Kubernetes versions in Azure Kubernetes Service (AKS), including upcoming versions and their expected release dates.",
-      "category": "General",
-      "score": 0.6,
-      "cached_at": "2026-10-26T13:38:05.5972914+00:00"
+      "cached_at": "2026-10-26T18:14:56.5326318+00:00"
     },
     {
       "cache_key": "c190e8fecc83e096e2b8ec71a763877f22520b7472643ad7a35bbb8d052a47be",
@@ -224,16 +89,16 @@
       "summary": "Clarified the process for updating existing Linux node pools to enable or disable FIPS, specifying the transition between FIPS and non-FIPS images and the reimage requirement, which may extend the update time.",
       "category": "Security",
       "score": 0.8,
-      "cached_at": "2026-10-26T13:38:05.5972712+00:00"
+      "cached_at": "2026-10-26T18:14:56.5326048+00:00"
     },
     {
-      "cache_key": "dd934e9be72b7a4b684a7047d2b73053979107d60485f0b72f996b7c17417a9b",
+      "cache_key": "a4bcb078d2a65217a5c9ad001174073a1861dce8a8e42fb76072b52881973417",
       "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share.md",
-      "summary": "The documentation now includes a detailed section on troubleshooting the `AuthorizationFailed` error during Azure Files share provisioning in Azure Kubernetes Service (AKS). Users can identify the principal reported in the error, verify AKS identity configurations, and check role assignments to ensure the necessary Azure RBAC permissions are granted for file share operations. Additionally, the article clarifies the implications of using FIPS-enabled node pools and provides updated guidance on encryption algorithm support for different AKS versions.",
-      "category": "Storage",
+      "file": "articles/aks/use-node-disruption-policy.md",
+      "summary": "Updated the configuration details for the Node Disruption Policy in Azure Kubernetes Service (AKS). The maintenance configuration can now define the schedule inline or link to a shared maintenance window, enhancing clarity on how to manage disruptive operations during maintenance windows.",
+      "category": "Operations",
       "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5972487+00:00"
+      "cached_at": "2026-10-26T18:14:56.5325780+00:00"
     },
     {
       "cache_key": "6feedfd5c93a58be7adfd0bbfc4721ec5817a9f39f3f753dc6e6475886beba44",
@@ -242,7 +107,142 @@
       "summary": "The documentation for upgrading Azure Kubernetes Service (AKS) on Azure Local for multi-rack deployments has been updated to reflect new version numbers. Users can now see the latest available versions, including 1.33.13, 1.34.10, 1.34.11, 1.35.7, 1.35.8, 1.36.3, and 1.36.4, ensuring they have the most current information for their upgrade processes.",
       "category": "Operations",
       "score": 0.9,
-      "cached_at": "2026-10-26T13:38:05.5972119+00:00"
+      "cached_at": "2026-10-26T18:14:56.5325367+00:00"
+    },
+    {
+      "cache_key": "50280a7052494bfef70a4901f1dfb9eff5bcc8041bdc39858eb03aac613fdc8a",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/application-gateway/for-containers/alb-controller-release-notes.md",
+      "summary": "This document provides release notes for the ALB Controller, detailing version updates and security patches.",
+      "category": "General",
+      "score": 0.5,
+      "cached_at": "2026-10-26T18:14:56.5325066+00:00"
+    },
+    {
+      "cache_key": "7da72de62cb4e77a9615beb7558da9753f3164d089bfecda674165fb54d08bb1",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/aks-communication-manager.md",
+      "summary": "The documentation now specifies that when creating a planned maintenance window for automatic upgrades in AKS, users can define the schedule inline on the cluster's maintenance configuration or link it from a shared maintenance window. This enhancement provides greater flexibility in managing maintenance schedules.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5324773+00:00"
+    },
+    {
+      "cache_key": "dd934e9be72b7a4b684a7047d2b73053979107d60485f0b72f996b7c17417a9b",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/storage/fail-to-mount-azure-file-share.md",
+      "summary": "The documentation now includes a detailed section on troubleshooting the `AuthorizationFailed` error during Azure Files share provisioning in Azure Kubernetes Service (AKS). Users can identify the principal reported in the error, verify AKS identity configurations, and check role assignments to ensure the necessary Azure RBAC permissions are granted for file share operations. Additionally, the article clarifies the implications of using FIPS-enabled node pools and provides updated guidance on encryption algorithm support for different AKS versions.",
+      "category": "Storage",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5324469+00:00"
+    },
+    {
+      "cache_key": "51a430292ffef0b6ecf01ac6d59b9653cdf0d0666d6cfee472b03181d800e5fc",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/security-bulletins/overview.md",
+      "summary": "The documentation now includes a new section detailing the security bulletin AKS-2026-0006, which addresses OpenSSL end-of-life findings in AKS-managed add-on images. Users are informed that while some vulnerability scanners may report OpenSSL 3.3 as end-of-life, Azure Linux continues to provide security fixes through backports, and they should verify package versions using the image's SBOM or RPM metadata rather than relying solely on the upstream version. Additionally, guidance is provided on how to handle EOL warnings and CVEs, emphasizing the importance of using distribution-aware matching for accurate vulnerability assessments.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5323930+00:00"
+    },
+    {
+      "cache_key": "de6537b73933ad63f76c276e5861455a848fe7ef7941e1b8d4065436f68a05a5",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-disruption-policy.md",
+      "summary": "This article explains the Node Disruption Policy in Azure Kubernetes Service (AKS), detailing how to manage disruptions during maintenance windows.",
+      "category": "Operations",
+      "score": 0.7,
+      "cached_at": "2026-10-26T18:14:56.5323650+00:00"
+    },
+    {
+      "cache_key": "806bdd13e13a572b0c324f88f37964a894271537f766e150bdf5adad5f983cdc",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/upgrade-cluster-components.md",
+      "summary": "This document provides an overview of upgrading Azure Kubernetes Service (AKS) clusters and components, including managed reliability defaults and upgrade cadence.",
+      "category": "Operations",
+      "score": 0.7,
+      "cached_at": "2026-10-26T18:14:56.5323360+00:00"
+    },
+    {
+      "cache_key": "c49c6936cc8e31eb2f2771815a00d9f6d44c872fdbafb34599ace6cc571004fe",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/app-routing-nginx-to-gateway-api-migration.md",
+      "summary": "This document outlines the migration process from Ingress-Nginx to the Gateway API implementation on AKS, detailing necessary steps and considerations for users.",
+      "category": "General",
+      "score": 0.8,
+      "cached_at": "2026-10-26T18:14:56.5323062+00:00"
+    },
+    {
+      "cache_key": "4cf9e6ac6c573d1e348f4d4fe8d8a38afa30a74eef8d3e842fcfb49840059e7b",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/extensions/troubleshoot-kuberay-extension-errors.md",
+      "summary": "This article assists in troubleshooting the managed KubeRay extension on Azure Kubernetes Service (AKS), providing guidance on common issues and resolutions.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "2026-10-26T18:14:56.5322774+00:00"
+    },
+    {
+      "cache_key": "fbabcef5a368236ad4fc35041164a9a72553e76ecac3ab85497b215511ede750",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks-hybrid-edge/local/hyperconverged/howto-upgrade-windows-os.md",
+      "summary": "The documentation now indicates that Windows Server 2019 node pools are deprecated and no longer supported, meaning users must upgrade to a newer version to maintain support. Additionally, it clarifies that Windows Server 2022 will continue to be supported until the introduction of Windows Server 2025 node pools with Kubernetes 1.35, prompting users to plan their upgrades accordingly. Users are advised to refer to the Windows Server servicing and support lifecycle for security patches and OS-level bug fixes.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5322510+00:00"
+    },
+    {
+      "cache_key": "01b9889751abc4f200affefa74b6fa19846d6519f163a0c9b0f6d4745aba94ca",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/application-gateway/for-containers/service-mesh-integration.md",
+      "summary": "This article discusses service mesh integration with Application Gateway for Containers, including version updates and configuration details.",
+      "category": "General",
+      "score": 0.5,
+      "cached_at": "2026-10-26T18:14:56.5322226+00:00"
+    },
+    {
+      "cache_key": "c3a7b86140b2bfa45638a70aad5f63027dd46a0ee804438a0ebc5e844d843e59",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks-hybrid-edge/local/disconnected-operations/overview.md",
+      "summary": "The documentation now clarifies that Windows node pools and GPUs are not supported in AKS on Azure Local with disconnected operations. This update informs users about the limitations they may encounter when configuring their environments.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5321942+00:00"
+    },
+    {
+      "cache_key": "40c67c4d201a6ee31efb131b541fc9eca75e3fe2fa92a0e04290853f9a0e8a75",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/extensions/troubleshoot-kueue-extension-errors.md",
+      "summary": "This article helps troubleshoot managed Kueue extension errors on Azure Kubernetes Service (AKS) and restore workload admission. It includes detailed diagnostic steps and information to include in support requests.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "2026-10-26T18:14:56.5321656+00:00"
+    },
+    {
+      "cache_key": "5b1e94189fe7d39181f1b09efebf7089b735a4be27b2b31194f30d13c5c9fb1e",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm.md",
+      "summary": "The documentation has been updated to reflect the use of version 1.12.4 of the Application Gateway for Containers ALB Controller in the Helm commands. Users should now reference this updated version when deploying the Application Gateway for Containers to ensure they are using the latest features and fixes.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5321367+00:00"
+    },
+    {
+      "cache_key": "2e06439e4f5b7a728aeacd3180f525f1886b6b188aad06b1f4048a0364030d6d",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-auto-provisioning-node-pools.md",
+      "summary": "This article provides guidance on configuring Node Pools for Node Auto-Provisioning (NAP) in Azure Kubernetes Service (AKS), including detailed steps and examples.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-26T18:14:56.5321026+00:00"
+    },
+    {
+      "cache_key": "0a66d50ef8e42b7123176ad9ab8fe5c73383f4b2299b61f60b53a4100493b13e",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/supported-kubernetes-versions.md",
+      "summary": "This article lists the supported Kubernetes versions in Azure Kubernetes Service (AKS), including upcoming versions and their expected release dates.",
+      "category": "General",
+      "score": 0.6,
+      "cached_at": "2026-10-26T18:14:56.5320465+00:00"
     }
   ]
 }
