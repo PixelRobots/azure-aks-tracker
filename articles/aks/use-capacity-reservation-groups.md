@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn how to use capacity reservation groups with node pools in Azure Kubernetes Service (AKS) to guarantee allocated capacity for your node pools.
 ms.topic: how-to
-ms.date: 2026-09-14T00:00:00.0000000Z
+ms.date: 2026-09-29T00:00:00.0000000Z
 author: schaffererin
 ms.author: stgriffi
 ms.subservice: aks-nodes
@@ -118,12 +118,41 @@ Get the ID of an existing capacity reservation group by using the [`az capacity 
 CRG_ID=$(az capacity reservation group show --capacity-reservation-group <crg-name> --resource-group <resource-group-name> --query id -o tsv)
 ```
 
+## Associate an existing capacity reservation group with a new cluster
+
+Associate an existing capacity reservation group with the default system node pool during cluster creation by running the [`az aks create`](/en-us/cli/azure/aks#az-aks-create) command with the `--assign-identity` and `--crg-id` flags.
+
+```azurecli
+az aks create \
+    --resource-group <resource-group-name> \
+    --name <cluster-name> \
+    --location <location> \
+    --node-vm-size <vm-size> \
+    --node-count <node-count> \
+    --assign-identity $IDENTITY_ID \
+    --crg-id $CRG_ID \
+    --generate-ssh-keys
+```
+
 ## Associate an existing capacity reservation group with a new node pool
 
-Associate an existing capacity reservation group with a new node pool by using the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command with the `--crg-id` flag. The following example assumes you have a CRG named "myCRG".
+Associate an existing capacity reservation group with a new user node pool by using the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command with the `--crg-id` flag.
 
 ```azurecli
 az aks nodepool add --resource-group <resource-group-name> --cluster-name <cluster-name> --name <node-pool-name> --crg-id $CRG_ID
+```
+
+To associate an existing capacity reservation group with a new system node pool, create the node pool with the `--mode System` and `--crg-id` flags. For production clusters, use a minimum of three nodes for system node pools.
+
+```azurecli
+az aks nodepool add \
+    --resource-group <resource-group-name> \
+    --cluster-name <cluster-name> \
+    --name <system-node-pool-name> \
+    --mode System \
+    --node-count 3 \
+    --node-taints CriticalAddonsOnly=true:NoSchedule \
+    --crg-id $CRG_ID
 ```
 
 ## Associate an existing capacity reservation group with an existing node pool (Preview)
@@ -131,7 +160,8 @@ az aks nodepool add --resource-group <resource-group-name> --cluster-name <clust
 Associate an existing capacity reservation group with an existing node pool by using the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command with the `--crg-id` flag.
 
 - For zonal node pools, this operation initiates a rolling update of the target node pool. The update process involves rolling cordon and drain of all nodes, followed by a reboot to apply the change.
-- For non-zonal (regional) node pools during the preview, first scale the node pool to zero, then apply the capacity reservation group.
+- For non-zonal (regional) user node pools during the preview, first scale the node pool to zero, then apply the capacity reservation group.
+- For non-zonal (regional) system node pools, don't scale the system node pool to zero. Instead, create a new system node pool associated with the capacity reservation group, verify the new node pool is ready, and then delete the old system node pool. AKS requires at least one system node pool at all times.
 
 ### Prerequisites
 
@@ -144,23 +174,6 @@ Associate an existing capacity reservation group with an existing node pool by u
 
     If the command fails with `LinkedAuthorizationFailed` and references `Microsoft.Compute/capacityReservationGroups/write`, grant that permission to the signed-in user or service principal running the command on the target capacity reservation group.
 
-## Associate an existing capacity reservation group with a system node pool
-
-To associate an existing capacity reservation group with a system node pool, you need to assign the user-assigned managed identity with the `Contributor` role to the cluster during cluster creation. You can then use the `--crg-id` flag to associate the capacity reservation group with the system node pool.
-
-- Create a new AKS cluster with the user-assigned managed identity and associate it with the capacity reservation group using the `--assign-identity` and `--crg-id` flags with the [`az aks create`](/en-us/cli/azure/aks#az-aks-create) command.
-
-    ```azurecli
-    az aks create \
-        --resource-group <resource-group-name> \
-        --name <cluster-name> \
-        --location <location> \
-        --node-vm-size <vm-size> --node-count <node-count> \
-        --assign-identity $IDENTITY_ID \
-        --crg-id $CRG_ID \
-        --generate-ssh-keys
-    ```
-
 ## Next steps: Manage node pools in AKS
 
-To learn more about managing node pools in AKS, see [Manage node pools in Azure Kubernetes Service (AKS)](manage-node-pools).
+To learn more about managing node pools in AKS, see [Manage node pools in Azure Kubernetes Service (AKS)](manage-node-pools). To learn how to add, update, or delete system node pools, see [Use system node pools in Azure Kubernetes Service (AKS)](use-system-pools).
