@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "checked_at": "2026-10-27T02:47:51.567Z",
+  "checked_at": "2026-10-27T06:16:00.691Z",
   "complete": true,
   "errors": 0,
   "unreached": 0,
@@ -15,5 +15,5 @@
     "Arc K8s",
     "Fleet"
   ],
-  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/40439873596"
+  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/40459454273"
 }
