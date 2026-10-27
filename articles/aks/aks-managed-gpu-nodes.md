@@ -232,60 +232,62 @@ To use managed GPU nodes with node auto-provisioning (NAP), add the `EnableManag
 
 To learn more about configurable Azure-specific settings, see [Configure AKSNodeClass resources for NAP](node-auto-provisioning-aksnodeclass).
 
-1. Create an `AKSNodeClass` CRD with the `EnableManagedGPUExperience: "true"` value in the `tags` field.
+1. Create an `AKSNodeClass` CRD and set `mode: Driver` and `nvidia.managementMode: Managed` in the `spec.gpu` field.
 
     ```yaml
     apiVersion: karpenter.azure.com/v1beta1
     kind: AKSNodeClass
     metadata:
       name: managed-gpu-class
-    spec:
-      imageFamily: Ubuntu
-      tags:
-        EnableManagedGPUExperience: "true"
     ```
-2. Create a `NodePool` CRD that allows NAP to deploy NVIDIA GPU SKUs.
 
-    ```yaml
-    apiVersion: karpenter.sh/v1
-    kind: NodePool
-    metadata:
-      name: managed-gpu-np
+spec: gpu: mode: Driver nvidia: managementMode: Managed
+
+```
+
+1. Create a `NodePool` CRD that allows NAP to deploy NVIDIA GPU SKUs.
+
+```yaml
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: managed-gpu-np
+spec:
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s
+  template:
     spec:
-      disruption:
-        consolidationPolicy: WhenEmptyOrUnderutilized
-        consolidateAfter: 30s
-      template:
-        spec:
-          nodeClassRef:
-            group: karpenter.azure.com
-            kind: AKSNodeClass
-            name: managed-gpu-class
-          requirements:
-            - key: kubernetes.io/arch
-              operator: In
-              values: ["amd64"]
-            - key: kubernetes.io/os
-              operator: In
-              values: ["linux"]
-            - key: karpenter.azure.com/sku-family
-              operator: In
-              values: ["N"]
-            - key: karpenter.azure.com/sku-gpu-manufacturer
-              operator: In
-              values: ["nvidia"]
-            - key: karpenter.sh/capacity-type
-              operator: In
-              values: ["spot", "on-demand"]
-    ```
-3. Deploy the `AKSNodeClass` and `NodePool` CRDs.
+      nodeClassRef:
+        group: karpenter.azure.com
+        kind: AKSNodeClass
+        name: managed-gpu-class
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.azure.com/sku-family
+          operator: In
+          values: ["N"]
+        - key: karpenter.azure.com/sku-gpu-manufacturer
+          operator: In
+          values: ["nvidia"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]
+```
+
+1. Deploy the `AKSNodeClass` and `NodePool` CRDs.
 
     ```bash
     kubectl apply -f managed-gpu-class.yaml
     kubectl apply -f managed-gpu-np.yaml
     ```
-4. Deploy a sample workload that requests GPU resources. NAP provisions a matching GPU node when the pod is pending.
-5. Confirm that the `AKSNodeClass` and `NodePool` resources are deployed and the managed GPU label is applied to the NAP-provisioned node.
+2. Deploy a sample workload that requests GPU resources. NAP provisions a matching GPU node when the pod is pending.
+3. Confirm that the `AKSNodeClass` and `NodePool` resources are deployed and the managed GPU label is applied to the NAP-provisioned node.
 
     ```bash
     kubectl get aksnodeclasses.karpenter.azure.com,nodepools.karpenter.sh
