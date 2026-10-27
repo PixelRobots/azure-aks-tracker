@@ -246,7 +246,9 @@ test('production change disclosure escapes Markdown, keeps the complete diff and
   const data = JSON.parse(result.stdout);
   assert.match(data.modified, /<details class="aks-doc-changes">/);
   assert.doesNotMatch(data.modified, /<details[^>]*\bopen\b/);
+  assert.match(data.modified, /<span class="aks-diff-show">Show changes<\/span><span class="aks-diff-hide">Hide changes<\/span>/);
   assert.match(data.modified, /1001 added, 1 removed lines/);
+  assert.match(data.modified, /class="aks-diff-expand" aria-label="Expand changes" title="Expand changes" data-article-title="Test &quot;article&quot; &lt;script&gt;" hidden/);
   assert.match(data.modified, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.match(data.modified, /aria-label="Article changes: Test &quot;article&quot; &lt;script&gt;"/);
   assert.match(data.modified, /class="aks-diff-added">\+line 1000<\/span>/);
@@ -302,6 +304,21 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.ok(data.html.includes('class="aks-diff-added"'));
   assert.ok(data.html.includes('class="aks-diff-removed"'));
   assert.ok(data.html.includes('.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }'));
+  assert.ok(data.html.includes('.aks-doc-changes, .aks-updates .aks-doc-new-notice {'));
+  assert.ok(data.html.includes('.aks-doc-changes[open] > summary::before { transform: rotate(45deg); }'));
+  assert.ok(data.html.includes('.aks-doc-changes[open] > summary .aks-diff-show { display: none; }'));
+  assert.ok(data.html.includes('.aks-doc-changes[open] > summary .aks-diff-hide { display: inline; }'));
+  assert.ok(data.html.includes('--cp-accent: #ffea00;'));
+  assert.ok(data.html.includes('scrollbar-color: var(--cp-accent) var(--cp-diff-scroll-track);'));
+  assert.ok(data.html.includes('.aks-diff-scroll::-webkit-scrollbar-thumb'));
+  assert.equal((data.html.match(/class="aks-diff-expand"/g) || []).length, 8);
+  assert.ok(data.html.includes("dialog.showModal()"));
+  assert.ok(data.html.includes("active.placeholder.replaceWith(active.viewer)"));
+  assert.ok(data.html.includes('dialog.aks-diff-dialog[open]'));
+  assert.ok(data.html.includes('aria-label="Close changes"'));
+  for (const script of data.html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+    assert.doesNotThrow(() => new (require('node:vm').Script)(script[1]));
+  }
   assert.equal(data.digest_docs_html.includes('aks-doc-changes'), false);
   assert.equal(data.digest_docs_html.includes('<details'), false);
   assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 8);

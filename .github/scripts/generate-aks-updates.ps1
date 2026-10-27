@@ -1080,7 +1080,7 @@ function Get-SnapshotChangesHtml($item) {
   }
   return @"
 <details class="aks-doc-changes">
-  <summary>Show changes <span class="aks-diff-count">($($item.additions) added, $($item.deletions) removed lines)</span></summary>
+  <summary><span class="aks-diff-show">Show changes</span><span class="aks-diff-hide">Hide changes</span> <span class="aks-diff-count">($($item.additions) added, $($item.deletions) removed lines)</span><button type="button" class="aks-diff-expand" aria-label="Expand changes" title="Expand changes" data-article-title="$(Escape-Html $item.pr_title)" hidden><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/></svg></button></summary>
   <p class="aks-diff-help">Net changes between saved snapshots in this tracking window, shown as source Markdown. Publication metadata is excluded. + marks additions; - marks removals. Surrounding lines provide context.</p>
   <div class="aks-diff-scroll" role="region" aria-label="Article changes: $(Escape-Html $item.pr_title)" tabindex="0"><pre><code>$($lines -join '')</code></pre></div>
 </details>
@@ -4382,24 +4382,126 @@ $snapshotDiffStyles = if ($SnapshotMode) {
 @'
 <style>
 .aks-updates .aks-doc-summary { overflow-wrap: anywhere; }
-.aks-doc-changes {
+.aks-doc-changes, .aks-diff-dialog {
   --cp-success: #16a34a;
   --cp-danger: #dc2626;
+  --cp-accent: #ffea00;
+  --cp-diff-scroll-track: #18181b;
+  --cp-diff-surface: #18181b;
+  --cp-diff-text: #f5f5f5;
+  --cp-diff-backdrop: rgba(0, 0, 0, 0.75);
+}
+.aks-doc-changes, .aks-updates .aks-doc-new-notice {
   margin-top: 16px; border-top: 1px solid currentColor; padding-top: 12px; min-width: 0;
 }
-html[data-theme="dark"] .aks-doc-changes { --cp-success: #4ade80; --cp-danger: #f87171; }
-.aks-doc-changes summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+html[data-theme="dark"] .aks-doc-changes, .aks-diff-dialog { --cp-success: #4ade80; --cp-danger: #f87171; }
+.aks-doc-changes > summary { display: block; list-style: none; cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.aks-doc-changes > summary::-webkit-details-marker { display: none; }
+.aks-doc-changes > summary::before { content: ""; display: inline-block; width: 0.45em; height: 0.45em; margin-right: 0.65em; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); vertical-align: 0.1em; }
+.aks-doc-changes[open] > summary::before { transform: rotate(45deg); }
+.aks-doc-changes > summary .aks-diff-hide, .aks-doc-changes[open] > summary .aks-diff-show { display: none; }
+.aks-doc-changes[open] > summary .aks-diff-hide { display: inline; }
 .aks-doc-changes summary:focus-visible, .aks-diff-scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 .aks-doc-changes .aks-diff-count { font-weight: 400; font-size: 0.85em; }
 .aks-doc-changes .aks-diff-help, .aks-doc-new-notice { font-size: 0.85em; margin: 12px 0; }
-.aks-diff-scroll { max-height: 24rem; overflow: auto; border: 1px solid currentColor; border-radius: 0.625rem; margin-top: 12px; }
+.aks-updates .aks-doc-new-notice { margin-top: 16px !important; }
+.aks-diff-scroll { max-height: 24rem; overflow: auto; border: 1px solid currentColor; border-radius: 0.625rem; margin-top: 12px; scrollbar-width: thin; scrollbar-color: var(--cp-accent) var(--cp-diff-scroll-track); }
+.aks-diff-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.aks-diff-scroll::-webkit-scrollbar-track, .aks-diff-scroll::-webkit-scrollbar-corner { background: var(--cp-diff-scroll-track); }
+.aks-diff-scroll::-webkit-scrollbar-thumb { background: var(--cp-accent); border: 2px solid var(--cp-diff-scroll-track); border-radius: 8px; }
 .aks-diff-scroll pre, .aks-diff-scroll code { font: 13px/1.6 Consolas, "Courier New", Courier, monospace; color: inherit; background: inherit; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
 .aks-diff-scroll pre { margin: 0; padding: 12px; }
 .aks-diff-scroll code > span { display: block; min-height: 1.6em; padding: 0 8px; border-left: 3px solid transparent; }
 .aks-diff-scroll .aks-diff-added { border-left-color: var(--cp-success); }
 .aks-diff-scroll .aks-diff-removed { border-left-color: var(--cp-danger); }
 .aks-diff-scroll .aks-diff-hunk { font-weight: 700; margin-top: 8px; }
+.aks-doc-changes > summary .aks-diff-expand, .aks-diff-dialog .aks-diff-close { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid currentColor; border-radius: 6px; background: transparent; color: var(--cp-accent); cursor: pointer; vertical-align: middle; flex-shrink: 0; }
+.aks-doc-changes > summary .aks-diff-expand { position: relative; width: 28px; height: 28px; margin-left: 8px; }
+.aks-doc-changes > summary .aks-diff-expand::after { content: ""; position: absolute; inset: -8px; }
+.aks-doc-changes:not([open]) > summary .aks-diff-expand, .aks-doc-changes > summary .aks-diff-expand[hidden] { display: none; }
+.aks-diff-expand svg, .aks-diff-close svg { width: 20px; height: 20px; pointer-events: none; }
+.aks-doc-changes > summary .aks-diff-expand svg { width: 16px; height: 16px; }
+.aks-doc-changes > summary .aks-diff-expand:hover, .aks-diff-dialog .aks-diff-close:hover { background: var(--cp-accent); color: var(--cp-diff-surface); }
+.aks-diff-expand:focus-visible, .aks-diff-close:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 3px; }
+html.aks-diff-modal-open { overflow: hidden; }
+dialog.aks-diff-dialog { box-sizing: border-box; width: calc(100% - 48px); max-width: 1200px; height: 88vh; height: 88dvh; max-height: calc(100% - 48px); margin: auto; padding: 24px; border: 1px solid var(--cp-accent); border-radius: 8px; background: var(--cp-diff-surface); color: var(--cp-diff-text); }
+dialog.aks-diff-dialog[open] { display: flex; flex-direction: column; gap: 16px; }
+.aks-diff-dialog::backdrop { background: var(--cp-diff-backdrop); }
+.aks-diff-dialog .aks-diff-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; min-width: 0; }
+.aks-diff-dialog .aks-diff-dialog-heading { min-width: 0; }
+.aks-diff-dialog h2 { margin: 0; font: inherit; font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--cp-accent); }
+.aks-diff-dialog .aks-diff-dialog-article { margin: 8px 0; overflow-wrap: anywhere; font-size: 16px; line-height: 1.4; }
+.aks-diff-dialog .aks-diff-dialog-count { margin: 0; font-size: 14px; }
+.aks-diff-dialog .aks-diff-scroll { flex: 1; min-height: 0; max-height: none; margin: 0; }
+@media (max-width: 600px) {
+  dialog.aks-diff-dialog { width: 100%; max-width: 100%; height: 100%; height: 100dvh; max-height: 100%; margin: 0; padding: 16px; border: 0; border-radius: 0; }
+}
 </style>
+<script>
+(() => {
+  function initializeDiffDialog() {
+    const root = document.querySelector('.aks-updates');
+    if (!root || root.dataset.diffDialogReady || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
+    root.dataset.diffDialogReady = 'true';
+    const dialog = document.createElement('dialog');
+    dialog.className = 'aks-diff-dialog';
+    dialog.setAttribute('aria-labelledby', 'aks-diff-dialog-title');
+    dialog.setAttribute('aria-describedby', 'aks-diff-dialog-article aks-diff-dialog-count');
+    dialog.innerHTML = '<header class="aks-diff-dialog-header"><div class="aks-diff-dialog-heading"><h2 id="aks-diff-dialog-title">Article changes</h2><p id="aks-diff-dialog-article" class="aks-diff-dialog-article"></p><p id="aks-diff-dialog-count" class="aks-diff-dialog-count"></p></div><button type="button" class="aks-diff-close" aria-label="Close changes" title="Close changes" autofocus><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg></button></header>';
+    document.body.append(dialog);
+    let active = null;
+    function closeDiffDialog() {
+      if (active) active.scrollTop = active.viewer.scrollTop;
+      dialog.close();
+    }
+    dialog.querySelector('.aks-diff-close').addEventListener('click', closeDiffDialog);
+    dialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      closeDiffDialog();
+    });
+    dialog.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeDiffDialog();
+      }
+    });
+    dialog.addEventListener('click', event => {
+      const bounds = dialog.getBoundingClientRect();
+      if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) closeDiffDialog();
+    });
+    dialog.addEventListener('close', () => {
+      if (!active) return;
+      active.placeholder.replaceWith(active.viewer);
+      active.viewer.scrollTop = active.scrollTop;
+      document.documentElement.classList.remove('aks-diff-modal-open');
+      active.button.focus({ preventScroll: true });
+      active = null;
+    });
+    root.querySelectorAll('.aks-diff-expand').forEach(button => { button.hidden = false; });
+    root.addEventListener('click', event => {
+      const button = event.target.closest('.aks-diff-expand');
+      if (!button || !root.contains(button)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (dialog.open || active) return;
+      const details = button.closest('.aks-doc-changes');
+      const viewer = details.querySelector('.aks-diff-scroll');
+      const placeholder = document.createComment('Inline changes');
+      const scrollTop = viewer.scrollTop;
+      active = { button, viewer, placeholder, scrollTop };
+      dialog.querySelector('.aks-diff-dialog-article').textContent = button.dataset.articleTitle;
+      dialog.querySelector('.aks-diff-dialog-count').textContent = details.querySelector('.aks-diff-count').textContent;
+      viewer.replaceWith(placeholder);
+      dialog.append(viewer);
+      document.documentElement.classList.add('aks-diff-modal-open');
+      dialog.showModal();
+      viewer.scrollTop = scrollTop;
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeDiffDialog, { once: true });
+  else initializeDiffDialog();
+})();
+</script>
 '@
 } else { '' }
 
