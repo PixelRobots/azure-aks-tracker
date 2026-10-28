@@ -62,6 +62,29 @@ test('qualified baseline does not replay existing articles; demo changes cover a
   }
 }));
 
+test('product baseline suppresses imported articles but preserves later edits, new pages and other products', () => fixture(({ repo, build, git, commit }) => {
+  const linuxArticle = 'articles/azure-linux/azure-linux-overview.md';
+  const imported = git('rev-parse', 'HEAD');
+  const productBaselines = { 'articles/azure-linux/': imported };
+  const initial = build({ productBaselines });
+  assert.equal(initial.changes.some(item => item.product === 'Azure Linux'), false);
+  assert.equal(initial.changes.length, 8);
+  fs.appendFileSync(path.join(repo, linuxArticle), '\n## Package management\nUse DNF to update packages.\n');
+  const newArticle = 'articles/azure-linux/new-security-guide.md';
+  fs.writeFileSync(path.join(repo, newArticle), '# New security guide\n\nEnable security updates.\n');
+  const statePath = path.join(repo, '.learn-mirror/state.json');
+  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  state.pages['https://learn.microsoft.com/en-us/azure/azure-linux/new-security-guide'] = { path: newArticle };
+  fs.writeFileSync(statePath, JSON.stringify(state));
+  commit();
+  const changed = build({ productBaselines });
+  assert.equal(changed.changes.find(item => item.filename === linuxArticle).status, 'modified');
+  assert.equal(changed.changes.find(item => item.filename === newArticle).status, 'added');
+  assert.equal(changed.changes.filter(item => item.product !== 'Azure Linux').length, 8);
+  assert.equal(build({ baseline: imported, productBaselines }).changes.length, 2);
+  assert.throws(() => build({ productBaselines: { 'articles/unknown/': imported } }), /Unknown product baseline/);
+}));
+
 test('metadata-only/state changes do not emit articles; detection time follows content, not republish', () => fixture(({ repo, build, git, commit }) => {
   const head = git('rev-parse', 'HEAD');
   const file = path.join(repo, article);

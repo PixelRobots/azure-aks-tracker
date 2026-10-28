@@ -59,7 +59,7 @@ function readArticle(repo, revision, file) {
   return null;
 }
 
-function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = false, maxAgeHours = 12, production = false }) {
+function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = false, maxAgeHours = 12, production = false, productBaselines = {} }) {
   if (git(repo, 'rev-parse', '--is-shallow-repository').trim() !== 'false') {
     throw new Error('Snapshot history is shallow; fetch the complete docs-snapshots branch.');
   }
@@ -88,6 +88,24 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
   if (!base || spawnSync('git', ['-C', repo, 'merge-base', '--is-ancestor', baselineRevision, base]).status !== 0) {
     base = baselineRevision;
   }
+  const resolvedProductBaselines = {};
+  for (const [prefix, revision] of Object.entries(productBaselines)) {
+    if (!routes.some(item => item.route[0] === prefix)) throw new Error(`Unknown product baseline scope: ${prefix}`);
+    const resolved = resolve(revision);
+    if (spawnSync('git', ['-C', repo, 'merge-base', '--is-ancestor', baselineRevision, resolved]).status !== 0 ||
+        spawnSync('git', ['-C', repo, 'merge-base', '--is-ancestor', resolved, headRevision]).status !== 0) {
+      throw new Error(`Product baseline is outside the qualified snapshot history: ${prefix}`);
+    }
+    if (!git(repo, 'ls-tree', '-r', '--name-only', resolved, '--', prefix).trim()) {
+      throw new Error(`Product baseline contains no articles: ${prefix}`);
+    }
+    resolvedProductBaselines[prefix] = resolved;
+  }
+  const baseFor = file => {
+    const entry = Object.entries(resolvedProductBaselines).find(([prefix]) => file.startsWith(prefix));
+    return entry && spawnSync('git', ['-C', repo, 'merge-base', '--is-ancestor', base, entry[1]]).status === 0
+      ? entry[1] : base;
+  };
   const state = JSON.parse(git(repo, 'show', `${headRevision}:.learn-mirror/state.json`));
   if (!state.pages || typeof state.pages !== 'object' || Array.isArray(state.pages)) {
     throw new Error('Snapshot state has no valid pages map.');
@@ -112,9 +130,10 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
   const suppressed = [];
   const deletedBodies = new Map(files.map(file => [file, readArticle(repo, headRevision, file)])
     .filter(([, text]) => text === null)
-    .map(([file]) => [body(git(repo, 'show', `${base}:${file}`)), file]));
+    .map(([file]) => [body(git(repo, 'show', `${baseFor(file)}:${file}`)), file]));
   for (const file of files) {
-    const before = readArticle(repo, base, file);
+    const fileBase = baseFor(file);
+    const before = readArticle(repo, fileBase, file);
     const after = readArticle(repo, headRevision, file);
     if (after === null) {
       suppressed.push({ filename: file, reason: 'Deletion requires confirmation; not announced as a withdrawal.' });
@@ -131,7 +150,7 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
     const canonical = byPath.get(file);
     if (!canonical) throw new Error(`Changed article has no canonical URL in snapshot state: ${file}`);
     const patch = diffBodies(oldBody, newBody);
-    const revisions = git(repo, 'log', '--format=%H', `${base}..${headRevision}`, '--', file).trim().split('\n').filter(Boolean);
+    const revisions = git(repo, 'log', '--format=%H', `${fileBase}..${headRevision}`, '--', file).trim().split('\n').filter(Boolean);
     let detectedRevision;
     for (const revision of revisions) {
       const parent = git(repo, 'rev-parse', `${revision}^`).trim();
@@ -161,6 +180,7 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
     schema_version: 1, source: 'learn-snapshot', demo, production_ready: production,
     collection_health: health,
     baseline_revision: baselineRevision, base_revision: base, head_revision: headRevision,
+    product_baselines: resolvedProductBaselines,
     since: since.toISOString(), generated_at: now.toISOString(), snapshot_at: headTime,
     baseline_only: headRevision === baselineRevision,
     warnings: [
@@ -224,7 +244,9 @@ function main() {
     const repo = temporary || args.repo;
     if (!repo || (!temporary && !args.baseline) || !args.output) throw new Error('Required: --repo, --baseline and --output (or --demo=true --output).');
     const baseline = temporary ? createDemo(repo) : args.baseline;
-    const result = buildChanges({ repo, baseline, head: args.head || 'HEAD', demo: Boolean(temporary), production: args.production === 'true' });
+    const productBaselines = temporary ? {} : JSON.parse(fs.readFileSync(
+      path.resolve(__dirname, '../../snapshot-preview.config.json'), 'utf8')).product_baselines || {};
+    const result = buildChanges({ repo, baseline, head: args.head || 'HEAD', demo: Boolean(temporary), production: args.production === 'true', productBaselines });
     fs.mkdirSync(path.dirname(path.resolve(args.output)), { recursive: true });
     fs.writeFileSync(args.output, JSON.stringify(result, null, 2) + '\n');
     console.log(`${result.demo ? 'SYNTHETIC' : 'Live'} preview: ${result.changes.length} content changes; ${result.suppressed.length} deletions held for review.`);

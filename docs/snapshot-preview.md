@@ -56,6 +56,14 @@ The first cutover can therefore show zero documentation updates until real
 changes are detected after that baseline. This does not preserve the old PR
 collector's seven-day list: source and published-page histories are different.
 
+New product scopes use `product_baselines` in the same configuration, keyed by
+source-path prefix. Azure Linux uses its first complete, zero-error collection,
+`ce655a297b4c3f32e5fd22745e5742c9265ac43c`, as its baseline. Both production
+and live previews compare that scope against the later of its baseline and the
+seven-day window boundary. This suppresses the initial import without hiding
+later edits, new pages or updates to other products. Synthetic previews ignore
+these live-history baselines.
+
 The adapter aggregates net article-body changes in the last seven days from UTC
 midnight, ignores metadata-only edits/reversions and holds deletions for review.
 Simple content-preserving moves are not new articles. AI summaries and filtering
