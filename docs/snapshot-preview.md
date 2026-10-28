@@ -69,6 +69,14 @@ secret and Responses API. With no provider configured the existing heuristic
 path remains available; a configured but broken/unsupported provider fails
 visibly. No new secret is needed for the current repository.
 
+Snapshot enrichment sends article paths and patch samples directly in small
+batches, rather than relying on file-search retrieval from an uploaded JSON
+file. Each batch contains at most five articles and targets 60,000 input
+characters; larger individual articles are sent alone without further truncation.
+Returned identities must exactly match an article in that batch, with a nonempty
+summary and no duplicates. Invalid responses still block publication rather than
+silently dropping articles or falling back to metadata-only summaries.
+
 The explicit **CVE-only** and **SSH-upload-only** manual modes bypass the
 documentation prerequisite. Release/CVE APIs, rendering, cache behaviour and
 weekly-post conditions otherwise retain their existing implementation.
