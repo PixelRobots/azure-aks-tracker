@@ -32,7 +32,7 @@ not their exact publication time, author or original PR.
 | Public source repository | Published documentation |
 |---|---|
 | `MicrosoftDocs/azure-aks-docs` | AKS, Kubernetes Fleet Manager, AKS Application Network, AKS Hybrid and Edge / AKS Arc |
-| `MicrosoftDocs/azure-management-docs` | Azure Container Registry, Azure Arc-enabled Kubernetes and Azure Linux |
+| `MicrosoftDocs/azure-management-docs` | Azure Container Registry and Azure Arc-enabled Kubernetes |
 | `MicrosoftDocs/azure-docs` | Application Gateway for Containers |
 | `MicrosoftDocs/SupportArticles-docs` | The same nine AKS troubleshooting categories as the existing tracker |
 
@@ -41,7 +41,7 @@ metadata. Private GitHub access is **not** needed to retrieve published pages.
 AKS releases, App Net GitHub release notes and CVE scans retain their existing
 collectors; they are not Learn documentation repositories.
 
-Discovery combines English Azure and troubleshooting sitemaps, eight tables of
+Discovery combines English Azure and troubleshooting sitemaps, seven tables of
 contents, the committed seed list and previously known pages. The AKS table of
 contents includes AKS Arc; its standalone `toc.json` currently returns 404.
 URL and source-path filters keep the mirror within the tracked product scopes.

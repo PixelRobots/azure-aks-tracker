@@ -964,7 +964,6 @@ https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/use-azure-policy-fl
 https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/validation-program
 https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/workload-identity
 https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/workload-management
-https://learn.microsoft.com/en-us/azure/azure-linux/
 https://learn.microsoft.com/en-us/azure/container-registry/allow-access-trusted-services
 https://learn.microsoft.com/en-us/azure/container-registry/anonymous-pull-access
 https://learn.microsoft.com/en-us/azure/container-registry/artifact-cache-acr-to-acr-cli
