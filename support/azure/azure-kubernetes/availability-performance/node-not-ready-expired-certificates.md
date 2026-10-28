@@ -13,10 +13,11 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to fix expired certificates causing Node Not Ready failures in AKS. Follow steps to rotate certificates and restore your cluster nodes.
-ms.date: 2025-04-10T00:00:00.0000000Z
-ms.reviewer: rissing, chiragpa, momajed, v-leedennis, addobres, v-weizhu
+ms.date: 2026-10-26T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, momajed, v-leedennis, addobres, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance
+ai-usage: ai-assisted
 locale: en-us
 document_id: 8335138c-d04f-9de4-1f77-6ba5c834a6c3
 document_version_independent_id: 8335138c-d04f-9de4-1f77-6ba5c834a6c3
@@ -46,16 +47,18 @@ platformId: fc05880e-8786-535b-8346-522c6fcbf711
 
 ## Summary
 
-This article helps you troubleshoot Node Not Ready failures in an Azure Kubernetes Service (AKS) cluster caused by expired certificates. Learn how to identify expired certificates and rotate them to restore node availability.
+This article helps you troubleshoot **Node Not Ready** failures in an Azure Kubernetes Service (AKS) cluster caused by expired certificates. Learn how to identify expired certificates and rotate them to restore node availability.
 
 ## Prerequisites
+
+To troubleshoot and fix expired certificates in an AKS cluster, you need the following prerequisites:
 
 - [Azure CLI](/en-us/cli/azure/install-azure-cli)
 - The [OpenSSL](https://www.openssl.org/source/) command-line tool for certificate display and signing
 
 ## Symptoms
 
-You discover that an AKS cluster node is in the Node Not Ready state.
+You discover that an AKS cluster node is in the **Node Not Ready** state.
 
 ## Cause
 
@@ -65,7 +68,7 @@ One or more certificates are expired.
 
 Check the expiration dates of certificates by invoking the [openssl-x509](https://www.openssl.org/docs/man3.0/man1/openssl-x509.html) command, as follows:
 
-- For virtual machine (VM) scale set nodes, use the [az vmss run-command invoke](/en-us/cli/azure/vmss/run-command#az-vmss-run-command-invoke) command:
+- For virtual machine (VM) scale set nodes, use the [az vmss run-command invoke](/en-us/cli/azure/vmss/run-command#az-vmss-run-command-invoke) command.
 
     ```azurecli
     az vmss run-command invoke \
@@ -77,7 +80,7 @@ Check the expiration dates of certificates by invoking the [openssl-x509](https:
         --query "value[0].message" \
         --scripts "openssl x509 -in /etc/kubernetes/certs/apiserver.crt -noout -enddate"
     ```
-- For VM availability set nodes, use the [az vm run-command invoke](/en-us/cli/azure/vm/run-command#az-vm-run-command-invoke) command:
+- For VM availability set nodes, use the [az vm run-command invoke](/en-us/cli/azure/vm/run-command#az-vm-run-command-invoke) command.
 
     ```azurecli
     az vm run-command invoke \
@@ -89,7 +92,7 @@ Check the expiration dates of certificates by invoking the [openssl-x509](https:
         --scripts "openssl x509 -in /etc/kubernetes/certs/apiserver.crt -noout -enddate"
     ```
 
-You might receive certain error codes after you invoke these commands. For information about error codes 50, 51, and 52, see the following links, as necessary:
+You might receive certain error codes after you invoke these commands. For information about error codes 50, 51, and 52, see the following articles:
 
 - [Troubleshoot the OutboundConnFailVMExtensionError error code (50)](../create-upgrade-delete/error-code-outboundconnfailvmextensionerror)
 - [Troubleshoot the K8SAPIServerConnFailVMExtensionError error code (51)](../create-upgrade-delete/error-code-k8sapiserverconnfailvmextensionerror)
@@ -119,6 +122,6 @@ Starting in the [July 15, 2021, release of AKS](https://github.com/Azure/AKS/rel
 
 Only a full upgrade (that is, an upgrade for both the control plane and the node pool) helps renew the expired certificates.
 
-## More information
+## References
 
 - For general troubleshooting steps, see [Basic troubleshooting of Node Not Ready failures](node-not-ready-basic-troubleshooting).

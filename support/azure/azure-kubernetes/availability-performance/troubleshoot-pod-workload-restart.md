@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot and resolve pod workload restarts in Azure Kubernetes Service (AKS) by reviewing and adjusting container health probe configurations.
-ms.date: 2026-09-17T00:00:00.0000000Z
-ms.reviewer: pinghe, shipu.yao, zhixinsun
+description: Learn how to troubleshoot pod workload restarts in Azure Kubernetes Service (AKS) by checking termination reasons and fixing health probe settings. Resolve restarts now.
+ms.date: 2026-10-27T00:00:00.0000000Z
+ms.reviewer: pinghe, shipu.yao, zhixinsun, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance
 ai-usage: ai-assisted
@@ -37,9 +37,11 @@ source_path: support/azure/azure-kubernetes/availability-performance/troubleshoo
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/5cf46315-b33f-4e99-8224-a1592697eff9
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/715d24c3-3683-4219-82c5-1e3c813fb7fc
 platformId: 64eb9ef3-2138-4eee-353f-771729a0eb77
 ---
 
@@ -107,12 +109,12 @@ Run the following command.
 kubectl get pods -n "<namespace>"
 ```
 
-See the following indicators to interpret the pod `AGE` and restart behavior:
+To interpret the pod `AGE` and restart behavior, see the following indicators:
 
-- **AGE reset around the incident and the original pod is gone** - Investigate pod replacement. Review Kubernetes audit logs for the namespace and incident time to identify pod deletion, creation, eviction, or workload updates, including the operation, timestamp, and initiating user or controller.
+- **AGE reset around the incident and the original pod is gone** - Investigate pod replacement. Review Kubernetes audit logs for the namespace and incident time to identify pod deletion, creation, eviction, or workload updates. The logs include the operation, timestamp, and initiating user or controller.
 - **The pod wasn't replaced and RESTARTS keeps increasing** - Continue to Step 2 to check the container's termination reason.
 
-`AGE` measures time since pod creation, not the last container restart. A young pod can also be an additional replica, so compare it with the original pod rather than using a low `AGE` alone.
+`AGE` measures time since pod creation, not the last container restart. A young pod can also be an extra replica, so compare it with the original pod rather than using a low `AGE` alone.
 
 Use retained `kube-audit` or `kube-audit-admin` logs. Enabling collection at this point doesn't recover earlier operations. For more information, see [AKS resource logs](/en-us/azure/aks/monitor-aks-reference#resource-logs).
 

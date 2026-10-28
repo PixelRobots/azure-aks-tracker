@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Improve container image pull performance in Azure Kubernetes Service - Azure | Microsoft Learn
+title: Improve container image pull performance in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/availability-performance/container-image-pull-performance
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to improve container image pull performance in AKS for parallel or serialized pulls, reduce latency, and optimize node startup. Get started now.
-ms.date: 2026-08-19T00:00:00.0000000Z
-ms.reviewer: slibbing, schaffererin, v-weizhu, jiayil
+description: Learn how to improve container image pull performance in AKS, compare parallel and serialized pulls, and reduce node startup latency. Get started now.
+ms.date: 2026-10-23T00:00:00.0000000Z
+ms.reviewer: slibbing, schaffererin, v-weizhu, jiayil, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance
+ai-usage: ai-assisted
 locale: en-us
 document_id: dfba110f-6300-dd28-4763-bf114918fcad
 document_version_independent_id: dfba110f-6300-dd28-4763-bf114918fcad
@@ -36,18 +37,18 @@ item_type: Content
 source_path: support/azure/azure-kubernetes/availability-performance/container-image-pull-performance.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: f4ac0a4d-6828-0b9b-e931-66636e78385a
 ---
 
-# Improve container image pull performance in Azure Kubernetes Service - Azure | Microsoft Learn
+# Improve container image pull performance in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-Container image pull performance can be affected by the image size and layer count, node CPU and disk performance, network connectivity, registry location and service tier, and the number of concurrent pulls. For large supported images, [Artifact Streaming](/en-us/azure/aks/artifact-streaming) can reduce pod startup time. To isolate the source of slow pulls, review the pod's `Pulling`, `Pulled`, and `Started` events, and follow the guidance in [Troubleshoot ACR performance](/en-us/azure/container-registry/container-registry-troubleshoot-performance).
+This article explains the factors that affect container image pull performance in Azure Kubernetes Service (AKS) and describes how to reduce pod startup latency.
+
+The image size and layer count, node CPU and disk performance, network connectivity, registry location and service tier, and the number of concurrent pulls can affect container image pull performance. For large supported images, [Artifact Streaming](/en-us/azure/aks/artifact-streaming) can reduce pod startup time. To isolate the source of slow pulls, review the pod's `Pulling`, `Pulled`, and `Started` events, and follow the guidance in [Troubleshoot ACR performance](/en-us/azure/container-registry/container-registry-troubleshoot-performance).
 
 This article provides methods to improve container image pull performance in Azure Kubernetes Service (AKS).
 
@@ -93,7 +94,7 @@ Behavior expectation if the feature is registered:
 # [Azure CLI](#tab/azure-cli)
 #### Enable serialized image pulls
 
-1. Check the feature registration state:
+1. Check the feature registration state.
 
     ```azurecli
     az feature list \
@@ -103,14 +104,14 @@ Behavior expectation if the feature is registered:
       --output table
     ```
 
-    The output resembles the following example:
+    The output resembles the following example.
 
     ```output
     Name                                                   State
     -----------------------------------------------------  -------------
     Microsoft.ContainerService/DisableParallelImagePulls   NotRegistered
     ```
-2. Register the feature:
+2. Register the feature.
 
     ```azurecli
     az feature register \
@@ -118,7 +119,7 @@ Behavior expectation if the feature is registered:
       --name DisableParallelImagePulls \
       --subscription <subscription-id>
     ```
-3. Wait until the feature reports `Registered`, and then register the `Microsoft.ContainerService` resource provider:
+3. Wait until the feature reports `Registered`, and then register the `Microsoft.ContainerService` resource provider.
 
     ```azurecli
     az provider register \
@@ -134,7 +135,7 @@ Behavior expectation if the feature is registered:
     ```
 4. Apply the setting by using one of the following options:
 
-    - Update and reimage an existing node pool:
+    - Update and reimage an existing node pool.
 
         ```azurecli
         az aks nodepool update \
@@ -151,7 +152,7 @@ Behavior expectation if the feature is registered:
           --node-image-only \
           --subscription <subscription-id>
         ```
-    - Create a new node pool, which uses the setting when AKS provisions its nodes:
+    - Create a new node pool, which uses the setting when AKS provisions its nodes.
 
         ```azurecli
         az aks nodepool add \
@@ -164,7 +165,7 @@ Behavior expectation if the feature is registered:
 
 #### Roll back to parallel image pulls
 
-1. Unregister the feature:
+1. Unregister the feature.
 
     ```azurecli
     az feature unregister \
@@ -172,7 +173,7 @@ Behavior expectation if the feature is registered:
       --name DisableParallelImagePulls \
       --subscription <subscription-id>
     ```
-2. Wait until the feature reports `Unregistered`, and then register the `Microsoft.ContainerService` resource provider:
+2. Wait until the feature reports `Unregistered`, and then register the `Microsoft.ContainerService` resource provider.
 
     ```azurecli
     az feature list \
@@ -194,7 +195,7 @@ Behavior expectation if the feature is registered:
     ```
 3. Apply the rollback by using one of the following options:
 
-    - Update and reimage an existing node pool:
+    - Update and reimage an existing node pool.
 
         ```azurecli
         az aks nodepool update \
@@ -211,7 +212,7 @@ Behavior expectation if the feature is registered:
           --node-image-only \
           --subscription <subscription-id>
         ```
-    - Create a new node pool, which uses the rollback setting when AKS provisions its nodes:
+    - Create a new node pool, which uses the rollback setting when AKS provisions its nodes.
 
         ```azurecli
         az aks nodepool add \
@@ -227,7 +228,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
 # [Azure PowerShell](#tab/azure-powershell)
 #### Enable serialized image pulls
 
-1. Set the subscription context and check the feature registration state:
+1. Set the subscription context and check the feature registration state.
 
     ```azurepowershell
     $subscriptionId = "<subscription-id>"
@@ -242,21 +243,21 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
       -FeatureName DisableParallelImagePulls
     ```
 
-    The output resembles the following example:
+    The output resembles the following example.
 
     ```output
     FeatureName                ProviderName                 RegistrationState
     -----------                ------------                 -----------------
     DisableParallelImagePulls  Microsoft.ContainerService   NotRegistered
     ```
-2. Register the feature:
+2. Register the feature.
 
     ```azurepowershell
     Register-AzProviderFeature `
       -ProviderNamespace Microsoft.ContainerService `
       -FeatureName DisableParallelImagePulls
     ```
-3. Check the feature state until it reports `Registered`, and then register the `Microsoft.ContainerService` resource provider:
+3. Check the feature state until it reports `Registered`, and then register the `Microsoft.ContainerService` resource provider.
 
     ```azurepowershell
     Get-AzProviderFeature `
@@ -273,7 +274,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
     ```
 4. Apply the setting by using one of the following options:
 
-    - Update and reimage an existing node pool:
+    - Update and reimage an existing node pool.
 
         ```azurepowershell
         Update-AzAksNodePool `
@@ -290,7 +291,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
           -NodeImageOnly `
           -SubscriptionId $subscriptionId
         ```
-    - Create a new node pool, which uses the setting when AKS provisions its nodes:
+    - Create a new node pool, which uses the setting when AKS provisions its nodes.
 
         ```azurepowershell
         New-AzAksNodePool `
@@ -303,7 +304,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
 
 #### Roll back to parallel image pulls
 
-1. Unregister the feature:
+1. Unregister the feature.
 
     ```azurepowershell
     Unregister-AzProviderFeature `
@@ -311,7 +312,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
       -FeatureName DisableParallelImagePulls `
       -Confirm:$false
     ```
-2. Check the feature state until it reports `Unregistered`, and then register the `Microsoft.ContainerService` resource provider:
+2. Check the feature state until it reports `Unregistered`, and then register the `Microsoft.ContainerService` resource provider.
 
     ```azurepowershell
     Get-AzProviderFeature `
@@ -328,7 +329,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
     ```
 3. Apply the rollback by using one of the following options:
 
-    - Update and reimage an existing node pool:
+    - Update and reimage an existing node pool.
 
         ```azurepowershell
         Update-AzAksNodePool `
@@ -345,7 +346,7 @@ After the reimage finishes, kubelet uses `serializeImagePulls: false` and pulls 
           -NodeImageOnly `
           -SubscriptionId $subscriptionId
         ```
-    - Create a new node pool, which uses the rollback setting when AKS provisions its nodes:
+    - Create a new node pool, which uses the rollback setting when AKS provisions its nodes.
 
         ```azurepowershell
         New-AzAksNodePool `

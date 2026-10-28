@@ -24,7 +24,7 @@ description: Understand the advanced configuration options that are supported wi
 ms.subservice: aks-networking
 ms.custom: devx-track-azurecli
 ms.topic: how-to
-ms.date: 2023-11-21T00:00:00.0000000Z
+ms.date: 2026-10-26T00:00:00.0000000Z
 zone_pivot_groups: app-routing-nginx-configuration
 ms.author: schaffererin
 author: schaffererin
@@ -183,6 +183,10 @@ The `webAppRouting` profile has an optional `nginx` configuration with a `defaul
 ---
 
 ## Create another public facing NGINX ingress controller
+
+Note
+
+A separate NGINX ingress controller doesn't isolate tenants. Any user who can create an Ingress can use any Ingress class. For more information, see [Multi-tenant clusters](app-routing#multi-tenant-clusters).
 
 1. Copy the following YAML manifest into a new file named `nginx-public-controller.yaml` and save the file to your local computer.
 

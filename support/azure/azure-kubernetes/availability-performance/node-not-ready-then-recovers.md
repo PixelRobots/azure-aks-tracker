@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Node not ready but then recovers - Azure | Microsoft Learn
+title: Troubleshoot Node Not Ready failures followed by recoveries in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/availability-performance/node-not-ready-then-recovers
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot AKS Node Not Ready events that recover, find root causes, and take preventive actions to avoid repeat outages. Start now.
-ms.date: 2024-02-25T00:00:00.0000000Z
-ms.reviewer: rissing, chiragpa, momajed, v-leedennis, novictor
+description: Learn how to troubleshoot AKS Node Not Ready events that recover, identify root causes, and apply preventive actions to avoid repeat outages. Start now.
+ms.date: 2026-10-27T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, momajed, v-leedennis, novictor, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance
+ai-usage: ai-assisted
 locale: en-us
 document_id: 80a9294c-a6e6-8d32-bb82-32766e0d7f11
 document_version_independent_id: 80a9294c-a6e6-8d32-bb82-32766e0d7f11
@@ -34,27 +35,26 @@ monikers: []
 item_type: Content
 source_path: support/azure/azure-kubernetes/availability-performance/node-not-ready-then-recovers.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: fcbd8f68-d1fd-a839-2e2c-cb497c56609e
 ---
 
-# Node not ready but then recovers - Azure | Microsoft Learn
+# Troubleshoot Node Not Ready failures followed by recoveries in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article provides a guide to troubleshoot and resolve **Node Not Ready** problems in Azure Kubernetes Service (AKS) clusters. When a node enters a **NotReady** state, it disrupts the application's functionality and causes it to stop responding. Typically, the node recovers automatically after a short period. However, to prevent recurring problems and maintain a stable environment, you need to understand the underlying causes so you can implement effective resolutions.
+This article helps you troubleshoot **Node Not Ready** failures in Azure Kubernetes Service (AKS) clusters that recover on their own, so you can find root causes and prevent repeat outages. When a node enters a **NotReady** state, it disrupts the application's functionality and causes it to stop responding. Typically, the node recovers automatically after a short period. However, to prevent recurring problems and maintain a stable environment, you need to understand the underlying causes so you can implement effective resolutions.
 
 ## Cause
 
-Several scenarios can cause a **NotReady** state:
+The following scenarios can cause a **NotReady** state:
 
 - The unavailability of the API server. This condition causes the readiness probe to fail. This failure prevents the pod from being attached to the service so that traffic is no longer forwarded to the pod instance.
 - Virtual machine (VM) host faults. To determine whether VM host faults occurred, check the following information sources:
-
     - [AKS diagnostics](/en-us/azure/aks/concepts-diagnostics)
     - [Azure status](https://status.azure.com/)
     - Azure notifications (for any recent outages or maintenance periods)
@@ -74,5 +74,5 @@ For further steps, see [Basic troubleshooting of Node Not Ready failures](node-n
 
 To prevent this issue, take one or more of the following actions:
 
-- Make sure that you pay for your service tier.
+- Ensure that you pay for your service tier.
 - Reduce the number of `watch` and `get` requests to the API server.

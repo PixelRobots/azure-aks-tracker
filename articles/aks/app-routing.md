@@ -24,7 +24,8 @@ ms.subservice: aks-networking
 ms.custom: devx-track-azurecli, biannual
 author: schaffererin
 ms.topic: how-to
-ms.date: 2026-08-03T00:00:00.0000000Z
+ms.date: 2026-10-26T00:00:00.0000000Z
+ai-usage: ai-assisted
 ms.author: schaffererin
 locale: en-us
 document_id: ee35d171-5757-af15-8127-6e9fa6bd46ba
@@ -109,6 +110,27 @@ If your cluster uses the OSM add-on, migrate to the Istio add-on before the end-
     | `}` | The Ingress isn't configured. |
     | `'` | The Ingress isn't configured. |
 - The add-on doesn't officially support injecting non-Microsoft-managed sidecars (for example, custom telemetry, logging, or security agents) into the ingress-nginx proxy pods that it manages. If you choose to inject your own sidecar into a managed proxy pod, Microsoft provides only best-effort support for any issues you encounter.
+
+## Multi-tenant clusters
+
+Important
+
+The managed NGINX Ingress controller doesn't isolate tenants at the namespace level. Don't use it as a security boundary between tenants that share a cluster.
+
+The managed NGINX Ingress controller is based on the upstream ingress-nginx project. The ingress-nginx project assumes that users who can create Ingress objects are cluster administrators. The project says not to use ingress-nginx in multi-tenant production clusters. For more information, see [Multi-tenant Kubernetes](https://kubernetes.github.io/ingress-nginx/faq/#multi-tenant-kubernetes) in the ingress-nginx FAQ.
+
+The following behaviors cross namespace boundaries:
+
+- One NGINX Ingress controller serves the Ingress objects of its Ingress class from all namespaces. The controller merges the rules of these Ingress objects into one NGINX configuration. For more information, see [How it works](https://kubernetes.github.io/ingress-nginx/how-it-works/#building-the-nginx-model).
+- An Ingress in one namespace can add paths to a host that an Ingress in a different namespace uses. If two Ingress objects use the same host, the oldest Ingress object controls the TLS settings and server-level annotations for that host. If they also use the same path, the oldest Ingress object gets the traffic for that path.
+- The add-on allows snippet annotations, except for the blocked values in Limitations. Snippet annotations add NGINX configuration to the shared controller.
+- The NGINX Ingress controller can read Secrets in all namespaces. The add-on enables the [`allow-cross-namespace-resources`](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/configmap/#allow-cross-namespace-resources) option. By using this option, some annotations can reference a Secret or ConfigMap in a different namespace.
+- A user who can create an Ingress can use any Ingress class. A separate `NginxIngressController` for each tenant doesn't isolate tenants.
+
+To decrease this risk, use these practices:
+
+- Give permission to create or update Ingress objects only to users that you trust at the same level as cluster administrators.
+- If tenants don't trust each other, use a separate cluster for each tenant. For more information, see [Physically isolated clusters](operator-best-practices-cluster-isolation#physically-isolated-clusters).
 
 ## Enable the application routing add-on using Azure CLI
 

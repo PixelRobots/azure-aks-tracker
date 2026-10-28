@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Basic troubleshooting for Node Not Ready problems in Azure Kubernetes Service - Azure | Microsoft Learn
+title: Troubleshoot Node Not Ready problems in Azure Kubernetes Service - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/availability-performance/node-not-ready-basic-troubleshooting
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Troubleshoot Node Not Ready problems in Azure Kubernetes Service (AKS) cluster nodes. Follow these steps to identify causes and recover your nodes quickly.
-ms.date: 2026-07-20T00:00:00.0000000Z
-ms.reviewer: rissing, chiragpa, momajed, v-leedennis, wonkilee, v-weizhu, mariusbutuc
+description: Troubleshoot Node Not Ready problems in Azure Kubernetes Service (AKS) cluster nodes. Follow these steps to identify the causes and recover your nodes quickly.
+ms.date: 2026-10-26T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, momajed, v-leedennis, wonkilee, v-weizhu, mariusbutuc, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance
+ai-usage: ai-assisted
 locale: en-us
 document_id: 12341141-4481-46c4-61dc-05e7a1626967
 document_version_independent_id: 12341141-4481-46c4-61dc-05e7a1626967
@@ -44,11 +45,11 @@ spProducts:
 platformId: a8b34fa8-d72d-5827-3335-66d05e94ed05
 ---
 
-# Basic troubleshooting for Node Not Ready problems in Azure Kubernetes Service - Azure | Microsoft Learn
+# Troubleshoot Node Not Ready problems in Azure Kubernetes Service - Azure | Microsoft Learn
 
 ## Summary
 
-This article provides troubleshooting steps to recover Azure Kubernetes Service (AKS) cluster nodes after a failure. It specifically addresses the most common error messages that appear when a Node Not Ready failure occurs, and explains how to repair nodes for both Windows and Linux nodes.
+This article helps you troubleshoot **Node Not Ready** failures in Azure Kubernetes Service (AKS) and recover your cluster nodes. It covers the most common error messages and explains how to repair both Windows and Linux nodes.
 
 ## Before you begin
 
@@ -56,9 +57,9 @@ Read the [official guide for troubleshooting Kubernetes clusters](https://kubern
 
 ## Prerequisites
 
-- [Azure CLI](/en-us/cli/azure/install-azure-cli), version 2.31 or later. If you already have Azure CLI installed, run `az --version` to check your version.
+Ensure you have [Azure CLI](/en-us/cli/azure/install-azure-cli), version 2.31 or later. If you already have Azure CLI installed, run `az --version` to check your version.
 
-## Basic troubleshooting
+## Troubleshooting
 
 AKS continuously monitors the health state of worker nodes, and [automatically repairs](/en-us/azure/aks/node-auto-repair) the nodes if they become unhealthy. The Azure Virtual Machine (VM) platform [maintains VMs](/en-us/azure/virtual-machines/maintenance-and-updates) that experience issues. AKS and Azure VMs work together to reduce service disruptions for clusters.
 
@@ -70,6 +71,8 @@ For nodes, there are two forms of heartbeats:
 Compared to updates to the *.status* of a `Node`, a `Lease` is a lightweight resource. Using `Lease` objects for heartbeats reduces the performance impact of these updates for large clusters.
 
 The [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) is responsible for creating and updating the *.status* for `Node` objects. It's also responsible for updating the `Lease` objects that are related to the `Node` objects.
+
+The following explains how the kubelet updates the node status and lease objects:
 
 - The kubelet updates the node `.status` when there's a change in status or if there hasn't been an update for a configured interval. The default interval for `.status` updates to nodes is five minutes, which is much longer than the 40-second default time-out for unreachable nodes.
 - The kubelet creates and then updates its `Lease` object every 10 seconds (the default update interval). `Lease` updates occur independently from updates to the node `.status`. If the `Lease` update fails, the kubelet retries, using an exponential backoff that starts at 200 milliseconds and is capped at seven seconds.
@@ -84,16 +87,16 @@ Make sure that the following conditions are met:
 
 - Your cluster is in **Succeeded (Running)** state. To check the cluster status on the [Azure portal](https://portal.azure.com), search for and select **Kubernetes services**, and select the name of your AKS cluster. Then, on the cluster's **Overview** page, look in **Essentials** to find the **Status**. Or, enter the [az aks show](/en-us/cli/azure/aks#az-aks-show) command in Azure CLI.
 
-    ![Screenshot of an Azure Kubernetes Service (AKS) cluster Overview page in the Azure portal. In the Essentials section, the Status field shows 'Succeeded (Running)'.](media/node-not-ready-basic-troubleshooting/aks-cluster-overview-page-essentials-status.png)
+    [![Screenshot of the AKS cluster Overview page in the Azure portal, with the Status field in Essentials showing Succeeded (Running).](media/node-not-ready-basic-troubleshooting/aks-cluster-overview-page-essentials-status.png)](media/node-not-ready-basic-troubleshooting/aks-cluster-overview-page-essentials-status.png#lightbox)
 - Your node pool has a **Provisioning state** of **Succeeded** and a **Power state** of **Running**. To check the node pool status on the Azure portal, return to your AKS cluster's page, and then select **Node pools**. Alternatively, enter the [az aks nodepool show](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-show) command in Azure CLI.
 
-    ![Screenshot of an Azure Kubernetes Service (AKS) cluster Node pools page in the Azure portal. The Provisioning state is Succeeded and the Power state is Running.](media/node-not-ready-basic-troubleshooting/aks-cluster-node-pools.png)
+    [![Screenshot of an Azure Kubernetes Service (AKS) cluster Node pools page in the Azure portal. The Provisioning state is Succeeded and the Power state is Running.](media/node-not-ready-basic-troubleshooting/aks-cluster-node-pools.png)](media/node-not-ready-basic-troubleshooting/aks-cluster-node-pools.png#lightbox)
 - The required egress ports are open in your network security groups (NSGs) and firewall so that the API server's IP address can be reached. For more information, see [Required outbound network rules and FQDNs for AKS clusters](/en-us/azure/aks/limit-egress-traffic#required-outbound-network-rules-and-fqdns-for-aks-clusters).
 - Your nodes [have deployed the latest node images](/en-us/azure/aks/node-image-upgrade).
 - Your nodes are in the `Running` state instead of `Stopped` or `Deallocated`.
 - Your cluster is running an [AKS-supported version of Kubernetes](/en-us/azure/aks/supported-kubernetes-versions).
 
-## More information
+## References
 
 To troubleshoot the `Not Ready` status of a node, see [Troubleshoot a change in a healthy node to Not Ready status](node-not-ready-after-being-healthy).
 

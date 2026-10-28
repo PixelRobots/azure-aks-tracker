@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn common node auto-repair errors in AKS, find causes and fixes for NotReady nodes, and troubleshoot issues faster with actionable guidance.
-ms.date: 2026-09-15T00:00:00.0000000Z
-ms.reviewer: juliayin, aritraghosh, shmalfat, v-weizhu, shuyingqin
+description: Troubleshoot common node auto-repair errors in AKS. Find causes and fixes for NotReady nodes, and follow the steps to restore node health.
+ms.date: 2026-10-26T00:00:00.0000000Z
+ms.reviewer: juliayin, aritraghosh, shmalfat, v-weizhu, shuyingqin, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance
 ai-usage: ai-assisted
@@ -57,7 +57,7 @@ This article provides potential causes and solutions to common node auto-repair 
 
 ## Prerequisites
 
-Check the following Kubernetes events to identify the type of node auto-repair error:
+Check the following Kubernetes events to identify the type of node auto-repair error.
 
 | Reason | Event message | Description |
 | --- | --- | --- |
@@ -71,6 +71,8 @@ Because your node is already in an unhealthy state before the auto-repair proces
 
 ## Common error codes
 
+The following table lists common error codes that you might encounter during node auto-repair. It provides their causes and potential solutions.
+
 | Error code | Cause and solution |
 | --- | --- |
 | VMExtensionProvisioningError | One or more virtual machine (VM) extensions failed to provision on the VM. For more information about possible error types and troubleshooting steps, see [Troubleshoot the ERR_VHD_FILE_NOT_FOUND error code (124)](../create-upgrade-delete/error-code-vhdfilenotfound). To determine the exact VM extension provisioning error on your node, [view error details in the Azure portal](../create-upgrade-delete/troubleshoot-aks-cluster-creation-issues#view-resources-in-the-azure-portal). |
@@ -82,6 +84,8 @@ Because your node is already in an unhealthy state before the auto-repair proces
 | OutboundConnectivityNotEnabledOnVMSS | This error occurs when your node or overall Virtual Machine Scale Set doesn't have outbound access enabled. To resolve this issue, enable secure outbound access for your scale set by using a method that's best suited for your application. For more information, see ["OutboundConnectivityNotEnabledOnVM. No outbound connectivity configured for virtual machine."](../../virtual-machine-scale-sets/deploy/vmss-outbound-connectivity-not-enabled#solution) |
 
 ## Best practices for monitoring node auto-repair
+
+The following best practices help you monitor node auto-repair and respond to errors effectively:
 
 - AKS stores Kubernetes events from the past hour by default. Enable [Container Insights](/en-us/azure/azure-monitor/containers/kubernetes-monitoring-enable#enable-container-insights) so that you can store events for up to 90 days. You can also [query events and configure alerts](/en-us/azure/aks/events#automating-event-notifications) to quickly detect node auto-repair errors.
 - Node auto-repair is a best-effort service. It doesn't guarantee that your node can be restored to a `Ready` status. Actively monitor and set alerts for Node Not Ready issues, and troubleshoot and resolve these issues yourself. For more information, see [basic troubleshooting of Node Not Ready issues](node-not-ready-basic-troubleshooting).

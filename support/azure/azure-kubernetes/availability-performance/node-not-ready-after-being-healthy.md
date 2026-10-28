@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot an AKS node that changes to Not Ready after a healthy state, and restore cluster health faster.
-ms.date: 2026-09-01T00:00:00.0000000Z
-ms.reviewer: rissing, chiragpa, momajed, v-leedennis, ookour
+description: Learn how to troubleshoot an AKS node that changes to Not Ready after a healthy state. Follow these steps to find the cause and restore your cluster.
+ms.date: 2026-10-26T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, momajed, v-leedennis, ookour, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Node/node pool availability and performance, innovation-engine
 ai-usage: ai-assisted
@@ -51,6 +51,8 @@ This article explains how to troubleshoot an Azure Kubernetes Service (AKS) node
 
 ## Prerequisites
 
+To troubleshoot an AKS node that changes to **Not Ready** status, you need the following prerequisites:
+
 - The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) tool. To install kubectl by using Azure CLI, run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
 - The Kubernetes [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) tool.
 - The Kubernetes [containerd](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd) tool.
@@ -64,7 +66,7 @@ This article explains how to troubleshoot an Azure Kubernetes Service (AKS) node
 
 ## Connect to the AKS cluster
 
-Before you can troubleshoot the issue, you must connect to the AKS cluster. To do so, run the following commands:
+Before you can troubleshoot the issue, you must connect to the AKS cluster. To do so, run the following commands.
 
 ```bash
 export RANDOM_SUFFIX=$(head -c 3 /dev/urandom | xxd -p)
@@ -75,7 +77,7 @@ az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER --ov
 
 ## Symptoms
 
-The status of a cluster node that has a healthy state (all services running) unexpectedly changes to **Not Ready**. To view the status of a node, run the following [kubectl describe](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#describe) command:
+The status of a cluster node that has a healthy state (all services running) unexpectedly changes to **Not Ready**. To view the status of a node, run the following [kubectl describe](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#describe) command.
 
 ```bash
 kubectl describe nodes
@@ -154,7 +156,7 @@ Process IDs (PIDs) represent threads. The default number of PIDs that a pod can 
 
 Instead, identify the problematic application, and then take the appropriate action. Consider other options, like increasing the VM size or upgrading AKS. These actions can mitigate the issue temporarily, but they aren't a guarantee that the issue won't reappear.
 
-To monitor the thread count for each control group (cgroup) and print the top eight cgroups, run the following shell command:
+To monitor the thread count for each control group (cgroup) and print the top eight cgroups, run the following shell command.
 
 ```bash
 # Show current thread count for each cgroup (top 8)
@@ -176,7 +178,7 @@ By default, neither of these methods is set up. Additionally, you can't currentl
 
 To ensure the AKS API server is highly available, use a higher service tier. For more information, see the [Azure Kubernetes Service (AKS) Uptime SLA](/en-us/azure/aks/uptime-sla).
 
-## More information
+## References
 
 - To view the health and performance of the AKS API server and kubelets, see [Managed AKS components](/en-us/azure/aks/monitor-aks#level-2---managed-aks-components).
 - For general troubleshooting steps, see [Basic troubleshooting of node not ready failures](node-not-ready-basic-troubleshooting).
