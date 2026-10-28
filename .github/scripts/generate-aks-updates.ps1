@@ -38,6 +38,15 @@ $Repositories = @(
   },
   @{
     Owner = "MicrosoftDocs"
+    Repo = "azure-management-docs"
+    PathFilter = "^articles/azure-linux/"  # Only Azure Linux docs
+    DisplayName = "Azure Linux"
+    IconUrl = "https://az-icons.com/images/azure-linux/icon.svg"
+    IconAlt = "Azure Linux"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/azure-linux/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
     Repo = "azure-docs"
     PathFilter = "^articles/application-gateway/for-containers/"  # Only App Gateway for Containers docs
     DisplayName = "AGC"
@@ -829,6 +838,13 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
       url   = $ArcHybridAksIconUrl
       alt   = 'Azure Arc-enabled Kubernetes'
       label = 'Arc K8s'
+    }
+  }
+  elseif ($FilePath -match '^articles/azure-linux/') {
+    return @{
+      url   = 'https://az-icons.com/images/azure-linux/icon.svg'
+      alt   = 'Azure Linux'
+      label = 'Azure Linux'
     }
   }
   elseif ($FilePath -match '^articles/aks-hybrid-edge/') {
@@ -4511,14 +4527,14 @@ $snapshotDiffStyles
 
   <div class="aks-intro">
     <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Kubernetes Fleet Manager documentation, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC). AKS everywhere! It also shows the last 5 AKS and App Net release notes.</p>
+    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Kubernetes Fleet Manager, Azure Linux, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC) documentation. AKS everywhere! It also shows the last 5 AKS and App Net release notes.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
 
     <p><strong>With this tracker, you can:</strong></p>
     <ul>
-      <li>Quickly scan meaningful AKS, App Net, Arc K8s, AKS Arc, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
+      <li>Quickly scan meaningful AKS, App Net, Arc K8s, AKS Arc, Azure Linux, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS and App Net release notes without digging through every doc page</li>
       <li>Search and browse CVE security data across AKS releases and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
     </ul>
@@ -4555,7 +4571,7 @@ $snapshotDiffStyles
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to AKS, App Net, Arc K8s, AKS Arc, ACR, AGC, and Fleet docs from the last 7 days.</div>
+      <div class="aks-docs-desc">Meaningful updates to AKS, App Net, Arc K8s, AKS Arc, Azure Linux, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>

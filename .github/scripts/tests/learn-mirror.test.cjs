@@ -19,6 +19,7 @@ const cases = [
   ['articles/application-network/overview.md', 'azure/application-network/overview'],
   ['articles/container-registry/container-registry-intro.md', 'azure/container-registry/container-registry-intro'],
   ['articles/azure-arc/kubernetes/overview.md', 'azure/azure-arc/kubernetes/overview'],
+  ['articles/azure-linux/azure-linux-overview.md', 'azure/azure-linux/azure-linux-overview'],
   ['articles/application-gateway/for-containers/overview.md', 'azure/application-gateway/for-containers/overview'],
   ['support/azure/azure-kubernetes/storage/test.md', 'troubleshoot/azure/azure-kubernetes/storage/test']
 ];
@@ -65,6 +66,7 @@ test('seed mapping excludes includes and media, and maps index pages', () => {
   }
   assert.equal(pageUrl('articles/aks/index.md', routes), 'https://learn.microsoft.com/en-us/azure/aks/');
   assert.ok(config.tocs.includes('https://learn.microsoft.com/en-us/azure/application-network/toc.json'));
+  assert.ok(config.tocs.includes('https://learn.microsoft.com/en-us/azure/azure-linux/toc.json'));
   assert.equal(pageUrl('articles/application-network/overview.md', routes),
     'https://learn.microsoft.com/en-us/azure/application-network/overview');
 });

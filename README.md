@@ -12,8 +12,7 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
   Tracks the last 7 days of meaningful article-body changes on Microsoft Learn,
   using snapshots for the product scopes previously collected from:
   - `MicrosoftDocs/azure-aks-docs` (AKS and Fleet Manager)
-  - `MicrosoftDocs/azure-management-docs` (Azure Container Registry)
-  - `MicrosoftDocs/azure-management-docs` (Azure Arc-enabled Kubernetes)
+  - `MicrosoftDocs/azure-management-docs` (Azure Container Registry, Azure Arc-enabled Kubernetes and Azure Linux)
   - `MicrosoftDocs/azure-docs` (Application Gateway for Containers)
   - `MicrosoftDocs/azure-aks-docs/articles/aks-hybrid-edge` (AKS Hybrid and Edge / AKS Arc)
   - `MicrosoftDocs/SupportArticles-docs` (AKS support and troubleshooting articles)

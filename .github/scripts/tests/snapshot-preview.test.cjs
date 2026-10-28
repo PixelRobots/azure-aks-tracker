@@ -45,13 +45,13 @@ test('all nine support routes retain the AKS Support product', () => {
   }
 });
 
-test('qualified baseline does not replay existing articles; demo changes cover all eight products', () => fixture(({ build, baseline }) => {
+test('qualified baseline does not replay existing articles; demo changes cover all nine products', () => fixture(({ build, baseline }) => {
   const initial = build({ head: baseline });
   assert.equal(initial.changes.length, 0);
   assert.equal(initial.baseline_only, true);
   const changed = build();
-  assert.equal(changed.changes.length, 8);
-  assert.equal(new Set(changed.changes.map(item => item.product)).size, 8);
+  assert.equal(changed.changes.length, 9);
+  assert.equal(new Set(changed.changes.map(item => item.product)).size, 9);
   for (const item of changed.changes) {
     assert.equal(item.status, 'modified');
     assert.ok(item.additions > 0);
@@ -70,7 +70,7 @@ test('metadata-only/state changes do not emit articles; detection time follows c
   fs.writeFileSync(state, JSON.stringify(JSON.parse(fs.readFileSync(state, 'utf8')), null, 2));
   commit('Metadata only', new Date(now.getTime() + 1000));
   const changed = build();
-  assert.equal(changed.changes.length, 8);
+  assert.equal(changed.changes.length, 9);
   assert.equal(changed.changes.find(item => item.filename === article).sha, head);
   const none = build({ baseline: head });
   assert.equal(none.changes.length, 0);
@@ -158,7 +158,7 @@ test('renderer escapes content, rejects unsafe URLs, and uses detection dates an
   };
   for (const mode of ['tracker', 'digest']) {
     const html = render(data, mode);
-    assert.equal((html.match(/<article /g) || []).length, 8);
+    assert.equal((html.match(/<article /g) || []).length, 9);
     assert.ok(html.includes('SYNTHETIC TEST DATA'));
     assert.ok(html.includes('Detected:'));
     assert.ok(html.includes('View documentation'));
@@ -193,13 +193,13 @@ test('existing generator produces isolated no-AI summaries and matching HTML wit
   });
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const data = JSON.parse(fs.readFileSync(path.join(repo, 'summaries.json'), 'utf8').replace(/^\uFEFF/, ''));
-  assert.equal(data.items.length, 8);
+  assert.equal(data.items.length, 9);
   assert.equal(data.ai_summary_count, 0);
-  assert.equal(new Set(data.items.map(item => item.product)).size, 8);
+  assert.equal(new Set(data.items.map(item => item.product)).size, 9);
   assert.ok(fs.existsSync(path.join(output, 'docs-summary-cache.json')));
   assert.equal(data.preview_only, true);
-  assert.ok(render(data).includes('8 updates'));
-  assert.ok(render(data, 'digest').includes('8 updates'));
+  assert.ok(render(data).includes('9 updates'));
+  assert.ok(render(data, 'digest').includes('9 updates'));
   assert.equal(result.stdout.includes('Processing AKS repository'), false);
   assert.equal(result.stdout.includes('Fetching AKS CVE'), false);
 }));
@@ -210,12 +210,12 @@ test('production health requires a complete fresh pass and matches committed con
   commit('Incomplete collector heartbeat');
   assert.throws(() => build({ production: true }), /incomplete or failed/);
   const health = recordHealth(repo, { errors: 0, unreached: 0, now });
-  assert.equal(health.article_count, 8);
+  assert.equal(health.article_count, 9);
   assert.equal(validateHealth(health, now).complete, true);
   commit('Complete collector heartbeat');
   const data = build({ production: true });
   assert.equal(data.production_ready, true);
-  assert.equal(data.changes.length, 8);
+  assert.equal(data.changes.length, 9);
   assert.throws(() => build({ production: true, now: new Date(now.getTime() + 13 * 3600000) }), /stale/);
   assert.throws(() => build({ production: true, demo: true }), /Synthetic/);
   assert.throws(() => recordHealth(repo, { errors: NaN, unreached: 0 }), /valid errors/);
@@ -289,18 +289,18 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   });
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const data = JSON.parse(fs.readFileSync(path.join(output, 'production.json'), 'utf8').replace(/^\uFEFF/, ''));
-  assert.equal(data.digest_docs_count, 8);
+  assert.equal(data.digest_docs_count, 9);
   for (const name of ['html', 'digest_docs_html', 'digest_docs_title', 'cve_section_html', 'digest_releases_html', 'hash']) {
     assert.equal(typeof data[name], 'string', name);
     assert.ok(data[name].length > 0, name);
   }
-  assert.equal((data.html.match(/class="aks-doc-update"/g) || []).length, 8);
-  assert.equal((data.html.match(/>View Documentation<\/a>/g) || []).length, 8);
-  assert.equal((data.digest_docs_html.match(/View Documentation<\/a>/g) || []).length, 8);
+  assert.equal((data.html.match(/class="aks-doc-update"/g) || []).length, 9);
+  assert.equal((data.html.match(/>View Documentation<\/a>/g) || []).length, 9);
+  assert.equal((data.digest_docs_html.match(/View Documentation<\/a>/g) || []).length, 9);
   assert.equal(/View PR|View change|aks-doc-link-pr/.test(data.html + data.digest_docs_html), false);
-  assert.equal((data.html.match(/Detected:/g) || []).length, 8);
-  assert.equal((data.html.match(/class="aks-doc-header" style="flex-wrap:wrap;"/g) || []).length, 8);
-  assert.equal((data.html.match(/<details class="aks-doc-changes">/g) || []).length, 8);
+  assert.equal((data.html.match(/Detected:/g) || []).length, 9);
+  assert.equal((data.html.match(/class="aks-doc-header" style="flex-wrap:wrap;"/g) || []).length, 9);
+  assert.equal((data.html.match(/<details class="aks-doc-changes">/g) || []).length, 9);
   assert.ok(data.html.includes('class="aks-diff-added"'));
   assert.ok(data.html.includes('class="aks-diff-removed"'));
   assert.ok(data.html.includes('.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }'));
@@ -311,7 +311,7 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.ok(data.html.includes('--cp-accent: #ffea00;'));
   assert.ok(data.html.includes('scrollbar-color: var(--cp-accent) var(--cp-diff-scroll-track);'));
   assert.ok(data.html.includes('.aks-diff-scroll::-webkit-scrollbar-thumb'));
-  assert.equal((data.html.match(/class="aks-diff-expand"/g) || []).length, 8);
+  assert.equal((data.html.match(/class="aks-diff-expand"/g) || []).length, 9);
   assert.ok(data.html.includes("dialog.showModal()"));
   assert.ok(data.html.includes("active.placeholder.replaceWith(active.viewer)"));
   assert.ok(data.html.includes('dialog.aks-diff-dialog[open]'));
@@ -321,13 +321,14 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   }
   assert.equal(data.digest_docs_html.includes('aks-doc-changes'), false);
   assert.equal(data.digest_docs_html.includes('<details'), false);
-  assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 8);
+  assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 9);
   assert.ok(data.html.includes('class="aks-tabs"'));
   assert.ok(data.html.includes('id="aks-tab-releases"'));
   assert.ok(data.html.includes('id="aks-tab-cve"'));
   assert.ok(data.html.includes('AKS fixture release'));
   assert.ok(data.cve_section_html.includes('fixture-version'));
   assert.ok(data.html.includes('https://learn.microsoft.com/en-us/azure/application-network/overview'));
+  assert.ok(data.html.includes('https://az-icons.com/images/azure-linux/icon.svg'));
   assert.equal(result.stdout.includes('Processing AKS repository'), false);
 
   const productionEnv = {
@@ -350,8 +351,8 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   });
   assert.equal(actual.status, 0, actual.stdout + actual.stderr);
   const production = JSON.parse(fs.readFileSync(path.join(output, 'production.json'), 'utf8').replace(/^\uFEFF/, ''));
-  assert.equal(production.digest_docs_count, 8);
-  assert.equal((production.html.match(/<details class="aks-doc-changes">/g) || []).length, 8);
+  assert.equal(production.digest_docs_count, 9);
+  assert.equal((production.html.match(/<details class="aks-doc-changes">/g) || []).length, 9);
   assert.equal(/View PR|View change/.test(production.html + production.digest_docs_html), false);
   assert.ok(fs.existsSync(path.join(repo, 'snapshot-docs-summary-cache.json')));
 
