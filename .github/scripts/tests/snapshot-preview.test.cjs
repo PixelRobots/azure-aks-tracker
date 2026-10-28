@@ -204,6 +204,93 @@ test('existing generator produces isolated no-AI summaries and matching HTML wit
   assert.equal(result.stdout.includes('Fetching AKS CVE'), false);
 }));
 
+test('snapshot AI receives batched article identities and diffs directly and rejects invalid responses', () => fixture(({ repo, build }) => {
+  const groups = build({ demo: true }).changes.map(item => ({
+    file: item.filename, patch_sample: item.patch, subjects: [item.filename], statuses: [item.status]
+  }));
+  const input = path.join(repo, 'ai-input.json');
+  fs.writeFileSync(input, JSON.stringify({ since: now.toISOString(), groups }));
+  const script = path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''");
+  const result = spawnSync('pwsh', ['-NoProfile', '-Command', `
+    $ErrorActionPreference='Stop'
+    $ast=[System.Management.Automation.Language.Parser]::ParseFile('${script}',[ref]$null,[ref]$null)
+    $ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+      $node.Name -in @('Remove-AIResponseArtifacts','Get-SnapshotSummariesViaOpenAIResponses','Get-PerFileSummariesViaOpenAIResponses')},$true) |
+      ForEach-Object { Invoke-Expression $_.Extent.Text }
+    $SnapshotMode=$true
+    $PSAIReady=$true
+    function Get-OAIProvider { 'OpenAI' }
+    function Log {}
+    function Invoke-OAIUploadFile { throw 'Snapshot input must not be uploaded for file search' }
+    function Invoke-OpenAIResponsesText {
+      param($Instructions,$InputText,$Model,$MaxOutputTokens,$Temperature,$VectorStoreId)
+      if ($VectorStoreId) { throw 'Snapshot input must not use file search' }
+      if ($Instructions -notmatch 'ALWAYS KEEP' -or $Instructions -notmatch 'groups\\[\\]\\.file value EXACTLY') {
+        throw 'Missing filtering or article identity instructions'
+      }
+      $batch=($InputText.Substring($InputText.IndexOf("\`n")+1) | ConvertFrom-Json).groups
+      $script:calls.Add(@($batch))
+      $items=@($batch | Where-Object { $_.file -ne $script:source.groups[-1].file } |
+        ForEach-Object { @{file=$_.file;summary='Require managed identity for this procedure.';category='Security';score=0.9} })
+      switch ($script:mode) {
+        'empty' { return '[]' }
+        'filename' { return '[{"file":"aks-doc-pr-groups-20261028191717.json","summary":"Wrong identity"}]' }
+        'missing-file' { return '[{"summary":"Missing identity"}]' }
+        'empty-summary' { return ConvertTo-Json -InputObject @(@{file=$batch[0].file;summary=' '}) -Compress }
+        'duplicate' { return ConvertTo-Json -InputObject @($items[0],$items[0]) -Compress }
+        'cross-batch' { return ConvertTo-Json -InputObject @(@{file=$script:source.groups[5].file;summary='Wrong batch'}) -Compress }
+        'malformed' { return '[{"file":' }
+        'object' { return '{"results":[]}' }
+        'provider-error' { throw 'Provider unavailable' }
+        'late-failure' { if ($script:calls.Count -gt 1) { throw 'Second batch failed' } }
+      }
+      return ConvertTo-Json -InputObject $items -Compress
+    }
+    $inputPath='${input.replace(/'/g, "''")}'
+    $script:source=Get-Content -LiteralPath $inputPath -Raw | ConvertFrom-Json
+    $results=@{}
+    foreach ($script:mode in @('valid','empty','filename','missing-file','empty-summary','duplicate','cross-batch','malformed','object','provider-error','late-failure','large')) {
+      $script:calls=[System.Collections.Generic.List[object]]::new()
+      $script:SnapshotAiFiles=[System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+      if ($script:mode -eq 'large') {
+        $script:source.groups[0].patch_sample='+' + ('x' * 35000)
+        $script:source.groups[1].patch_sample='+' + ('y' * 35000)
+        $script:source | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $inputPath
+      }
+      try {
+        $verdicts=Get-PerFileSummariesViaOpenAIResponses -JsonPath $inputPath
+        $results[$script:mode]=@{
+          kept=@($verdicts.ordered).Count; by_file=$verdicts.byFile.Count
+          ai_count=$script:SnapshotAiFiles.Count; calls=@($script:calls.ToArray())
+        }
+      } catch {
+        $results[$script:mode]=@{error=$_.Exception.Message;ai_count=$script:SnapshotAiFiles.Count}
+      }
+    }
+    $results | ConvertTo-Json -Depth 12 -Compress
+  `], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const data = JSON.parse(result.stdout);
+  assert.equal(data.valid.kept, groups.length - 1);
+  assert.equal(data.valid.by_file, groups.length - 1);
+  assert.equal(data.valid.ai_count, groups.length - 1);
+  assert.deepEqual(data.valid.calls.map(batch => batch.length), [5, 4]);
+  assert.deepEqual(data.valid.calls.flat(), groups);
+  assert.equal(data.empty.kept, 0);
+  assert.equal(data.empty.ai_count, 0);
+  assert.equal(data.empty.calls.length, 2);
+  for (const mode of ['filename', 'missing-file', 'empty-summary', 'duplicate', 'cross-batch', 'malformed', 'object', 'provider-error', 'late-failure']) {
+    assert.match(data[mode].error, /Snapshot enrichment failed:/, mode);
+    assert.equal(data[mode].ai_count, 0, mode);
+  }
+  assert.match(data.filename.error, /unknown article or empty summary: aks-doc-pr-groups-20261028191717.json/);
+  assert.match(data.duplicate.error, /duplicate article/);
+  assert.deepEqual(data.large.calls.map(batch => batch.length), [1, 5, 3]);
+  assert.equal(data.large.calls[0][0].patch_sample, `+${'x'.repeat(35000)}`);
+  assert.equal(data.large.calls[1][0].patch_sample, `+${'y'.repeat(35000)}`);
+  assert.equal(data.large.kept, groups.length - 1);
+}));
+
 test('production health requires a complete fresh pass and matches committed content', () => fixture(({ repo, build, commit }) => {
   assert.throws(() => build({ production: true }), /Command failed/);
   recordHealth(repo, { errors: 0, unreached: 2, now });
