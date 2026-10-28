@@ -19,7 +19,8 @@ const sources = [
     repo: 'MicrosoftDocs/azure-management-docs',
     routes: [
       ['articles/container-registry/', 'azure/container-registry/'],
-      ['articles/azure-arc/kubernetes/', 'azure/azure-arc/kubernetes/']
+      ['articles/azure-arc/kubernetes/', 'azure/azure-arc/kubernetes/'],
+      ['articles/azure-linux/', 'azure/azure-linux/']
     ]
   },
   {

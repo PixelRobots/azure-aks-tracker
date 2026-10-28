@@ -14,7 +14,7 @@
   original design/checklist; the preview guide describes the implemented state.
 
 The collector covers AKS, AKS Arc, Fleet, Application Network, ACR, Arc Kubernetes,
-AGC and the nine existing AKS support categories. See
+Azure Linux, AGC and the nine existing AKS support categories. See
 [collector documentation](learn-snapshots.md).
 
 ## 1. Establish and qualify the baseline
@@ -22,7 +22,7 @@ AGC and the nine existing AKS support categories. See
 1. Verify the first hosted workflow succeeds and pushes `docs-snapshots`.
 2. Record its content revision as the baseline in explicit tracker-consumer
    state. Do not infer that every file in the root commit is a new article.
-3. Check the run summary for errors and unreached pages and inspect all eight
+3. Check the run summary for errors and unreached pages and inspect all nine
    product scopes. The initial local reference contained 1,352 Markdown files;
    use it as a comparison, not a permanent exact-count requirement.
 4. Confirm a subsequent hosted collection loads saved ETags and does not
@@ -30,7 +30,7 @@ AGC and the nine existing AKS support categories. See
 5. Record newly discovered pages during baseline completion as baseline content,
    not automatically as newly published articles.
 
-Gate: all eight scopes have content, a complete pass has no unexplained fetch
+Gate: all nine scopes have content, a complete pass has no unexplained fetch
 errors/unreached pages, and a repeat pass successfully revalidates saved state.
 Do not enable reader-facing new-page alerts until this gate is met.
 
@@ -144,7 +144,7 @@ traffic, for deterministic adapter tests:
 | Rename, redirect, alias, 404/410 | No duplicate or premature withdrawal announcement |
 | Partial crawl / retry / rate limit | Last good data preserved; explicit health diagnostic |
 | Stale state / missing baseline / shallow history | Publication blocked with actionable error |
-| All eight products | Correct scope, category, URL and source repository |
+| All nine products | Correct scope, category, URL and source repository |
 | AI disabled / cache reuse | Useful fallback; cache keys isolated by source/content |
 | Tracker and weekly digest | Same eligible set, accurate count and valid JSON contract |
 | CVE-only and releases | Existing behaviour unchanged |
