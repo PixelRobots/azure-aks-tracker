@@ -6,13 +6,14 @@
     "https://learn.microsoft.com/en-us/azure/application-network/toc.json",
     "https://learn.microsoft.com/en-us/azure/container-registry/toc.json",
     "https://learn.microsoft.com/en-us/azure/azure-arc/kubernetes/toc.json",
+    "https://learn.microsoft.com/en-us/azure/azure-linux/toc.json",
     "https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/toc.json",
     "https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/toc.json"
   ],
   "extraUrls": [],
-  "include": "^https://learn\\.microsoft\\.com/en-us/(azure/(aks|aks-hybrid-edge|kubernetes-fleet|application-network|container-registry|azure-arc/kubernetes|application-gateway/for-containers)/|troubleshoot/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/)",
+  "include": "^https://learn\\.microsoft\\.com/en-us/(azure/(aks|aks-hybrid-edge|kubernetes-fleet|application-network|container-registry|azure-arc/kubernetes|azure-linux|application-gateway/for-containers)/|troubleshoot/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/)",
   "exclude": [],
-  "trackedPaths": "^(articles/(aks/|aks-hybrid-edge/|application-network/|kubernetes-fleet/|container-registry/|azure-arc/kubernetes/|application-gateway/for-containers/)|support/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/).+\\.md$",
+  "trackedPaths": "^(articles/(aks/|aks-hybrid-edge/|application-network/|kubernetes-fleet/|container-registry/|azure-arc/kubernetes/|azure-linux/|application-gateway/for-containers/)|support/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/).+\\.md$",
   "sourceRepos": [
     "MicrosoftDocs/azure-aks-docs",
     "MicrosoftDocs/azure-aks-docs-pr",
