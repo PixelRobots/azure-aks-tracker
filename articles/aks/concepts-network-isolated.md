@@ -23,7 +23,7 @@ description: Learn how network isolated AKS clusters work
 author: charleswool
 ms.author: yuewu2
 ms.topic: concept-article
-ms.date: 2026-06-15T00:00:00.0000000Z
+ms.date: 2026-10-09T00:00:00.0000000Z
 ai-usage: ai-assisted
 locale: en-us
 document_id: 8690ecb2-be26-4a5f-68cf-75ed4430bf3e
@@ -131,11 +131,11 @@ A firewall typically establishes a barrier between a trusted network and an untr
 
 In summary, while Azure Firewall can be used to define egress restrictions on clusters with outbound requests, network isolated clusters go further on secure-by-default posture by eliminating or blocking the outbound requests altogether.
 
-### Do I need to set up any allowlist endpoints for the network isolated cluster to work?
+### Do I need to set up any allow list endpoints for the network isolated cluster to work?
 
-The cluster creation and bootstrapping stages don't require any outbound traffic from the network isolated cluster. Images required for AKS components and add-ons are pulled from the private ACR connected to the cluster instead of pulling from Microsoft Artifact Registry (MAR) over public endpoints.
+Cluster creation, bootstrapping, and ongoing cluster lifecycle operations don't require any outbound traffic from the network isolated cluster. These operations include scaling out node pools, adding node pools, node image upgrades, and Kubernetes version upgrades. The cluster pulls images and binaries required for AKS components and add-ons from the private ACR connected to the cluster instead of pulling them from Microsoft Artifact Registry (MAR) over public endpoints.
 
-After setting up a network isolated cluster. If you want to enable features or add-ons that need to make outbound requests to their service endpoints, you can set up private endpoints to the services powered by Azure Private Link.
+You only need outbound access if you enable features or add-ons that make outbound requests to their own service endpoints. In that case, set up private endpoints to the services powered by Azure Private Link, or allow the specific endpoints listed in [outbound network and FQDN rules for AKS clusters](outbound-rules-control-egress).
 
 ### Can I manually upgrade packages to upgrade node pool image?
 
