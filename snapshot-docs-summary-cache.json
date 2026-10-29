@@ -1,447 +1,6 @@
 {
-  "generated_at": "2026-10-29T06:13:45.0244041+00:00",
+  "generated_at": "2026-10-29T06:48:25.7543489+00:00",
   "entries": [
-    {
-      "cache_key": "a27874d72c09eba17fcdd845a488765ad40f8e0153fd2e3c5004dba85382e8e0",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-arc/kubernetes/quickstart-connect-cluster.md",
-      "summary": "The ResourceId in the quickstart guide for connecting an existing Kubernetes cluster to Azure Arc has been updated to reflect a new subscription ID. This change is important for users following the tutorial to ensure they are using the correct resource path.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0153669+00:00"
-    },
-    {
-      "cache_key": "6feedfd5c93a58be7adfd0bbfc4721ec5817a9f39f3f753dc6e6475886beba44",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks-hybrid-edge/local/multi-rack/cluster-upgrade.md",
-      "summary": "The documentation for upgrading Azure Kubernetes Service (AKS) on Azure Local for multi-rack deployments has been updated to reflect new version numbers. Users can now see the latest available versions, including 1.33.13, 1.34.10, 1.34.11, 1.35.7, 1.35.8, 1.36.3, and 1.36.4, ensuring they have the most current information for their upgrade processes.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0153519+00:00"
-    },
-    {
-      "cache_key": "4392761ef2c3b8d342f179c2facba70cb261ec2de1119f67e204ac3eab3c60f2",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-arc/kubernetes/extensions-release.md",
-      "summary": "The documentation now includes the OpenShift Cloud Platform (OCP) as a supported distribution with conformance validation for Azure Arc-enabled Kubernetes clusters. Additionally, Nexus Baremetal has been added to the list of supported distributions without conformance validation, expanding the options available for users managing their Kubernetes environments.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0153374+00:00"
-    },
-    {
-      "cache_key": "51a430292ffef0b6ecf01ac6d59b9653cdf0d0666d6cfee472b03181d800e5fc",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/security-bulletins/overview.md",
-      "summary": "The documentation now includes a new section detailing the security bulletin AKS-2026-0006, which addresses OpenSSL end-of-life findings in AKS-managed add-on images. Users are informed that while some vulnerability scanners may report OpenSSL 3.3 as end-of-life, Azure Linux continues to provide security fixes through backports, and they should verify package versions using the image's SBOM or RPM metadata rather than relying solely on the upstream version. Additionally, guidance is provided on how to handle EOL warnings and CVEs, emphasizing the importance of using distribution-aware matching for accurate vulnerability assessments.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0153234+00:00"
-    },
-    {
-      "cache_key": "aca4af01c2cfb547775ad89ff56fa9f298be968b1f62b6512324f35eed39794a",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-basic-troubleshooting.md",
-      "summary": "The documentation for troubleshooting \"Node Not Ready\" issues in Azure Kubernetes Service has been updated to enhance clarity and usability. It now explicitly states that the article helps users recover their cluster nodes and provides detailed explanations of common error messages for both Windows and Linux nodes. Additionally, the section titles have been revised for better alignment with troubleshooting practices, improving the overall user experience.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0153089+00:00"
-    },
-    {
-      "cache_key": "3a1ddf0e2559dfdc7f80fde5d1226ad2447e5af080ff5798f60d2752d2695672",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/identify-memory-saturation-aks.md",
-      "summary": "The documentation now includes a new section outlining prerequisites for troubleshooting memory saturation in AKS clusters, detailing commands such as `kubectl top node`, `kubectl get pods`, and `kubectl describe node` for gathering memory usage data. Additionally, the guidance on using memory requests and limits has been clarified to emphasize the importance of setting these values appropriately to avoid memory pressure on nodes.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0152941+00:00"
-    },
-    {
-      "cache_key": "8b77b1b9c519389e624df5cb8d4b6808d4ea209c0f88db447469073d9767ebeb",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/use-capacity-reservation-groups.md",
-      "summary": "The documentation now includes instructions for associating an existing capacity reservation group (CRG) with both new clusters and new system node pools in Azure Kubernetes Service (AKS). Users can create a cluster with a CRG by using the `az aks create` command with the `--assign-identity` and `--crg-id` flags, and they can also add a CRG to a new system node pool using the `az aks nodepool add` command with the `--mode System` and `--crg-id` flags. Additionally, guidance has been clarified for managing non-zonal system node pools without needing to scale them to zero.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0152766+00:00"
-    },
-    {
-      "cache_key": "296fa497b377eaac8b0121af1b272f709a88a8cc214e9b97f7a5238a006cf0c9",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/connectivity/troubleshoot-microsoft-entra-ssh-node-access.md",
-      "summary": "New documentation page: Troubleshoot Microsoft Entra SSH access to AKS nodes - Azure | Microsoft Learn. Review the published article and captured content diff.",
-      "category": "Security",
-      "score": 1.0,
-      "cached_at": "2026-10-29T06:13:45.0152625+00:00"
-    },
-    {
-      "cache_key": "221e141eeda6a54f14cb542e91da07033864474f3d9037428f33c32e9753d5b9",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/aks-production-upgrade-strategies.md",
-      "summary": "The documentation for Azure Kubernetes Service (AKS) production upgrade strategies has been updated to clarify that AKS Automatic now includes managed upgrade defaults alongside preconfigured automatic upgrade channels. Users can also link multiple clusters to a shared maintenance window for consistent emergency patching schedules, enhancing management efficiency. Additionally, the guidance on architectural patterns has been refined to emphasize the importance of workload design and resilience during upgrades.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0152488+00:00"
-    },
-    {
-      "cache_key": "622cd4de93861200316f8f4b23e74fc9cdfea7f137648e7650c8b425012729f3",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-auto-provisioning-aksnodeclass.md",
-      "summary": "Introduced detailed configurations for Azure Container Linux and Windows Server images in AKS, including Trusted Launch settings and limitations. This provides critical information for users configuring node pools with specific OS requirements.",
-      "category": "General",
-      "score": 0.85,
-      "cached_at": "2026-10-29T06:13:45.0152354+00:00"
-    },
-    {
-      "cache_key": "62816722edf5cd360be0c10c6d4ad50cd9797e7ca7909e055d75899a6625a382",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-pod-scheduler-errors.md",
-      "summary": "The documentation for troubleshooting AKS pod scheduler errors has been updated to clarify the causes and solutions for common issues that prevent pods from running. Users can now find more detailed steps for resolving volume node affinity conflicts and insufficient CPU issues, including specific commands to scale the node pool. Additionally, the section on untolerated taints has been enhanced to emphasize the need for matching tolerations in pod specifications.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0152222+00:00"
-    },
-    {
-      "cache_key": "78b2cbc46116fd366ce3765d7e4fe1ed879124479dc6bef2a5a88dece03c1a42",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-after-being-healthy.md",
-      "summary": "The article has been updated to clarify troubleshooting steps for AKS nodes that unexpectedly change to Not Ready status, improving guidance for users.",
-      "category": "Operations",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0152088+00:00"
-    },
-    {
-      "cache_key": "65c20e010ac3a1f0719576da4be14527c346fc73c7e231566aa0972f662ff5f1",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/security-controls-policy.md",
-      "summary": "Updated the Azure Policy Regulatory Compliance controls for AKS, reflecting changes in access control policies and ensuring compliance with the latest standards. This is crucial for maintaining security posture.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0151961+00:00"
-    },
-    {
-      "cache_key": "c6804b66509c0682060327de209ac490d547df2905f587ccce1d72460199c334",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/cluster-service-health-probe-mode-issues.md",
-      "summary": "The documentation now provides clearer guidance on troubleshooting issues related to the Azure Kubernetes Service (AKS) load balancer health probe mode, including detailed steps for checking configurations and logs. Users can better understand the implications of using the Shared and ServiceNodePort modes, as well as the necessary commands to enable these features and verify their configurations. Additionally, the article emphasizes the requirement for the Azure Standard Load Balancer SKU for the health probe mode feature to function correctly.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0151824+00:00"
-    },
-    {
-      "cache_key": "a4bcb078d2a65217a5c9ad001174073a1861dce8a8e42fb76072b52881973417",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/use-node-disruption-policy.md",
-      "summary": "Updated the configuration details for the Node Disruption Policy in Azure Kubernetes Service (AKS). The maintenance configuration can now define the schedule inline or link to a shared maintenance window, enhancing clarity on how to manage disruptive operations during maintenance windows.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0151687+00:00"
-    },
-    {
-      "cache_key": "4f2e0368533a55e89e7d254229b17c34d729bbc9eb6002d577a2e471bdd24080",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/aks-managed-gpu-nodes.md",
-      "summary": "Updated the procedure for creating an AKS-managed GPU node pool, emphasizing the use of `mode: Driver` and `nvidia.managementMode: Managed` in the `spec.gpu` field. This change clarifies the setup for users looking to utilize managed GPU experiences in AKS.",
-      "category": "Compute",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0151559+00:00"
-    },
-    {
-      "cache_key": "8ab6c32a743b1db5e490643c208c2b4160025378fa6ea2580471c2410a2c3942",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/node-auto-repair-errors.md",
-      "summary": "This article has been enhanced to provide a clearer understanding of common node auto-repair errors in AKS, including a table of error codes and best practices for monitoring and responding to errors.",
-      "category": "Operations",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0151417+00:00"
-    },
-    {
-      "cache_key": "88d8f0b6df9b014f967059657325a895e98c0e164d4d4df86b1a886a8e23d085",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/container-registry/tasks-agent-pools.md",
-      "summary": "The documentation now clarifies that users with effective agent pool read access, such as those assigned the **Container Registry Tasks Contributor** role at the registry scope, will not require a permission change for the upcoming agent pool permission update. Users can refer to the section on \"Migrate ACR task agent pool permissions\" for additional details on roles and permissions.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0151277+00:00"
-    },
-    {
-      "cache_key": "07f2b940cc0d013b97e741b622e8e13256ea907b1267b4bc64a9d19883eb922f",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/identify-high-cpu-consuming-containers-aks.md",
-      "summary": "The documentation has been updated to enhance clarity on troubleshooting high CPU usage in Azure Kubernetes Service (AKS) clusters. Users can now follow a more structured approach to identify high CPU-consuming nodes and containers, with clearer steps for utilizing the Container Insights feature in the Azure portal. Additionally, best practices for managing CPU usage have been refined, providing users with actionable guidance to improve performance and reliability.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0151131+00:00"
-    },
-    {
-      "cache_key": "7da72de62cb4e77a9615beb7558da9753f3164d089bfecda674165fb54d08bb1",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/aks-communication-manager.md",
-      "summary": "The documentation now specifies that when creating a planned maintenance window for automatic upgrades in AKS, users can define the schedule inline on the cluster's maintenance configuration or link it from a shared maintenance window. This enhancement provides greater flexibility in managing maintenance schedules.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0150988+00:00"
-    },
-    {
-      "cache_key": "c3a7b86140b2bfa45638a70aad5f63027dd46a0ee804438a0ebc5e844d843e59",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks-hybrid-edge/local/disconnected-operations/overview.md",
-      "summary": "The documentation now clarifies that Windows node pools and GPUs are not supported in AKS on Azure Local with disconnected operations. This update informs users about the limitations they may encounter when configuring their environments.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0150858+00:00"
-    },
-    {
-      "cache_key": "1027df37e31c8fecc951e75b06ea1b640245586fac1743c79caad8c0cd58d988",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-expired-certificates.md",
-      "summary": "The documentation now emphasizes troubleshooting the **Node Not Ready** state in Azure Kubernetes Service (AKS) clusters due to expired certificates, providing clearer guidance on identifying and rotating these certificates. Additionally, the prerequisites for troubleshooting have been specified, enhancing user understanding of necessary steps before proceeding with commands like `az vmss run-command invoke` and `az vm run-command invoke`.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0150719+00:00"
-    },
-    {
-      "cache_key": "8ca3f2d7fe1ce4c076bee9bb275fd0f0791b1c66503a0694871a1c3066fc28be",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-node-cpu-pressure-psi.md",
-      "summary": "The article has been updated to clarify the use of Pressure Stall Information (PSI) metrics for troubleshooting CPU pressure in AKS clusters. It emphasizes the importance of understanding CPU pressure as a more accurate indicator of resource contention than traditional metrics.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0150568+00:00"
-    },
-    {
-      "cache_key": "0ce404cc3c8559f1f39f5e66531aee8349c8c7496ef90615d4b1abf4b9623391",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/istio-meshconfig.md",
-      "summary": "The documentation now specifies that the parameters `defaultTrafficPolicy`, `serviceEntryVisibility`, `zoneAwareLbSetting`, and `connectionSettings` are configurable starting with asm-1-31. This allows users to customize these settings for the Istio-based service mesh add-on in Azure Kubernetes Service, enhancing their control over traffic management and service visibility.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0150426+00:00"
-    },
-    {
-      "cache_key": "de6537b73933ad63f76c276e5861455a848fe7ef7941e1b8d4065436f68a05a5",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-disruption-policy.md",
-      "summary": "This article explains the Node Disruption Policy in Azure Kubernetes Service (AKS), detailing how to manage disruptions during maintenance windows.",
-      "category": "Operations",
-      "score": 0.7,
-      "cached_at": "2026-10-29T06:13:45.0150293+00:00"
-    },
-    {
-      "cache_key": "24b11511e195110b7861f0746a91f6e7dc1cfa5bcb04291e75e154d548393386",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-then-recovers.md",
-      "summary": "The documentation has been updated to clarify the troubleshooting process for **Node Not Ready** failures in Azure Kubernetes Service (AKS) clusters. Users can now better understand the root causes of these failures and implement effective resolutions to prevent repeat outages. Additionally, the phrasing has been adjusted for clarity regarding the importance of service tier payments.",
-      "category": "Compute",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0150163+00:00"
-    },
-    {
-      "cache_key": "d041848b05a25c4dd3b3fbb73e4bd4caf9a7f428f01b3e213f4b3fc7549f6d6c",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-oomkilled-aks-clusters.md",
-      "summary": "This article has been revised to improve clarity on troubleshooting OOMKilled errors in AKS clusters, including identifying root causes and applying solutions to prevent memory-related pod restarts.",
-      "category": "Operations",
-      "score": 0.85,
-      "cached_at": "2026-10-29T06:13:45.0150031+00:00"
-    },
-    {
-      "cache_key": "492e5a79603db6fa2942f5fdb2c746768a19f1a47b39693c78de1630a7cff2db",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/high-memory-consumption-disk-intensive-applications.md",
-      "summary": "The documentation now provides clearer guidance on troubleshooting high memory consumption in disk-intensive applications on Kubernetes pods, specifically identifying Linux kernel caching as a potential cause and offering solutions to reduce memory pressure. Additionally, the steps for inspecting pod memory consumption and dropping the Linux kernel cache have been refined for better clarity, ensuring users can effectively manage memory resources in their Kubernetes environments.",
-      "category": "Storage",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0149891+00:00"
-    },
-    {
-      "cache_key": "96c13de23343a9bb5909e2eeb2db5e1869060e96f48563eb7a5268ef88b62684",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-arc/kubernetes/policy-reference.md",
-      "summary": "Enhanced the built-in policy definitions for Azure Arc-enabled Kubernetes. The updates include new policies for restricting pod access to host networks and ports, improving security compliance with Pod Security Standards, and preventing the use of ContainerAdministrator for Windows containers.",
-      "category": "Security",
-      "score": 0.95,
-      "cached_at": "2026-10-29T06:13:45.0149682+00:00"
-    },
-    {
-      "cache_key": "a719a663693ac4e0b0107bfce68d5900f13789ef11ffb75e6134911c22c5e6a0",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-custom-script-extension-errors.md",
-      "summary": "The article has been updated to help troubleshoot custom script extension errors that prevent AKS nodes from provisioning, providing clearer steps for identifying and resolving issues.",
-      "category": "Operations",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0149532+00:00"
-    },
-    {
-      "cache_key": "5b1e94189fe7d39181f1b09efebf7089b735a4be27b2b31194f30d13c5c9fb1e",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm.md",
-      "summary": "The documentation has been updated to reflect the use of version 1.12.4 of the Application Gateway for Containers ALB Controller in the Helm commands. Users should now reference this updated version when deploying the Application Gateway for Containers to ensure they are using the latest features and fixes.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0149373+00:00"
-    },
-    {
-      "cache_key": "b8aa80cc42d7207bf39f5a87a5c0c9dddba995fe46f8a16136681b77297c35c4",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/enable-fips-cluster.md",
-      "summary": "Added a comprehensive guide on enabling Federal Information Processing Standard (FIPS) for AKS clusters, detailing prerequisites, limitations, and the implications of FIPS mode on node pools and AKS-managed components.",
-      "category": "Security",
-      "score": 1.0,
-      "cached_at": "2026-10-29T06:13:45.0149224+00:00"
-    },
-    {
-      "cache_key": "ae62a2a826ea2b97284b58fb1b325678e6bd6e9cbc524b6644651f2ba1007a55",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/security/troubleshoot-cluster-level-fips.md",
-      "summary": "New documentation page: Troubleshoot cluster-level FIPS errors in AKS (preview) - Azure | Microsoft Learn. Review the published article and captured content diff.",
-      "category": "Security",
-      "score": 1.0,
-      "cached_at": "2026-10-29T06:13:45.0149087+00:00"
-    },
-    {
-      "cache_key": "ae9684be38746d9e62307893532186d3b133015f387ffae5d37473f4b93f8e2e",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks-hybrid-edge/supported-kubernetes-versions.md",
-      "summary": "Updated the supported Kubernetes versions for AKS Hybrid and Edge, including new version details and emphasizing the importance of sequential upgrade paths for clusters.",
-      "category": "General",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0148952+00:00"
-    },
-    {
-      "cache_key": "71312c408d0884a7b273d82c7106ca9e3b02628d7fecf42fa76b6d8fce140943",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks-hybrid-edge/local/aks-whats-new-local.md",
-      "summary": "Introduced new Kubernetes versions included in the 2610 release for AKS Hybrid and Edge, providing users with updated version information for better planning and deployment.",
-      "category": "General",
-      "score": 0.7,
-      "cached_at": "2026-10-29T06:13:45.0148795+00:00"
-    },
-    {
-      "cache_key": "50280a7052494bfef70a4901f1dfb9eff5bcc8041bdc39858eb03aac613fdc8a",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/application-gateway/for-containers/alb-controller-release-notes.md",
-      "summary": "This document provides release notes for the ALB Controller, detailing version updates and security patches.",
-      "category": "General",
-      "score": 0.5,
-      "cached_at": "2026-10-29T06:13:45.0148661+00:00"
-    },
-    {
-      "cache_key": "ecea4989983304f9e74158098b620a8ad20eee187e87e7ec6b20ae6e53e90562",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-auto-provisioning-networking.md",
-      "summary": "Added a section on dual-stack networking considerations for Node Auto-Provisioning (NAP) in AKS, including prerequisites and limitations for IPv4/IPv6 dual-stack cluster networking. This enhances understanding of networking configurations for users implementing NAP.",
-      "category": "Networking",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0148525+00:00"
-    },
-    {
-      "cache_key": "090c7e2a8583e2ae361900d84bedc7705bdaa2249ef5ab25c7314312985546b1",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-pod-workload-restart.md",
-      "summary": "Clarified the indicators for interpreting pod age and restart behavior, enhancing the troubleshooting guidance for users. This includes details on reviewing Kubernetes audit logs.",
-      "category": "Operations",
-      "score": 0.85,
-      "cached_at": "2026-10-29T06:13:45.0148391+00:00"
-    },
-    {
-      "cache_key": "5b63496b8e9752bda504a59d9e6bf91d93c482b54f75d92c76e25fcd181fb2f3",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/availability-performance/identify-high-disk-io-latency-containers-aks.md",
-      "summary": "The article now provides guidance on identifying containers causing high disk I/O latency in AKS clusters, enhancing troubleshooting capabilities for performance issues.",
-      "category": "Operations",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0148246+00:00"
-    },
-    {
-      "cache_key": "ffcc14ec0795197e09c204ed45d4be4a957d42fc35673bdd662d66708cfb6301",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/policy-reference.md",
-      "summary": "Modified the built-in policy definitions for Azure Kubernetes Service, including updates to deployment safeguards and best practices. This provides clearer guidance for users implementing policies.",
-      "category": "Compliance",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0148097+00:00"
-    },
-    {
-      "cache_key": "6add22df25ca6ab1d8ba3d121ac0613f95991dabacf06c533fa5ce4048ac9945",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/create-upgrade-delete/aks-at-scale-troubleshoot-guide.md",
-      "summary": "The documentation now provides enhanced troubleshooting guidance for common issues when running or scaling large Azure Kubernetes Service (AKS) clusters, specifically addressing quota, networking, scaling, and upgrade problems. Users can now better understand how to resolve \"InsufficientSubnetSize\" errors and are advised to use Azure CLI for scaling operations, with clear instructions on managing node pools and verifying regional quotas. Additionally, the article emphasizes the importance of planning for subnet capacity and using the Managed NAT Gateway for improved scalability in large clusters.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0147956+00:00"
-    },
-    {
-      "cache_key": "dec6c4e0915b80ff1c6457f4e7fd8ac7e2474dc2303c8ccd0994305f806c9126",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/app-routing-nginx-configuration.md",
-      "summary": "The documentation now includes a note about the limitations of using a separate NGINX ingress controller in multi-tenant clusters, emphasizing security considerations.",
-      "category": "General",
-      "score": 0.75,
-      "cached_at": "2026-10-29T06:13:45.0147800+00:00"
-    },
-    {
-      "cache_key": "ebda8aae98e7a82d1776cb2cc83d75775bc93e8b807d20a741abcedd5432c671",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/container-registry/tasks-agent-pools-permission-migration.md",
-      "summary": "New documentation page: Migrate ACR task agent pool permissions - Azure Container Registry | Microsoft Learn. Review the published article and captured content diff.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "2026-10-29T06:13:45.0147504+00:00"
-    },
-    {
-      "cache_key": "806bdd13e13a572b0c324f88f37964a894271537f766e150bdf5adad5f983cdc",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/upgrade-cluster-components.md",
-      "summary": "This document provides an overview of upgrading Azure Kubernetes Service (AKS) clusters and components, including managed reliability defaults and upgrade cadence.",
-      "category": "Operations",
-      "score": 0.7,
-      "cached_at": "2026-10-29T06:13:45.0147392+00:00"
-    },
-    {
-      "cache_key": "4cf9e6ac6c573d1e348f4d4fe8d8a38afa30a74eef8d3e842fcfb49840059e7b",
-      "cache_version": "openai-responses-v1",
-      "file": "support/azure/azure-kubernetes/extensions/troubleshoot-kuberay-extension-errors.md",
-      "summary": "This article assists in troubleshooting the managed KubeRay extension on Azure Kubernetes Service (AKS), providing guidance on common issues and resolutions.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "2026-10-29T06:13:45.0147298+00:00"
-    },
-    {
-      "cache_key": "b6db5e21447c5ba00c450c1c4635ea9c4fe9c204608336c7f60512cbad11cb98",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/istio-support-policy.md",
-      "summary": "The support policy for the Istio-based service mesh add-on for Azure Kubernetes Service has been updated with revised expected end-of-life dates for specific versions. Users can now expect the end-of-life for asm-1-29 to be around December 2026, and for asm-1-31 around March 2027, allowing for better planning and management of their service mesh deployments.",
-      "category": "Compliance",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0147202+00:00"
-    },
-    {
-      "cache_key": "c190e8fecc83e096e2b8ec71a763877f22520b7472643ad7a35bbb8d052a47be",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/enable-fips-nodes.md",
-      "summary": "Clarified the process for updating existing Linux node pools to enable or disable FIPS, specifying the transition between FIPS and non-FIPS images and the reimage requirement, which may extend the update time.",
-      "category": "Security",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0147094+00:00"
-    },
-    {
-      "cache_key": "01b9889751abc4f200affefa74b6fa19846d6519f163a0c9b0f6d4745aba94ca",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/application-gateway/for-containers/service-mesh-integration.md",
-      "summary": "This article discusses service mesh integration with Application Gateway for Containers, including version updates and configuration details.",
-      "category": "General",
-      "score": 0.5,
-      "cached_at": "2026-10-29T06:13:45.0146993+00:00"
-    },
-    {
-      "cache_key": "2e06439e4f5b7a728aeacd3180f525f1886b6b188aad06b1f4048a0364030d6d",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-auto-provisioning-node-pools.md",
-      "summary": "This article provides guidance on configuring Node Pools for Node Auto-Provisioning (NAP) in Azure Kubernetes Service (AKS), including detailed steps and examples.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0146892+00:00"
-    },
     {
       "cache_key": "dd934e9be72b7a4b684a7047d2b73053979107d60485f0b72f996b7c17417a9b",
       "cache_version": "openai-responses-v1",
@@ -449,34 +8,7 @@
       "summary": "The documentation now includes a detailed section on troubleshooting the `AuthorizationFailed` error during Azure Files share provisioning in Azure Kubernetes Service (AKS). Users can identify the principal reported in the error, verify AKS identity configurations, and check role assignments to ensure the necessary Azure RBAC permissions are granted for file share operations. Additionally, the article clarifies the implications of using FIPS-enabled node pools and provides updated guidance on encryption algorithm support for different AKS versions.",
       "category": "Storage",
       "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0146781+00:00"
-    },
-    {
-      "cache_key": "6efd31d3ddc5cc9fd269dc34df9ce659c4a348859af0ce13a38cbecad349e69f",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/container-registry/container-registry-geo-replication.md",
-      "summary": "The documentation now clarifies that when using static private IP allocation for Azure Container Registry, adding geo-replicas or enabling regional endpoints can fail if the required member-to-IP mappings are not configured. Users are advised to create the private endpoint only after all geo-replicas are established to ensure proper IP configuration, and to use dynamic IP allocation if they plan to add geo-replicas or enable regional endpoints later, as this will automate the necessary member mappings.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0146666+00:00"
-    },
-    {
-      "cache_key": "0e68912d70038800d9b2777b8ca4801a048f35b66d8d4b440516fbe6d52b5696",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/auto-upgrade-cluster.md",
-      "summary": "This article describes how to automatically upgrade an Azure Kubernetes Service (AKS) cluster, including linking multiple clusters to a shared maintenance window.",
-      "category": "Operations",
-      "score": 0.8,
-      "cached_at": "2026-10-29T06:13:45.0146567+00:00"
-    },
-    {
-      "cache_key": "2f423c841d50b20a18608a0b63bfcc4d3e8eab5d36319bca3cc1fde12d46c13b",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/container-registry/policy-reference.md",
-      "summary": "Updated the policy definition for restricting external private endpoints in Azure Container Registry. The new version (1.1.0) includes a link to the updated policy details and emphasizes the importance of preserving enclave boundaries to reduce data exposure risk.",
-      "category": "Security",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0146461+00:00"
+      "cached_at": "2026-10-29T06:48:25.7441103+00:00"
     },
     {
       "cache_key": "40c67c4d201a6ee31efb131b541fc9eca75e3fe2fa92a0e04290853f9a0e8a75",
@@ -485,25 +17,106 @@
       "summary": "This article helps troubleshoot managed Kueue extension errors on Azure Kubernetes Service (AKS) and restore workload admission. It includes detailed diagnostic steps and information to include in support requests.",
       "category": "Operations",
       "score": 1.0,
-      "cached_at": "2026-10-29T06:13:45.0146348+00:00"
+      "cached_at": "2026-10-29T06:48:25.7440856+00:00"
     },
     {
-      "cache_key": "906c3e729c6567493295b58d23225f3de22973bf5098f633345514fdb8306d35",
+      "cache_key": "88d8f0b6df9b014f967059657325a895e98c0e164d4d4df86b1a886a8e23d085",
       "cache_version": "openai-responses-v1",
-      "file": "articles/aks/node-auto-provisioning-disruption.md",
-      "summary": "Updated the scheduling syntax for node auto-provisioning disruptions, clarifying the use of cron job syntax and providing additional details on budget activation. This enhances user understanding of disruption policies.",
-      "category": "Operations",
-      "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0146229+00:00"
-    },
-    {
-      "cache_key": "8d5021d1357cbb25f4f34d1ffc35a56b46356e4b961cf98cdcca39f318f815b0",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/aks/app-routing.md",
-      "summary": "The documentation now includes a new section on multi-tenant clusters, highlighting that the managed NGINX Ingress controller does not provide isolation at the namespace level and should not be used as a security boundary in shared clusters. Users are informed about the implications of using Ingress objects across namespaces, including shared configurations and access to Secrets, along with recommended practices to mitigate risks in multi-tenant environments.",
+      "file": "articles/container-registry/tasks-agent-pools.md",
+      "summary": "The documentation now clarifies that users with effective agent pool read access, such as those assigned the **Container Registry Tasks Contributor** role at the registry scope, will not require a permission change for the upcoming agent pool permission update. Users can refer to the section on \"Migrate ACR task agent pool permissions\" for additional details on roles and permissions.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "2026-10-29T06:13:45.0146117+00:00"
+      "cached_at": "2026-10-29T06:48:25.7440603+00:00"
+    },
+    {
+      "cache_key": "221e141eeda6a54f14cb542e91da07033864474f3d9037428f33c32e9753d5b9",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/aks-production-upgrade-strategies.md",
+      "summary": "The documentation for Azure Kubernetes Service (AKS) production upgrade strategies has been updated to clarify that AKS Automatic now includes managed upgrade defaults alongside preconfigured automatic upgrade channels. Users can also link multiple clusters to a shared maintenance window for consistent emergency patching schedules, enhancing management efficiency. Additionally, the guidance on architectural patterns has been refined to emphasize the importance of workload design and resilience during upgrades.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7440362+00:00"
+    },
+    {
+      "cache_key": "3a1ddf0e2559dfdc7f80fde5d1226ad2447e5af080ff5798f60d2752d2695672",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/identify-memory-saturation-aks.md",
+      "summary": "The documentation now includes a new section outlining prerequisites for troubleshooting memory saturation in AKS clusters, detailing commands such as `kubectl top node`, `kubectl get pods`, and `kubectl describe node` for gathering memory usage data. Additionally, the guidance on using memory requests and limits has been clarified to emphasize the importance of setting these values appropriately to avoid memory pressure on nodes.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7440119+00:00"
+    },
+    {
+      "cache_key": "4cf9e6ac6c573d1e348f4d4fe8d8a38afa30a74eef8d3e842fcfb49840059e7b",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/extensions/troubleshoot-kuberay-extension-errors.md",
+      "summary": "This article assists in troubleshooting the managed KubeRay extension on Azure Kubernetes Service (AKS), providing guidance on common issues and resolutions.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "2026-10-29T06:48:25.7439874+00:00"
+    },
+    {
+      "cache_key": "50280a7052494bfef70a4901f1dfb9eff5bcc8041bdc39858eb03aac613fdc8a",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/application-gateway/for-containers/alb-controller-release-notes.md",
+      "summary": "This document provides release notes for the ALB Controller, detailing version updates and security patches.",
+      "category": "General",
+      "score": 0.5,
+      "cached_at": "2026-10-29T06:48:25.7439629+00:00"
+    },
+    {
+      "cache_key": "dec6c4e0915b80ff1c6457f4e7fd8ac7e2474dc2303c8ccd0994305f806c9126",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/app-routing-nginx-configuration.md",
+      "summary": "The documentation now includes a note about the limitations of using a separate NGINX ingress controller in multi-tenant clusters, emphasizing security considerations.",
+      "category": "General",
+      "score": 0.75,
+      "cached_at": "2026-10-29T06:48:25.7439368+00:00"
+    },
+    {
+      "cache_key": "a4bcb078d2a65217a5c9ad001174073a1861dce8a8e42fb76072b52881973417",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/use-node-disruption-policy.md",
+      "summary": "Updated the configuration details for the Node Disruption Policy in Azure Kubernetes Service (AKS). The maintenance configuration can now define the schedule inline or link to a shared maintenance window, enhancing clarity on how to manage disruptive operations during maintenance windows.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7439093+00:00"
+    },
+    {
+      "cache_key": "4392761ef2c3b8d342f179c2facba70cb261ec2de1119f67e204ac3eab3c60f2",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-arc/kubernetes/extensions-release.md",
+      "summary": "The documentation now includes the OpenShift Cloud Platform (OCP) as a supported distribution with conformance validation for Azure Arc-enabled Kubernetes clusters. Additionally, Nexus Baremetal has been added to the list of supported distributions without conformance validation, expanding the options available for users managing their Kubernetes environments.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7438829+00:00"
+    },
+    {
+      "cache_key": "71312c408d0884a7b273d82c7106ca9e3b02628d7fecf42fa76b6d8fce140943",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks-hybrid-edge/local/aks-whats-new-local.md",
+      "summary": "Introduced new Kubernetes versions included in the 2610 release for AKS Hybrid and Edge, providing users with updated version information for better planning and deployment.",
+      "category": "General",
+      "score": 0.7,
+      "cached_at": "2026-10-29T06:48:25.7438575+00:00"
+    },
+    {
+      "cache_key": "806bdd13e13a572b0c324f88f37964a894271537f766e150bdf5adad5f983cdc",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/upgrade-cluster-components.md",
+      "summary": "This document provides an overview of upgrading Azure Kubernetes Service (AKS) clusters and components, including managed reliability defaults and upgrade cadence.",
+      "category": "Operations",
+      "score": 0.7,
+      "cached_at": "2026-10-29T06:48:25.7438314+00:00"
+    },
+    {
+      "cache_key": "01b9889751abc4f200affefa74b6fa19846d6519f163a0c9b0f6d4745aba94ca",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/application-gateway/for-containers/service-mesh-integration.md",
+      "summary": "This article discusses service mesh integration with Application Gateway for Containers, including version updates and configuration details.",
+      "category": "General",
+      "score": 0.5,
+      "cached_at": "2026-10-29T06:48:25.7438036+00:00"
     },
     {
       "cache_key": "0a66d50ef8e42b7123176ad9ab8fe5c73383f4b2299b61f60b53a4100493b13e",
@@ -512,7 +125,286 @@
       "summary": "This article lists the supported Kubernetes versions in Azure Kubernetes Service (AKS), including upcoming versions and their expected release dates.",
       "category": "General",
       "score": 0.6,
-      "cached_at": "2026-10-29T06:13:45.0145986+00:00"
+      "cached_at": "2026-10-29T06:48:25.7437787+00:00"
+    },
+    {
+      "cache_key": "c3a7b86140b2bfa45638a70aad5f63027dd46a0ee804438a0ebc5e844d843e59",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks-hybrid-edge/local/disconnected-operations/overview.md",
+      "summary": "The documentation now clarifies that Windows node pools and GPUs are not supported in AKS on Azure Local with disconnected operations. This update informs users about the limitations they may encounter when configuring their environments.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7437546+00:00"
+    },
+    {
+      "cache_key": "ffcc14ec0795197e09c204ed45d4be4a957d42fc35673bdd662d66708cfb6301",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/policy-reference.md",
+      "summary": "Modified the built-in policy definitions for Azure Kubernetes Service, including updates to deployment safeguards and best practices. This provides clearer guidance for users implementing policies.",
+      "category": "Compliance",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7437291+00:00"
+    },
+    {
+      "cache_key": "78b2cbc46116fd366ce3765d7e4fe1ed879124479dc6bef2a5a88dece03c1a42",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-after-being-healthy.md",
+      "summary": "The article has been updated to clarify troubleshooting steps for AKS nodes that unexpectedly change to Not Ready status, improving guidance for users.",
+      "category": "Operations",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7437042+00:00"
+    },
+    {
+      "cache_key": "090c7e2a8583e2ae361900d84bedc7705bdaa2249ef5ab25c7314312985546b1",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-pod-workload-restart.md",
+      "summary": "Clarified the indicators for interpreting pod age and restart behavior, enhancing the troubleshooting guidance for users. This includes details on reviewing Kubernetes audit logs.",
+      "category": "Operations",
+      "score": 0.85,
+      "cached_at": "2026-10-29T06:48:25.7436793+00:00"
+    },
+    {
+      "cache_key": "6add22df25ca6ab1d8ba3d121ac0613f95991dabacf06c533fa5ce4048ac9945",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/create-upgrade-delete/aks-at-scale-troubleshoot-guide.md",
+      "summary": "The documentation now provides enhanced troubleshooting guidance for common issues when running or scaling large Azure Kubernetes Service (AKS) clusters, specifically addressing quota, networking, scaling, and upgrade problems. Users can now better understand how to resolve \"InsufficientSubnetSize\" errors and are advised to use Azure CLI for scaling operations, with clear instructions on managing node pools and verifying regional quotas. Additionally, the article emphasizes the importance of planning for subnet capacity and using the Managed NAT Gateway for improved scalability in large clusters.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7436542+00:00"
+    },
+    {
+      "cache_key": "ae62a2a826ea2b97284b58fb1b325678e6bd6e9cbc524b6644651f2ba1007a55",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/security/troubleshoot-cluster-level-fips.md",
+      "summary": "New documentation page: Troubleshoot cluster-level FIPS errors in AKS (preview) - Azure | Microsoft Learn. Review the published article and captured content diff.",
+      "category": "Security",
+      "score": 1.0,
+      "cached_at": "2026-10-29T06:48:25.7436280+00:00"
+    },
+    {
+      "cache_key": "62816722edf5cd360be0c10c6d4ad50cd9797e7ca7909e055d75899a6625a382",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-pod-scheduler-errors.md",
+      "summary": "The documentation for troubleshooting AKS pod scheduler errors has been updated to clarify the causes and solutions for common issues that prevent pods from running. Users can now find more detailed steps for resolving volume node affinity conflicts and insufficient CPU issues, including specific commands to scale the node pool. Additionally, the section on untolerated taints has been enhanced to emphasize the need for matching tolerations in pod specifications.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7436010+00:00"
+    },
+    {
+      "cache_key": "622cd4de93861200316f8f4b23e74fc9cdfea7f137648e7650c8b425012729f3",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-auto-provisioning-aksnodeclass.md",
+      "summary": "Introduced detailed configurations for Azure Container Linux and Windows Server images in AKS, including Trusted Launch settings and limitations. This provides critical information for users configuring node pools with specific OS requirements.",
+      "category": "General",
+      "score": 0.85,
+      "cached_at": "2026-10-29T06:48:25.7435743+00:00"
+    },
+    {
+      "cache_key": "de6537b73933ad63f76c276e5861455a848fe7ef7941e1b8d4065436f68a05a5",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-disruption-policy.md",
+      "summary": "This article explains the Node Disruption Policy in Azure Kubernetes Service (AKS), detailing how to manage disruptions during maintenance windows.",
+      "category": "Operations",
+      "score": 0.7,
+      "cached_at": "2026-10-29T06:48:25.7435461+00:00"
+    },
+    {
+      "cache_key": "24b11511e195110b7861f0746a91f6e7dc1cfa5bcb04291e75e154d548393386",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-then-recovers.md",
+      "summary": "The documentation has been updated to clarify the troubleshooting process for **Node Not Ready** failures in Azure Kubernetes Service (AKS) clusters. Users can now better understand the root causes of these failures and implement effective resolutions to prevent repeat outages. Additionally, the phrasing has been adjusted for clarity regarding the importance of service tier payments.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7435140+00:00"
+    },
+    {
+      "cache_key": "8ca3f2d7fe1ce4c076bee9bb275fd0f0791b1c66503a0694871a1c3066fc28be",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-node-cpu-pressure-psi.md",
+      "summary": "The article has been updated to clarify the use of Pressure Stall Information (PSI) metrics for troubleshooting CPU pressure in AKS clusters. It emphasizes the importance of understanding CPU pressure as a more accurate indicator of resource contention than traditional metrics.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7434876+00:00"
+    },
+    {
+      "cache_key": "07f2b940cc0d013b97e741b622e8e13256ea907b1267b4bc64a9d19883eb922f",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/identify-high-cpu-consuming-containers-aks.md",
+      "summary": "The documentation has been updated to enhance clarity on troubleshooting high CPU usage in Azure Kubernetes Service (AKS) clusters. Users can now follow a more structured approach to identify high CPU-consuming nodes and containers, with clearer steps for utilizing the Container Insights feature in the Azure portal. Additionally, best practices for managing CPU usage have been refined, providing users with actionable guidance to improve performance and reliability.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7434632+00:00"
+    },
+    {
+      "cache_key": "51a430292ffef0b6ecf01ac6d59b9653cdf0d0666d6cfee472b03181d800e5fc",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/security-bulletins/overview.md",
+      "summary": "The documentation now includes a new section detailing the security bulletin AKS-2026-0006, which addresses OpenSSL end-of-life findings in AKS-managed add-on images. Users are informed that while some vulnerability scanners may report OpenSSL 3.3 as end-of-life, Azure Linux continues to provide security fixes through backports, and they should verify package versions using the image's SBOM or RPM metadata rather than relying solely on the upstream version. Additionally, guidance is provided on how to handle EOL warnings and CVEs, emphasizing the importance of using distribution-aware matching for accurate vulnerability assessments.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7434390+00:00"
+    },
+    {
+      "cache_key": "7da72de62cb4e77a9615beb7558da9753f3164d089bfecda674165fb54d08bb1",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/aks-communication-manager.md",
+      "summary": "The documentation now specifies that when creating a planned maintenance window for automatic upgrades in AKS, users can define the schedule inline on the cluster's maintenance configuration or link it from a shared maintenance window. This enhancement provides greater flexibility in managing maintenance schedules.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7434147+00:00"
+    },
+    {
+      "cache_key": "a719a663693ac4e0b0107bfce68d5900f13789ef11ffb75e6134911c22c5e6a0",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-custom-script-extension-errors.md",
+      "summary": "The article has been updated to help troubleshoot custom script extension errors that prevent AKS nodes from provisioning, providing clearer steps for identifying and resolving issues.",
+      "category": "Operations",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7433875+00:00"
+    },
+    {
+      "cache_key": "ecea4989983304f9e74158098b620a8ad20eee187e87e7ec6b20ae6e53e90562",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-auto-provisioning-networking.md",
+      "summary": "Added a section on dual-stack networking considerations for Node Auto-Provisioning (NAP) in AKS, including prerequisites and limitations for IPv4/IPv6 dual-stack cluster networking. This enhances understanding of networking configurations for users implementing NAP.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7433555+00:00"
+    },
+    {
+      "cache_key": "96c13de23343a9bb5909e2eeb2db5e1869060e96f48563eb7a5268ef88b62684",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-arc/kubernetes/policy-reference.md",
+      "summary": "Enhanced the built-in policy definitions for Azure Arc-enabled Kubernetes. The updates include new policies for restricting pod access to host networks and ports, improving security compliance with Pod Security Standards, and preventing the use of ContainerAdministrator for Windows containers.",
+      "category": "Security",
+      "score": 0.95,
+      "cached_at": "2026-10-29T06:48:25.7433313+00:00"
+    },
+    {
+      "cache_key": "aca4af01c2cfb547775ad89ff56fa9f298be968b1f62b6512324f35eed39794a",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-basic-troubleshooting.md",
+      "summary": "The documentation for troubleshooting \"Node Not Ready\" issues in Azure Kubernetes Service has been updated to enhance clarity and usability. It now explicitly states that the article helps users recover their cluster nodes and provides detailed explanations of common error messages for both Windows and Linux nodes. Additionally, the section titles have been revised for better alignment with troubleshooting practices, improving the overall user experience.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7433049+00:00"
+    },
+    {
+      "cache_key": "c6804b66509c0682060327de209ac490d547df2905f587ccce1d72460199c334",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/cluster-service-health-probe-mode-issues.md",
+      "summary": "The documentation now provides clearer guidance on troubleshooting issues related to the Azure Kubernetes Service (AKS) load balancer health probe mode, including detailed steps for checking configurations and logs. Users can better understand the implications of using the Shared and ServiceNodePort modes, as well as the necessary commands to enable these features and verify their configurations. Additionally, the article emphasizes the requirement for the Azure Standard Load Balancer SKU for the health probe mode feature to function correctly.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7432793+00:00"
+    },
+    {
+      "cache_key": "2f423c841d50b20a18608a0b63bfcc4d3e8eab5d36319bca3cc1fde12d46c13b",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/container-registry/policy-reference.md",
+      "summary": "Updated the policy definition for restricting external private endpoints in Azure Container Registry. The new version (1.1.0) includes a link to the updated policy details and emphasizes the importance of preserving enclave boundaries to reduce data exposure risk.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7432532+00:00"
+    },
+    {
+      "cache_key": "65c20e010ac3a1f0719576da4be14527c346fc73c7e231566aa0972f662ff5f1",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/security-controls-policy.md",
+      "summary": "Updated the Azure Policy Regulatory Compliance controls for AKS, reflecting changes in access control policies and ensuring compliance with the latest standards. This is crucial for maintaining security posture.",
+      "category": "Security",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7432284+00:00"
+    },
+    {
+      "cache_key": "ae9684be38746d9e62307893532186d3b133015f387ffae5d37473f4b93f8e2e",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks-hybrid-edge/supported-kubernetes-versions.md",
+      "summary": "Updated the supported Kubernetes versions for AKS Hybrid and Edge, including new version details and emphasizing the importance of sequential upgrade paths for clusters.",
+      "category": "General",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7432031+00:00"
+    },
+    {
+      "cache_key": "ebda8aae98e7a82d1776cb2cc83d75775bc93e8b807d20a741abcedd5432c671",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/container-registry/tasks-agent-pools-permission-migration.md",
+      "summary": "New documentation page: Migrate ACR task agent pool permissions - Azure Container Registry | Microsoft Learn. Review the published article and captured content diff.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "2026-10-29T06:48:25.7431763+00:00"
+    },
+    {
+      "cache_key": "2e06439e4f5b7a728aeacd3180f525f1886b6b188aad06b1f4048a0364030d6d",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-auto-provisioning-node-pools.md",
+      "summary": "This article provides guidance on configuring Node Pools for Node Auto-Provisioning (NAP) in Azure Kubernetes Service (AKS), including detailed steps and examples.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7431336+00:00"
+    },
+    {
+      "cache_key": "0ce404cc3c8559f1f39f5e66531aee8349c8c7496ef90615d4b1abf4b9623391",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/istio-meshconfig.md",
+      "summary": "The documentation now specifies that the parameters `defaultTrafficPolicy`, `serviceEntryVisibility`, `zoneAwareLbSetting`, and `connectionSettings` are configurable starting with asm-1-31. This allows users to customize these settings for the Istio-based service mesh add-on in Azure Kubernetes Service, enhancing their control over traffic management and service visibility.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7431057+00:00"
+    },
+    {
+      "cache_key": "8d5021d1357cbb25f4f34d1ffc35a56b46356e4b961cf98cdcca39f318f815b0",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/app-routing.md",
+      "summary": "The documentation now includes a new section on multi-tenant clusters, highlighting that the managed NGINX Ingress controller does not provide isolation at the namespace level and should not be used as a security boundary in shared clusters. Users are informed about the implications of using Ingress objects across namespaces, including shared configurations and access to Secrets, along with recommended practices to mitigate risks in multi-tenant environments.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7430808+00:00"
+    },
+    {
+      "cache_key": "906c3e729c6567493295b58d23225f3de22973bf5098f633345514fdb8306d35",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/node-auto-provisioning-disruption.md",
+      "summary": "Updated the scheduling syntax for node auto-provisioning disruptions, clarifying the use of cron job syntax and providing additional details on budget activation. This enhances user understanding of disruption policies.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7430546+00:00"
+    },
+    {
+      "cache_key": "492e5a79603db6fa2942f5fdb2c746768a19f1a47b39693c78de1630a7cff2db",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/high-memory-consumption-disk-intensive-applications.md",
+      "summary": "The documentation now provides clearer guidance on troubleshooting high memory consumption in disk-intensive applications on Kubernetes pods, specifically identifying Linux kernel caching as a potential cause and offering solutions to reduce memory pressure. Additionally, the steps for inspecting pod memory consumption and dropping the Linux kernel cache have been refined for better clarity, ensuring users can effectively manage memory resources in their Kubernetes environments.",
+      "category": "Storage",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7430258+00:00"
+    },
+    {
+      "cache_key": "1027df37e31c8fecc951e75b06ea1b640245586fac1743c79caad8c0cd58d988",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/node-not-ready-expired-certificates.md",
+      "summary": "The documentation now emphasizes troubleshooting the **Node Not Ready** state in Azure Kubernetes Service (AKS) clusters due to expired certificates, providing clearer guidance on identifying and rotating these certificates. Additionally, the prerequisites for troubleshooting have been specified, enhancing user understanding of necessary steps before proceeding with commands like `az vmss run-command invoke` and `az vm run-command invoke`.",
+      "category": "Compute",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7429674+00:00"
+    },
+    {
+      "cache_key": "6feedfd5c93a58be7adfd0bbfc4721ec5817a9f39f3f753dc6e6475886beba44",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks-hybrid-edge/local/multi-rack/cluster-upgrade.md",
+      "summary": "The documentation for upgrading Azure Kubernetes Service (AKS) on Azure Local for multi-rack deployments has been updated to reflect new version numbers. Users can now see the latest available versions, including 1.33.13, 1.34.10, 1.34.11, 1.35.7, 1.35.8, 1.36.3, and 1.36.4, ensuring they have the most current information for their upgrade processes.",
+      "category": "Operations",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7429510+00:00"
+    },
+    {
+      "cache_key": "4f2e0368533a55e89e7d254229b17c34d729bbc9eb6002d577a2e471bdd24080",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/aks-managed-gpu-nodes.md",
+      "summary": "Updated the procedure for creating an AKS-managed GPU node pool, emphasizing the use of `mode: Driver` and `nvidia.managementMode: Managed` in the `spec.gpu` field. This change clarifies the setup for users looking to utilize managed GPU experiences in AKS.",
+      "category": "Compute",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7429350+00:00"
     },
     {
       "cache_key": "bf7a2b2848a4825dd35444657e4dc2ee6b43c09e14a2f707c6b66ea7c784ec83",
@@ -521,7 +413,115 @@
       "summary": "The article has been revised to improve clarity on factors affecting container image pull performance in AKS, providing users with actionable insights.",
       "category": "Operations",
       "score": 0.75,
-      "cached_at": "2026-10-29T06:13:45.0145707+00:00"
+      "cached_at": "2026-10-29T06:48:25.7429174+00:00"
+    },
+    {
+      "cache_key": "0e68912d70038800d9b2777b8ca4801a048f35b66d8d4b440516fbe6d52b5696",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/auto-upgrade-cluster.md",
+      "summary": "This article describes how to automatically upgrade an Azure Kubernetes Service (AKS) cluster, including linking multiple clusters to a shared maintenance window.",
+      "category": "Operations",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7429014+00:00"
+    },
+    {
+      "cache_key": "b8aa80cc42d7207bf39f5a87a5c0c9dddba995fe46f8a16136681b77297c35c4",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/enable-fips-cluster.md",
+      "summary": "Added a comprehensive guide on enabling Federal Information Processing Standard (FIPS) for AKS clusters, detailing prerequisites, limitations, and the implications of FIPS mode on node pools and AKS-managed components.",
+      "category": "Security",
+      "score": 1.0,
+      "cached_at": "2026-10-29T06:48:25.7428829+00:00"
+    },
+    {
+      "cache_key": "6efd31d3ddc5cc9fd269dc34df9ce659c4a348859af0ce13a38cbecad349e69f",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/container-registry/container-registry-geo-replication.md",
+      "summary": "The documentation now clarifies that when using static private IP allocation for Azure Container Registry, adding geo-replicas or enabling regional endpoints can fail if the required member-to-IP mappings are not configured. Users are advised to create the private endpoint only after all geo-replicas are established to ensure proper IP configuration, and to use dynamic IP allocation if they plan to add geo-replicas or enable regional endpoints later, as this will automate the necessary member mappings.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7428672+00:00"
+    },
+    {
+      "cache_key": "b6db5e21447c5ba00c450c1c4635ea9c4fe9c204608336c7f60512cbad11cb98",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/istio-support-policy.md",
+      "summary": "The support policy for the Istio-based service mesh add-on for Azure Kubernetes Service has been updated with revised expected end-of-life dates for specific versions. Users can now expect the end-of-life for asm-1-29 to be around December 2026, and for asm-1-31 around March 2027, allowing for better planning and management of their service mesh deployments.",
+      "category": "Compliance",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7428495+00:00"
+    },
+    {
+      "cache_key": "d041848b05a25c4dd3b3fbb73e4bd4caf9a7f428f01b3e213f4b3fc7549f6d6c",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/troubleshoot-oomkilled-aks-clusters.md",
+      "summary": "This article has been revised to improve clarity on troubleshooting OOMKilled errors in AKS clusters, including identifying root causes and applying solutions to prevent memory-related pod restarts.",
+      "category": "Operations",
+      "score": 0.85,
+      "cached_at": "2026-10-29T06:48:25.7428336+00:00"
+    },
+    {
+      "cache_key": "8ab6c32a743b1db5e490643c208c2b4160025378fa6ea2580471c2410a2c3942",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/node-auto-repair-errors.md",
+      "summary": "This article has been enhanced to provide a clearer understanding of common node auto-repair errors in AKS, including a table of error codes and best practices for monitoring and responding to errors.",
+      "category": "Operations",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7428168+00:00"
+    },
+    {
+      "cache_key": "a27874d72c09eba17fcdd845a488765ad40f8e0153fd2e3c5004dba85382e8e0",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-arc/kubernetes/quickstart-connect-cluster.md",
+      "summary": "The ResourceId in the quickstart guide for connecting an existing Kubernetes cluster to Azure Arc has been updated to reflect a new subscription ID. This change is important for users following the tutorial to ensure they are using the correct resource path.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7427976+00:00"
+    },
+    {
+      "cache_key": "5b1e94189fe7d39181f1b09efebf7089b735a4be27b2b31194f30d13c5c9fb1e",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-helm.md",
+      "summary": "The documentation has been updated to reflect the use of version 1.12.4 of the Application Gateway for Containers ALB Controller in the Helm commands. Users should now reference this updated version when deploying the Application Gateway for Containers to ensure they are using the latest features and fixes.",
+      "category": "Networking",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7427769+00:00"
+    },
+    {
+      "cache_key": "296fa497b377eaac8b0121af1b272f709a88a8cc214e9b97f7a5238a006cf0c9",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/connectivity/troubleshoot-microsoft-entra-ssh-node-access.md",
+      "summary": "New documentation page: Troubleshoot Microsoft Entra SSH access to AKS nodes - Azure | Microsoft Learn. Review the published article and captured content diff.",
+      "category": "Security",
+      "score": 1.0,
+      "cached_at": "2026-10-29T06:48:25.7427597+00:00"
+    },
+    {
+      "cache_key": "c190e8fecc83e096e2b8ec71a763877f22520b7472643ad7a35bbb8d052a47be",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/enable-fips-nodes.md",
+      "summary": "Clarified the process for updating existing Linux node pools to enable or disable FIPS, specifying the transition between FIPS and non-FIPS images and the reimage requirement, which may extend the update time.",
+      "category": "Security",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7427421+00:00"
+    },
+    {
+      "cache_key": "8b77b1b9c519389e624df5cb8d4b6808d4ea209c0f88db447469073d9767ebeb",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/aks/use-capacity-reservation-groups.md",
+      "summary": "The documentation now includes instructions for associating an existing capacity reservation group (CRG) with both new clusters and new system node pools in Azure Kubernetes Service (AKS). Users can create a cluster with a CRG by using the `az aks create` command with the `--assign-identity` and `--crg-id` flags, and they can also add a CRG to a new system node pool using the `az aks nodepool add` command with the `--mode System` and `--crg-id` flags. Additionally, guidance has been clarified for managing non-zonal system node pools without needing to scale them to zero.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "2026-10-29T06:48:25.7427201+00:00"
+    },
+    {
+      "cache_key": "5b63496b8e9752bda504a59d9e6bf91d93c482b54f75d92c76e25fcd181fb2f3",
+      "cache_version": "openai-responses-v1",
+      "file": "support/azure/azure-kubernetes/availability-performance/identify-high-disk-io-latency-containers-aks.md",
+      "summary": "The article now provides guidance on identifying containers causing high disk I/O latency in AKS clusters, enhancing troubleshooting capabilities for performance issues.",
+      "category": "Operations",
+      "score": 0.8,
+      "cached_at": "2026-10-29T06:48:25.7426805+00:00"
     },
     {
       "cache_key": "fbabcef5a368236ad4fc35041164a9a72553e76ecac3ab85497b215511ede750",
@@ -542,19 +542,28 @@
       "cached_at": "10/28/2026 21:10:56"
     },
     {
-      "cache_key": "10c70ec244ea6753a92218be744764aa55c9d8d77a893304caa41d1d06e96ee2",
+      "cache_key": "551f5d54760d909b1c4e18b37ed4912d44b9ddd84f1fe48777378994bc26f551",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-migrate-os-guard-aks.md",
-      "summary": "This tutorial guides users through migrating nodes to Azure Linux with OS Guard, detailing prerequisites, commands, and considerations for in-place OS SKU migration. It emphasizes the upcoming retirement of Azure Linux with OS Guard and the transition to Azure Container Linux.",
+      "file": "articles/azure-linux/deploy-azure-linux-aks-cli.md",
+      "summary": "This article provides a comprehensive quickstart guide for deploying an Azure Linux Container Host for an AKS cluster using the Azure CLI. It includes prerequisites, environment variable setup, resource group creation, cluster creation, and application deployment steps, along with example commands and outputs.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "da8796b46f4347d5940c6fc2be56115c53481732e4fa39d2358db8fbdf589733",
+      "cache_key": "8af4f76b6182a13d79712de077d26b9d70185a74a68fe193a2feb9d2d8be93fd",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/get-started-aks.md",
-      "summary": "This article introduces Azure Linux for AKS, comparing the Azure Linux Container Host and Azure Container Linux (ACL). It provides guidance on selecting the appropriate OS based on workload requirements and outlines the key differences between the two options.",
+      "file": "articles/azure-linux/get-started-system-management.md",
+      "summary": "This article introduces core operational tasks for managing Azure Linux deployments, covering topics such as kernel configuration, network setup, and system monitoring. It serves as a guide to effectively configure and manage Azure Linux environments.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "e640b304bba1f67238865923486dd425e4ee4874fcf25b08568465dda8236d77",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/deploy-azure-linux-aks-powershell.md",
+      "summary": "This quickstart guide details how to deploy an Azure Linux Container Host for an AKS cluster using Azure PowerShell, covering prerequisites, resource group creation, cluster deployment, and application deployment.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
@@ -569,192 +578,12 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "2e3eea76ca459c921478fc77d07da9fba745dc7ca93abefd1d43f2777dd1fcad",
+      "cache_key": "45e19b37d85b5522613f8bd8c789ec857dfdf7c2881514bc061c0011c6bb180f",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-add-azure-container-linux-node-pool.md",
-      "summary": "This tutorial explains how to add an Azure Container Linux (ACL) node pool to an existing AKS cluster, including prerequisites, considerations, and commands for adding and checking the status of node pools.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "081d217ef792348dbdb99274076ba33877353562089275ecd72ab7f9b76b34d6",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/package-repositories.md",
-      "summary": "This article provides an overview of Azure Linux package repositories, detailing how to discover packages, the structure of repositories, and the purpose of different repository components. It also notes that Azure Linux 4.0 is in preview.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "3db2c5047d4b8c39581f38b78529c77f49a4a829fcc7e616707ffb4434867dec",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/support-options.md",
-      "summary": "This article details the official support options available for Azure Linux, including how to get production support and report issues. It clarifies the scope of Microsoft support, emphasizing that it applies only to Azure scenarios, and provides information on community engagement opportunities.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "197c9dcab1b3efe799b300875f5fdbdb9b69c490810067d617fc9009de40e5c5",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/storage-file-system-management.md",
-      "summary": "This article explains how to manage storage and filesystems on Azure Linux, including identifying the root filesystem, discovering available filesystem packages, and using standard utilities for filesystem management. It also covers how to force a filesystem check on the next boot.",
-      "category": "Storage",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "11cd86c9f942a074d7b5242c71aba6902e04be9e0e7ec425255ab1b0f603f999",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/azure-container-linux-overview.md",
-      "summary": "This article provides an overview of Azure Container Linux (ACL), an immutable, container-optimized OS for Azure Kubernetes Service (AKS). It details the benefits, key features, and migration options for ACL, along with important retirement information for Azure Linux with OS Guard. ACL is generally available starting AKS v1.34.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "4233b66fcce49587596bf09d96f32ceb954e1eeec4e9edc32ea4062d7f62743e",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-add-azure-linux-node-pool.md",
-      "summary": "This tutorial explains how to add an Azure Linux node pool to an existing AKS cluster, including prerequisites, environment variable setup, and commands for adding and checking the status of node pools. It builds on previous tutorials for a comprehensive learning experience.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "dd729ca0e517c2de0828a94fe11339f3d96ae638cf52e12903cc274fb8993269",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/get-started-windows-subsystem-for-linux.md",
-      "summary": "This guide assists users in installing Azure Linux on Windows Subsystem for Linux (WSL) and using it as a local development environment. It includes prerequisites, installation steps, verification of installation, and optional integration with Visual Studio Code.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "9cae0e5ee9623416ea2bfbbcf26b5c84c54cb47d6a7b2d5890155a067304c044",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-create-cluster-azure-container-linux-aks.md",
-      "summary": "This tutorial guides users through the process of creating a cluster with Azure Container Linux for Azure Kubernetes Service. It includes prerequisites, considerations, and detailed commands for setting up the environment, creating a resource group, and deploying the cluster, along with verification steps.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "bb2e5d5332336e421ce11f1dada70873b74e5eb6b9b5205ccfc2643d6f266095",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/contribute-to-code.md",
-      "summary": "This article outlines how to contribute to Azure Linux code, detailing the process for submitting pull requests, fixing bugs, and adding features. It emphasizes the importance of targeting Azure-supported scenarios and provides best practices for contributions, including the need for prior issue approval and adherence to a recommended workflow.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "623a2fb67db6442336d6c2b1e28007c9090ac1877335e34984d062913186aa88",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/whats-new-azure-linux-4.md",
-      "summary": "This article details the new features in Azure Linux 4.0, including a new kernel, package manager, and updated core libraries. It highlights key components and improvements, providing insights into the structure of the operating system.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "4f7f39ca29b4c37c0ceecb838a1405b08546179bf68bfdd1867cac3aca728664",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/troubleshoot-package-upgrade-aks.md",
-      "summary": "This article provides guidance on troubleshooting package upgrade issues on the Azure Linux Container Host for AKS. It explains the default behavior of `dnf-automatic`, symptoms of upgrade failures, underlying causes, and recommended solutions.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "16c686c9f80ecfd8b3904b49b37beb55ccd0189aea3c6d0371d1ed3c5195cd79",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-monitor-os-guard-aks.md",
-      "summary": "This tutorial provides detailed instructions on enabling telemetry and monitoring for Azure Linux with OS Guard clusters. It includes important retirement dates for Azure Linux with OS Guard and emphasizes the need to migrate to Azure Container Linux. The tutorial covers prerequisites, considerations, and step-by-step commands for enabling monitoring and verifying deployments.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "9ea362a04bbfb83d7effcee04b8be6bc508a83b24ffa1097c6699e330f8a310b",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/pod-sandboxing-aks.md",
-      "summary": "This article explains Pod Sandboxing on AKS, detailing its isolation features, limitations, and deployment steps. It includes prerequisites for using Pod Sandboxing and how to deploy applications with the Kata runtime.",
+      "file": "articles/azure-linux/quick-deploy-os-guard-cli.md",
+      "summary": "This quickstart guides users on deploying an Azure Linux with OS Guard AKS cluster using the Azure CLI. It includes important notes on the retirement of Azure Linux with OS Guard and prerequisites for deployment.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "d692538505faaebc35eab6c3e75aed8d184cf6ddc64d620fd6faf4ea293d4acb",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/deploy-azure-linux-aks-terraform.md",
-      "summary": "This article provides a comprehensive quickstart guide for deploying an Azure Linux Container Host for AKS using Terraform. It includes prerequisites, detailed steps for creating SSH keys, implementing Terraform code, and verifying the deployment. The guide emphasizes the importance of following the execution plan and offers troubleshooting tips.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "657e3657578d74115c4b67b36a2bb3034cba7d5e3031bf169e9b7a990332fa97",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/azure-linux-vm-vmss-overview.md",
-      "summary": "This article provides an overview of deploying Azure Linux on Azure Virtual Machines (VMs) and Virtual Machine Scale Sets, including available images, supported VM sizes, and disk size configurations.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "d3fe7597fabe047cefc992b555bac4ffd0d40597cf96eaa6040dd2e32b8699d8",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/container-images-overview.md",
-      "summary": "This article provides an overview of Azure Linux container images, including standard base images and distroless images. It discusses their intended use cases and tagging policies, emphasizing security and minimalism in container design.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "7e46fb8e6bd4e9291e51a228a4832de149b6346cc717430c2dee55ee847af578",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/troubleshoot-kernel-version.md",
-      "summary": "This article addresses issues with outdated kernel versions in Azure Linux Container Host node images, providing troubleshooting steps, symptoms, causes, and solutions for ensuring nodes run the latest kernel versions.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "1c58ca8a87d8b829d071c59b1c7ba1e9123fec67dcfa16b5c3120be1e5ac8704",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/architecture.md",
-      "summary": "This article outlines the architecture of Azure Linux, detailing its layered structure, relationship with Fedora, and security features. It discusses the default networking and storage settings, as well as the security architecture, including mandatory access control and cryptography.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "876e2d19e0f85305772f60dee7f90a89a63d387b3d3c219ad890f3d28ed90ab1",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/azure-linux-overview.md",
-      "summary": "This article introduces Azure Linux, a Microsoft-maintained open-source Linux distribution optimized for Azure. It details its features, benefits, and deployment options across various Azure environments, emphasizing its security and operational capabilities.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "447a94e80496f5402dd1c62f81fefa2e5545111558d4937e40bfe7cc32a3a0d0",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/get-started-azure-linux.md",
-      "summary": "This article introduces a set of quickstart tutorials for deploying and using Azure Linux in various environments. It highlights that Azure Linux 4.0 is in preview and not suitable for production use, along with quickstart options for creating VMs and deploying AKS clusters.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "751beeca35230e2afc439b53c53c89aa6d6cc4c68688fe94b6e2dc73def46dc8",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/contribute-to-docs.md",
-      "summary": "This article outlines how to contribute to the Azure Linux documentation, detailing in-scope and out-of-scope contributions, style guidelines, and the process for submitting documentation changes. It emphasizes the importance of opening an issue before submitting a pull request.",
-      "category": "General",
-      "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
     },
     {
@@ -762,6 +591,15 @@
       "cache_version": "openai-responses-v1",
       "file": "articles/azure-linux/windows-subsystem-for-linux-overview.md",
       "summary": "This article provides an overview of Azure Linux on Windows Subsystem for Linux (WSL), detailing its features, installation process, and supported architectures. It includes links to resources for getting started and developing in WSL.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "adba01bf2438c14b2422f79f2c2cdbe0ae7d3d5f94a4e6d4c6fef255582ba4a4",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-add-os-guard-node-pool.md",
+      "summary": "This tutorial explains how to add an Azure Linux with OS Guard node pool to an existing AKS cluster. It includes important retirement information for Azure Linux with OS Guard and provides prerequisites, considerations, and commands for adding the node pool.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
@@ -776,37 +614,82 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "7b1853dd01b0398f86e5abe6ccb56887d9eb643bf32a95daea7d6c9fb4a0ff65",
+      "cache_key": "2951aafed949eee906e3e99d6bab931dfa4fc5a49274008d740756acfd6c269e",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/os-guard-overview.md",
-      "summary": "This article discusses Azure Linux with OS Guard for AKS, detailing its features, benefits, and key considerations. It includes important retirement dates for the service and emphasizes the need to migrate to Azure Container Linux for continued support.",
+      "file": "articles/azure-linux/tutorial-create-cluster-os-guard-aks.md",
+      "summary": "This tutorial outlines the steps to create a cluster with Azure Linux with OS Guard for AKS, including prerequisites and considerations. It also notes the upcoming retirement of Azure Linux with OS Guard and encourages migration to Azure Container Linux.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "122282e33c5628c2ab537e079c7f6a6481f0c161892aae5fe3549d45a0ac4fd3",
+      "cache_key": "1c58ca8a87d8b829d071c59b1c7ba1e9123fec67dcfa16b5c3120be1e5ac8704",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/selinux-toggle-troubleshoot.md",
-      "summary": "This article provides guidance on switching SELinux from enforcing mode to permissive mode on Azure Container Linux nodes in AKS for troubleshooting. It includes prerequisites, resolution steps for creating or updating node pools, and verification methods.",
+      "file": "articles/azure-linux/architecture.md",
+      "summary": "This article outlines the architecture of Azure Linux, detailing its layered structure, relationship with Fedora, and security features. It discusses the default networking and storage settings, as well as the security architecture, including mandatory access control and cryptography.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "e46711114891a61620444ce45ac0dce178b6772bd0f4e84acbc6460069f4c2bd",
+      "cache_key": "16c686c9f80ecfd8b3904b49b37beb55ccd0189aea3c6d0371d1ed3c5195cd79",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-create-cluster-azure-linux-aks.md",
-      "summary": "This tutorial provides a comprehensive guide on creating a cluster with the Azure Linux Container Host for Azure Kubernetes Service (AKS). It includes prerequisites, environment variable setup, resource group creation, and commands for deploying and connecting to the AKS cluster.",
+      "file": "articles/azure-linux/tutorial-monitor-os-guard-aks.md",
+      "summary": "This tutorial provides detailed instructions on enabling telemetry and monitoring for Azure Linux with OS Guard clusters. It includes important retirement dates for Azure Linux with OS Guard and emphasizes the need to migrate to Azure Container Linux. The tutorial covers prerequisites, considerations, and step-by-step commands for enabling monitoring and verifying deployments.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "09b668f09250a19ebb192fa945da4a10c43f687489ae51f03429aca983b6cf6c",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/manage-cves.md",
+      "summary": "This article explains how to manage Common Vulnerabilities and Exposures (CVEs) on Azure Linux and Azure Container Linux. It details the CVE identification and patching process, the responsibilities of Microsoft, and the delivery mechanisms for CVE fixes across different deployment options.",
+      "category": "Security",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "2445301aa438cda7a0fc23037c5da0df762dd486708286f5c11874746f995d50",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/kernel-management.md",
+      "summary": "This article explains how to manage the Azure Linux kernel, including inspecting the running kernel, working with kernel modules, and modifying kernel parameters at runtime. It also covers enabling kdump for crash dump management.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "c0814cd10b77b93046d5ed5bad05dd490a86db875d3a97b0d810786e77415874",
+      "cache_key": "5df77635dbb8958ecb75e8af35352a8f0ebf4342d20391e8bf985b297b0b1efb",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/get-started-developer.md",
-      "summary": "This article covers common developer tasks on Azure Linux, including building RPM packages, customizing images, and managing certificates. It notes that Azure Linux 4.0 is in preview and not suitable for production use.",
+      "file": "articles/azure-linux/tutorial-upgrade-azure-linux-nodes.md",
+      "summary": "This tutorial provides instructions for upgrading Azure Linux Container Host nodes, covering both manual and automatic upgrade processes. It emphasizes the importance of keeping clusters updated and secured, and includes commands for upgrading node images and enabling automatic package upgrades.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "a7019065a629d758a1912320375917b19121018873f0e06687ec71fac8be2481",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/logging-monitoring.md",
+      "summary": "The article explains logging and monitoring on Azure Linux, focusing on the use of systemd journal for log management and various commands for monitoring system health and performance. It also covers traditional log files and auditing tools available on Azure Linux.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "74ec0fc74f6e474cd32b8f793caf816c32e5857c14a4bd113d492d8cba5ef797",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/report-issues-request-features.md",
+      "summary": "This article explains how to report bugs, documentation issues, and security vulnerabilities, and how to request new features for Azure Linux. It includes important notes on support scope and guidance on filing issues effectively.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "11cd86c9f942a074d7b5242c71aba6902e04be9e0e7ec425255ab1b0f603f999",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/azure-container-linux-overview.md",
+      "summary": "This article provides an overview of Azure Container Linux (ACL), an immutable, container-optimized OS for Azure Kubernetes Service (AKS). It details the benefits, key features, and migration options for ACL, along with important retirement information for Azure Linux with OS Guard. ACL is generally available starting AKS v1.34.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
@@ -830,120 +713,12 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "8d19859b38024ba6a8d8190a28d7628834739e780ff6e1c9ef955035d4fd378f",
+      "cache_key": "37129982c64141d03d760bb0b5da519bc49a3f2d45dc2af8590ca1ad3d2b1324",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/configure-networking.md",
-      "summary": "This article provides a comprehensive guide on configuring networking on Azure Linux using systemd-networkd. It covers managing the service, configuring network interfaces, and troubleshooting network states, along with examples for DHCP and static IP configurations. Note that Azure Linux 4.0 is in preview and not suitable for production use.",
-      "category": "Networking",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "b2f2371ada12e94116868ebf1c5367a37f4f9f096ac819a53efae61e6b85710d",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-upgrade-azure-container-linux-nodes.md",
-      "summary": "This tutorial explains how to upgrade Azure Container Linux (ACL) nodes, covering both manual and automatic upgrade processes. It emphasizes the importance of keeping clusters updated and provides commands for managing upgrades.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "ecb12ca794086bf3eeb16bcfe5dee25c6c7c85974c8236c40689bea1c9e05911",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/ecosystem-support.md",
-      "summary": "This article introduces Azure Linux Partner Solutions, detailing various partners and their validated solutions for Azure Linux. It includes a comprehensive list of partners, their categories, and the solutions they offer, emphasizing the collaborative effort to optimize application performance on Azure Linux.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "1bf3a431160347e0060082b1824c3c7064ddf5831e1ab6dc52c0bcb982570024",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/how-to-contribute.md",
-      "summary": "This article outlines how to contribute to Azure Linux, detailing the scope of contributions, ways to contribute, and community expectations. It emphasizes that contributions are limited to Azure Linux on Azure scenarios and provides guidance on the correct repositories for different types of changes.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "c094df1c9e0e61dbb0b7e9e9254e2a4613d1f66d38b0d747aeafc23e17385550",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/security-overview.md",
-      "summary": "This article discusses the security model of Azure Linux, detailing its secure-by-default design, core security features, and recommendations for validating security settings. It highlights the importance of security in the Azure Linux environment.",
-      "category": "Security",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "7ef9b1b582dee45e4db025bf137115a5545cae60c9d5aa438ec71ec717ab4c24",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-monitor-azure-container-linux-aks.md",
-      "summary": "This tutorial guides users through enabling telemetry and monitoring for Azure Container Linux (ACL) clusters. It covers prerequisites, connection steps, and detailed commands for enabling monitoring using both default and specified Log Analytics workspaces.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "e640b304bba1f67238865923486dd425e4ee4874fcf25b08568465dda8236d77",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/deploy-azure-linux-aks-powershell.md",
-      "summary": "This quickstart guide details how to deploy an Azure Linux Container Host for an AKS cluster using Azure PowerShell, covering prerequisites, resource group creation, cluster deployment, and application deployment.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "46211352283be8b97294fa733187b9f7fbf81e054f2e4f8d745df02794ec633b",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/aks-support-cycle.md",
-      "summary": "This article outlines the support lifecycle for the Azure Linux Container Host for Azure Kubernetes Service (AKS), detailing image releases, major and minor release schedules, and long-term support (LTS) releases.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "035c3a326616e9235d62e96616fbbc05570c607206948cbf8026dccc1989d73b",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/aks-core-concepts.md",
-      "summary": "This article introduces the Azure Linux Container Host for AKS, detailing Microsoft's management of CVEs, feature requests, upgrades, and image validation. It includes sections on CVE infrastructure, feature additions, and testing processes to ensure quality before deployment.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "a7019065a629d758a1912320375917b19121018873f0e06687ec71fac8be2481",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/logging-monitoring.md",
-      "summary": "The article explains logging and monitoring on Azure Linux, focusing on the use of systemd journal for log management and various commands for monitoring system health and performance. It also covers traditional log files and auditing tools available on Azure Linux.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "f56f819fceeef54ccd27d1affd220428690c2dddb58e068211c5708bbe474c18",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/manage-packages.md",
-      "summary": "This article covers common package management tasks on Azure Linux using DNF5, including repository configuration, command mappings, and how to enable unattended updates. It also discusses handling install-only packages and provides frequently used DNF commands.",
+      "file": "articles/azure-linux/quick-create-vm-portal.md",
+      "summary": "This quickstart provides steps to create an Azure Linux Virtual Machine in the Azure portal, covering VM configuration, SSH access, and resource cleanup. It emphasizes that Azure Linux 4.0 is in preview and not suitable for production use.",
       "category": "General",
       "score": 0.9,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "d265579b8fc0d4ac66924da135caa19570acd461484ba35fbddd3c06d86d48c7",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/quick-create-azure-container-linux-aks.md",
-      "summary": "This quickstart guide demonstrates how to deploy Azure Container Linux for Azure Kubernetes Service (AKS). It covers prerequisites, environment variable setup, resource group creation, AKS cluster deployment, and verification of the cluster connection.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "1cc864d1c9143f4d32a6d3093c3e1e0b0bf926bac783f1b97c623222fd76a439",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/certificate-management.md",
-      "summary": "This article outlines how Azure Linux manages trusted root certificates and how to add custom certificates to Azure Linux images. It discusses the use of Fedora's `ca-certificates` package and provides guidance on installing certificates.",
-      "category": "General",
-      "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
     },
     {
@@ -956,118 +731,10 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "24df2296b97feec532791bf2853db935f5c63c039b181f1602ebe8e9ed5e033b",
+      "cache_key": "0c3392bc9c98bb80e184a068b1df4f522c8e33a5109c8a8ee190f10b9144df3c",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/azure-linux-aks-overview.md",
-      "summary": "This article offers an overview of the Azure Linux Container Host, highlighting its lightweight design, security features, and compatibility with Azure Kubernetes Service (AKS). It also discusses the key benefits and supported GPU VM sizes for running container workloads.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "45e19b37d85b5522613f8bd8c789ec857dfdf7c2881514bc061c0011c6bb180f",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/quick-deploy-os-guard-cli.md",
-      "summary": "This quickstart guides users on deploying an Azure Linux with OS Guard AKS cluster using the Azure CLI. It includes important notes on the retirement of Azure Linux with OS Guard and prerequisites for deployment.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "1ac166f34737b113391961ec5e92f9862626ddb274dfaca38c7f55c546c74489",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/create-vm-azure-linux-4-0.md",
-      "summary": "This article provides a comprehensive guide on creating an Azure Linux 4.0 virtual machine using various methods including the Azure portal, CLI, ARM templates, and Terraform. It emphasizes that Azure Linux 4.0 is in preview and not for production use.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "6cbeecc53e504f6071cd5d3b355be0fa3cc505b320b3ae92c1cf8420b3b1ca25",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/deploy-azure-linux-aks-arm.md",
-      "summary": "This quickstart guide details how to deploy an Azure Linux Container Host for an AKS cluster using an ARM template. It includes prerequisites, template review, and deployment steps, emphasizing the use of Azure Linux.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "2445301aa438cda7a0fc23037c5da0df762dd486708286f5c11874746f995d50",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/kernel-management.md",
-      "summary": "This article explains how to manage the Azure Linux kernel, including inspecting the running kernel, working with kernel modules, and modifying kernel parameters at runtime. It also covers enabling kdump for crash dump management.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "60094e9c6cf6a471077929e8955f4966a03935e4662675d05a36eb89f58b248f",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-upgrade-os-guard-nodes.md",
-      "summary": "This tutorial outlines the process for upgrading Azure Linux with OS Guard nodes, including prerequisites, considerations, and commands for manual and automatic upgrades. It also highlights the retirement timeline for Azure Linux with OS Guard.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "b54a5a6b79bcdb50362c82edeaac55a600b8a4e0afe58d8eb9eb8afad82da90d",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-migrate-azure-linux-aks.md",
-      "summary": "This tutorial provides detailed steps for migrating existing nodes to Azure Linux, including prerequisites, commands, and considerations for in-place OS SKU migration. It highlights the retirement of Azure Linux with OS Guard and the need to migrate to Azure Container Linux before specified deadlines.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "d70c240ddba8a13e6e0c30a9badf5464eb2a471d5ec02b767c738fd554030179",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/quick-create-azure-linux-aks.md",
-      "summary": "This quickstart guide outlines the steps to create a cluster with the Azure Linux Container Host for AKS, including prerequisites, environment variable setup, and commands for creating a resource group and deploying the cluster. It notes that Azure Linux 4.0 is in preview and not suitable for production use.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "74ec0fc74f6e474cd32b8f793caf816c32e5857c14a4bd113d492d8cba5ef797",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/report-issues-request-features.md",
-      "summary": "This article explains how to report bugs, documentation issues, and security vulnerabilities, and how to request new features for Azure Linux. It includes important notes on support scope and guidance on filing issues effectively.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "551f5d54760d909b1c4e18b37ed4912d44b9ddd84f1fe48777378994bc26f551",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/deploy-azure-linux-aks-cli.md",
-      "summary": "This article provides a comprehensive quickstart guide for deploying an Azure Linux Container Host for an AKS cluster using the Azure CLI. It includes prerequisites, environment variable setup, resource group creation, cluster creation, and application deployment steps, along with example commands and outputs.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "33a7d19e40c709786b73cba5ba4823a84eccd01549d466b79c87693a37868405",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/quick-deploy-azure-container-linux-aks-cli.md",
-      "summary": "This quickstart guide details the steps to deploy an Azure Kubernetes Service (AKS) cluster using Azure Container Linux (ACL) as the node operating system. It covers prerequisites, resource group creation, cluster creation, and application deployment, along with considerations and limitations for ACL.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "bb42ee47a7d5c4e0ed7d018cc610ac1d842bf5ff1432e4a79f6f57778f630098",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-monitor-azure-linux-aks.md",
-      "summary": "This tutorial guides users on enabling telemetry and monitoring for their Azure Linux Container Host cluster. It includes steps for connecting to the cluster, enabling monitoring, and verifying the deployment of monitoring solutions.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "036901d1158f84a5893d0112605fd7e3f6e8a67008894243aa63a39a6b287626",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/quick-deploy-os-guard-arm.md",
-      "summary": "This quickstart guide explains how to deploy an Azure Linux with OS Guard for AKS cluster using an ARM template. It includes important retirement dates for Azure Linux with OS Guard and instructions for setting up the deployment.",
+      "file": "articles/azure-linux/aks-packages.md",
+      "summary": "This article provides an overview of the Azure Linux Container Host packages for AKS, detailing how to view the package list for a given node image version and determine the versions of packages installed in a running cluster. It includes commands for listing installed packages and checking installation dates.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
@@ -1082,10 +749,64 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "ef5776331b1594944eaae86b9b1416f6866ecb39db42fc2db596d11715763131",
+      "cache_key": "036901d1158f84a5893d0112605fd7e3f6e8a67008894243aa63a39a6b287626",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/install-debug-symbol-packages.md",
-      "summary": "This article explains how to install debug symbol packages on Azure Linux, detailing the prerequisites, repository setup, and installation process for `debuginfo` RPMs. It highlights that Azure Linux 4.0 is in preview and not for production use.",
+      "file": "articles/azure-linux/quick-deploy-os-guard-arm.md",
+      "summary": "This quickstart guide explains how to deploy an Azure Linux with OS Guard for AKS cluster using an ARM template. It includes important retirement dates for Azure Linux with OS Guard and instructions for setting up the deployment.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "122282e33c5628c2ab537e079c7f6a6481f0c161892aae5fe3549d45a0ac4fd3",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/selinux-toggle-troubleshoot.md",
+      "summary": "This article provides guidance on switching SELinux from enforcing mode to permissive mode on Azure Container Linux nodes in AKS for troubleshooting. It includes prerequisites, resolution steps for creating or updating node pools, and verification methods.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "24df2296b97feec532791bf2853db935f5c63c039b181f1602ebe8e9ed5e033b",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/azure-linux-aks-overview.md",
+      "summary": "This article offers an overview of the Azure Linux Container Host, highlighting its lightweight design, security features, and compatibility with Azure Kubernetes Service (AKS). It also discusses the key benefits and supported GPU VM sizes for running container workloads.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "6cbeecc53e504f6071cd5d3b355be0fa3cc505b320b3ae92c1cf8420b3b1ca25",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/deploy-azure-linux-aks-arm.md",
+      "summary": "This quickstart guide details how to deploy an Azure Linux Container Host for an AKS cluster using an ARM template. It includes prerequisites, template review, and deployment steps, emphasizing the use of Azure Linux.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "94a6d777c8c34ba7a226fb97c2783a10b5c4cfc11935a4202adffccc595b6873",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/supported-azure-services.md",
+      "summary": "This article outlines the supported Azure services in Azure Linux, including agents, extensions, and add-ons available for Azure Kubernetes Service (AKS). It emphasizes that Azure Linux 4.0 is in preview and not suitable for production use.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "c094df1c9e0e61dbb0b7e9e9254e2a4613d1f66d38b0d747aeafc23e17385550",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/security-overview.md",
+      "summary": "This article discusses the security model of Azure Linux, detailing its secure-by-default design, core security features, and recommendations for validating security settings. It highlights the importance of security in the Azure Linux environment.",
+      "category": "Security",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "876e2d19e0f85305772f60dee7f90a89a63d387b3d3c219ad890f3d28ed90ab1",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/azure-linux-overview.md",
+      "summary": "This article introduces Azure Linux, a Microsoft-maintained open-source Linux distribution optimized for Azure. It details its features, benefits, and deployment options across various Azure environments, emphasizing its security and operational capabilities.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
@@ -1100,60 +821,6 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "37129982c64141d03d760bb0b5da519bc49a3f2d45dc2af8590ca1ad3d2b1324",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/quick-create-vm-portal.md",
-      "summary": "This quickstart provides steps to create an Azure Linux Virtual Machine in the Azure portal, covering VM configuration, SSH access, and resource cleanup. It emphasizes that Azure Linux 4.0 is in preview and not suitable for production use.",
-      "category": "General",
-      "score": 0.9,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "0c3392bc9c98bb80e184a068b1df4f522c8e33a5109c8a8ee190f10b9144df3c",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/aks-packages.md",
-      "summary": "This article provides an overview of the Azure Linux Container Host packages for AKS, detailing how to view the package list for a given node image version and determine the versions of packages installed in a running cluster. It includes commands for listing installed packages and checking installation dates.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "5df77635dbb8958ecb75e8af35352a8f0ebf4342d20391e8bf985b297b0b1efb",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-upgrade-azure-linux-nodes.md",
-      "summary": "This tutorial provides instructions for upgrading Azure Linux Container Host nodes, covering both manual and automatic upgrade processes. It emphasizes the importance of keeping clusters updated and secured, and includes commands for upgrading node images and enabling automatic package upgrades.",
-      "category": "Operations",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "94a6d777c8c34ba7a226fb97c2783a10b5c4cfc11935a4202adffccc595b6873",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/supported-azure-services.md",
-      "summary": "This article outlines the supported Azure services in Azure Linux, including agents, extensions, and add-ons available for Azure Kubernetes Service (AKS). It emphasizes that Azure Linux 4.0 is in preview and not suitable for production use.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "8af4f76b6182a13d79712de077d26b9d70185a74a68fe193a2feb9d2d8be93fd",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/get-started-system-management.md",
-      "summary": "This article introduces core operational tasks for managing Azure Linux deployments, covering topics such as kernel configuration, network setup, and system monitoring. It serves as a guide to effectively configure and manage Azure Linux environments.",
-      "category": "General",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
-      "cache_key": "09b668f09250a19ebb192fa945da4a10c43f687489ae51f03429aca983b6cf6c",
-      "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/manage-cves.md",
-      "summary": "This article explains how to manage Common Vulnerabilities and Exposures (CVEs) on Azure Linux and Azure Container Linux. It details the CVE identification and patching process, the responsibilities of Microsoft, and the delivery mechanisms for CVE fixes across different deployment options.",
-      "category": "Security",
-      "score": 1.0,
-      "cached_at": "10/28/2026 19:40:59"
-    },
-    {
       "cache_key": "b6e0f5c761612c5a73651a2eab3181050d4c73e6fc4afe1d93a66b03017e0a51",
       "cache_version": "openai-responses-v1",
       "file": "articles/azure-linux/tutorial-migrate-azure-container-linux-aks.md",
@@ -1163,10 +830,127 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "2951aafed949eee906e3e99d6bab931dfa4fc5a49274008d740756acfd6c269e",
+      "cache_key": "f56f819fceeef54ccd27d1affd220428690c2dddb58e068211c5708bbe474c18",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-create-cluster-os-guard-aks.md",
-      "summary": "This tutorial outlines the steps to create a cluster with Azure Linux with OS Guard for AKS, including prerequisites and considerations. It also notes the upcoming retirement of Azure Linux with OS Guard and encourages migration to Azure Container Linux.",
+      "file": "articles/azure-linux/manage-packages.md",
+      "summary": "This article covers common package management tasks on Azure Linux using DNF5, including repository configuration, command mappings, and how to enable unattended updates. It also discusses handling install-only packages and provides frequently used DNF commands.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "4233b66fcce49587596bf09d96f32ceb954e1eeec4e9edc32ea4062d7f62743e",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-add-azure-linux-node-pool.md",
+      "summary": "This tutorial explains how to add an Azure Linux node pool to an existing AKS cluster, including prerequisites, environment variable setup, and commands for adding and checking the status of node pools. It builds on previous tutorials for a comprehensive learning experience.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "9ea362a04bbfb83d7effcee04b8be6bc508a83b24ffa1097c6699e330f8a310b",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/pod-sandboxing-aks.md",
+      "summary": "This article explains Pod Sandboxing on AKS, detailing its isolation features, limitations, and deployment steps. It includes prerequisites for using Pod Sandboxing and how to deploy applications with the Kata runtime.",
+      "category": "General",
+      "score": 0.9,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "8d19859b38024ba6a8d8190a28d7628834739e780ff6e1c9ef955035d4fd378f",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/configure-networking.md",
+      "summary": "This article provides a comprehensive guide on configuring networking on Azure Linux using systemd-networkd. It covers managing the service, configuring network interfaces, and troubleshooting network states, along with examples for DHCP and static IP configurations. Note that Azure Linux 4.0 is in preview and not suitable for production use.",
+      "category": "Networking",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "7ef9b1b582dee45e4db025bf137115a5545cae60c9d5aa438ec71ec717ab4c24",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-monitor-azure-container-linux-aks.md",
+      "summary": "This tutorial guides users through enabling telemetry and monitoring for Azure Container Linux (ACL) clusters. It covers prerequisites, connection steps, and detailed commands for enabling monitoring using both default and specified Log Analytics workspaces.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "d3fe7597fabe047cefc992b555bac4ffd0d40597cf96eaa6040dd2e32b8699d8",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/container-images-overview.md",
+      "summary": "This article provides an overview of Azure Linux container images, including standard base images and distroless images. It discusses their intended use cases and tagging policies, emphasizing security and minimalism in container design.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "1ac166f34737b113391961ec5e92f9862626ddb274dfaca38c7f55c546c74489",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/create-vm-azure-linux-4-0.md",
+      "summary": "This article provides a comprehensive guide on creating an Azure Linux 4.0 virtual machine using various methods including the Azure portal, CLI, ARM templates, and Terraform. It emphasizes that Azure Linux 4.0 is in preview and not for production use.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "035c3a326616e9235d62e96616fbbc05570c607206948cbf8026dccc1989d73b",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/aks-core-concepts.md",
+      "summary": "This article introduces the Azure Linux Container Host for AKS, detailing Microsoft's management of CVEs, feature requests, upgrades, and image validation. It includes sections on CVE infrastructure, feature additions, and testing processes to ensure quality before deployment.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "dd729ca0e517c2de0828a94fe11339f3d96ae638cf52e12903cc274fb8993269",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/get-started-windows-subsystem-for-linux.md",
+      "summary": "This guide assists users in installing Azure Linux on Windows Subsystem for Linux (WSL) and using it as a local development environment. It includes prerequisites, installation steps, verification of installation, and optional integration with Visual Studio Code.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "447a94e80496f5402dd1c62f81fefa2e5545111558d4937e40bfe7cc32a3a0d0",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/get-started-azure-linux.md",
+      "summary": "This article introduces a set of quickstart tutorials for deploying and using Azure Linux in various environments. It highlights that Azure Linux 4.0 is in preview and not suitable for production use, along with quickstart options for creating VMs and deploying AKS clusters.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "c0814cd10b77b93046d5ed5bad05dd490a86db875d3a97b0d810786e77415874",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/get-started-developer.md",
+      "summary": "This article covers common developer tasks on Azure Linux, including building RPM packages, customizing images, and managing certificates. It notes that Azure Linux 4.0 is in preview and not suitable for production use.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "bb42ee47a7d5c4e0ed7d018cc610ac1d842bf5ff1432e4a79f6f57778f630098",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-monitor-azure-linux-aks.md",
+      "summary": "This tutorial guides users on enabling telemetry and monitoring for their Azure Linux Container Host cluster. It includes steps for connecting to the cluster, enabling monitoring, and verifying the deployment of monitoring solutions.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "b54a5a6b79bcdb50362c82edeaac55a600b8a4e0afe58d8eb9eb8afad82da90d",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-migrate-azure-linux-aks.md",
+      "summary": "This tutorial provides detailed steps for migrating existing nodes to Azure Linux, including prerequisites, commands, and considerations for in-place OS SKU migration. It highlights the retirement of Azure Linux with OS Guard and the need to migrate to Azure Container Linux before specified deadlines.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "4f7f39ca29b4c37c0ceecb838a1405b08546179bf68bfdd1867cac3aca728664",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/troubleshoot-package-upgrade-aks.md",
+      "summary": "This article provides guidance on troubleshooting package upgrade issues on the Azure Linux Container Host for AKS. It explains the default behavior of `dnf-automatic`, symptoms of upgrade failures, underlying causes, and recommended solutions.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
@@ -1181,10 +965,226 @@
       "cached_at": "10/28/2026 19:40:59"
     },
     {
-      "cache_key": "adba01bf2438c14b2422f79f2c2cdbe0ae7d3d5f94a4e6d4c6fef255582ba4a4",
+      "cache_key": "2e3eea76ca459c921478fc77d07da9fba745dc7ca93abefd1d43f2777dd1fcad",
       "cache_version": "openai-responses-v1",
-      "file": "articles/azure-linux/tutorial-add-os-guard-node-pool.md",
-      "summary": "This tutorial explains how to add an Azure Linux with OS Guard node pool to an existing AKS cluster. It includes important retirement information for Azure Linux with OS Guard and provides prerequisites, considerations, and commands for adding the node pool.",
+      "file": "articles/azure-linux/tutorial-add-azure-container-linux-node-pool.md",
+      "summary": "This tutorial explains how to add an Azure Container Linux (ACL) node pool to an existing AKS cluster, including prerequisites, considerations, and commands for adding and checking the status of node pools.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "e46711114891a61620444ce45ac0dce178b6772bd0f4e84acbc6460069f4c2bd",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-create-cluster-azure-linux-aks.md",
+      "summary": "This tutorial provides a comprehensive guide on creating a cluster with the Azure Linux Container Host for Azure Kubernetes Service (AKS). It includes prerequisites, environment variable setup, resource group creation, and commands for deploying and connecting to the AKS cluster.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "b2f2371ada12e94116868ebf1c5367a37f4f9f096ac819a53efae61e6b85710d",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-upgrade-azure-container-linux-nodes.md",
+      "summary": "This tutorial explains how to upgrade Azure Container Linux (ACL) nodes, covering both manual and automatic upgrade processes. It emphasizes the importance of keeping clusters updated and provides commands for managing upgrades.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "657e3657578d74115c4b67b36a2bb3034cba7d5e3031bf169e9b7a990332fa97",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/azure-linux-vm-vmss-overview.md",
+      "summary": "This article provides an overview of deploying Azure Linux on Azure Virtual Machines (VMs) and Virtual Machine Scale Sets, including available images, supported VM sizes, and disk size configurations.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "ef5776331b1594944eaae86b9b1416f6866ecb39db42fc2db596d11715763131",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/install-debug-symbol-packages.md",
+      "summary": "This article explains how to install debug symbol packages on Azure Linux, detailing the prerequisites, repository setup, and installation process for `debuginfo` RPMs. It highlights that Azure Linux 4.0 is in preview and not for production use.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "3db2c5047d4b8c39581f38b78529c77f49a4a829fcc7e616707ffb4434867dec",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/support-options.md",
+      "summary": "This article details the official support options available for Azure Linux, including how to get production support and report issues. It clarifies the scope of Microsoft support, emphasizing that it applies only to Azure scenarios, and provides information on community engagement opportunities.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "33a7d19e40c709786b73cba5ba4823a84eccd01549d466b79c87693a37868405",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/quick-deploy-azure-container-linux-aks-cli.md",
+      "summary": "This quickstart guide details the steps to deploy an Azure Kubernetes Service (AKS) cluster using Azure Container Linux (ACL) as the node operating system. It covers prerequisites, resource group creation, cluster creation, and application deployment, along with considerations and limitations for ACL.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "d265579b8fc0d4ac66924da135caa19570acd461484ba35fbddd3c06d86d48c7",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/quick-create-azure-container-linux-aks.md",
+      "summary": "This quickstart guide demonstrates how to deploy Azure Container Linux for Azure Kubernetes Service (AKS). It covers prerequisites, environment variable setup, resource group creation, AKS cluster deployment, and verification of the cluster connection.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "9cae0e5ee9623416ea2bfbbcf26b5c84c54cb47d6a7b2d5890155a067304c044",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-create-cluster-azure-container-linux-aks.md",
+      "summary": "This tutorial guides users through the process of creating a cluster with Azure Container Linux for Azure Kubernetes Service. It includes prerequisites, considerations, and detailed commands for setting up the environment, creating a resource group, and deploying the cluster, along with verification steps.",
+      "category": "Operations",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "46211352283be8b97294fa733187b9f7fbf81e054f2e4f8d745df02794ec633b",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/aks-support-cycle.md",
+      "summary": "This article outlines the support lifecycle for the Azure Linux Container Host for Azure Kubernetes Service (AKS), detailing image releases, major and minor release schedules, and long-term support (LTS) releases.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "10c70ec244ea6753a92218be744764aa55c9d8d77a893304caa41d1d06e96ee2",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-migrate-os-guard-aks.md",
+      "summary": "This tutorial guides users through migrating nodes to Azure Linux with OS Guard, detailing prerequisites, commands, and considerations for in-place OS SKU migration. It emphasizes the upcoming retirement of Azure Linux with OS Guard and the transition to Azure Container Linux.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "751beeca35230e2afc439b53c53c89aa6d6cc4c68688fe94b6e2dc73def46dc8",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/contribute-to-docs.md",
+      "summary": "This article outlines how to contribute to the Azure Linux documentation, detailing in-scope and out-of-scope contributions, style guidelines, and the process for submitting documentation changes. It emphasizes the importance of opening an issue before submitting a pull request.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "7e46fb8e6bd4e9291e51a228a4832de149b6346cc717430c2dee55ee847af578",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/troubleshoot-kernel-version.md",
+      "summary": "This article addresses issues with outdated kernel versions in Azure Linux Container Host node images, providing troubleshooting steps, symptoms, causes, and solutions for ensuring nodes run the latest kernel versions.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "197c9dcab1b3efe799b300875f5fdbdb9b69c490810067d617fc9009de40e5c5",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/storage-file-system-management.md",
+      "summary": "This article explains how to manage storage and filesystems on Azure Linux, including identifying the root filesystem, discovering available filesystem packages, and using standard utilities for filesystem management. It also covers how to force a filesystem check on the next boot.",
+      "category": "Storage",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "623a2fb67db6442336d6c2b1e28007c9090ac1877335e34984d062913186aa88",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/whats-new-azure-linux-4.md",
+      "summary": "This article details the new features in Azure Linux 4.0, including a new kernel, package manager, and updated core libraries. It highlights key components and improvements, providing insights into the structure of the operating system.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "ecb12ca794086bf3eeb16bcfe5dee25c6c7c85974c8236c40689bea1c9e05911",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/ecosystem-support.md",
+      "summary": "This article introduces Azure Linux Partner Solutions, detailing various partners and their validated solutions for Azure Linux. It includes a comprehensive list of partners, their categories, and the solutions they offer, emphasizing the collaborative effort to optimize application performance on Azure Linux.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "bb2e5d5332336e421ce11f1dada70873b74e5eb6b9b5205ccfc2643d6f266095",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/contribute-to-code.md",
+      "summary": "This article outlines how to contribute to Azure Linux code, detailing the process for submitting pull requests, fixing bugs, and adding features. It emphasizes the importance of targeting Azure-supported scenarios and provides best practices for contributions, including the need for prior issue approval and adherence to a recommended workflow.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "d692538505faaebc35eab6c3e75aed8d184cf6ddc64d620fd6faf4ea293d4acb",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/deploy-azure-linux-aks-terraform.md",
+      "summary": "This article provides a comprehensive quickstart guide for deploying an Azure Linux Container Host for AKS using Terraform. It includes prerequisites, detailed steps for creating SSH keys, implementing Terraform code, and verifying the deployment. The guide emphasizes the importance of following the execution plan and offers troubleshooting tips.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "1cc864d1c9143f4d32a6d3093c3e1e0b0bf926bac783f1b97c623222fd76a439",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/certificate-management.md",
+      "summary": "This article outlines how Azure Linux manages trusted root certificates and how to add custom certificates to Azure Linux images. It discusses the use of Fedora's `ca-certificates` package and provides guidance on installing certificates.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "081d217ef792348dbdb99274076ba33877353562089275ecd72ab7f9b76b34d6",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/package-repositories.md",
+      "summary": "This article provides an overview of Azure Linux package repositories, detailing how to discover packages, the structure of repositories, and the purpose of different repository components. It also notes that Azure Linux 4.0 is in preview.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "d70c240ddba8a13e6e0c30a9badf5464eb2a471d5ec02b767c738fd554030179",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/quick-create-azure-linux-aks.md",
+      "summary": "This quickstart guide outlines the steps to create a cluster with the Azure Linux Container Host for AKS, including prerequisites, environment variable setup, and commands for creating a resource group and deploying the cluster. It notes that Azure Linux 4.0 is in preview and not suitable for production use.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "da8796b46f4347d5940c6fc2be56115c53481732e4fa39d2358db8fbdf589733",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/get-started-aks.md",
+      "summary": "This article introduces Azure Linux for AKS, comparing the Azure Linux Container Host and Azure Container Linux (ACL). It provides guidance on selecting the appropriate OS based on workload requirements and outlines the key differences between the two options.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "1bf3a431160347e0060082b1824c3c7064ddf5831e1ab6dc52c0bcb982570024",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/how-to-contribute.md",
+      "summary": "This article outlines how to contribute to Azure Linux, detailing the scope of contributions, ways to contribute, and community expectations. It emphasizes that contributions are limited to Azure Linux on Azure scenarios and provides guidance on the correct repositories for different types of changes.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "60094e9c6cf6a471077929e8955f4966a03935e4662675d05a36eb89f58b248f",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/tutorial-upgrade-os-guard-nodes.md",
+      "summary": "This tutorial outlines the process for upgrading Azure Linux with OS Guard nodes, including prerequisites, considerations, and commands for manual and automatic upgrades. It also highlights the retirement timeline for Azure Linux with OS Guard.",
+      "category": "General",
+      "score": 1.0,
+      "cached_at": "10/28/2026 19:40:59"
+    },
+    {
+      "cache_key": "7b1853dd01b0398f86e5abe6ccb56887d9eb643bf32a95daea7d6c9fb4a0ff65",
+      "cache_version": "openai-responses-v1",
+      "file": "articles/azure-linux/os-guard-overview.md",
+      "summary": "This article discusses Azure Linux with OS Guard for AKS, detailing its features, benefits, and key considerations. It includes important retirement dates for the service and emphasizes the need to migrate to Azure Container Linux for continued support.",
       "category": "General",
       "score": 1.0,
       "cached_at": "10/28/2026 19:40:59"
