@@ -3,7 +3,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { routeFor } = require('./snapshot-changes.cjs');
+const { products: expectedProducts, routeFor } = require('./snapshot-changes.cjs');
 
 function recordHealth(root, { errors, unreached, now = new Date(), runUrl }) {
   for (const [key, value] of Object.entries({ errors, unreached })) {
@@ -17,7 +17,7 @@ function recordHealth(root, { errors, unreached, now = new Date(), runUrl }) {
     if (!fs.existsSync(path.join(root, file))) throw new Error(`Snapshot file missing: ${file}`);
     products.add(routeFor(file).product);
   }
-  if (products.size !== 9) throw new Error(`Incomplete product coverage: ${[...products].join(', ')}`);
+  if (products.size !== expectedProducts.length) throw new Error(`Incomplete product coverage: ${[...products].join(', ')}`);
   const health = {
     schema_version: 1,
     checked_at: now.toISOString(),
@@ -32,8 +32,9 @@ function recordHealth(root, { errors, unreached, now = new Date(), runUrl }) {
 
 function validateHealth(health, now, maxAgeHours = 12) {
   if (health?.schema_version !== 1 || health.complete !== true || health.errors !== 0 || health.unreached !== 0 ||
-      !Number.isSafeInteger(health.article_count) || health.article_count < 9 ||
-      !Array.isArray(health.products) || new Set(health.products).size !== 9) {
+      !Number.isSafeInteger(health.article_count) || health.article_count < expectedProducts.length ||
+      !Array.isArray(health.products) || health.products.length !== expectedProducts.length ||
+      !expectedProducts.every(product => health.products.includes(product))) {
     throw new Error('Latest snapshot collection is missing, incomplete or failed; retain the published page and inspect the collector run.');
   }
   const age = (now - new Date(health.checked_at)) / 3600000;
@@ -54,6 +55,6 @@ if (require.main === module) {
       errors: Number(errors), unreached: Number(unreached),
       runUrl: process.env.GITHUB_SERVER_URL && `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
     });
-    console.log(`Collector health: ${health.complete ? 'complete' : 'INCOMPLETE'}, ${health.article_count} articles across nine products.`);
+    console.log(`Collector health: ${health.complete ? 'complete' : 'INCOMPLETE'}, ${health.article_count} articles across ${health.products.length} products.`);
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

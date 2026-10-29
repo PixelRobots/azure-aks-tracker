@@ -18,6 +18,9 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
   - `MicrosoftDocs/SupportArticles-docs` (AKS support and troubleshooting articles)
   
   Groups changes by page, filters trivial edits, and writes AI summaries with intelligent product categorization.
+  AKS Automatic has its own product category for the Automatic documentation section
+  and overview; troubleshooting articles remain under AKS Support. Both categories
+  use distinct product icons on the tracker and in weekly digests.
   It does not require public GitHub documentation repositories to remain available.
 
 * **AKS and App Net releases**

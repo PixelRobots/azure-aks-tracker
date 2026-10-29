@@ -45,13 +45,65 @@ test('all nine support routes retain the AKS Support product', () => {
   }
 });
 
-test('qualified baseline does not replay existing articles; demo changes cover all nine products', () => fixture(({ build, baseline }) => {
+test('AKS Automatic routes are distinct without reclassifying automatic features or support', () => {
+  for (const file of ['articles/aks/intro-aks-automatic.md',
+    'articles/aks/automatic/quick-automatic-managed-network.md',
+    'articles/aks/automatic/aks-automatic-sku-migration.md']) {
+    const route = routeFor(file);
+    assert.equal(route.product, 'AKS Automatic');
+    assert.equal(route.source.repo, 'MicrosoftDocs/azure-aks-docs');
+  }
+  for (const file of ['articles/aks/what-is-aks.md',
+    'articles/aks/automatic-pod-disruption-budget-management.md',
+    'articles/aks/configure-automatic-zone-placement.md']) {
+    assert.equal(routeFor(file).product, 'AKS');
+  }
+  assert.equal(routeFor('support/azure/azure-kubernetes/create-upgrade-delete/aks-automatic-troubleshoot.md').product, 'AKS Support');
+});
+
+test('product icons distinguish AKS Support and Automatic for snapshot and legacy paths', () => {
+  const script = path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''");
+  const result = spawnSync('pwsh', ['-NoProfile', '-Command', `
+    $ErrorActionPreference='Stop'
+    $ast=[System.Management.Automation.Language.Parser]::ParseFile('${script}',[ref]$null,[ref]$null)
+    foreach ($statement in $ast.EndBlock.Statements) {
+      if ($statement -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+          $statement.Left.Extent.Text -in @('$Repositories','$ArcHybridAksIconUrl','$AksSupportIconUrl')) {
+        Invoke-Expression $statement.Extent.Text
+      }
+    }
+    $ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+      $node.Name -eq 'Get-ProductIconMeta'},$true) | ForEach-Object { Invoke-Expression $_.Extent.Text }
+    $files=@('articles/aks/intro-aks-automatic.md','articles/aks/automatic/quick-automatic-managed-network.md',
+      'articles/intro-aks-automatic.md','articles/automatic/quick-automatic-managed-network.md',
+      'articles/aks/automatic-pod-disruption-budget-management.md','articles/aks/configure-automatic-zone-placement.md',
+      'support/azure/azure-kubernetes/create-upgrade-delete/aks-automatic-troubleshoot.md')
+    @{
+      icons=@($files | ForEach-Object { Get-ProductIconMeta -FilePath $_ -RepoName 'azure-aks-docs' })
+      support_default=Get-ProductIconMeta -FilePath '' -RepoName 'SupportArticles-docs'
+    } | ConvertTo-Json -Depth 4 -Compress
+  `], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const data = JSON.parse(result.stdout);
+  for (const icon of data.icons.slice(0, 4)) {
+    assert.equal(icon.label, 'AKS Automatic');
+    assert.equal(icon.alt, 'AKS Automatic');
+    assert.equal(icon.url, 'https://az-icons.com/images/aks-automatic/icon.svg');
+  }
+  for (const icon of data.icons.slice(4, 6)) assert.equal(icon.label, 'AKS');
+  for (const icon of [data.icons[6], data.support_default]) {
+    assert.equal(icon.label, 'AKS Support');
+    assert.equal(icon.url, 'https://az-icons.com/images/azure-support-center-blue/icon.svg');
+  }
+});
+
+test('qualified baseline does not replay existing articles; demo changes cover all ten products', () => fixture(({ build, baseline }) => {
   const initial = build({ head: baseline });
   assert.equal(initial.changes.length, 0);
   assert.equal(initial.baseline_only, true);
   const changed = build();
-  assert.equal(changed.changes.length, 9);
-  assert.equal(new Set(changed.changes.map(item => item.product)).size, 9);
+  assert.equal(changed.changes.length, 10);
+  assert.equal(new Set(changed.changes.map(item => item.product)).size, 10);
   for (const item of changed.changes) {
     assert.equal(item.status, 'modified');
     assert.ok(item.additions > 0);
@@ -68,7 +120,7 @@ test('product baseline suppresses imported articles but preserves later edits, n
   const productBaselines = { 'articles/azure-linux/': imported };
   const initial = build({ productBaselines });
   assert.equal(initial.changes.some(item => item.product === 'Azure Linux'), false);
-  assert.equal(initial.changes.length, 8);
+  assert.equal(initial.changes.length, 9);
   fs.appendFileSync(path.join(repo, linuxArticle), '\n## Package management\nUse DNF to update packages.\n');
   const newArticle = 'articles/azure-linux/new-security-guide.md';
   fs.writeFileSync(path.join(repo, newArticle), '# New security guide\n\nEnable security updates.\n');
@@ -80,7 +132,7 @@ test('product baseline suppresses imported articles but preserves later edits, n
   const changed = build({ productBaselines });
   assert.equal(changed.changes.find(item => item.filename === linuxArticle).status, 'modified');
   assert.equal(changed.changes.find(item => item.filename === newArticle).status, 'added');
-  assert.equal(changed.changes.filter(item => item.product !== 'Azure Linux').length, 8);
+  assert.equal(changed.changes.filter(item => item.product !== 'Azure Linux').length, 9);
   assert.equal(build({ baseline: imported, productBaselines }).changes.length, 2);
   assert.throws(() => build({ productBaselines: { 'articles/unknown/': imported } }), /Unknown product baseline/);
 }));
@@ -93,7 +145,7 @@ test('metadata-only/state changes do not emit articles; detection time follows c
   fs.writeFileSync(state, JSON.stringify(JSON.parse(fs.readFileSync(state, 'utf8')), null, 2));
   commit('Metadata only', new Date(now.getTime() + 1000));
   const changed = build();
-  assert.equal(changed.changes.length, 9);
+  assert.equal(changed.changes.length, 10);
   assert.equal(changed.changes.find(item => item.filename === article).sha, head);
   const none = build({ baseline: head });
   assert.equal(none.changes.length, 0);
@@ -181,7 +233,7 @@ test('renderer escapes content, rejects unsafe URLs, and uses detection dates an
   };
   for (const mode of ['tracker', 'digest']) {
     const html = render(data, mode);
-    assert.equal((html.match(/<article /g) || []).length, 9);
+    assert.equal((html.match(/<article /g) || []).length, 10);
     assert.ok(html.includes('SYNTHETIC TEST DATA'));
     assert.ok(html.includes('Detected:'));
     assert.ok(html.includes('View documentation'));
@@ -216,13 +268,14 @@ test('existing generator produces isolated no-AI summaries and matching HTML wit
   });
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const data = JSON.parse(fs.readFileSync(path.join(repo, 'summaries.json'), 'utf8').replace(/^\uFEFF/, ''));
-  assert.equal(data.items.length, 9);
+  assert.equal(data.items.length, 10);
   assert.equal(data.ai_summary_count, 0);
-  assert.equal(new Set(data.items.map(item => item.product)).size, 9);
+  assert.equal(new Set(data.items.map(item => item.product)).size, 10);
   assert.ok(fs.existsSync(path.join(output, 'docs-summary-cache.json')));
   assert.equal(data.preview_only, true);
-  assert.ok(render(data).includes('9 updates'));
-  assert.ok(render(data, 'digest').includes('9 updates'));
+  assert.ok(render(data).includes('10 updates'));
+  assert.ok(render(data, 'digest').includes('10 updates'));
+  assert.ok(render(data).includes('<option value="AKS Automatic">AKS Automatic</option>'));
   assert.equal(result.stdout.includes('Processing AKS repository'), false);
   assert.equal(result.stdout.includes('Fetching AKS CVE'), false);
 }));
@@ -297,7 +350,7 @@ test('snapshot AI receives batched article identities and diffs directly and rej
   assert.equal(data.valid.kept, groups.length - 1);
   assert.equal(data.valid.by_file, groups.length - 1);
   assert.equal(data.valid.ai_count, groups.length - 1);
-  assert.deepEqual(data.valid.calls.map(batch => batch.length), [5, 4]);
+  assert.deepEqual(data.valid.calls.map(batch => batch.length), [5, 5]);
   assert.deepEqual(data.valid.calls.flat(), groups);
   assert.equal(data.empty.kept, 0);
   assert.equal(data.empty.ai_count, 0);
@@ -308,7 +361,7 @@ test('snapshot AI receives batched article identities and diffs directly and rej
   }
   assert.match(data.filename.error, /unknown article or empty summary: aks-doc-pr-groups-20261028191717.json/);
   assert.match(data.duplicate.error, /duplicate article/);
-  assert.deepEqual(data.large.calls.map(batch => batch.length), [1, 5, 3]);
+  assert.deepEqual(data.large.calls.map(batch => batch.length), [1, 5, 4]);
   assert.equal(data.large.calls[0][0].patch_sample, `+${'x'.repeat(35000)}`);
   assert.equal(data.large.calls[1][0].patch_sample, `+${'y'.repeat(35000)}`);
   assert.equal(data.large.kept, groups.length - 1);
@@ -320,16 +373,18 @@ test('production health requires a complete fresh pass and matches committed con
   commit('Incomplete collector heartbeat');
   assert.throws(() => build({ production: true }), /incomplete or failed/);
   const health = recordHealth(repo, { errors: 0, unreached: 0, now });
-  assert.equal(health.article_count, 9);
+  assert.equal(health.article_count, 10);
   assert.equal(validateHealth(health, now).complete, true);
   commit('Complete collector heartbeat');
   const data = build({ production: true });
   assert.equal(data.production_ready, true);
-  assert.equal(data.changes.length, 9);
+  assert.equal(data.changes.length, 10);
   assert.throws(() => build({ production: true, now: new Date(now.getTime() + 13 * 3600000) }), /stale/);
   assert.throws(() => build({ production: true, demo: true }), /Synthetic/);
   assert.throws(() => recordHealth(repo, { errors: NaN, unreached: 0 }), /valid errors/);
   assert.throws(() => validateHealth({ ...health, products: ['AKS'] }, now), /incomplete or failed/);
+  assert.throws(() => validateHealth({ ...health, products: health.products.filter(product => product !== 'AKS Automatic') }, now), /incomplete or failed/);
+  assert.throws(() => validateHealth({ ...health, products: health.products.map(product => product === 'AKS Automatic' ? 'Unknown' : product) }, now), /incomplete or failed/);
 }));
 
 test('production change disclosure escapes Markdown, keeps the complete diff and avoids full-page diffs for new articles', () => {
@@ -399,18 +454,18 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   });
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const data = JSON.parse(fs.readFileSync(path.join(output, 'production.json'), 'utf8').replace(/^\uFEFF/, ''));
-  assert.equal(data.digest_docs_count, 9);
+  assert.equal(data.digest_docs_count, 10);
   for (const name of ['html', 'digest_docs_html', 'digest_docs_title', 'cve_section_html', 'digest_releases_html', 'hash']) {
     assert.equal(typeof data[name], 'string', name);
     assert.ok(data[name].length > 0, name);
   }
-  assert.equal((data.html.match(/class="aks-doc-update"/g) || []).length, 9);
-  assert.equal((data.html.match(/>View Documentation<\/a>/g) || []).length, 9);
-  assert.equal((data.digest_docs_html.match(/View Documentation<\/a>/g) || []).length, 9);
+  assert.equal((data.html.match(/class="aks-doc-update"/g) || []).length, 10);
+  assert.equal((data.html.match(/>View Documentation<\/a>/g) || []).length, 10);
+  assert.equal((data.digest_docs_html.match(/View Documentation<\/a>/g) || []).length, 10);
   assert.equal(/View PR|View change|aks-doc-link-pr/.test(data.html + data.digest_docs_html), false);
-  assert.equal((data.html.match(/Detected:/g) || []).length, 9);
-  assert.equal((data.html.match(/class="aks-doc-header" style="flex-wrap:wrap;"/g) || []).length, 9);
-  assert.equal((data.html.match(/<details class="aks-doc-changes">/g) || []).length, 9);
+  assert.equal((data.html.match(/Detected:/g) || []).length, 10);
+  assert.equal((data.html.match(/class="aks-doc-header" style="flex-wrap:wrap;"/g) || []).length, 10);
+  assert.equal((data.html.match(/<details class="aks-doc-changes">/g) || []).length, 10);
   assert.ok(data.html.includes('class="aks-diff-added"'));
   assert.ok(data.html.includes('class="aks-diff-removed"'));
   assert.ok(data.html.includes('.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }'));
@@ -421,7 +476,7 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.ok(data.html.includes('--cp-accent: #ffea00;'));
   assert.ok(data.html.includes('scrollbar-color: var(--cp-accent) var(--cp-diff-scroll-track);'));
   assert.ok(data.html.includes('.aks-diff-scroll::-webkit-scrollbar-thumb'));
-  assert.equal((data.html.match(/class="aks-diff-expand"/g) || []).length, 9);
+  assert.equal((data.html.match(/class="aks-diff-expand"/g) || []).length, 10);
   assert.ok(data.html.includes("dialog.showModal()"));
   assert.ok(data.html.includes("active.placeholder.replaceWith(active.viewer)"));
   assert.ok(data.html.includes('dialog.aks-diff-dialog[open]'));
@@ -431,7 +486,7 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   }
   assert.equal(data.digest_docs_html.includes('aks-doc-changes'), false);
   assert.equal(data.digest_docs_html.includes('<details'), false);
-  assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 9);
+  assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 10);
   assert.ok(data.html.includes('class="aks-tabs"'));
   assert.ok(data.html.includes('id="aks-tab-releases"'));
   assert.ok(data.html.includes('id="aks-tab-cve"'));
@@ -439,6 +494,13 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   assert.ok(data.cve_section_html.includes('fixture-version'));
   assert.ok(data.html.includes('https://learn.microsoft.com/en-us/azure/application-network/overview'));
   assert.ok(data.html.includes('https://az-icons.com/images/azure-linux/icon.svg'));
+  for (const html of [data.html, data.digest_docs_html]) {
+    assert.ok(html.includes('https://az-icons.com/images/azure-support-center-blue/icon.svg'));
+    assert.ok(html.includes('https://az-icons.com/images/aks-automatic/icon.svg'));
+    assert.ok(html.includes('alt="AKS Automatic"'));
+    assert.ok(html.includes('alt="AKS Support Articles"'));
+  }
+  assert.match(data.html, /data-product="AKS Automatic"/);
   assert.equal(result.stdout.includes('Processing AKS repository'), false);
 
   const productionEnv = {
@@ -461,8 +523,8 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   });
   assert.equal(actual.status, 0, actual.stdout + actual.stderr);
   const production = JSON.parse(fs.readFileSync(path.join(output, 'production.json'), 'utf8').replace(/^\uFEFF/, ''));
-  assert.equal(production.digest_docs_count, 9);
-  assert.equal((production.html.match(/<details class="aks-doc-changes">/g) || []).length, 9);
+  assert.equal(production.digest_docs_count, 10);
+  assert.equal((production.html.match(/<details class="aks-doc-changes">/g) || []).length, 10);
   assert.equal(/View PR|View change/.test(production.html + production.digest_docs_html), false);
   assert.ok(fs.existsSync(path.join(repo, 'snapshot-docs-summary-cache.json')));
 

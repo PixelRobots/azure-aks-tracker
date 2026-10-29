@@ -7,6 +7,7 @@
 
 # Repository configuration - easily extensible for more MS Docs sites
 $ArcHybridAksIconUrl = "https://az-icons.com/images/arc-kubernetes/icon.svg"
+$AksSupportIconUrl = "https://az-icons.com/images/azure-support-center-blue/icon.svg"
 
 $Repositories = @(
   @{
@@ -68,7 +69,7 @@ $Repositories = @(
     Repo = "SupportArticles-docs"
     PathFilter = "^support/azure/azure-kubernetes/(availability-performance|connectivity|create-upgrade-delete|error-codes|extensions|load-bal-ingress-c|logs|security|storage)/.*\.md$"  # Only AKS support articles, excluding toc/media
     DisplayName = "AKS Support"
-    IconUrl = "https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg"
+    IconUrl = $AksSupportIconUrl
     IconAlt = "AKS Support Articles"
     DocsBaseUrl = "https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/"
   }
@@ -805,11 +806,18 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
       label = 'App Net'
     }
   }
-  elseif ($RepoName -eq 'SupportArticles-docs' -and $FilePath -match '^support/azure/azure-kubernetes/') {
+  elseif ($FilePath -match '^support/azure/azure-kubernetes/') {
     return @{
-      url   = 'https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg'
+      url   = $AksSupportIconUrl
       alt   = 'AKS Support Articles'
       label = 'AKS Support'
+    }
+  }
+  elseif ($FilePath -match '^articles/(aks/)?(automatic/|intro-aks-automatic\.md$)') {
+    return @{
+      url   = 'https://az-icons.com/images/aks-automatic/icon.svg'
+      alt   = 'AKS Automatic'
+      label = 'AKS Automatic'
     }
   }
   elseif ($FilePath -match '/kubernetes-fleet/' -or $FilePath -match 'fleet') {
@@ -3086,9 +3094,11 @@ $initTopRowsHtml
 # =========================
 
 # Initialize AI if provider is configured
-if ($PreferProvider -and -not ($SnapshotMode -and $PSAIReady)) {
-  $PSAIReady = Initialize-AIProvider -Provider $PreferProvider
-  if ($PSAIReady) { Log "AI provider ($PreferProvider) initialized." }
+if ($PreferProvider) {
+  if (-not ($SnapshotMode -and $PSAIReady)) {
+    $PSAIReady = Initialize-AIProvider -Provider $PreferProvider
+  }
+  if ($PSAIReady) { Log "AI provider ($PreferProvider) ready." }
 } else {
   Log "No AI provider configured - running without AI summaries."
 }
@@ -4596,7 +4606,7 @@ $snapshotDiffStyles
 
     <p><strong>With this tracker, you can:</strong></p>
     <ul>
-      <li>Quickly scan meaningful AKS, App Net, Arc K8s, AKS Arc, Azure Linux, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
+      <li>Quickly scan meaningful AKS, AKS Automatic, AKS Support, App Net, Arc K8s, AKS Arc, Azure Linux, ACR, AGC, and Fleet documentation changes from the past 7 days</li>
       <li>Stay up to date with the latest AKS and App Net release notes without digging through every doc page</li>
       <li>Search and browse CVE security data across AKS releases and VHD node images, powered by the <strong>AKS Vulnerability Data API</strong> (Public Preview)</li>
     </ul>
@@ -4633,7 +4643,7 @@ $snapshotDiffStyles
 
     <div class="aks-tab-panel active" id="aks-tab-docs">
       <h2>Documentation Updates</h2>
-      <div class="aks-docs-desc">Meaningful updates to AKS, App Net, Arc K8s, AKS Arc, Azure Linux, ACR, AGC, and Fleet docs from the last 7 days.</div>
+      <div class="aks-docs-desc">Meaningful updates to AKS, AKS Automatic, AKS Support, App Net, Arc K8s, AKS Arc, Azure Linux, ACR, AGC, and Fleet docs from the last 7 days.</div>
       <div class="aks-docs-updated-main">
         <span class="aks-pill aks-pill-updated">updated: $lastUpdated</span>
         <span class="aks-pill aks-pill-count">$updateCount updates</span>

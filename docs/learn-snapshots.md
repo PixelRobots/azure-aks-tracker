@@ -31,7 +31,7 @@ not their exact publication time, author or original PR.
 
 | Public source repository | Published documentation |
 |---|---|
-| `MicrosoftDocs/azure-aks-docs` | AKS, Kubernetes Fleet Manager, AKS Application Network, AKS Hybrid and Edge / AKS Arc |
+| `MicrosoftDocs/azure-aks-docs` | AKS, AKS Automatic, Kubernetes Fleet Manager, AKS Application Network, AKS Hybrid and Edge / AKS Arc |
 | `MicrosoftDocs/azure-management-docs` | Azure Container Registry, Azure Arc-enabled Kubernetes and Azure Linux |
 | `MicrosoftDocs/azure-docs` | Application Gateway for Containers |
 | `MicrosoftDocs/SupportArticles-docs` | The same nine AKS troubleshooting categories as the existing tracker |
@@ -40,6 +40,12 @@ Public and private (`-pr`) repository names are accepted in Learn's source
 metadata. Private GitHub access is **not** needed to retrieve published pages.
 AKS releases, App Net GitHub release notes and CVE scans retain their existing
 collectors; they are not Learn documentation repositories.
+
+AKS Automatic is categorized separately for `articles/aks/automatic/` and
+`articles/aks/intro-aks-automatic.md`. Other AKS articles about automatic features
+stay under AKS, and all troubleshooting articles stay under AKS Support.
+Collection health requires all ten products, including AKS Automatic; run a fresh
+complete collection before publishing with this categorization.
 
 Discovery combines English Azure and troubleshooting sitemaps, eight tables of
 contents, the committed seed list and previously known pages. The AKS table of
