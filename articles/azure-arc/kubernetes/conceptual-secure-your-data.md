@@ -21,8 +21,9 @@ ms.reviewer: davidsmatlak
 ms.author: davidsmatlak
 ms.service: azure-arc
 ms.subservice: azure-arc-kubernetes
-ms.date: 2025-06-06T00:00:00.0000000Z
+ms.date: 2026-07-17T00:00:00.0000000Z
 ms.topic: concept-article
+ai-usage: ai-assisted
 description: Best practices for protecting data at rest and in transit in Azure Arc-enabled Kubernetes clusters.
 locale: en-us
 document_id: d963edc0-ee2b-1762-ee43-3b6b2a8d9e76
@@ -65,7 +66,7 @@ If so, consider using the [Azure Key Vault Secret Store extension for Kubernetes
 
 ## Protect the Kubernetes secrets store
 
-If you’re running AKS enabled by Azure Arc on Azure Local, then it restricts direct access to the Kubernetes configuration store, etcd, which holds Kubernetes secrets. Further, it has a built-in [KMS plugin](/en-us/azure/aks/aksarc/encrypt-etcd-secrets) that helps to automatically encrypt these secrets. This plugin generates the [Key Encryption Key](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-encryption-and-per-object-encryption-keys) (KEK), isolates it away from the cluster in the underlying Windows host, and automatically rotates it every 30 days.
+On Azure Local hyperconverged deployments, AKS enabled by Azure Arc restricts direct access to the Kubernetes configuration store, etcd, which holds Kubernetes secrets. It also includes a built-in [KMS plugin](/en-us/azure/aks/aksarc/encrypt-etcd-secrets) that helps automatically encrypt these secrets. This plugin generates the [Key Encryption Key](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/#kms-encryption-and-per-object-encryption-keys) (KEK), isolates it away from the cluster in the underlying Windows host, and automatically rotates it every 30 days.
 
 If you connect your own cluster via Arc-enabled Kubernetes, then help ensure etcd is protected, and your secrets are encrypted, by following your vendor’s guidance.
 
@@ -77,13 +78,13 @@ If you connect your own cluster via Arc-enabled Kubernetes, then help ensure etc
 
 ## Protect other workload data
 
-Beyond your secret values, consider the protection at rest of other workload data that may still be sensitive. If you’re running AKS on Azure Local, then all data volumes are [encrypted at rest using BitLocker](/en-us/azure/azure-local/concepts/security-features#bitlocker-encryption). If you connect your own cluster via Arc-enabled Kubernetes then use any similar protection offered by the vendor.
+Beyond your secret values, consider the protection at rest of other workload data that might still be sensitive. If you're running AKS enabled by Azure Arc on an Azure Local hyperconverged deployment, all data volumes are [encrypted at rest using BitLocker](/en-us/azure/azure-local/concepts/security-features#bitlocker-encryption). On [Azure Local small form factor](/en-us/azure/azure-local/small-form-factor/small-form-factor-security#data-protection-by-default) (preview), persistent data partitions that store workload data are likewise encrypted at rest by default, using hardware-backed disk encryption whose keys are sealed by the TPM and released only when the device boots into a known, verified state. If you connect your own cluster via Arc-enabled Kubernetes, use any similar protection offered by the vendor.
 
 In addition to helping protect your workload data at rest, it’s also important to help protect your workload data in transit. See sections 2.5-2.7 above about establishing encryption, authentication, and authorization for data traffic between your workloads and to/from Azure. See also [our guidance](conceptual-secure-your-network) on adding further network layer protections. If you use [Azure Container Storage enabled by Azure Arc](/en-us/azure/azure-arc/container-storage/overview) to store data locally and synchronize it with Azure in the cloud, then it uses such transit protections automatically.
 
 ## Enable cluster recovery without impacting your security posture
 
-Plan how you would recover from a loss of your cluster. If you’re using AKS enabled by Azure Arc on Azure Local or other high-availability options, then it can help protect against regular hardware failures. But it’s still possible that the cluster can be lost due to an incident that impacts your whole site or to a cyberattack.
+Plan how you would recover from a loss of your cluster. If your AKS enabled by Azure Arc deployment on Azure Local is configured for high availability, it can help protect against regular hardware failures. But it’s still possible that the cluster can be lost due to an incident that impacts your whole site or to a cyberattack.
 
 A starting point is to aim for all your configuration and data to be sourced from, and synchronized back to, the cloud. This synchronization means that reinstating your cluster is like initial activation. Consider configuring your cluster using [GitOps with Flux](/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli), synchronizing your Azure Key Vault secrets using the [Secret Store extension](/en-us/azure/azure-arc/kubernetes/secret-store-extension?tabs=arc-k8s), and synchronizing your data using [Azure Container Storage (preview)](/en-us/azure/azure-arc/container-storage/overview).
 

@@ -21,7 +21,7 @@ ms.reviewer: davidsmatlak
 ms.author: davidsmatlak
 ms.service: azure-arc
 ms.subservice: azure-arc-kubernetes
-ms.date: 2025-06-06T00:00:00.0000000Z
+ms.date: 2026-07-17T00:00:00.0000000Z
 ms.topic: concept-article
 description: Comprehensive security guidance and best practices for securing Azure Arc-enabled Kubernetes and AKS enabled by Azure Arc clusters, covering platform, workloads, operations, data, and network.
 locale: en-us
@@ -54,7 +54,7 @@ Note
 
 This content is one of a series of security books, offering recommendations and best practices to help secure Microsoft platforms. Other security books include [Azure Local security book](https://github.com/Azure-Samples/AzureLocal/blob/main/SecurityBook/Azure%20Local%20Security%20Book_04302025.pdf), [the Windows Server 2025 security book](https://techcommunity.microsoft.com/blog/microsoft-security-blog/windows-server-2025-security-book/4283981), and the [Windows Client security book](/en-us/windows/security/book/).
 
-Your organization may have Kubernetes deployments that include clusters running at the edge (on-premises in data centers, factories, shops) or in multiple clouds. It's often a challenge to maintain a consistent and scalable security posture in these heterogeneous environments. You can help address this challenge, and simplify your security workflows by running Microsoft-managed clusters using [Azure Kubernetes Service (AKS) enabled by Azure Arc](/en-us/azure/aks/hybrid/aks-overview) on your edge infrastructure, such as on [Azure Local](/en-us/azure/azure-local/overview). Or you can connect existing non-Microsoft edge clusters using [Azure Arc-enabled Kubernetes](/en-us/azure/azure-arc/kubernetes/).
+Your organization might have Kubernetes deployments that include clusters running at the edge (on-premises in data centers, factories, shops) or in multiple clouds. It's often a challenge to maintain a consistent and scalable security posture in these heterogeneous environments. You can help address this challenge and simplify your security workflows by running [Azure Kubernetes Service (AKS) enabled by Azure Arc](/en-us/azure/aks/hybrid/aks-overview) on your edge infrastructure, such as [Azure Local](/en-us/azure/azure-local/overview). Or you can connect existing non-Microsoft edge clusters, such as [K3s](https://k3s.io/), by using [Azure Arc-enabled Kubernetes](/en-us/azure/azure-arc/kubernetes/).
 
 This book explains how these products can help you maintain a consistent and scalable security posture, covering both your cluster infrastructure and your application workloads. It advises how you can help guard against multiple threat vectors across supply chain risks, malicious external actors, or insider attacks. It builds on industry best practices such as those from:
 
@@ -82,4 +82,9 @@ The security challenges fall into five categories:
 4. Secure your data. This category includes better securing access both to your workload application data and to the data that Kubernetes stores on your behalf, particularly secrets such as passwords.
 5. Secure your network. This category includes configuring the extra defense in depth that comes from controlling management and data traffic at the network level. It discusses how to restrict which sources your clusters and workloads can receive from, and which targets they can they send to.
 
-This book provides guidance on these challenges for Arc-enabled Kubernetes clusters in general and for AKS enabled by Azure Arc clusters in particular. There are many [deployment options](/en-us/azure/aks/aksarc/aks-overview#aks-enabled-by-azure-arc-deployment-options) for AKS enabled by Azure Arc. This book covers the [Azure Local 23H2](/en-us/azure/aks/aksarc/cluster-architecture) deployment option and builds upon the [Azure Local security features](/en-us/azure/azure-local/concepts/security-features) and [security book](https://github.com/Azure-Samples/AzureLocal/blob/main/SecurityBook/Azure%20Local%20Security%20Book_04302025.pdf). (Other deployment options offer some but not all of the same benefits.)
+This book provides guidance on these challenges for Arc-enabled Kubernetes clusters in general and for AKS enabled by Azure Arc clusters in particular. There are multiple [deployment options](/en-us/azure/aks/aksarc/aks-overview#aks-enabled-by-azure-arc-deployment-options) for AKS enabled by Azure Arc. This book covers two of these deployment options on [Azure Local](/en-us/azure/azure-local/overview):
+
+- [AKS enabled by Azure Arc](/en-us/azure/aks/aksarc/aks-overview) on an [Azure Local hyperconverged deployment](/en-us/azure/azure-local/overview/hyperconverged-overview), which runs on a hypervisor. This security book builds upon the [Azure Local security features](/en-us/azure/azure-local/concepts/security-features) and [security book](https://github.com/Azure-Samples/AzureLocal/blob/main/SecurityBook/Azure%20Local%20Security%20Book_04302025.pdf).
+- [AKS on bare metal](/en-us/azure/aks/aksarc/aks-bare-metal-overview) on an [Azure Local small form factor deployment](/en-us/azure/azure-local/small-form-factor/small-form-factor-overview) (preview), which runs on physical hardware without a hypervisor layer. This security book builds upon the [security features](/en-us/azure/azure-local/small-form-factor/small-form-factor-security) for this type of Azure Local deployment.
+
+Other deployment options might offer some, but not all, of the same benefits.

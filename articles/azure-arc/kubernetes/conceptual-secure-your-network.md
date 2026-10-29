@@ -21,8 +21,9 @@ ms.reviewer: davidsmatlak
 ms.author: davidsmatlak
 ms.service: azure-arc
 ms.subservice: azure-arc-kubernetes
-ms.date: 2025-06-06T00:00:00.0000000Z
+ms.date: 2026-07-17T00:00:00.0000000Z
 ms.topic: concept-article
+ai-usage: ai-assisted
 description: Network security best practices for Azure Arc-enabled Kubernetes clusters, including segmentation, encryption, and access controls.
 locale: en-us
 document_id: a0353a57-8dee-545d-d71f-9fe87562a7f6
@@ -39,9 +40,11 @@ item_type: Content
 source_path: articles/azure-arc/kubernetes/conceptual-secure-your-network.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: f1f2fd92-7193-4a24-462d-b3af1af42466
 ---
@@ -61,9 +64,9 @@ In addition to [helping to protect your cluster’s workload data traffic via TL
 - [NSA Kubernetes Hardening Guidance – "Network policies"](https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF)
 - [Kubernetes Security - OWASP Cheat Sheet Series – "Use Kubernetes network policies to control traffic"](https://cheatsheetseries.owasp.org/cheatsheets/Kubernetes_Security_Cheat_Sheet.html)
 
-## Configure your network infrastructure for further defense in depth
+## Configure your network infrastructure for extra protection
 
-You can also create further defense in depth, for both your management and data traffic, by appropriately configuring the network of your underlying infrastructure. For example, if you’re using AKS enabled by Azure Arc on Azure Local, you should review the [guidance](/en-us/azure/aks/aksarc/aks-hci-network-system-requirements) for cluster IP address planning. Consider fully separating management and data traffic if your workloads don’t need to access the API server.
+You can create extra protection for both your management and data traffic by appropriately configuring the network of your underlying infrastructure. For example, consider fully separating management and data traffic if your workloads don't need to access the API server. If you're using AKS enabled by Azure Arc on an Azure Local hyperconverged deployment, review the [AKS network requirements](/en-us/azure/aks/aksarc/network-system-requirements) for cluster IP address planning. If you're using AKS bare-metal, you can [configure a dedicated control plane IP address](/en-us/azure/aks/aksarc/aks-bare-metal-create-cluster-portal#step-4-configure-networking).
 
 Further, we recommend evaluating your organization’s external firewall rules so that they're consistent with the rules you set at the Kubernetes and infrastructure layers. Enable only those outbound and inbound destinations strictly required, and no more. You can also use [Azure Arc gateway](/en-us/azure/azure-arc/kubernetes/arc-gateway-simplify-networking?tabs=azure-cli) to simplify the firewall rules needed to enable your cluster’s access to Azure resources.
 

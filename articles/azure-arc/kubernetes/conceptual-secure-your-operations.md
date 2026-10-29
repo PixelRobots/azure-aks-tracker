@@ -21,7 +21,7 @@ ms.reviewer: davidsmatlak
 ms.author: davidsmatlak
 ms.service: azure-arc
 ms.subservice: azure-arc-kubernetes
-ms.date: 2025-06-06T00:00:00.0000000Z
+ms.date: 2026-07-17T00:00:00.0000000Z
 ms.topic: concept-article
 description: Operational security guidance for managing Azure Arc-enabled Kubernetes clusters, including monitoring, logging, and incident response.
 locale: en-us
@@ -38,13 +38,13 @@ monikers: []
 item_type: Content
 source_path: articles/azure-arc/kubernetes/conceptual-secure-your-operations.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
-- https://authoring-docs-microsoft.poolparty.biz/devrel/07bb3e10-d135-43ff-bc8b-360497cb39fa
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: be563df8-4b75-2c8c-c9a7-c23bc658e20f
 ---
 
@@ -64,11 +64,11 @@ It’s also important to control access to the Kubernetes control plane (API ser
 
 For nonhuman access to the API server from workloads, use Kubernetes’ built-in RBAC to authorize only the specific service accounts that require it. See also the [advice on issuing and protecting these service accounts](conceptual-secure-your-workloads#configure-tls-encryption-and-authentication-withintofrom-workloads).
 
-For human access to the API server, Kubernetes doesn’t have built-in user accounts. So we recommended integrating it with an external user account service such as Microsoft Entra ID. You can then create authorization policies that use these identities to control who can do what in which namespaces. You can author these policies either using Kubernetes’ built-in RBAC or using Azure RBAC. Azure RBAC is recommended if you want to consistently manage and audit all your user authorization policies together in one central place, covering both your cloud and edge resources. It's easy to use Azure RBAC [if you’re running AKS enabled by Azure Arc on Azure Local](/en-us/azure/aks/hybrid/azure-rbac-23h2) or [if you connect your own cluster](/en-us/azure/azure-arc/kubernetes/azure-rbac?tabs=kubernetes-latest). Your users can then use their Entra ID account to access the cluster (its API server) either directly or via an Azure proxy using the "cluster connect" capability. We recommend taking a "least privilege" approach of assigning each user or workload a role that has the minimum permissions required.
+For human access to the API server, Kubernetes doesn't have built-in user accounts. So, integrate it with an external user account service such as Microsoft Entra ID. You can then create authorization policies that use these identities to control who can do what in which namespaces. You can author these policies either by using Kubernetes' built-in RBAC or by using Azure RBAC. Use Azure RBAC if you want to consistently manage and audit all your user authorization policies together in one central place, covering both your cloud and edge resources. It's easy to use Azure RBAC [if you're running AKS enabled by Azure Arc on Azure Local](/en-us/azure/aks/aksarc/azure-rbac-local), or [if you connect your own cluster](/en-us/azure/azure-arc/kubernetes/azure-rbac?tabs=kubernetes-latest). Your users can then use their Entra ID account to access the cluster (its API server) either directly or via an Azure proxy by using the "cluster connect" capability. Assign each user or workload a role that has the minimum permissions required.
 
 More generally, follow standard best practice in separating development, test, and production clusters. And consider if production deployments to your clusters would be more reliably and securely managed by using a [GitOps approach](/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2?tabs=azure-cli). If you follow this approach, then it’s also important to implement similar strong role-based access control for changes (pull requests) on the underlying source Git repository and branch used to define your deployments.
 
-Finally, if you’re running AKS enabled by Azure Arc on Azure Local then you can also [download an admin client certificate for full admin access](/en-us/azure/aks/aksarc/retrieve-admin-kubeconfig). It isn't typically necessary to use this certificate, so only download it when required: for example, to diagnose issues that can’t be investigated any another way. You should also use this approach with care because it doesn’t use an Entra ID account and the per-user policies that you set up. Further, you must carefully store the client certificate and then delete when no longer required.
+Finally, if you're running AKS enabled by Azure Arc on Azure Local, you can also [download an admin client certificate for full admin access](/en-us/azure/aks/aksarc/retrieve-admin-kubeconfig). It isn't typically necessary to use this certificate, so only download it when required: for example, to diagnose issues that can't be investigated any another way. Use this approach with care because it doesn't use an Entra ID account and the per-user policies that you set up. Store the client certificate carefully and then delete it when no longer required.
 
 ### References
 
