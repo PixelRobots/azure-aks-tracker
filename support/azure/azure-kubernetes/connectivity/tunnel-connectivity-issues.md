@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Tunnel connectivity issues - Azure | Microsoft Learn
+title: Troubleshoot tunnel connectivity issues in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/tunnel-connectivity-issues
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,13 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Resolve tunnel connectivity issues in your Azure Kubernetes Service (AKS) cluster to restore logs, exec, and port-forward access. Follow the troubleshooting steps.
-ms.date: 2026-06-18T00:00:00.0000000Z
+description: Resolve tunnel connectivity issues in your Azure Kubernetes Service (AKS) cluster to restore kubectl logs, exec, and port-forward access. Follow these steps.
+ms.date: 2026-10-29T00:00:00.0000000Z
 ms.reviewer: chiragpa, andbar, v-leedennis, v-weizhu, albarqaw, andraciobanu
 ms.service: azure-kubernetes-service
 keywords: Azure Kubernetes Service, AKS cluster, Kubernetes cluster, tunnels, connectivity, tunnel-front, aks-link, Konnectivity agent, Cluster Proportional Autoscaler, CPA, Resource allocation, Performance bottlenecks, Networking reliability, Azure Kubernetes troubleshooting, AKS performance issues
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: cd1e1d57-0112-d5d7-1453-33397d75a48e
 document_version_independent_id: cd1e1d57-0112-d5d7-1453-33397d75a48e
@@ -36,18 +37,20 @@ item_type: Content
 source_path: support/azure/azure-kubernetes/connectivity/tunnel-connectivity-issues.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: fdf93b0c-3dc7-41a6-b999-eb9ae4f3bb7f
 ---
 
-# Tunnel connectivity issues - Azure | Microsoft Learn
+# Troubleshoot tunnel connectivity issues in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-Tunnel connectivity problems in Azure Kubernetes Service (AKS) can disrupt secure communication between cluster nodes and the control plane. This article explains how to troubleshoot and resolve these problems to restore expected cluster operations.
+Tunnel connectivity issues in Azure Kubernetes Service (AKS) can disrupt secure communication between cluster nodes and the control plane. This article helps you troubleshoot and resolve these issues so that you can restore kubectl logs, exec, and port-forward functionality.
 
 [Tunnel connectivity is used specifically for API server to kubelet communication](/en-us/azure/aks/faq#how-does-the-managed-control-plane-communicate-with-my-nodes-) (not general pod-to-pod) or ingress traffic.
 
@@ -55,7 +58,7 @@ Tunnel connectivity problems in Azure Kubernetes Service (AKS) can disrupt secur
 
 Note
 
-Previously, the AKS tunnel component was `tunnel-front`. It's now migrated to the [Konnectivity service](https://kubernetes.io/docs/concepts/architecture/control-plane-node-communication/#konnectivity-service), an upstream Kubernetes component. For more information about this migration, see the [AKS release notes](https://github.com/Azure/AKS/releases/tag/2021-10-28).
+Previously, the AKS tunnel component was `tunnel-front`. It migrated to the [Konnectivity service](https://kubernetes.io/docs/concepts/architecture/control-plane-node-communication/#konnectivity-service), an upstream Kubernetes component. For more information about this migration, see the [AKS release notes](https://github.com/Azure/AKS/releases/tag/2021-10-28).
 
 [API Server VNet Integration](/en-us/azure/aks/api-server-vnet-integration) enables nodes to communicate directly with the API server through an internal load balancer, without requiring a tunnel. Therefore, the `konnectivity-agent` component isn't expected in clusters where Konnectivity isn't required.
 
@@ -106,7 +109,7 @@ az vmss run-command invoke --resource-group <infra-or-MC-resource-group> \
 
 If you use an NSG and you have specific restrictions, make sure that you add a security rule that allows traffic for port 10250 at the virtual network level. The following [Azure portal](https://portal.azure.com) image shows an example security rule:
 
-![Screenshot of the Add inbound security rule pane in the Azure portal. The Destination port ranges box is set to 10250 for the new security rule.](media/tunnel-connectivity-issues/add-inbound-security-rule.png)
+[![Screenshot of the Add inbound security rule pane in the Azure portal. The Destination port ranges box is set to 10250 for the new security rule.](media/tunnel-connectivity-issues/add-inbound-security-rule.png)](media/tunnel-connectivity-issues/add-inbound-security-rule.png#lightbox)
 
 If you want to be more restrictive, you can allow access to port 10250 at the subnet level only.
 
@@ -258,7 +261,7 @@ To use service diagnostics to view the SNAT ports, follow these steps:
 5. Under **SNAT Connection and Port Allocation**, select **View details**.
 6. If necessary, use the **Time Range** button to customize the time frame.
 
-### Solution 4a: Make sure the application uses connection pooling
+### Solution 4a: Ensure the application uses connection pooling
 
 This behavior might occur because an application isn't reusing existing connections. Don't create one outbound connection per request. Such a configuration can cause connection exhaustion. Check whether the application code follows best practices and uses connection pooling. Most libraries support connection pooling. Therefore, you shouldn't have to create a new outbound connection per request.
 
@@ -278,7 +281,7 @@ Note
 
 This cause applies only to the `Konnectivity-agent` pods.
 
-### Solution 6: Cluster Proportional Autoscaler for Konnectivity Agent
+### Solution 5: Cluster Proportional Autoscaler for Konnectivity Agent
 
 To manage scalability challenges in large clusters, implement the Cluster Proportional Autoscaler for your Konnectivity Agents. This approach aligns with industry standards and best practices. It ensures optimal resource usage and enhanced performance.
 
@@ -342,6 +345,55 @@ kubectl get pod <pod-name> -n kube-system -o yaml | grep -A5 "resources:"
 ```
 kubectl edit deployment konnectivity-agent -n kube-system
 ```
+
+## Cause 6: Excessive API server traffic caused by Grafana Alloy log collection
+
+### Symptoms
+
+The AKS cluster experiences intermittent Konnectivity tunnel failures or degraded tunnel connectivity.
+
+You might observe one or more of the following symptoms:
+
+- Konnectivity agents become intermittently unhealthy or unresponsive.
+- Kubernetes API server requests experience increased latency or timeouts.
+- `kubectl` commands intermittently fail or take significantly longer than expected.
+- Admission webhooks time out or fail.
+- Aggregated API requests, such as `metrics.k8s.io`, fail intermittently.
+- API server responses stall during periods of high log collection activity.
+
+### Cause
+
+This issue can occur when **Grafana Alloy is configured to collect container logs through the Kubernetes API server**, rather than reading them directly from the cluster nodes.
+
+When Grafana Alloy uses API-based log collection, log retrieval requests route through the Kubernetes API server and the Konnectivity tunnel to reach the kubelets.
+
+In clusters generating large volumes of logs, this configuration can introduce significant traffic through the tunnel infrastructure.
+
+The resulting load can saturate Konnectivity tunnel resources, causing delayed or stalled API server responses and intermittent failures in operations that depend on tunnel connectivity.
+
+Note
+
+This issue is related to the log collection method used by Grafana Alloy, not to Loki itself. Loki is the log aggregation backend.
+
+### Solution: Configure Grafana Alloy to collect logs directly from nodes
+
+To prevent excessive traffic through the Kubernetes API server and Konnectivity tunnel, configure Grafana Alloy to collect container logs directly from the AKS nodes.
+
+Use node-level log collection instead of Kubernetes API-based log streaming.
+
+With this configuration:
+
+1. Grafana Alloy runs on the cluster nodes, typically as a DaemonSet.
+2. Alloy reads container logs directly from the node filesystem.
+3. Collected logs are forwarded to the configured Loki endpoint.
+4. Log collection no longer relies on the API server and Konnectivity tunnel for retrieving container log contents.
+
+This approach reduces API server and Konnectivity tunnel traffic and helps prevent tunnel saturation caused by high-volume log collection.
+
+For configuration guidance, see the Grafana documentation:
+
+- [Grafana Alloy - Collect Kubernetes logs](https://grafana.com/docs/alloy/latest/collect/logs-in-kubernetes/)
+- [Grafana Alloy - loki.source.file](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.file/)
 
 **Third-party contact disclaimer**
 

@@ -13,10 +13,11 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Troubleshoot DNS failures across an AKS cluster in real time with Inspektor Gadget and identify slow or failed queries—start diagnosing now.
-ms.reviewer: qasimsarfraz, v-weizhu
+ms.reviewer: qasimsarfraz, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
-ms.date: 2024-08-09T00:00:00.0000000Z
+ms.date: 2026-10-28T00:00:00.0000000Z
+ai-usage: ai-assisted
 locale: en-us
 document_id: b869b76b-e7a4-e7eb-4618-1136bdc47462
 document_version_independent_id: b869b76b-e7a4-e7eb-4618-1136bdc47462
@@ -67,6 +68,8 @@ The following table outlines common symptoms that you might observe in an AKS cl
 
 ## Prerequisites
 
+Before you start troubleshooting DNS failures across an AKS cluster, ensure you have the following prerequisites:
+
 - Azure CLI.
 
     To install Azure CLI, see [How to install the Azure CLI](/en-us/cli/azure/install-azure-cli).
@@ -75,23 +78,23 @@ The following table outlines common symptoms that you might observe in an AKS cl
     To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
 - [Inspektor Gadget](https://go.microsoft.com/fwlink/?linkid=2260072).
 
-    This tool is used in most troubleshooting steps covered in this article, so make sure to install it on the cluster. To install it on an AKS cluster, see [How to install Inspektor Gadget in an AKS cluster](../../logs/capture-system-insights-from-aks#how-to-install-inspektor-gadget-in-an-aks-cluster).
+    This tool is used in most troubleshooting steps covered in this article, so ensure you install it on the cluster. To install it on an AKS cluster, see [How to install Inspektor Gadget in an AKS cluster](../../logs/capture-system-insights-from-aks#how-to-install-inspektor-gadget-in-an-aks-cluster).
 - Familiarity with [gadgets](../../logs/capture-system-insights-from-aks#gadgets).
 - [Inspektor Gadget DNS gadget](https://go.microsoft.com/fwlink/?linkid=2260317).
 
     It's used in all the following troubleshooting steps.
 
-To troubleshoot DNS failures across an AKS cluster, use the instructions in the following sections. Before we start, export the gadget version to a variable. This variable is used in all the commands in this article.
+To troubleshoot DNS failures across an AKS cluster, use the instructions in the following sections. Before you start, export the gadget version to a variable. You use this variable in all the commands in this article.
 
 ```bash
 GADGET_VERSION=$(kubectl gadget version | grep Server | awk '{print $3}')
 ```
 
-Please feel free to choose a different version. For example, you can use `latest` or `main` to get the latest stable or development version of the gadget respectively.
+You can choose a different version. For example, use `latest` or `main` to get the latest stable or development version of the gadget respectively.
 
 ## Step 1: Identify unsuccessful DNS responses across the cluster
 
-You can use the DNS gadget to identify all the unsuccessful DNS responses across the cluster. To perform this check, trace DNS packets on all the nodes and filter unsuccessful responses.
+Use the DNS gadget to identify all the unsuccessful DNS responses across the cluster. To perform this check, trace DNS packets on all the nodes and filter unsuccessful responses.
 
 ```bash
 kubectl gadget run trace_dns:$GADGET_VERSION \
@@ -106,7 +109,7 @@ Here are the explanations of the command parameters:
 - `--fields k8s.node,src,dst,name,qtype,rcode`: Shows only Kubernetes information, source and destination of the DNS packets, DNS name, DNS query type, and DNS response code.
 - `--filter "qr==R,rcode!=Success"`: Matches only DNS responses (`qr==R`) with a response code other than `Success`.
 
-The output should look similar to the following:
+The output looks similar to the following:
 
 ```output
 K8S.NODE                      SRC                                    DST                                    NAME                         QTYPE           RCODE   
@@ -118,18 +121,18 @@ Where `RCODE` is the DNS response code and helps you identify the type of DNS fa
 
 Here are some causes of unsuccessful DNS responses:
 
-- The DNS name being resolved has a typo.
+- The DNS name you're resolving has a typo.
 - The upstream DNS nameservers experience issues.
-- A misconfigured networking configuration (such as NetworkPolicy (NetPol), firewall or NSG rules) blocks DNS traffic.
+- A misconfigured networking configuration (such as NetworkPolicy (NetPol), firewall, or NSG rules) blocks DNS traffic.
 - The DNS name becomes invalid after expansion.
 
-    To understand how DNS queries might be expanded using the `/etc/resolv.conf` file of a pod, see [Namespaces of Services](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services).
+    To understand how DNS queries might be expanded by using the `/etc/resolv.conf` file of a pod, see [Namespaces of Services](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services).
 
 ## Step 2: Identify slow DNS queries across the cluster
 
-You can use the DNS gadget to identify all the slow DNS queries across the cluster. To perform this check, trace DNS packets on all the nodes and filter slow responses.
+Use the DNS gadget to identify all the slow DNS queries across the cluster. To perform this check, trace DNS packets on all the nodes and filter slow responses.
 
-In the following example, you're using a latency value of `5ms` to define slow packets. You can change it to a desired value, for example, `5μs`, `20ms`, `1s`:
+In the following example, you use a latency value of `5ms` to define slow packets. You can change it to a desired value, for example, `5μs`, `20ms`, `1s`:
 
 ```bash
 kubectl gadget run trace_dns:$GADGET_VERSION \
@@ -144,7 +147,7 @@ Here are the explanations of the command parameters:
 - `--fields k8s.node,src,dst,name,qtype,rcode,latency_ns`: Shows only Kubernetes information, source and destination of the DNS packets, DNS name, DNS query type, DNS response code, and latency in nanoseconds.
 - `--filter "latency_ns_raw>5000000"`: Matches only DNS responses with latency greater than `5ms` (`5000000` nanoseconds).
 
-The output should look similar to the following:
+The output looks similar to the following:
 
 ```output
 K8S.NODE                   SRC                                DST                               NAME                      QTYPE         RCODE          LATENCY_NS
@@ -178,7 +181,7 @@ Here are the explanations of the command parameters:
 - `--fields src,dst,id,qr,name,nameserver,rcode,latency_ns`: Shows only source and destination of the DNS packets, DNS query ID, query/response, DNS name, nameserver, DNS response result, and latency in nanoseconds.
 - `--filter "nameserver.addr==168.63.129.16" `: Matches only DNS packets with the nameserver IP address `168.63.129.16`.
 
-The output should look similar to the following:
+The output looks similar to the following:
 
 ```output
 SRC                                        DST                                        ID                QR NAME                           NAMESERVER       RCODE              LATENCY_NS
@@ -196,7 +199,7 @@ You can use the `RCODE`, and `LATENCY` values to determine the health of the ups
 
 ## Step 4: Verify DNS queries get responses in a timely manner
 
-You can use the DNS gadget to verify that a particular DNS query gets a response in a timely manner. To perform this check, filter the events with a DNS name and match the query/response IDs:
+Use the DNS gadget to verify that a particular DNS query gets a response in a timely manner. To perform this check, filter the events with a DNS name and match the query and response IDs:
 
 ```bash
 kubectl gadget run trace_dns:$GADGET_VERSION \
@@ -207,11 +210,11 @@ kubectl gadget run trace_dns:$GADGET_VERSION \
 
 Here are the explanations of the command parameters:
 
-- `-l app=test-pod`: Shows only data to/from pods with the label `app=test-pod` in the default namespace.
-- `--fields k8s.node,k8s.namespace,k8s.podname,id,qtype,qr,name,rcode,latency_ns`: Shows only Kubernetes information, DNS query ID, query type, query/response, DNS name, DNS response result, and latency in nanoseconds.
+- `-l app=test-pod`: Shows only data to and from pods with the label `app=test-pod` in the default namespace.
+- `--fields k8s.node,k8s.namespace,k8s.podname,id,qtype,qr,name,rcode,latency_ns`: Shows only Kubernetes information, DNS query ID, query type, query and response, DNS name, DNS response result, and latency in nanoseconds.
 - `--filter name==microsoft.com.`: Matches only DNS packets with the DNS name `microsoft.com.` Ensure that the filter value is a fully qualified domain name (**FQDN**) by adding a dot (`.`) to the end of the name.
 
-The output should look similar to the following:
+The output looks similar to the following:
 
 ```output
 K8S.NODE                  K8S.NAMESPACE             K8S.PODNAME               ID             QTYPE          QR NAME                     RCODE          LATENCY_NS
@@ -221,11 +224,11 @@ aks-agentpoo…9-vmss000000 default                   mypod                     
 aks-agentpoo…9-vmss000000 default                   mypod                     d482           AAAA           R  microsoft.com.           Success            9.27ms
 ```
 
-The `ID` value (for example, `102d`) can be used to correlate the queries with responses. You also can use the `LATENCY_NS` value to validate that you get the responses in a timely manner.
+Use the `ID` value (for example, `102d`) to correlate the queries with responses. You can also use the `LATENCY_NS` value to validate that you get the responses in a timely manner.
 
 ## Step 5: Verify DNS responses contain the expected IP addresses
 
-You can use the DNS gadget to verify that a particular DNS query gets the expected response. For example, for a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) (named *myheadless*), you would expect the response to contain the IP addresses of all the pods.
+Use the DNS gadget to verify that a particular DNS query gets the expected response. For example, for a [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) (named *myheadless*), you expect the response to contain the IP addresses of all the pods.
 
 ```bash
 kubectl gadget run trace_dns:$GADGET_VERSION \
@@ -238,7 +241,7 @@ Here are the explanations of the command parameters:
 - `--fields k8s.podname,id,qtype,qr,name,rcode,num_answers,addresses`: Shows only Kubernetes information, DNS query ID, query type, query/response, DNS name, DNS response result, number of answers, and IP addresses in the response.
 - `--filter name~myheadless`: Matches only DNS packets with the DNS name that contains `myheadless`. The `~` operator is used to match a regex.
 
-The output should look similar to the following:
+The output looks similar to the following:
 
 ```output
 K8S.PODNAME                           ID                   QTYPE                QR NAME                                 RCODE     NUM_ANSWERS ADDRESSES          
@@ -248,7 +251,7 @@ mypod                                 abcd                 AAAA                 
 mypod                                 abcd                 AAAA                 R  myheadless.default.svc.cluster.loca… Success   0                              
 ```
 
-You can use the `NUM_ANSWERS` and `ADDRESSES` values to match the values you get from `kubectl get ep myheadless`.
+Use the `NUM_ANSWERS` and `ADDRESSES` values to match the values you get from `kubectl get ep myheadless`.
 
 ```bash
 kubectl get ep myheadless 

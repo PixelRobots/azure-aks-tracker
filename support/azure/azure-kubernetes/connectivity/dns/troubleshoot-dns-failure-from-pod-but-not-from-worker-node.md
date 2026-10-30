@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot DNS resolution failures from inside the pod - Azure | Microsoft Learn
+title: Troubleshoot DNS resolution failures from inside the pod in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/dns/troubleshoot-dns-failure-from-pod-but-not-from-worker-node
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: DNS resolution fails in AKS pods while nodes resolve correctly? Troubleshoot DNS resolution failures in Azure Kubernetes Service and restore outbound connectivity now.
-ms.date: 2026-07-22T00:00:00.0000000Z
-ms.reviewer: chiragpa, rissing, v-leedennis
-editor: v-jsitser
+description: DNS resolution fails in AKS pods but not on nodes? Troubleshoot DNS resolution failures in Azure Kubernetes Service and restore connectivity now.
+ms.date: 2026-10-28T00:00:00.0000000Z
+ms.reviewer: chiragpa, rissing, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: 4e51cf8d-062f-6698-8e5e-bd57b4edf4fd
 document_version_independent_id: 4e51cf8d-062f-6698-8e5e-bd57b4edf4fd
@@ -45,13 +45,15 @@ spProducts:
 platformId: ae1f44dd-2d97-bb1f-4874-43f3ed07d095
 ---
 
-# Troubleshoot DNS resolution failures from inside the pod - Azure | Microsoft Learn
+# Troubleshoot DNS resolution failures from inside the pod in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to troubleshoot Domain Name System (DNS) resolution failures that occur from inside the pod, but not from the worker node, when you try to establish an outbound connection from a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article discusses how to troubleshoot Domain Name System (DNS) resolution failures that occur from inside the pod, but not from the worker node, when you try to establish an outbound connection from an Azure Kubernetes Service (AKS) cluster.
 
 ## Prerequisites
+
+Ensure the following prerequisites are met before you start troubleshooting DNS resolution failures from inside the pod:
 
 - The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/) tool, or a similar tool to connect to the cluster. To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
 - A test container image that the cluster can pull and that includes DNS lookup tools such as [host](https://linux.die.net/man/1/host), `dig`, and `nslookup`. This article uses `mcr.microsoft.com/aks/fundamental/base-ubuntu`. If you instead use a minimal image that doesn't include these tools, you also need a package manager (such as [apt-get](https://linux.die.net/man/8/apt-get)) to install them. If you prefer a different image, use a [glibc](https://www.gnu.org/software/libc/)-based distribution (such as Ubuntu, Debian, or Azure Linux) rather than a musl-based one (such as Alpine or BusyBox). The resolver behavior described in this article (for example, the *resolv.conf* search-domain and `ndots` handling and the three name server limit) follows the glibc implementation, and a musl-based image can resolve DNS differently.
@@ -63,7 +65,7 @@ For DNS resolution, the pods send requests to the CoreDNS pods in the `kube-syst
 
 If the DNS query is for an internal component, such as a service name, the CoreDNS pod responds by itself. However, if the request is for an external domain, the CoreDNS pod sends the request to the upstream DNS server.
 
-The upstream DNS servers are obtained based on the *resolv.conf* file of the worker node in which the pod is running. The *resolv.conf* file (*/run/systemd/resolve/resolv.conf*) is updated based on the DNS settings of the virtual network on which the worker node is running.
+The upstream DNS servers are based on the *resolv.conf* file of the worker node where the pod runs. The DNS settings of the virtual network on which the worker node runs update the *resolv.conf* file (*/run/systemd/resolve/resolv.conf*).
 
 ## Troubleshooting checklist
 

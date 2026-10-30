@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot Kubernetes resource viewer access in Azure portal - Azure | Microsoft Learn
+title: Troubleshoot Kubernetes resource viewer access in Azure portal for AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/cannot-view-resources-kubernetes-resource-viewer-portal
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,13 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Can't view resources in Kubernetes resource viewer in Azure portal? Learn fixes for authorized IP ranges and private clusters. Resolve access now.
-ms.date: 2025-04-14T00:00:00.0000000Z
-ms.reviewer: edneto, chiragpa, nickoman, jaewonpark, v-leedennis
+description: Can't view resources in the Kubernetes resource viewer in the Azure portal? Learn how to fix authorized IP range and private cluster issues. Resolve access now.
+ms.date: 2026-10-29T00:00:00.0000000Z
+ms.reviewer: edneto, chiragpa, nickoman, jaewonpark, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 keywords: 
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: 3a6074f4-686b-7221-67c4-2a8c1d637ac2
 document_version_independent_id: 3a6074f4-686b-7221-67c4-2a8c1d637ac2
@@ -35,30 +36,34 @@ monikers: []
 item_type: Content
 source_path: support/azure/azure-kubernetes/connectivity/cannot-view-resources-kubernetes-resource-viewer-portal.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/970f20f1-2f12-4aa9-9c95-c00fe1f5e722
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/432c4950-b799-4ed5-93d5-b9b2934edf7d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 7430d882-e91d-f052-0b26-b20ad6fda085
 ---
 
-# Troubleshoot Kubernetes resource viewer access in Azure portal - Azure | Microsoft Learn
+# Troubleshoot Kubernetes resource viewer access in Azure portal for AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to resolve an issue that prevents you from using the Azure portal to view resources in the Kubernetes resource viewer.
+This article discusses how to resolve an issue that prevents you from using the Azure portal to view resources in the Kubernetes resource viewer for Azure Kubernetes Service (AKS).
 
 ## Symptoms
 
-When you try to view resources in the [Kubernetes resource viewer](/en-us/azure/aks/kubernetes-portal) in the [Azure portal](https://portal.azure.com), you receive the following error message:
+When you try to view resources in the [Kubernetes resource viewer](/en-us/azure/aks/kubernetes-portal) in the [Azure portal](https://portal.azure.com), you receive the following error message.
 
 > 
-> `Unable to reach the API server '<server-url>' or API is too busy to response. Check your network setting`.
+> `Unable to reach the API server '<server-url>' or API is too busy to respond. Check your network settings`.
 
-[![Screenshot of the Kubernetes resource viewer in Azure portal showing an API server network connectivity error message.](media/cannot-view-resources-kubernetes-resource-viewer-portal/network-error.png)](media/cannot-view-resources-kubernetes-resource-viewer-portal/network-error.png#lightbox)
+[![Screenshot of the Kubernetes resource viewer in the Azure portal showing an API server network connectivity error message.](media/cannot-view-resources-kubernetes-resource-viewer-portal/network-error.png)](media/cannot-view-resources-kubernetes-resource-viewer-portal/network-error.png#lightbox)
 
 ## Cause 1: You configured authorized IP address ranges
 
-You configured your Microsoft Azure Kubernetes Service (AKS) cluster to access the cluster API server by using authorized IP address ranges that your computer can't access.
+You configured your AKS cluster to access the cluster API server by using authorized IP address ranges that your computer can't access.
 
 ### Solution
 
@@ -66,12 +71,12 @@ When you run the [az aks create](/en-us/cli/azure/aks#az-aks-create) or [az aks 
 
 ## Cause 2: Your AKS cluster is private
 
-Your AKS is created as a private cluster, and you're accessing the Azure portal from a network that can't communicate with the subnet to which your AKS is connected.
+You created your AKS cluster as a private cluster, and you're accessing the Azure portal from a network that can't communicate with the subnet to which your AKS is connected.
 
 ### Solution
 
 This behavior is expected. To view the AKS resources in the Azure portal, you must access the Azure portal from a client that's located on a network that has connectivity to the AKS subnet. Then, you can view all AKS-related resources in the Azure portal.
 
-## More information
+## References
 
 - [How to find my IP to include in --api-server-authorized-ip-ranges?](/en-us/azure/aks/api-server-authorized-ip-ranges#how-to-find-my-ip-to-include-in---api-server-authorized-ip-ranges)
