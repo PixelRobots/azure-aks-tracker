@@ -68,7 +68,7 @@ Starting on **November 30, 2025**, Azure Kubernetes Service (AKS) no longer supp
 - Dual-stack networking is required for the Azure virtual network and the pod CIDR.
     - Single stack IPv6-only isn't supported for node or pod IP addresses. Services can be provisioned on IPv4 or IPv6.
 - Azure CNI Overlay doesn't support Azure or Calico network policies with dual-stack networking. To use network policies, use Azure CNI Powered by Cilium.
-- Standard NAT Gateway supports only IPv4. For dual-stack egress, use StandardV2 NAT Gateway. The AKS-managed `managedNATGatewayV2` outbound type is in preview.
+- Standard NAT Gateway supports only IPv4. For dual-stack egress, use StandardV2 NAT Gateway. The AKS-managed `managedNATGateway` outbound type now supports and defaults to StandardV2 NAT gateway in eligible regions. For more information, visit [using NAT Gateway with AKS](/en-us/nat-gateway).
 - The virtual nodes add-on isn't supported with dual-stack networking.
 
 ## Prerequisites
