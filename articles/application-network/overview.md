@@ -21,8 +21,9 @@ author: Kochhars
 ms.author: kochhars
 ms.service: azure-kubernetes-app-net
 ms.topic: overview
-ms.date: 2025-11-04T00:00:00.0000000Z
+ms.date: 2026-10-29T00:00:00.0000000Z
 ms.custom: references_regions
+ai-usage: ai-assisted
 locale: en-us
 document_id: f9ce3a85-6d47-3c42-8346-816531262843
 document_version_independent_id: c7c6b6de-a8ff-9737-4c78-cb3facb36f85
@@ -87,7 +88,11 @@ This design separates the data plane from individual workloads, improving effici
 
 ## Supported scenarios
 
-Application Network supports single-cluster AKS deployments running **Linux-based node pools**. It's ideal for applications that require secure, in-cluster communication and simplified mesh management without managing sidecars or control plane components.
+Application Network supports **single-cluster and multi-cluster AKS deployments** running **Linux-based node pools**. Connect multiple clusters to the same Application Network for service-to-service communication within and across member clusters, without managing sidecars or control plane components.
+
+For multi-cluster deployments, choose a topology that matches your network reachability. Members in the same mesh network require direct pod-IP connectivity; members in different networks communicate through east-west gateways. Application Network doesn't create the underlying connectivity for either path. For configuration steps, see [Configure multi-cluster connectivity](multi-cluster-connectivity).
+
+Joining a cluster doesn't automatically enroll all application workloads or export every service. Enroll the intended workloads in ambient mode and configure global services as described in the [traffic management walkthrough](traffic-management-use-cases).
 
 ## Limitations
 

@@ -21,7 +21,7 @@ author: Kochhars
 ms.author: kochhars
 ms.service: azure-kubernetes-app-net
 ms.topic: get-started
-ms.date: 2025-11-04T00:00:00.0000000Z
+ms.date: 2026-10-29T00:00:00.0000000Z
 locale: en-us
 document_id: 318bbaff-573d-b5cb-652e-5cfb3e38f9ea
 document_version_independent_id: a85372fc-3c4d-1b24-b56a-68a5209b0a13
@@ -171,6 +171,8 @@ If you have an existing cluster that already meets these requirements, you can s
 ## Join an AKS cluster as a member of Azure Kubernetes Application Network
 
 When you join a member cluster to Azure Kubernetes Application Network, you can specify one of the following upgrade modes for that cluster: **fully-managed** or **self-managed**. The upgrade mode determines how minor version upgrades of Azure Kubernetes Application Network are applied to the member cluster. If you don't specify an upgrade mode during member join, it defaults to `SelfManaged`. For more information about upgrade modes, see [Configure upgrades for Azure Kubernetes Application Network members](upgrades).
+
+For multi-cluster deployments, [choose your connectivity topology](multi-cluster-connectivity) before joining members. Network names describe whether members share direct pod-IP connectivity or communicate through east-west gateways.
 
 Note
 
