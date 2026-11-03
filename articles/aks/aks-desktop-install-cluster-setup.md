@@ -57,7 +57,7 @@ If you want to get started with AKS desktop as quickly as possible, we recommend
 
 - Creating an AKS Automatic cluster, which has all required features pre-enabled.
 - Attaching an Azure Container Registry (ACR) with your application images.
-- [Installing the latest version of AKS desktop](https://github.com/Azure/aks-desktop/releases).
+- [Install the latest version of AKS desktop](aks-desktop-overview#install-aks-desktop).
 
 ## Prerequisites
 

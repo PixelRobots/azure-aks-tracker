@@ -56,7 +56,13 @@ AKS desktop abstracts Kubernetes complexity but doesn't remove access. You can s
 
 ## Install AKS desktop
 
-If you have [Azure CLI](/en-us/cli/azure/install-azure-cli) version 2.91.0 or later, you can install AKS desktop by using the `az aks install-desktop` command. You can also download and install it from the [AKS desktop GitHub repository](https://github.com/Azure/aks-desktop/releases).
+If you have [Azure CLI](/en-us/cli/azure/install-azure-cli) version 2.91.0 or later, you can install AKS desktop by using the following command:
+
+```bash
+az aks install-desktop
+```
+
+You can also download and install it from the [AKS desktop GitHub repository](https://github.com/Azure/aks-desktop/releases).
 
 Note
 
