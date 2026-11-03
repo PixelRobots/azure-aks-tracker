@@ -114,9 +114,23 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
     throw new Error('Snapshot state has no valid pages map.');
   }
   const byPath = new Map();
+  const nonCanonicalPaths = new Set();
   for (const [url, entry] of Object.entries(state.pages)) {
     if (!entry || typeof entry !== 'object') throw new Error(`Malformed snapshot state for ${url}`);
-    if (!entry.path || entry.aliasOf || entry.redirectedTo) continue;
+    if (entry.path && entry.redirectedTo) {
+      if (!new RegExp(config.include).test(entry.redirectedTo)) {
+        throw new Error(`Unexpected redirect target in snapshot state: ${entry.redirectedTo}`);
+      }
+      byPath.set(entry.path, entry.redirectedTo);
+      continue;
+    }
+    if (entry.aliasOf || entry.redirectedTo) {
+      for (const file of [entry.path, entry.sourcePath]) {
+        if (file) nonCanonicalPaths.add(file);
+      }
+      continue;
+    }
+    if (!entry.path) continue;
     if (!new RegExp(config.include).test(url)) throw new Error(`Unexpected canonical URL in snapshot state: ${url}`);
     byPath.set(entry.path, url);
   }
@@ -151,7 +165,13 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
     }
     const route = routeFor(file);
     const canonical = byPath.get(file);
-    if (!canonical) throw new Error(`Changed article has no canonical URL in snapshot state: ${file}`);
+    if (!canonical) {
+      if (nonCanonicalPaths.has(file)) {
+        suppressed.push({ filename: file, reason: 'Alias or redirect path is not a canonical documentation change.' });
+        continue;
+      }
+      throw new Error(`Changed article has no canonical URL in snapshot state: ${file}`);
+    }
     const patch = diffBodies(oldBody, newBody);
     const revisions = git(repo, 'log', '--format=%H', `${fileBase}..${headRevision}`, '--', file).trim().split('\n').filter(Boolean);
     let detectedRevision;

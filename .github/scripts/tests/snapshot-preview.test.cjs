@@ -182,6 +182,29 @@ test('content-preserving moves are not reported as newly published pages', () =>
   assert.equal(result.suppressed.length, 2);
 }));
 
+test('changed redirect paths use the canonical Learn URL instead of being rejected', () => fixture(({ repo, build, commit }) => {
+  const aliasFile = 'articles/aks/install-the-managed-kueue-extension-on-aks.md';
+  fs.writeFileSync(path.join(repo, aliasFile), '# Managed Kueue extension\n\nUpdated alias content.\n');
+  const statePath = path.join(repo, '.learn-mirror/state.json');
+  const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+  state.pages['https://learn.microsoft.com/en-us/azure/aks/install-the-managed-kueue-extension-on-aks'] = {
+    aliasOf: 'https://learn.microsoft.com/en-us/azure/aks/configure-queues-with-automatic-resource-flavors',
+    sourcePath: aliasFile
+  };
+  state.pages['https://learn.microsoft.com/en-us/azure/aks/configure-queues-with-automatic-resource-flavors'] = {
+    path: aliasFile,
+    redirectedTo: 'https://learn.microsoft.com/en-us/azure/aks/install-the-managed-kueue-extension-on-aks',
+    sourcePath: aliasFile
+  };
+  fs.writeFileSync(statePath, JSON.stringify(state));
+  commit();
+
+  const result = build();
+  const change = result.changes.find(item => item.filename === aliasFile);
+  assert.ok(change);
+  assert.equal(change.canonical_url, 'https://learn.microsoft.com/en-us/azure/aks/install-the-managed-kueue-extension-on-aks');
+}));
+
 test('missing baseline, stale head, shallow history and missing canonical data fail explicitly', () => fixture(({ repo, build, commit }) => {
   assert.throws(() => build({ baseline: 'missing-baseline' }));
   assert.throws(() => build({ now: new Date(now.getTime() + 13 * 3600000) }), /stale/);
