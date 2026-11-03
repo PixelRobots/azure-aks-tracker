@@ -483,6 +483,12 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
     assert.ok(data[name].length > 0, name);
   }
   assert.equal((data.html.match(/class="aks-doc-update"/g) || []).length, 10);
+  const titleLinks = [...data.html.matchAll(/<h2 class="aks-doc-title"[^>]*>\s*<img[^>]*>\s*(<a\b[^>]*>)/g)];
+  assert.equal(titleLinks.length, 10);
+  for (const [, link] of titleLinks) {
+    assert.match(link, /target="_blank"/);
+    assert.match(link, /rel="noopener"/);
+  }
   assert.equal((data.html.match(/>View Documentation<\/a>/g) || []).length, 10);
   assert.equal((data.digest_docs_html.match(/View Documentation<\/a>/g) || []).length, 10);
   assert.equal(/View PR|View change|aks-doc-link-pr/.test(data.html + data.digest_docs_html), false);

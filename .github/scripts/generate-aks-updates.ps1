@@ -3778,7 +3778,7 @@ foreach ($row in @($finalResults.ordered)) {
      data-title="$(Escape-Html $display)">
   <h2 class="aks-doc-title" style="display: flex; align-items: center; gap: 0.5rem;">
     <img class="aks-doc-icon" src="$iconUrl" alt="$iconAlt" loading="lazy" style="height: 1em; width: auto; flex-shrink: 0;" />
-    <a href="$fileUrl">$(Escape-Html $cardTitle)</a>
+    <a href="$fileUrl" target="_blank" rel="noopener">$(Escape-Html $cardTitle)</a>
   </h2>
   <div class="aks-doc-header"$headerStyle>
     $categoryPill
