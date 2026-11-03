@@ -24,7 +24,7 @@ services: application-gateway
 author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.topic: concept-article
-ms.date: 2026-09-11T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: 8d4cfd14-d33a-dfbb-10b6-b296414c48be
@@ -229,7 +229,7 @@ BackendTLSPolicyConfig defines the policy specification for the Backend TLS Poli
 | `CommonTLSPolicy`*CommonTLSPolicy* | (Members of `CommonTLSPolicy` are embedded into this type.) |
 | `sni`* string * | *(Optional)*<br>Sni is the server name to use for the TLS connection to the backend. |
 | `ports`*[]BackendTLSPolicyPort* | Ports specifies the list of ports where the policy is applied. |
-| `clientCertificateRef`* Gateway API .SecretObjectReference * | *(Optional)*<br>ClientCertificateRef is the reference to the client certificate to use for the TLS connection to the backend. |
+| `clientCertificateRef`*[Gateway API .SecretObjectReference](https://gateway-api.sigs.k8s.io/reference/api-spec/1.6/spec/#secretobjectreference)* | *(Optional)*<br>ClientCertificateRef is the reference to the client certificate to use for the TLS connection to the backend. |
 
 ### BackendTLSPolicyPort
 
@@ -281,7 +281,7 @@ CommonTLSPolicyVerify defines the schema for the CommonTLSPolicyVerify API.
 
 | Field | Description |
 | --- | --- |
-| `caCertificateRef`* Gateway API .SecretObjectReference * | CaCertificateRef is the CA certificate used to verify peer certificate. |
+| `caCertificateRef`*[Gateway API .SecretObjectReference](https://gateway-api.sigs.k8s.io/reference/api-spec/1.6/spec/#secretobjectreference)* | CaCertificateRef is the CA certificate used to verify peer certificate. |
 | `subjectAltName`* string * | *(Optional)*<br>SubjectAltName is the subject alternative name used to verify peer certificate. |
 
 ### CustomTargetRef
@@ -292,7 +292,7 @@ CustomTargetRef is a reference to a custom resource that isn’t part of the Kub
 
 | Field | Description |
 | --- | --- |
-| `NamespacedPolicyTargetReference`* Gateway API .NamespacedPolicyTargetReference * | (Members of `NamespacedPolicyTargetReference` are embedded into this type.) |
+| `NamespacedPolicyTargetReference`*[Gateway API .NamespacedPolicyTargetReference](https://gateway-api.sigs.k8s.io/reference/api-spec/1.6/spec/#namespacedpolicytargetreference)* | (Members of `NamespacedPolicyTargetReference` are embedded into this type.) |
 | `sectionNames`* []string * | *(Optional)*<br>SectionNames is the name of the section within the target resource. When unspecified, this targetRef targets the entire resource. In the following resources, SectionNames is interpreted as the following:<br><br>- Gateway: Listener Name<br>- Service: Port Name<br><br><br>If a SectionNames is specified, but doesn’t exist on the targeted object, the Policy fails to attach, and the policy implementation will record a `ResolvedRefs` or similar Condition in the Policy’s status. |
 
 ### FrontendTLSPolicy
@@ -416,7 +416,7 @@ HTTPPathModifier defines configuration for path modifiers.
 
 | Field | Description |
 | --- | --- |
-| `type`*HTTPPathModifierType* | Type defines the type of path modifier. More types may be added in a future release of the API.<br><br>Values may be added to this enum, implementations must ensure unknown values won’t cause a crash.<br><br>Unknown values here must result in the implementation setting the Accepted Condition for the rule to be false |
+| `type`*HTTPPathModifierType* | Type defines the type of path modifier. More types may be added in a future release of the API.<br><br>This enum might be extended in the future. Implementations must handle unknown values without crashing.<br><br>Unknown values here must result in the implementation setting the Accepted Condition for the rule to be false |
 | `replaceFullPath`* string * | *(Optional)*<br>ReplaceFullPath specifies the value with which to replace the full path of a request during a rewrite or redirect. |
 | `replacePrefixMatch`* string * | *(Optional)*<br>ReplacePrefixMatch specifies the value with which to replace the prefix match of a request during a rewrite or redirect. For example, a request to “/foo/bar” with a prefix match of “/foo” and a ReplacePrefixMatch of “/xyz” would be modified to “/xyz/bar”.<br><br>This matches the behavior of the PathPrefix match type. This matches full path elements. A path element refers to the list of labels in the path split by the `/` separator. When specified, a trailing `/` is ignored. For example, the paths `/abc`, `/abc/`, and `/abc/def` would all match the prefix `/abc`, but the path `/abcd` wouldn’t.<br><br>ReplacePrefixMatch is only compatible with a `PathPrefix` HTTPRouteMatch. Using any other HTTPRouteMatch type on the same HTTPRouteRule results in the implementation setting the Accepted Condition for the Route to `status: False`.<br><br><br>| Request Path | Prefix Match | Replace Prefix | Modified Path |<br>| --- | --- | --- | --- |<br>| /foo/bar | /foo | /xyz | /xyz/bar |<br>| /foo/bar | /foo | /xyz/ | /xyz/bar |<br>| /foo/bar | /foo/ | /xyz | /xyz/bar |<br>| /foo/bar | /foo/ | /xyz/ | /xyz/bar |<br>| /foo | /foo | /xyz | /xyz |<br>| /foo/ | /foo | /xyz | /xyz/ |<br>| /foo/bar | /foo |  | /bar |<br>| /foo/ | /foo |  | / |<br>| /foo | /foo |  | / |<br>| /foo/ | /foo | / | / |<br>| /foo | /foo | / | / | |
 | --- | --- |
@@ -690,7 +690,7 @@ LoadAwareConfig defines the configuration for load aware routing.
 | `blackoutPeriod`*[Kubernetes meta/v1.Duration](https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Duration)* | *(Optional)*<br>An endpoint must report load metrics continuously for at least this long before the endpoint metrics will be used to influence load balancing decisions. Takes effect both immediately after we establish a connection to an endpoint and after `metricExpirationPeriod` has elapsed. Default is 10 seconds. |
 | `metricExpirationPeriod`*[Kubernetes meta/v1.Duration](https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Duration)* | *(Optional)*<br>If the endpoint does not report load metrics for this duration, metrics will stop being used to influence load balancing decisions. Default is 3 minutes. |
 | `errorUtilizationPenalty`* string * | *(Optional)*<br>The multiplier used to adjust endpoint weights with the error rated calculated based on the reported `rps_fractional` and `eps` load metrics. Must not be a negative value. Default is 1.0. |
-| `namedMetrics`* []string * | *(Optional)*<br>A list of custom metrics reported by endpoints to be used for reporting utilization and influencing load balancing decisions. Utilization will be computed by taking the max of the values of metrics specified in this list. |
+| `namedMetrics`* []string * | *(Optional)*<br>A list of custom metrics reported by endpoints to be used for reporting utilization and influencing load balancing decisions. Compute utilization by taking the max of the values of metrics specified in this list. |
 
 ### LoadBalancingConfig
 
@@ -725,7 +725,7 @@ MTLSPolicyVerify defines the schema for the MTLSPolicyVerify API.
 
 | Field | Description |
 | --- | --- |
-| `caCertificateRef`* Gateway API .SecretObjectReference * | CaCertificateRef is the CA certificate used to verify peer certificate. |
+| `caCertificateRef`*[Gateway API .SecretObjectReference](https://gateway-api.sigs.k8s.io/reference/api-spec/1.6/spec/#secretobjectreference)* | CaCertificateRef is the CA certificate used to verify peer certificate. |
 | `subjectAltNames`* []string * | *(Optional)*<br>SubjectAltNames is the list of subject alternative names used to verify peer certificate. |
 
 ### PolicyConditionReason (`string` alias)
@@ -749,6 +749,7 @@ PolicyConditionReason is the type of reason used for different ALB related polic
 | "NoTargetReference" |  |
 | "OperationFailed" |  |
 | "OverrideNotSupported" |  |
+| "PartiallyResolvedTargetReference" |  |
 | "Pending" |  |
 | "Programmed" |  |
 | "ProgrammingFailed" |  |
@@ -829,7 +830,7 @@ Redirect defines a filter that redirects a request. This MUST NOT be used on the
 | `hostname`*PreciseHostname* | *(Optional)*<br>Hostname is the hostname to be used in the value of the `Location` header in the response. When empty, the hostname in the `Host` header of the request is used. |
 | `path`*HTTPPathModifier* | *(Optional)*<br>Path defines parameters used to modify the path of the incoming request. The modified path is then used to construct the `Location` header. When empty, the request path is used as-is. |
 | `port`*PortNumber* | *(Optional)*<br>Port is the port to be used in the value of the `Location` header in the response.<br><br>If no port is specified, the redirect port MUST be derived using the following rules:<br><br>- If redirect scheme is not-empty, the redirect port MUST be the well-known port associated with the redirect scheme. Specifically “http” to port 80 and “https” to port 443. If the redirect scheme doesn’t have a well-known port, the listener port of the Gateway SHOULD be used.<br>- If redirect scheme is empty, the redirect port MUST be the Gateway Listener port.<br><br><br>Implementations SHOULD NOT add the port number in the ‘Location’ header in the following cases:<br><br>- A Location header that uses HTTP (whether that is determined via the Listener protocol or the Scheme field) *and* use port 80.<br>- A Location header that uses HTTPS (whether that is determined via the Listener protocol or the Scheme field) *and* use port 443. |
-| `statusCode`* int * | *(Optional)*<br>StatusCode is the HTTP status code to be used in response.<br><br>Values may be added to this enum, implementations must ensure that unknown values won’t cause a crash. |
+| `statusCode`* int * | *(Optional)*<br>StatusCode is the HTTP status code to be used in response.<br><br>This enum might be extended in the future. Implementations must handle unknown values without crashing. |
 
 ### RewriteType (`string` alias)
 

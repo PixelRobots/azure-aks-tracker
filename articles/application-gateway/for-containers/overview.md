@@ -25,7 +25,7 @@ author: mbender-ms
 ms.custom: references_regions
 ms.service: azure-application-gateway-containers
 ms.topic: overview
-ms.date: 2026-09-08T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: 9bd18cb5-838c-7717-faaf-1d12590c1312
@@ -69,7 +69,7 @@ At a high level, Application Gateway for Containers provides:
 - **Shared ingress platform**: Separate platform-owned ingress infrastructure from application-owned routing configuration.
 - **Incremental adoption**: Use Ingress or Gateway API resources so workloads can move to Application Gateway for Containers over time.
 - **AI inference support**: Route inference traffic to self-hosted model servers with model-aware routing and request-time endpoint selection, configured through the Gateway API Inference Extension.
-- **Application delivery controls**: Use layer 7 routing, traffic splitting, health probes, retries, TLS, mutual authentication, and Web Application Firewall (WAF) policies.
+- **Application delivery controls**: Use layer 7 routing, traffic splitting, health probes, retries, TLS, mutual authentication, JWT validation, and Web Application Firewall (WAF) policies.
 
 ## How does it work?
 
@@ -121,6 +121,7 @@ Application Gateway for Containers supports the following features for traffic m
     - SSL termination
     - End to End SSL
 - Ingress and Gateway API support
+- JWT validation
 - Layer 7 HTTP/HTTPS request forwarding based on prefix/exact match on:
     - Hostname
     - Path
@@ -129,6 +130,7 @@ Application Gateway for Containers supports the following features for traffic m
     - Methods
     - Ports (80/443)
 - Mutual authentication (mTLS) to frontend, backend, or end-to-end
+- Private endpoint support
 - Request mirroring
 - Server-sent event (SSE) support
 - TLS policies
@@ -182,7 +184,7 @@ Application Gateway for Containers is currently available in the following regio
 
 ### Gateway API support
 
-ALB Controller implements version [v1.5](https://gateway-api.sigs.k8s.io/docs/implementations/versions/v1.5/) of the [Gateway API](https://gateway-api.sigs.k8s.io/).
+ALB Controller implements version [v1.6](https://gateway-api.sigs.k8s.io/docs/implementations/versions/v1.6/) of the [Gateway API](https://gateway-api.sigs.k8s.io/).
 
 | Gateway API Resource | Support | Comments |
 | --- | --- | --- |
@@ -191,8 +193,14 @@ ALB Controller implements version [v1.5](https://gateway-api.sigs.k8s.io/docs/im
 | [HTTPRoute](https://gateway-api.sigs.k8s.io/reference/api-types/httproute/) | Yes |  |
 | [GRPCRoute](https://gateway-api.sigs.k8s.io/reference/api-types/grpcroute/) | Yes |  |
 | [ReferenceGrant](https://gateway-api.sigs.k8s.io/reference/api-types/referencegrant/) | Yes | Currently supports version v1alpha1 of this API |
+
+### Gateway API Inference Extension support
+
+ALB Controller implements version [v1.6](https://gateway-api-inference-extension.sigs.k8s.io/reference/spec/) of the [Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/).
+
+| Gateway API Inference Extension Resource | Support | Comments |
+| --- | --- | --- |
 | [InferencePool](https://gateway-api-inference-extension.sigs.k8s.io/reference/spec/#inferencepool) | Yes |  |
-| [InferenceObjective](https://gateway-api-inference-extension.sigs.k8s.io/?h=inferenceobjective#deploy-inferenceobjective-optional) | Yes | Currently implements version v1alpha1 of this API |
 
 ### Ingress API support
 
