@@ -41,9 +41,11 @@ item_type: Content
 source_path: articles/aks/aks-desktop-app.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/64b65f6c-101f-411a-9b83-9f577fab52d0
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/1a667fd1-8145-4b11-af0f-9f5de205a6e5
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: 1ac3d4ad-2272-6a12-632b-2750b1b2cd62
 ---
@@ -58,7 +60,7 @@ This article shows you how to sign in, add a cluster, create a [Project](aks-des
 - An existing [AKS Automatic cluster](intro-aks-automatic) with Microsoft Entra authentication. The cluster needs to be available through the Azure portal or an [Azure Container Registry (ACR)](/en-us/azure/container-registry/container-registry-intro) with your application image that you want to deploy.
 - Azure CLI version 2.64.0 or later. Check your version using the [`az --version`](/en-us/cli/azure/reference-index#az-version) command. To install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
 - The `aks-preview` Azure CLI extension. Install it using the `az extension add --name aks-preview` command.
-- [AKS desktop](https://github.com/Azure/aks-desktop/releases) installed. AKS desktop supports the following operating systems (OS): Windows, Linux, and Mac.
+- [AKS desktop](aks-desktop-overview#install-aks-desktop) installed.
 - Appropriate Role-Based Access Control (RBAC) roles assigned for your team. For more information, see [Set up permissions and RBAC for AKS desktop](aks-desktop-permissions).
 
 ## Sign in to your account

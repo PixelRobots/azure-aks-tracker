@@ -61,7 +61,7 @@ This article covers how to:
 
 ## Prerequisites
 
-- [AKS desktop](aks-desktop-overview) installed. AKS desktop supports Windows, Linux, and macOS.
+- [AKS desktop](aks-desktop-overview#install-aks-desktop) installed.
 - An existing AKS cluster. The cluster must use Microsoft Entra ID authentication. For the best experience, use an [AKS Automatic cluster](intro-aks-automatic). For Standard cluster requirements, see [AKS Standard clusters for AKS desktop](aks-desktop-install-cluster-setup#aks-standard-clusters).
 - The [Azure Kubernetes Service RBAC Cluster Admin role](manage-azure-rbac#aks-built-in-roles) or equivalent permissions on the target cluster.
 

@@ -61,7 +61,7 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 
 ## Prerequisites
 
-- **AKS desktop** installed and signed in to your AKS cluster. See [Set up an AKS cluster for AKS desktop](aks-desktop-install-cluster-setup) or [Deploy applications with AKS Automatic using AKS desktop](aks-desktop-quickstart-auto).
+- **[AKS desktop](aks-desktop-overview#install-aks-desktop)** installed and signed in to your AKS cluster. See [Set up an AKS cluster for AKS desktop](aks-desktop-install-cluster-setup) or [Deploy applications with AKS Automatic using AKS desktop](aks-desktop-quickstart-auto).
 - **Cluster admin** or equivalent Role-Based Access Control (RBAC) permissions on the target AKS cluster. Installing Inspektor Gadget requires creating a `ClusterRole`, `ClusterRoleBinding`, and a privileged `DaemonSet`.
 - Your cluster nodes must run **Linux** with kernel version **≥ 5.4**. Windows node pools aren't supported.
 - If your cluster uses Azure Policy or OPA Gatekeeper with restricted pod security, add an exemption for the `gadget` namespace to allow privileged pods.
