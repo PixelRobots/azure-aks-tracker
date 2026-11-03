@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: merill/learn-mirror
-          ref: 4f6c802dd18d00a99397504b8872ae0841ac5c38 # v1
+          ref: 4f6c802dd18d00a99397504b8872ae0841ac5c38 # main, SHA pinned; monitored by Renovate
           path: learn-mirror-tool
           persist-credentials: false
 

@@ -1,3 +1,31 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/(snapshot-learn-docs|preview-snapshot-tracker)\\.yml$/"
+      ],
+      "matchStrings": [
+        "repository: merill/learn-mirror\\s+ref: (?<currentDigest>[a-f0-9]{40})"
+      ],
+      "currentValueTemplate": "main",
+      "depNameTemplate": "merill/learn-mirror",
+      "packageNameTemplate": "https://github.com/merill/learn-mirror",
+      "datasourceTemplate": "git-refs"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["merill/learn-mirror"],
+      "groupName": "Learn mirror tool",
+      "schedule": ["* 0-5 * * 1"],
+      "automerge": false,
+      "assignees": ["PixelRobots"],
+      "prBodyNotes": [
+        "@PixelRobots: please review the upstream changes and snapshot preview checks before merging. Both workflow references remain pinned to a full commit SHA."
+      ]
+    }
+  ]
 }
