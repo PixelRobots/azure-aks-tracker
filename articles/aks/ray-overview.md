@@ -69,9 +69,9 @@ For managed operator installation outside this Terraform workflow, see [Install 
 
 ## What is Kueue?
 
-[Kueue](https://kueue.sigs.k8s.io/) is a Kubernetes-native job queueing controller that manages workload admission based on resource quotas. Instead of letting every submitted job consume resources immediately, Kueue gates admission against defined quotas - jobs that fit run, jobs that don't wait in line. For a detailed overview of Kueue concepts and configuration, see [Kueue overview on AKS](kueue-overview).
+[Kueue](https://kueue.sigs.k8s.io/) is a Kubernetes-native job queueing controller that manages workload admission based on resource quotas. Instead of letting every submitted job consume resources immediately, Kueue gates admission against defined quotas - jobs that fit run, jobs that don't wait in line. For a detailed overview of Kueue concepts and configuration, see [Managed Kueue extension overview](managed-kueue-extension-overview).
 
-For managed installation and operation, see [Install the managed Kueue extension on AKS (preview)](kueue-overview).
+For managed installation and operation, see [Install the managed Kueue extension on AKS (preview)](install-the-managed-kueue-extension-on-aks).
 
 ## Solution architecture
 

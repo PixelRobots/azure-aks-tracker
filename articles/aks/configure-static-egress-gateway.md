@@ -24,7 +24,7 @@ author: schaffererin
 ms.author: schaffererin
 ms.subservice: aks-networking
 ms.topic: how-to
-ms.date: 2026-08-06T00:00:00.0000000Z
+ms.date: 2026-10-27T00:00:00.0000000Z
 ai-usage: ai-assisted
 locale: en-us
 document_id: 182c02a4-964d-4660-0fa8-8038ff775576
@@ -42,8 +42,10 @@ item_type: Content
 source_path: articles/aks/configure-static-egress-gateway.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: 9de51e54-8a1c-147b-3124-85a1df1aff99
 ---
 
@@ -119,6 +121,8 @@ az aks nodepool scale --cluster-name <cluster-name> \
 
 Define the gateway configuration by creating a `StaticGatewayConfiguration` custom resource. This configuration specifies which node pool and public IP prefix to use.
 
+If you supply an existing public IP prefix, configure its access and namespace authorization before applying the manifest.
+
 | Field | Required | Description |
 | --- | --- | --- |
 | `gatewayNodepoolName` | Yes | Name of the gateway node pool that handles egress traffic. |
@@ -154,15 +158,46 @@ kubectl get staticgatewayconfiguration <gateway-config-name> \
     --output jsonpath='{.status.egressIpPrefix}'
 ```
 
-Tip
+### Use your own public IP prefix
 
-If you omit `publicIpPrefixId`, the controller creates a public IP prefix. Run `kubectl describe StaticGatewayConfiguration <gateway-config-name> --namespace <namespace>` and check `Egress Ip Prefix` in the status. To use an existing prefix, specify its resource ID in `publicIpPrefixId` and grant the AKS cluster identity the Network Contributor role.
+To use an existing public IP prefix, set `spec.publicIpPrefixId` to its Azure resource ID.
+
+#### Grant Azure access to the cluster identity
+
+Grant the AKS cluster identity the **Network Contributor** role at the existing public IP prefix's resource scope.
+
+#### Authorize the namespace on the prefix
+
+Ask the prefix administrator to set the Azure resource tag `kube-egress-gateway-allowed-namespaces` to the Kubernetes namespaces approved to use the prefix. The tag accepts comma- or semicolon-separated namespace names. For example, `team-a,team-b` authorizes configurations in those two namespaces. The value `*` authorizes all namespaces; use explicit namespace names when access should be limited.
+
+Set the tag:
+
+```azurecli
+PREFIX_ID=$(az network public-ip prefix show \
+    --resource-group <prefix-resource-group> \
+    --name <prefix-name> \
+    --query id \
+    --output tsv)
+
+az tag update \
+    --resource-id "$PREFIX_ID" \
+    --operation Merge \
+    --tags "kube-egress-gateway-allowed-namespaces=team-a,team-b"
+```
+
+Replace `team-a,team-b` with the complete list of approved namespaces, including any existing entries that should remain authorized. The merge operation preserves other resource tags, but replaces the value of this tag.
+
+Important
+
+Permission to modify this tag grants control over namespace authorization. Limit tag changes to trusted administrators. The tag doesn't grant Azure access to the cluster identity or Kubernetes access to create `StaticGatewayConfiguration` resources; configure those permissions separately.
+
+This tag applies only when you supply an existing public IP prefix through `spec.publicIpPrefixId`. It isn't required for automatically created public IP prefixes or private IP configurations with `spec.provisionPublicIps: false`.
 
 ## Configure Static Egress Gateway with private IP addresses
 
 Important
 
-Static private IP support is in preview and requires clusters running Kubernetes version 1.34 or later.
+Static private IP support requires clusters running Kubernetes version 1.34 or later.
 
 If you need to keep egress traffic on private addresses, create a gateway node pool that uses the `VirtualMachines` VM set type. Node public IPs are disabled by default. The `StaticGatewayConfiguration` resource in the following steps separately disables public IP provisioning for egress.
 
@@ -255,6 +290,23 @@ In the `status` section, verify the following fields:
 - `egressIpPrefix` contains the assigned public IP prefix or private IP addresses.
 - `gatewayServerProfile.ip` and `gatewayServerProfile.port` identify the gateway endpoint.
 - `gatewayServerProfile.publicKey` contains the public key for the WireGuard configuration, which defines the encrypted tunnel between pods and the gateway node pool.
+
+### Check BYO prefix authorization warnings
+
+A Kubernetes Warning event with reason `BYOPrefixAuthorizationRequired` on a `StaticGatewayConfiguration` indicates that its BYO prefix doesn't authorize the configuration's namespace.
+
+View events for a configuration:
+
+```bash
+kubectl describe staticgatewayconfiguration <gateway-config-name> -n <namespace>
+```
+
+List authorization warnings in a namespace:
+
+```bash
+kubectl get events -n <namespace> \
+    --field-selector involvedObject.kind=StaticGatewayConfiguration,reason=BYOPrefixAuthorizationRequired
+```
 
 ## Delete a gateway node pool
 
