@@ -75,7 +75,7 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
   let health = null;
   if (production) {
     if (demo) throw new Error('Synthetic changes cannot be published.');
-    // Require a committed heartbeat from a zero-error, complete pass, not just a recent article commit.
+    // Require committed collection health, not just a recent article commit.
     const { validateHealth } = require('./snapshot-health.cjs');
     health = validateHealth(JSON.parse(git(repo, 'show', `${headRevision}:.learn-mirror/health.json`)), now, maxAgeHours);
   }
@@ -207,6 +207,7 @@ function buildChanges({ repo, baseline, head = 'HEAD', now = new Date(), demo = 
     since: since.toISOString(), generated_at: now.toISOString(), snapshot_at: headTime,
     baseline_only: headRevision === baselineRevision,
     warnings: [
+      ...(health?.errors ? [`${health.errors} Learn page(s) failed collection; previous snapshots are retained where available. See collection_health.failed_pages for URLs and reasons.`] : []),
       ...(production ? [] : ['Preview only: collection freshness does not prove a complete crawl. Confirm the collector Actions summary before cutover.']),
       ...(demo ? ['SYNTHETIC TEST DATA: not real Microsoft documentation changes.'] : [])
     ],
@@ -273,6 +274,9 @@ function main() {
     const result = buildChanges({ repo, baseline, head: args.head || 'HEAD', demo: Boolean(temporary), production: args.production === 'true', productBaselines });
     fs.mkdirSync(path.dirname(path.resolve(args.output)), { recursive: true });
     fs.writeFileSync(args.output, JSON.stringify(result, null, 2) + '\n');
+    if (result.production_ready) {
+      for (const warning of result.warnings) console.warn(`::warning::${warning}`);
+    }
     console.log(`${result.demo ? 'SYNTHETIC' : 'Live'} preview: ${result.changes.length} content changes; ${result.suppressed.length} deletions held for review.`);
   } finally {
     if (temporary) fs.rmSync(temporary, { recursive: true, force: true });

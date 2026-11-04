@@ -106,6 +106,18 @@ test('pinned upstream tool accepts config and preserves content while stripping 
   assert.ok(cleaned.endsWith('# AKS\nBody\n'));
   assert.equal(/updated_at|git_commit_id|gitcommit|word_count/.test(cleaned), false);
   assert.equal(tool.mirrorPathFor('articles/aks/what-is-aks.md'), 'articles/aks/what-is-aks.md');
+  const failedUrl = 'https://learn.microsoft.com/en-us/azure/aks/what-is-aks';
+  const fetchedUrl = 'https://learn.microsoft.com/en-us/azure/aks/new-article';
+  const previous = { [failedUrl]: { path: 'articles/aks/what-is-aks.md', etag: 'previous' } };
+  const plan = tool.reconcile(previous, [failedUrl, fetchedUrl], [
+    { url: failedUrl, kind: 'error', error: 'HTTP 200 text/html' },
+    { url: fetchedUrl, kind: 'fetched', entry: { path: 'articles/aks/new-article.md' }, content: '# New article' }
+  ]);
+  assert.deepEqual(plan.pages[failedUrl], previous[failedUrl]);
+  assert.equal(plan.writes.length, 1);
+  assert.equal(plan.writes[0].path, 'articles/aks/new-article.md');
+  assert.deepEqual(plan.deletes, []);
+  assert.equal(plan.errors.length, 1);
 });
 
 test('snapshot storage starts empty on an orphan branch and can be reopened', () => {

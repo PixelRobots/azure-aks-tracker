@@ -410,6 +410,25 @@ test('production health requires a complete fresh pass and matches committed con
   assert.throws(() => validateHealth({ ...health, products: health.products.map(product => product === 'AKS Automatic' ? 'Unknown' : product) }, now), /incomplete or failed/);
 }));
 
+test('production publishes successful updates with disclosed bounded page failures', () => fixture(({ repo, build, commit }) => {
+  const failed = { url: 'https://learn.microsoft.com/en-us/azure/aks/what-is-aks', error: 'HTTP 200 text/html' };
+  const health = recordHealth(repo, {
+    errors: 1, unreached: 0, now,
+    collection: { attempted: 100, errors: 1, unreached: 0, failed_pages: [failed] }
+  });
+  commit('Degraded collector heartbeat');
+  const data = build({ production: true });
+  assert.equal(data.production_ready, true);
+  assert.equal(data.collection_health.complete, false);
+  assert.equal(data.collection_health.publishable, true);
+  assert.deepEqual(data.collection_health.failed_pages, [failed]);
+  assert.equal(data.changes.length, 10);
+  assert.match(data.warnings.join('\n'), /1 Learn page.*failed/);
+  fs.writeFileSync(path.join(repo, '.learn-mirror/health.json'), JSON.stringify({ ...health, attempted: 99 }));
+  commit('Over-limit collector heartbeat');
+  assert.throws(() => build({ production: true }), /incomplete or failed/);
+}));
+
 test('production change disclosure escapes Markdown, keeps the complete diff and avoids full-page diffs for new articles', () => {
   const script = path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''");
   const result = spawnSync('pwsh', ['-NoProfile', '-Command', `

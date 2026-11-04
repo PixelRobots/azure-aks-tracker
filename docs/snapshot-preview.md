@@ -38,14 +38,17 @@ collector commits its Markdown/state plus `.learn-mirror/health.json`, including
 the check timestamp, errors, unreached pages, article count, all ten product
 scopes and the Actions run URL.
 
-Production requires a complete pass with zero errors/unreached pages. A partial
-pass is saved for continuation but fails the publication prerequisite. Failed
-validation leaves the existing WordPress HTML untouched; it is not treated as
+Production requires every page to be reached, with at most five fetch failures
+and no more than 1% of requests failing. Allowed failures retain prior snapshots
+where available and are disclosed in health metadata and Actions warnings. Runs
+with unreached pages or failures exceeding either limit are saved for continuation
+but fail the publication prerequisite. Failed validation leaves the existing
+WordPress HTML untouched; it is not treated as
 "no documentation changes".
 
 The adapter reads a single captured Git revision, verifies complete history and
 baseline ancestry, and validates the committed health marker against its state
-and article files. A missing/incomplete marker, inconsistent coverage, or a
+and article files. A missing/non-publishable marker, inconsistent coverage, or a
 check older than 12 hours blocks publication. A heartbeat is committed even when
 article content is unchanged.
 
@@ -155,7 +158,8 @@ zero updates.
   generate fake new-page alerts.
 - Releases and CVE controls/data still render; CVE-only mode works without
   snapshot input.
-- Missing/stale/incomplete collection blocks publishing, rather than replacing
+- Missing/stale collection, unreached pages or failures over the five-page/1%
+  limit block publishing, rather than replacing
   the page with a misleading empty success.
 
 Continue reviewing real changes over the first week and a weekly-digest boundary.

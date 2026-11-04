@@ -43,7 +43,7 @@ jobs:
       - name: Test snapshot configuration
         env:
           LEARN_MIRROR_TOOL: ${{ github.workspace }}/learn-mirror-tool/learn-mirror.js
-        run: node --test tracker/.github/scripts/tests/learn-mirror.test.cjs
+        run: node --test tracker/.github/scripts/tests/learn-mirror.test.cjs tracker/.github/scripts/tests/snapshot-health.test.cjs
 
       - name: Open snapshot branch
         working-directory: tracker
@@ -78,7 +78,29 @@ jobs:
             --max-minutes=25
           )
           if [ "$FULL" = "true" ]; then args+=(--full); fi
-          node "$GITHUB_WORKSPACE/learn-mirror-tool/learn-mirror.js" "${args[@]}"
+          GITHUB_STEP_SUMMARY="$RUNNER_TEMP/snapshot-summary.md" \
+            node "$GITHUB_WORKSPACE/learn-mirror-tool/learn-mirror.js" "${args[@]}"
+          cat "$RUNNER_TEMP/snapshot-summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retry page errors
+        id: retry
+        if: steps.mirror.outputs.errors != '0' && steps.mirror.outputs.unreached == '0'
+        working-directory: snapshots
+        shell: bash
+        env:
+          FULL: ${{ inputs.full }}
+        run: |
+          set -euo pipefail
+          args=(
+            --config="$GITHUB_WORKSPACE/tracker/learn-mirror.config.json"
+            --seed-urls="$GITHUB_WORKSPACE/tracker/learn-mirror-seed-urls.txt"
+            --message-file="$RUNNER_TEMP/snapshot-retry-message.txt"
+            --max-minutes=10
+          )
+          if [ "$FULL" = "true" ]; then args+=(--full); fi
+          GITHUB_STEP_SUMMARY="$RUNNER_TEMP/snapshot-retry-summary.md" \
+            node "$GITHUB_WORKSPACE/learn-mirror-tool/learn-mirror.js" "${args[@]}"
+          cat "$RUNNER_TEMP/snapshot-retry-summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Preserve snapshot provenance
         shell: bash
@@ -89,15 +111,18 @@ jobs:
 
       - name: Record collection health and heartbeat
         env:
-          ERRORS: ${{ steps.mirror.outputs.errors }}
-          UNREACHED: ${{ steps.mirror.outputs.unreached }}
-        run: node tracker/.github/scripts/snapshot-health.cjs snapshots "$ERRORS" "$UNREACHED"
+          ERRORS: ${{ steps.retry.outputs.errors || steps.mirror.outputs.errors }}
+          UNREACHED: ${{ steps.retry.outputs.unreached || steps.mirror.outputs.unreached }}
+          COLLECTION_SUMMARY: ${{ steps.retry.outcome == 'success' && format('{0}/snapshot-retry-summary.md', runner.temp) || format('{0}/snapshot-summary.md', runner.temp) }}
+        run: node tracker/.github/scripts/snapshot-health.cjs snapshots "$ERRORS" "$UNREACHED" "$COLLECTION_SUMMARY"
 
       - name: Commit and push snapshots
         working-directory: snapshots
         shell: bash
         env:
-          CONTENT_CHANGED: ${{ steps.mirror.outputs.content_changed }}
+          CONTENT_CHANGED: ${{ steps.retry.outputs.content_changed == 'true' || steps.mirror.outputs.content_changed == 'true' }}
+          FIRST_CONTENT_CHANGED: ${{ steps.mirror.outputs.content_changed }}
+          RETRY_CONTENT_CHANGED: ${{ steps.retry.outputs.content_changed }}
         run: |
           set -euo pipefail
           git add -A
@@ -107,6 +132,14 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$RETRY_CONTENT_CHANGED" = "true" ]; then
+            if [ "$FIRST_CONTENT_CHANGED" = "true" ]; then
+              printf '\nRetry collection changes:\n' >> "$RUNNER_TEMP/snapshot-message.txt"
+              cat "$RUNNER_TEMP/snapshot-retry-message.txt" >> "$RUNNER_TEMP/snapshot-message.txt"
+            else
+              cp "$RUNNER_TEMP/snapshot-retry-message.txt" "$RUNNER_TEMP/snapshot-message.txt"
+            fi
+          fi
           if [ "$CONTENT_CHANGED" != "true" ]; then
             printf 'Refresh Learn snapshot state\n' > "$RUNNER_TEMP/snapshot-message.txt"
           fi
@@ -114,12 +147,5 @@ jobs:
           git commit -F "$RUNNER_TEMP/snapshot-message.txt"
           git push origin HEAD:refs/heads/docs-snapshots
 
-      - name: Require a complete collection
-        env:
-          ERRORS: ${{ steps.mirror.outputs.errors }}
-          UNREACHED: ${{ steps.mirror.outputs.unreached }}
-        run: |
-          if [ "$ERRORS" != "0" ] || [ "$UNREACHED" != "0" ]; then
-            echo "::error::Snapshots saved for continuation, but collection is incomplete. Publication must wait for a complete pass."
-            exit 1
-          fi
+      - name: Require publishable collection health
+        run: node tracker/.github/scripts/snapshot-health.cjs --validate snapshots
