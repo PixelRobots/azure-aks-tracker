@@ -23,7 +23,7 @@ description: Learn how to provision a fully managed GPU node pool on your new or
 ms.topic: how-to
 ms.custom: devx-track-azurecli
 ms.subservice: aks-developer
-ms.date: 2026-07-02T00:00:00.0000000Z
+ms.date: 2026-11-02T00:00:00.0000000Z
 author: sdesai345
 ms.author: sachidesai
 ai-usage: ai-assisted
@@ -52,7 +52,7 @@ platformId: d72641ca-0174-3da9-1a07-82b0ce907212
 
 Running NVIDIA GPU workloads on Azure Kubernetes Service (AKS) traditionally requires you to install and maintain the NVIDIA GPU driver, Kubernetes device plugin, and a GPU metrics exporter on each GPU node. These components enable GPU scheduling, container-level GPU access, and telemetry, but installing them manually or through the [NVIDIA GPU Operator](nvidia-gpu-operator) adds operational overhead.
 
-By using fully managed GPU nodes (preview), AKS installs and maintains the NVIDIA GPU driver, device plugin, and Data Center GPU Manager [(DCGM) metrics exporter](https://github.com/NVIDIA/dcgm-exporter/tree/main) for you. GPU node pool creation becomes a single step, and GPU capacity behaves like any other AKS node pool. You can use managed GPU nodes with manually created GPU node pools and with node auto-provisioning (NAP), including AKS Automatic clusters.
+By using fully managed GPU nodes, AKS installs and maintains the NVIDIA GPU driver, device plugin, and Data Center GPU Manager [(DCGM) metrics exporter](https://github.com/NVIDIA/dcgm-exporter/tree/main) for you. GPU node pool creation becomes a single step, and GPU capacity behaves like any other AKS node pool. You can use managed GPU nodes with manually created GPU node pools and with node auto-provisioning (NAP), including AKS Automatic clusters.
 
 You configure a managed GPU node pool through two fields under `gpuProfile.nvidia`:
 
@@ -61,18 +61,10 @@ You configure a managed GPU node pool through two fields under `gpuProfile.nvidi
 
 In this article, you provision a managed GPU node pool, optionally enable MIG, verify the stack, and run a sample GPU workload.
 
-Important
-
-AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
-
-- [AKS support policies](/en-us/azure/aks/support-policies)
-- [Azure support FAQ](/en-us/azure/aks/faq)
-
 ## Before you begin
 
 - This article assumes you have an existing AKS cluster. If you don't have a cluster, create one using the [Azure CLI](learn/quick-kubernetes-deploy-cli), [Azure PowerShell](learn/quick-kubernetes-deploy-powershell), or the [Azure portal](learn/quick-kubernetes-deploy-portal).
 - You need the Azure CLI version 2.85.0 or later installed. To find the version, run `az --version`. If you need to install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
-- You need to install and upgrade to latest version of the `aks-preview` extension. Version 19.0.0b29 or later is required.
 - Get the credentials for your AKS cluster with [`az aks get-credentials`](/en-us/cli/azure/aks#az_aks_get_credentials) before running the `kubectl` examples in this article.
 
 ## Managed GPU components
@@ -107,28 +99,6 @@ Together, they produce three install profiles:
 - **Override**: `managementMode: Managed` requires the driver, so `--gpu-driver None` is ignored when `--enable-managed-gpu=true` and the driver is still installed. To skip the driver, set both `--enable-managed-gpu=false` and `--gpu-driver None`.
 - **Immutability**: `managementMode`, `migStrategy`, and `driver` are all fixed at creation time. To change profile, create a new node pool.
 
-### Install the `aks-preview` CLI extension
-
-Install the aks-preview CLI extension by using the [`az extension add`](/en-us/cli/azure/extension#az-extension-add) command.
-
-```azurecli
-az extension add --name aks-preview
-```
-
-Update the extension to ensure you have the latest version installed by using the [`az extension update`](/en-us/cli/azure/extension#az-extension-update) command.
-
-```azurecli
-az extension update --name aks-preview
-```
-
-### Register the `ManagedGPUExperiencePreview` feature flag
-
-Register the `ManagedGPUExperiencePreview` feature flag in your subscription using the [`az feature register`](/en-us/cli/azure/feature#az-feature-register) command.
-
-```azurecli
-az feature register --namespace Microsoft.ContainerService --name ManagedGPUExperiencePreview
-```
-
 ## Limitations
 
 - This feature currently supports [NVIDIA GPU-enabled virtual machine (VM) sizes](/en-us/azure/virtual-machines/sizes-gpu) only.
@@ -142,7 +112,7 @@ Note
 
 GPU-enabled VMs contain specialized hardware subject to higher pricing and region availability. For more information, see the [pricing](https://azure.microsoft.com/pricing/) tool and [region availability](https://azure.microsoft.com/global-infrastructure/services/).
 
-## Create an AKS-managed GPU node pool (preview)
+## Create an AKS-managed GPU node pool
 
 Add a managed GPU node pool to an existing AKS cluster by passing `--enable-managed-gpu=true` to [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az_aks_nodepool_add). AKS sets `gpuProfile.nvidia.managementMode` to `Managed` and installs the GPU driver, device plugin, and DCGM metrics exporter automatically.
 
@@ -228,9 +198,15 @@ To use Azure Linux, you specify the OS SKU by setting `--os-sku` to `AzureLinux`
     ```
 
 # [Node auto-provisioning node pool](#tab/nap-managed-node)
-To use managed GPU nodes with node auto-provisioning (NAP), add the `EnableManagedGPUExperience: "true"` tag to your `AKSNodeClass` custom resource definition (CRD). Then create a `NodePool` that selects NVIDIA GPU-enabled VM sizes. This configuration applies to AKS Automatic clusters, where NAP is enabled by default, and to AKS Standard clusters with NAP enabled.
+To use managed GPU nodes with node auto-provisioning (NAP), configure `spec.gpu` on an `AKSNodeClass` resource, then create a `NodePool` that references it and selects Linux NVIDIA GPU-enabled VM sizes. This configuration applies to AKS Automatic clusters, where NAP is enabled by default, and to AKS Standard clusters with NAP enabled.
 
-To learn more about configurable Azure-specific settings, see [Configure AKSNodeClass resources for NAP](node-auto-provisioning-aksnodeclass).
+Important
+
+Managed GPU with NAP requires the AKS Machine API provision mode.
+
+Set `spec.gpu.mode` to `Driver` and `spec.gpu.nvidia.managementMode` to `Managed` to have AKS install and maintain the GPU driver, device plugin, and DCGM metrics exporter. The default NVIDIA management mode is `Unmanaged`. Don't set `mode` to `None` for managed GPU nodes, because it skips driver installation.
+
+For more information, see [GPU settings in AKSNodeClass](node-auto-provisioning-aksnodeclass#gpu-settings).
 
 1. Create an `AKSNodeClass` CRD and set `mode: Driver` and `nvidia.managementMode: Managed` in the `spec.gpu` field.
 
@@ -239,64 +215,61 @@ To learn more about configurable Azure-specific settings, see [Configure AKSNode
     kind: AKSNodeClass
     metadata:
       name: managed-gpu-class
-    ```
-
-spec: gpu: mode: Driver nvidia: managementMode: Managed
-
-```
-
-1. Create a `NodePool` CRD that allows NAP to deploy NVIDIA GPU SKUs.
-
-```yaml
-apiVersion: karpenter.sh/v1
-kind: NodePool
-metadata:
-  name: managed-gpu-np
-spec:
-  disruption:
-    consolidationPolicy: WhenEmptyOrUnderutilized
-    consolidateAfter: 30s
-  template:
     spec:
-      nodeClassRef:
-        group: karpenter.azure.com
-        kind: AKSNodeClass
-        name: managed-gpu-class
-      requirements:
-        - key: kubernetes.io/arch
-          operator: In
-          values: ["amd64"]
-        - key: kubernetes.io/os
-          operator: In
-          values: ["linux"]
-        - key: karpenter.azure.com/sku-family
-          operator: In
-          values: ["N"]
-        - key: karpenter.azure.com/sku-gpu-manufacturer
-          operator: In
-          values: ["nvidia"]
-        - key: karpenter.sh/capacity-type
-          operator: In
-          values: ["spot", "on-demand"]
-```
+      gpu:
+        mode: Driver
+        nvidia:
+          managementMode: Managed
+    ```
+2. Create a `NodePool` CRD that allows NAP to deploy NVIDIA GPU SKUs.
 
-1. Deploy the `AKSNodeClass` and `NodePool` CRDs.
+    ```yaml
+    apiVersion: karpenter.sh/v1
+    kind: NodePool
+    metadata:
+      name: managed-gpu-np
+    spec:
+      disruption:
+        consolidationPolicy: WhenEmptyOrUnderutilized
+        consolidateAfter: 30s
+      template:
+        spec:
+          nodeClassRef:
+            group: karpenter.azure.com
+            kind: AKSNodeClass
+            name: managed-gpu-class
+          requirements:
+            - key: kubernetes.io/arch
+              operator: In
+              values: ["amd64"]
+            - key: kubernetes.io/os
+              operator: In
+              values: ["linux"]
+            - key: karpenter.azure.com/sku-family
+              operator: In
+              values: ["N"]
+            - key: karpenter.azure.com/sku-gpu-manufacturer
+              operator: In
+              values: ["nvidia"]
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["spot", "on-demand"]
+    ```
+3. Deploy the `AKSNodeClass` and `NodePool` CRDs.
 
     ```bash
     kubectl apply -f managed-gpu-class.yaml
     kubectl apply -f managed-gpu-np.yaml
     ```
-2. Deploy a sample workload that requests GPU resources. NAP provisions a matching GPU node when the pod is pending.
-3. Confirm that the `AKSNodeClass` and `NodePool` resources are deployed and the managed GPU label is applied to the NAP-provisioned node.
+4. Deploy a sample workload that requests GPU resources. NAP provisions a matching GPU node when the pod is pending.
+5. Confirm that the `AKSNodeClass` and `NodePool` resources are deployed and the managed GPU label is applied to the NAP-provisioned node.
 
     ```bash
     kubectl get aksnodeclasses.karpenter.azure.com,nodepools.karpenter.sh
     kubectl get nodes -L kubernetes.azure.com/dcgm-exporter
     ```
 
----
-
-## Create a managed Multi-Instance GPU (MIG) node pool (preview)
+## Create a managed Multi-Instance GPU (MIG) node pool
 
 For GPU SKUs that support Multi-Instance GPU (such as A100 and H100), configure a MIG strategy at node pool creation with the `--gpu-mig-strategy` flag. The strategy controls how MIG partitions are exposed to Kubernetes:
 
@@ -340,9 +313,7 @@ az aks nodepool add \
 
 With this configuration, pods request specific MIG partitions, for example `nvidia.com/mig-1g.10gb: 1`.
 
----
-
-## Verify the managed GPU node pool (preview)
+## Verify the managed GPU node pool
 
 After the node pool is ready, run the following checks to confirm that the full managed stack is installed and healthy.
 
@@ -402,7 +373,7 @@ After the node pool is ready, run the following checks to confirm that the full 
     kubectl logs managed-gpu-test
     ```
 
-## Scale a managed GPU node pool (preview)
+## Scale a managed GPU node pool
 
 Scale a managed GPU node pool manually with [`az aks nodepool scale`](/en-us/cli/azure/aks/nodepool#az_aks_nodepool_scale). New nodes install the full managed GPU stack.
 
@@ -418,7 +389,7 @@ az aks nodepool scale \
 
 If the **Full managed stack** profile isn't the right fit, AKS supports two alternative profiles on GPU node pools.
 
-# [Driver only (preview)](#tab/driver-only)
+# [Driver only](#tab/driver-only)
 Use this profile when you want AKS to install and maintain the NVIDIA GPU driver, but you plan to deploy the device plugin and metrics exporter yourself (for example, with the [NVIDIA GPU Operator](nvidia-gpu-operator)). Set `--enable-managed-gpu=false`:
 
 ```azurecli
