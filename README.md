@@ -45,7 +45,7 @@ AKS Automatic is categorized separately for `articles/aks/automatic/` and
 `articles/aks/intro-aks-automatic.md`. Other AKS articles about automatic features
 stay under AKS, and all troubleshooting articles stay under AKS Support.
 Collection health requires all ten products, including AKS Automatic; run a fresh
-complete collection before publishing with this categorization.
+collection meeting the publication health requirements before publishing.
 
 Discovery combines English Azure and troubleshooting sitemaps, eight tables of
 contents, the committed seed list and previously known pages. The AKS table of
@@ -66,16 +66,33 @@ Requests are limited to four per second across four workers, with adaptive
 throttling and retries. Each collection has a 25-minute budget and continues
 from the saved cursor next time. Fetch errors are reported in logs and the
 Actions summary; previous content is retained for failed requests. A committed
-`.learn-mirror/health.json` heartbeat records completeness, zero-error status,
-coverage and the check time. Production validates this marker and requires a
-fresh, complete pass; partial collection is saved but blocks publishing.
+`.learn-mirror/health.json` heartbeat records completeness, publication eligibility,
+coverage and the check time. If a pass reaches every page but has fetch errors,
+the workflow makes one bounded
+10-minute collection pass to recover transient endpoint failures. Any remaining
+errors are assessed against the publication limit below.
+
+Production requires a fresh collection that reached every page and covers all
+ten products. Up to **five failed pages, capped at 1% of requests**, are allowed:
+successful updates can publish while failed pages retain their previous snapshots
+where available. A newly discovered page that fails has no snapshot until a
+successful fetch. Such a collection is marked `complete: false` and
+`publishable: true`, never reported as fully refreshed. The version-2 heartbeat
+records the request count and each failed URL and reason in `failed_pages`.
+Actions emits a warning and a publication-health summary; change output carries
+the warning and collection health. Failed pages remain eligible for the next run.
+More failures, any unreached pages, missing coverage or stale health block publishing.
+Legacy version-1 heartbeats still require zero errors.
+
+The request counts and failure details are read from the pinned collector's
+Actions summary. Missing, malformed or inconsistent summaries fail closed.
 
 An article disappearing from discovery alone does not remove its snapshot.
 The pinned tool handles 404/410 responses and redirects, and refuses unusually
 large deletion sets (more than the greater of 25 files or 10% of mirrored files).
 It also refuses writes when errors exceed the greater of 10 requests or half the
-checked pages. Smaller partial failures are saved, but our workflow then fails
-its publication gate rather than allowing an incomplete run to publish.
+checked pages. Smaller partial failures are saved; our publication gate applies
+the stricter five-page/1% limit above.
 It does **not** require a second 404 confirmation before removal; Git history
 retains removed content.
 
