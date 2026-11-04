@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn about ingress networking in Azure Kubernetes Service (AKS), including ingress controllers, and how AKS Automatic provides the recommended production-ready default for most workloads.
 ms.topic: concept-article
-ms.date: 2026-06-05T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 author: schaffererin
 ms.author: schaffererin
 ms.subservice: aks-networking
@@ -96,7 +96,7 @@ The following table lists the feature differences between the different ingress 
 | **API** | Ingress API | Ingress API and Gateway API | [Istio Ingress API](https://istio.io/latest/docs/reference/config/networking/gateway/) |
 | **Hosting** | In-cluster | Azure hosted | In-cluster |
 | **Scaling** | Autoscaling | Autoscaling | Autoscaling |
-| **Load balancing** | Internal/External | External | Internal/External |
+| **Load balancing** | Internal/External | Internal/External | Internal/External |
 | **SSL termination** | In-cluster | Yes: Offloading and E2E SSL | In-cluster |
 | **mTLS** | N/A | Yes: frontend and backend | Yes |
 | **Static IP address** | Yes | FQDN (no static IP) | N/A |
@@ -110,7 +110,7 @@ The following table lists the different scenarios where you might use each ingre
 | Ingress option | When to use |
 | --- | --- |
 | **Managed NGINX - Application Routing add-on** | • In-cluster hosted, customizable, and scalable NGINX ingress controllers.  • Basic load balancing and routing capabilities.  • Internal and external load balancer configuration.  • Static IP address configuration.  • Integration with Azure Key Vault for certificate management.  • Integration with Azure DNS Zones for public and private DNS management.  • Supports the Ingress API. |
-| **Application Gateway for Containers** | • Azure hosted ingress gateway.  • Flexible deployment strategies managed by the controller or bring your own Application Gateway for Containers.  • Advanced traffic management features such as automatic retries, availability zone resiliency, mutual authentication (mTLS) to backend target, traffic splitting / weighted round robin, and autoscaling.  • Integration with Azure Key Vault for certificate management.  • Integration with Azure DNS Zones for public and private DNS management.  • Supports the Ingress and Gateway APIs. |
+| **Application Gateway for Containers** | • Azure hosted ingress gateway.  • Web Application Firewall (WAF) support for application security.  • AI gateway capabilities for inference and Model Context Protocol (MCP) workloads.  • Flexible deployment strategies managed by the controller or bring your own Application Gateway for Containers.  • Advanced traffic management features such as automatic retries, availability zone resiliency, mutual authentication (mTLS) to backend target, traffic splitting / weighted round robin, and autoscaling.  • Integration with Azure Key Vault for certificate management.  • Integration with Azure DNS Zones for public and private DNS management.  • Supports the Ingress and Gateway APIs. |
 | **Istio Ingress Gateway** | • Based on Envoy, when using with Istio for a service mesh.  • Advanced traffic management features such as rate limiting and circuit breaking.  • Support for mTLS. |
 
 Note
