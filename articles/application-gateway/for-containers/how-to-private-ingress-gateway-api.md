@@ -44,11 +44,11 @@ source_path: articles/application-gateway/for-containers/how-to-private-ingress-
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d4cf20b3-3e54-4ed9-8b09-370a52eee81b
 - https://authoring-docs-microsoft.poolparty.biz/devrel/2ed91286-6cf7-4b83-810d-75d0ee3b09dd
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/20ed8455-bc18-4537-87a4-83784e7b2a39
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9ecc2643-be13-4271-a1f4-87114737d63a
 - https://authoring-docs-microsoft.poolparty.biz/devrel/6735bd7e-4f7b-457d-b58c-29e6f0198677
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
 platformId: 8618ec22-02dc-85e6-267c-bb92bc04844c
 ---
 
@@ -397,3 +397,14 @@ az network alb frontend delete -g $RESOURCE_GROUP --alb-name $AGFC_NAME -n $FRON
 kubectl delete httproute http-route -n test-infra
 kubectl delete gateway gateway-01 -n test-infra
 ```
+
+## Troubleshooting
+
+**Q: Why does the FQDN of my private frontend resolve to 2001:db8::/32?**
+
+**A:** The `2001:db8::/32` range is reserved for documentation and is returned when DNS resolution for `*.privatelink.alb.azure.com` is not configured correctly.
+
+If you see an address in this range, verify that:
+
+- Your DNS resolver can communicate with Azure DNS.
+- The private DNS zone is linked to the virtual network containing your DNS resolver or, if using Azure DNS directly, your client.
