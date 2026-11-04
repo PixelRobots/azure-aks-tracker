@@ -158,7 +158,7 @@ To understand take over behavior, see [Taking over existing workloads with Azure
 Save the following content to the file `deploy-kuard-fleet.yaml`.
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
     name: deploy-kuard-fleet
@@ -197,7 +197,7 @@ When the placement finishes, Fleet Manager is now responsible for the workload o
 Modify the `deploy-kuard-fleet.yaml` file by adding `aks-member-2` to the `clusterNames` array.
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
     name: deploy-kuard-fleet

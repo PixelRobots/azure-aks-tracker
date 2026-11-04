@@ -14,15 +14,17 @@ recommendation_types:
 - Certification
 uhfHeaderId: azure
 ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
 adobe-target: true
 learn_banner_products:
 - azure
 description: This article describes how to use the whenToTakeOver property to control how Fleet Manager handles existing workloads when placing workloads using resource placement.
-ms.date: 2026-07-28T00:00:00.0000000Z
+ms.date: 2026-10-09T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
 ms.topic: concept-article
+zone_pivot_groups: cluster-namespace-scope
 locale: en-us
 document_id: 4ddd64b0-21dc-8d59-2572-0bb14fc6c205
 document_version_independent_id: 7e867cfa-8f0a-2436-8d32-e1162c57ad26
@@ -55,12 +57,6 @@ Note
 
 If you aren't already familiar with Fleet Manager's resource placement concepts, read the [cluster-scoped resource placement overview](concepts-resource-placement) and the [namespace-scoped resource placement overview](concepts-namespace-scoped-resource-propagation) before reading this article.
 
-Important
-
-Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
-
-Our data plane previews are released via our v1beta1 API. If you don't see preview objects, check that you're requesting the v1beta1 API when you interact with the Fleet Manager hub cluster.
-
 ## Workload takeover options
 
 The starting point for workload takeover is to deploy the workload manifests onto your Fleet Manager [hub cluster](access-fleet-hub-cluster-kubernetes-api). Once deployed you define a `ClusterResourcePlacement` or `ResourcePlacement` that specifies an explicit takeover behavior using the `whenToTakeOver` property.
@@ -82,10 +78,12 @@ You can use an optional `comparisonOptions` property to fine-tune how `whenToTak
 
 In order to check for existing workloads, start by adding an `applyStrategy` with a `whenToTakeOver` value of `Never` as shown in the following examples.
 
+::: zone pivot="cluster-scope"
+
 ### ClusterResourcePlacement example
 
 ```yml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
   name: web-2-crp
@@ -114,10 +112,14 @@ Apply the `ClusterResourcePlacement` to your Fleet Manager hub cluster.
 kubectl apply -f web-2-crp.yaml
 ```
 
+::: zone-end
+
+::: zone pivot="namespace-scope"
+
 ### ResourcePlacement example
 
 ```yml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ResourcePlacement
 metadata:
   name: web-2-rp
@@ -145,25 +147,31 @@ Apply the `ResourcePlacement` to your Fleet Manager hub cluster.
 kubectl apply -f web-2-rp.yaml
 ```
 
+::: zone-end
+
 ### Check placement status
 
 Fleet Manager attempts to place the workload and when it finds a matching workload on a target member cluster returns a `failedPlacement` response.
 
 You can determine which member clusters failed placement due to a clashing workload using the following commands. The [jq command](https://github.com/jqlang/jq) is used to format the output.
 
-**For ClusterResourcePlacement:**
+::: zone pivot="cluster-scope"
 
 ```bash
-kubectl get clusterresourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-crp -o jsonpath='{.status.placementStatuses}' \
+kubectl get clusterresourceplacement.v1.placement.kubernetes-fleet.io web-2-crp -o jsonpath='{.status.placementStatuses}' \
     | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
 ```
 
-**For ResourcePlacement:**
+::: zone-end
+
+::: zone pivot="namespace-scope"
 
 ```bash
-kubectl get resourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-rp -n web-2 -o jsonpath='{.status.placementStatuses}' \
+kubectl get resourceplacement.v1.placement.kubernetes-fleet.io web-2-rp -n web-2 -o jsonpath='{.status.placementStatuses}' \
     | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
 ```
+
+::: zone-end
 
 Each cluster that fails placement due to an existing workload returns an entry similar to the following sample.
 
@@ -193,10 +201,12 @@ To proceed with the take over of an existing workload you can modify the existin
 
 Fleet Manager applies the hub cluster workload in place of the existing workload on the target cluster when there are no differences between managed fields on both workloads. Extra fields are ignored.
 
+::: zone pivot="cluster-scope"
+
 ### ClusterResourcePlacement example
 
 ```yml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
   name: web-2-crp
@@ -226,10 +236,14 @@ Apply the `ClusterResourcePlacement` to your Fleet Manager hub cluster.
 kubectl apply -f web-2-crp.yaml
 ```
 
+::: zone-end
+
+::: zone pivot="namespace-scope"
+
 ### ResourcePlacement example
 
 ```yml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ResourcePlacement
 metadata:
   name: web-2-rp
@@ -258,25 +272,31 @@ Apply the `ResourcePlacement` to your Fleet Manager hub cluster.
 kubectl apply -f web-2-rp.yaml
 ```
 
+::: zone-end
+
 ### Check for failed placements
 
 Fleet Manager attempts to place the workload, overwriting target member clusters that have matching fields.
 
 Placements can still fail, so check for extra `failedPlacement` messages. Determine which member clusters failed using the following commands. The [jq command](https://github.com/jqlang/jq) is used to format the output.
 
-**For ClusterResourcePlacement:**
+::: zone pivot="cluster-scope"
 
 ```bash
-kubectl get clusterresourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-crp -o jsonpath='{.status.placementStatuses}' \
+kubectl get clusterresourceplacement.v1.placement.kubernetes-fleet.io web-2-crp -o jsonpath='{.status.placementStatuses}' \
     | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
 ```
 
-**For ResourcePlacement:**
+::: zone-end
+
+::: zone pivot="namespace-scope"
 
 ```bash
-kubectl get resourceplacement.v1beta1.placement.kubernetes-fleet.io web-2-rp -n web-2 -o jsonpath='{.status.placementStatuses}' \
+kubectl get resourceplacement.v1.placement.kubernetes-fleet.io web-2-rp -n web-2 -o jsonpath='{.status.placementStatuses}' \
     | jq '[.[] | select (.failedPlacements != null)] | map({clusterName, failedPlacements})'
 ```
+
+::: zone-end
 
 Each cluster that failed placement due to a configuration difference returns an entry similar to the following sample.
 

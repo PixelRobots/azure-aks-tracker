@@ -1,7 +1,7 @@
 ---
 layout: Conceptual
 title: Defining a rollout strategy for Azure Kubernetes Fleet Manager resource placement | Microsoft Learn
-canonicalUrl: https://learn.microsoft.com/en-us/azure/kubernetes-fleet/concepts-rollout-strategy
+canonicalUrl: https://learn.microsoft.com/en-us/azure/kubernetes-fleet/concepts-placement-rollout-strategy
 breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
 feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
 feedback_help_link_type: get-help-at-qna
@@ -27,18 +27,18 @@ ms.topic: concept-article
 ai-usage: ai-assisted
 zone_pivot_groups: cluster-namespace-scope
 locale: en-us
-document_id: e877eb5c-8b2b-c90e-b432-957a4e3c4c87
-document_version_independent_id: 011ed9be-466c-40ef-ad76-53fdb1ec3d88
-original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/kubernetes-fleet/concepts-rollout-strategy.md
+document_id: 87fec237-2de7-83f3-dabd-c80c3c2ffb03
+document_version_independent_id: a7b3e0a9-9d28-cc47-9aad-8cb511f630b3
+original_content_git_url: https://github.com/MicrosoftDocs/azure-aks-docs-pr/blob/live/articles/kubernetes-fleet/concepts-placement-rollout-strategy.md
 site_name: Docs
 depot_name: Learn.azure-aks
 page_type: conceptual
 toc_rel: toc.json
-asset_id: kubernetes-fleet/concepts-rollout-strategy
+asset_id: kubernetes-fleet/concepts-placement-rollout-strategy
 moniker_range_name: 
 monikers: []
 item_type: Content
-source_path: articles/kubernetes-fleet/concepts-rollout-strategy.md
+source_path: articles/kubernetes-fleet/concepts-placement-rollout-strategy.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:

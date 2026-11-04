@@ -69,7 +69,7 @@ These CRDs provide a more structured and Kubernetes-native way to package resour
 The `ClusterResourceEnvelope` is a cluster-scoped resource that can only wrap other cluster-scoped resources. For example:
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourceEnvelope
 metadata:
   name: example
@@ -109,7 +109,7 @@ data:
 The `ResourceEnvelope` is a namespace-scoped resource that can only wrap namespace-scoped resources. For example:
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ResourceEnvelope
 metadata:
   name: example
@@ -153,7 +153,7 @@ We apply our envelope objects on the hub cluster and then use a `ClusterResource
 Here's an example of a `ClusterResourcePlacement` (CRP) that propagates a `ResourceEnvelope` to a member cluster, please note that since the `ResourceEnvelope` is namespace-scoped, the CRP just needs to select the namespace that contains the envelope object:
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
   name: crp-with-envelope
@@ -177,7 +177,7 @@ spec:
 Here's an example of a `ClusterResourcePlacement` (CRP) that propagates a `ClusterResourceEnvelope` to a member cluster, please note that since the `ClusterResourceEnvelope` is cluster-scoped, the ClusterResourcePlacement object just needs to select the envelope object itself:
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
   name: crp-with-cluster-envelope
@@ -190,7 +190,7 @@ spec:
   - group: placement.kubernetes-fleet.io
     kind: ClusterResourceEnvelope
     name: example
-    version: v1beta1
+    version: v1
   revisionHistoryLimit: 10
   strategy:
     type: RollingUpdate
@@ -211,7 +211,7 @@ status:
     kind: ResourceEnvelope
     name: example
     namespace: app
-    version: v1beta1
+    version: v1
   conditions:
   - lastTransitionTime: "2023-11-30T19:54:13Z"
     message: found all the clusters needed as specified by the scheduling policy
@@ -331,7 +331,7 @@ status:
     kind: ResourceEnvelope
     name: example
     namespace: app
-    version: v1beta1
+    version: v1
 ```
 
 ### CRP status with failed ClusterResourceEnvelope resource:
@@ -380,5 +380,5 @@ status:
   - group: placement.kubernetes-fleet.io
     kind: ClusterResourceEnvelope
     name: example
-    version: v1beta1
+    version: v1
 ```

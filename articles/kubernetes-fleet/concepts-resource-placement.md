@@ -748,7 +748,7 @@ Each toleration is used to tolerate one or more specific taints applied on a `Me
 ::: zone pivot="cluster-scope"
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ClusterResourcePlacement
 metadata:
   name: test-ns

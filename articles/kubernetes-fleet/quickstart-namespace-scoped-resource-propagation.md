@@ -224,7 +224,7 @@ Use the simple scenario of deploying two `ConfigMap` resources across selected c
 2. Create a `ResourcePlacement` to propagate the ConfigMaps. Save the following YAML to a file named `app-configs-rp.yaml`:
 
     ```yaml
-    apiVersion: placement.kubernetes-fleet.io/v1beta1
+    apiVersion: placement.kubernetes-fleet.io/v1
     kind: ResourcePlacement
     metadata:
       name: distribute-app-configs

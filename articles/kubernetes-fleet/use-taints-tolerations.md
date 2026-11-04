@@ -96,7 +96,7 @@ In this example, you add a taint to a `MemberCluster` resource. Then you try to 
 4. Create a `PickAll` placement policy on the `ClusterResourcePlacement` resource by using the following example code:
 
     ```yml
-    apiVersion: placement.kubernetes-fleet.io/v1beta1
+    apiVersion: placement.kubernetes-fleet.io/v1
     kind: ClusterResourcePlacement
     metadata:
       name: test-ns
@@ -188,7 +188,7 @@ In this example, you add a taint to a `MemberCluster` resource. Then you try to 
 5. Create a `PickAll` placement policy on the `ResourcePlacement` resource by using the following example code:
 
     ```yml
-    apiVersion: placement.kubernetes-fleet.io/v1beta1
+    apiVersion: placement.kubernetes-fleet.io/v1
     kind: ResourcePlacement
     metadata:
       name: app-config-placement
@@ -419,7 +419,7 @@ In this example, you add a toleration to a resource placement to propagate resou
 4. Create a toleration on the `ClusterResourcePlacement` resource by using the following example code:
 
     ```yml
-    apiVersion: placement.kubernetes-fleet.io/v1beta1
+    apiVersion: placement.kubernetes-fleet.io/v1
     kind: ClusterResourcePlacement
     metadata:
       name: test-ns
@@ -539,7 +539,7 @@ In this example, you add a toleration to a resource placement to propagate resou
 5. Create a toleration on the `ResourcePlacement` resource by using the following example code:
 
     ```yml
-    apiVersion: placement.kubernetes-fleet.io/v1beta1
+    apiVersion: placement.kubernetes-fleet.io/v1
     kind: ResourcePlacement
     metadata:
       name: app-config-placement

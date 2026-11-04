@@ -14,15 +14,17 @@ recommendation_types:
 - Certification
 uhfHeaderId: azure
 ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
 adobe-target: true
 learn_banner_products:
 - azure
 description: This article describes how Fleet Manager's cluster resource placement and resource placement manage snapshots.
-ms.date: 2026-07-24T00:00:00.0000000Z
+ms.date: 2026-10-09T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
 ms.topic: concept-article
+zone_pivot_groups: cluster-namespace-scope
 locale: en-us
 document_id: 34169e00-d6c3-a203-2bad-e72b39286da4
 document_version_independent_id: 30fcfc9f-88fd-455b-bd3e-f7229f361e85
@@ -47,39 +49,41 @@ platformId: 5752b180-e9a5-266f-f429-1bff286560e1
 
 **Applies to**: ✔️ Fleet Manager with hub cluster
 
-Fleet Manager keeps a history of the 10 most recently used placement scheduling policies, along with resource versions the placement selected. These policy and resource versions are held as snapshot objects:
+Fleet Manager keeps a history of the 10 most recently used placement scheduling policies, along with resource versions the placement selected. It holds these policy and resource versions as snapshot objects:
 
 - For **ClusterResourcePlacement** (CRP): `ClusterSchedulingPolicySnapshot` and `ClusterResourceSnapshot` (cluster-scoped)
 - For **ResourcePlacement** (RP): `SchedulingPolicySnapshot` and `ResourceSnapshot` (namespace-scoped)
 
-In this article, we explore these objects so you can understand them should you wish to work with them.
+In this article, we explore these objects so you can understand them if you wish to work with them.
 
 Note
 
-If you aren't already familiar with Fleet Manager's resource placement:
+If you're not already familiar with Fleet Manager's resource placement:
 
 - For cluster-scoped resources, read the [conceptual overview of ClusterResourcePlacement (CRP)](concepts-resource-placement).
 - For namespace-scoped resources, read the [conceptual overview of ResourcePlacement (RP)](concepts-namespace-scoped-resource-propagation).
 
 ## How resource snapshots are created
 
-Any change to resources covered by the scope of CRP or RP resource selector will automatically trigger the creation of a new resource snapshot within 60 seconds.
+Any change to resources covered by the scope of CRP or RP resource selector automatically triggers the creation of a new resource snapshot within 60 seconds.
 
 ## Viewing resource snapshots
 
-You can view the resource snapshots held by Fleet Manager using the following steps when connected to the [Fleet Manager hub cluster](access-fleet-hub-cluster-kubernetes-api).
+You can view the resource snapshots held by Fleet Manager by using the following steps when connected to the [Fleet Manager hub cluster](access-fleet-hub-cluster-kubernetes-api).
+
+::: zone pivot="cluster-scope"
 
 ### Viewing ClusterResourceSnapshot (for ClusterResourcePlacement)
 
-For cluster-scoped placements using `ClusterResourcePlacement`, view `ClusterResourceSnapshot` objects.
+For cluster-scoped placements that use `ClusterResourcePlacement`, view `ClusterResourceSnapshot` objects.
 
-In this sample, we use an updated ConfigMap, leading to two snapshots.
+In this sample, we use an updated ConfigMap, which creates two snapshots.
 
 ```bash
 kubectl get clusterresourcesnapshots --show-labels
 ```
 
-We see two snapshots, with the most recent one marked as the latest (`kubernetes-fleet.io/is-latest-snapshot=true`), with a resource-index of 1 (`kubernetes-fleet.io/resource-index=1`).
+You see two snapshots, and the most recent one is marked as the latest (`kubernetes-fleet.io/is-latest-snapshot=true`) and has a resource-index of 1 (`kubernetes-fleet.io/resource-index=1`).
 
 ```output
 NAME                           GEN   AGE    LABELS
@@ -87,7 +91,7 @@ example-placement-0-snapshot   1     17m    kubernetes-fleet.io/is-latest-snapsh
 example-placement-1-snapshot   1     2m2s   kubernetes-fleet.io/is-latest-snapshot=true,kubernetes-fleet.io/parent-CRP=example-placement,kubernetes-fleet.io/resource-index=1
 ```
 
-We can inspect the contents of the `example-placement-1-snapshot` object as follows.
+You can inspect the contents of the `example-placement-1-snapshot` object as follows.
 
 ```bash
 kubectl get clusterresourcesnapshots example-placement-1-snapshot -o yaml
@@ -124,17 +128,21 @@ spec:
       namespace: test-namespace
 ```
 
+::: zone-end
+
+::: zone pivot="namespace-scope"
+
 ### Viewing ResourceSnapshot (for ResourcePlacement)
 
-For namespace-scoped placements using `ResourcePlacement`, view `ResourceSnapshot` objects within the namespace.
+For namespace-scoped placements that use `ResourcePlacement`, view `ResourceSnapshot` objects within the namespace.
 
-In this sample, we have a `ResourcePlacement` in the `my-app` namespace with updated ConfigMaps, leading to two snapshots.
+In this example, you have a `ResourcePlacement` in the `my-app` namespace with updated ConfigMaps, which creates two snapshots.
 
 ```bash
 kubectl get resourcesnapshots -n my-app --show-labels
 ```
 
-We see two snapshots, with the most recent one marked as the latest (`kubernetes-fleet.io/is-latest-snapshot=true`), with a resource-index of 1 (`kubernetes-fleet.io/resource-index=1`).
+You see two snapshots, and the most recent one is marked as the latest (`kubernetes-fleet.io/is-latest-snapshot=true`) and has a resource-index of 1 (`kubernetes-fleet.io/resource-index=1`).
 
 ```output
 NAME                               GEN   AGE    LABELS
@@ -142,14 +150,14 @@ app-configs-rp-0-snapshot          1     15m    kubernetes-fleet.io/is-latest-sn
 app-configs-rp-1-snapshot          1     1m3s   kubernetes-fleet.io/is-latest-snapshot=true,kubernetes-fleet.io/parent-CRP=app-configs-rp,kubernetes-fleet.io/resource-index=1
 ```
 
-We can inspect the contents of the `app-configs-rp-1-snapshot` object as follows.
+You can inspect the contents of the `app-configs-rp-1-snapshot` object as follows.
 
 ```bash
 kubectl get resourcesnapshots app-configs-rp-1-snapshot -n my-app -o yaml
 ```
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ResourceSnapshot
 metadata:
   ...
@@ -173,18 +181,22 @@ spec:
         app: my-application
 ```
 
+::: zone-end
+
 ## Using resource snapshots
 
-Snapshots can be used as part of staged rollouts managed via update runs as a rollback mechanism. Both `ClusterResourcePlacement` and `ResourcePlacement` support staged rollouts with their respective snapshot types:
+Use snapshots as part of staged rollouts that update runs manage. They also serve as a rollback mechanism. Both `ClusterResourcePlacement` and `ResourcePlacement` support staged rollouts with their respective snapshot types:
 
-- For `ClusterResourcePlacement`: Uses `ClusterResourceSnapshot` objects with `ClusterStagedUpdateRun`
-- For `ResourcePlacement`: Uses `ResourceSnapshot` objects with `StagedUpdateRun`
+- `ClusterResourcePlacement` uses `ClusterResourceSnapshot` objects with `ClusterStagedUpdateRun`.
+- `ResourcePlacement` uses `ResourceSnapshot` objects with `StagedUpdateRun`.
 
-See [Staged rollout strategy](concepts-rollout-strategy#staged-update-strategy) for details on how to implement staged rollouts for both resource placement types.
+For details about how to implement staged rollouts for both resource placement types, see [Staged rollout strategy](concepts-rollout-strategy#staged-update-strategy).
 
 ## Modifying the snapshot history limit
 
 To change the number of items held in history, add a `revisionHistoryLimit` field to your placement and provide an integer value. The default value is 10.
+
+::: zone pivot="cluster-scope"
 
 ### For ClusterResourcePlacement
 
@@ -217,10 +229,14 @@ spec:
       maxSurge: 50%
 ```
 
+::: zone-end
+
+::: zone pivot="namespace-scope"
+
 ### For ResourcePlacement
 
 ```yaml
-apiVersion: placement.kubernetes-fleet.io/v1beta1
+apiVersion: placement.kubernetes-fleet.io/v1
 kind: ResourcePlacement
 metadata:
   name: rp-example
@@ -250,3 +266,5 @@ spec:
       maxUnavailable: 1
       maxSurge: 50%
 ```
+
+::: zone-end
