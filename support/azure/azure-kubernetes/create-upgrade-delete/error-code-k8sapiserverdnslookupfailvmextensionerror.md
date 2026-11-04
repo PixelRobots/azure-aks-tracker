@@ -13,8 +13,8 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to troubleshoot the K8SAPIServerDNSLookupFailVMExtensionError error (52) when you try to start or create and deploy an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2024-01-24T00:00:00.0000000Z
-ms.reviewer: rissing, chiragpa, erbookbi, v-leedennis, jovieir
+ms.date: 2026-10-24T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, erbookbi, v-leedennis, jovieir, andraciobanu, Kavyasri Sadineni
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool),  innovation-engine
 locale: en-us
@@ -75,7 +75,7 @@ When you try to start or create an AKS cluster, you receive the following error 
 
 ## Cause
 
-The cluster nodes can't resolve the cluster's fully qualified domain name (FQDN) in Azure DNS. Run the following DNS lookup command on the failed cluster node to find DNS resolutions that are valid.
+The cluster nodes can't resolve the cluster's fully qualified domain name (FQDN). This issue can occur when the DNS configuration available to the node doesn't return a valid response for the Kubernetes API server FQDN.
 
 | Node OS | Command |
 | --- | --- |
@@ -125,3 +125,30 @@ Conditional Forwarding doesn't support subdomains.
 ## More information
 
 - [General troubleshooting of AKS cluster creation issues](troubleshoot-aks-cluster-creation-issues)
+
+Because the affected node might be in a failed provisioning state and unavailable through SSH or RDP, use `az vmss run-command invoke` to run the DNS lookup directly on the Virtual Machine Scale Set instance.
+
+### Test DNS resolution from a Linux node
+
+Run `dig` against the cluster FQDN:
+
+```azurecli
+az vmss run-command invoke \
+  --resource-group <mc-resource-group-name> \
+  --name <vmss-name> \
+  --instance-id <instance-id> \
+  --command-id RunShellScript \
+  --scripts "dig <cluster-fqdn>"
+```
+
+### Test DNS resolution from a Windows node
+
+Run `nslookup` against the cluster FQDN:
+
+```azurecli
+az vmss run-command invoke \
+  --resource-group <mc-resource-group-name> \
+  --name <vmss-name> \
+  --instance-id <instance-id> \
+  --command-id RunPowerShellScript
+```

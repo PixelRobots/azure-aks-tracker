@@ -18,9 +18,9 @@ manager: kumud
 learn_banner_products:
 - azure
 ms.service: azure-kubernetes-service
-description: Learn how to create a Linux-based Azure Kubernetes Service cluster with a fully managed GPU node pool using Azure CLI.
+description: Learn how to create a Linux-based Azure Kubernetes Service cluster with a managed GPU node pool using Azure CLI.
 ms.topic: quickstart
-ms.date: 2026-07-01T00:00:00.0000000Z
+ms.date: 2026-10-14T00:00:00.0000000Z
 author: bbenz
 ms.author: bbenz
 ms.custom: devx-track-azurecli, mode-api, linux-related-content
@@ -39,6 +39,14 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks/learn/quick-create-gpu-linux-cluster-cli.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: 858b3164-c7e0-bf59-da76-c4d98aa70962
 ---
 
@@ -50,18 +58,11 @@ Azure Kubernetes Service (AKS) is a managed Kubernetes service that you can use 
 - Add a Linux-based GPU node pool with managed GPU nodes enabled.
 - Verify that AKS installed and configured the GPU software stack for scheduling.
 
-Fully managed GPU nodes are a preview feature. When you enable managed GPU nodes, AKS installs and manages the NVIDIA GPU driver, NVIDIA Kubernetes device plugin, Data Center GPU Manager (DCGM) metrics exporter, and GPU health monitoring components for the GPU node pool. Managed GPU nodes also integrate real-time GPU metrics for ingestion in Azure Managed Prometheus and Azure Monitor managed service for Prometheus. For more information, see [Create a fully managed GPU node pool on Azure Kubernetes Service (AKS) (preview)](../aks-managed-gpu-nodes) and [GPU observability in Azure Kubernetes Service (AKS)](../monitor-gpu-metrics).
+When you enable managed GPU nodes, AKS installs and manages the NVIDIA GPU driver, NVIDIA Kubernetes device plugin, Data Center GPU Manager (DCGM) metrics exporter, and GPU health monitoring components for the GPU node pool. Managed GPU nodes also integrate real-time GPU metrics for ingestion in Azure Managed Prometheus and Azure Monitor managed service for Prometheus. For more information, see [Create a managed GPU node pool on Azure Kubernetes Service (AKS)](../aks-managed-gpu-nodes) and [GPU observability in Azure Kubernetes Service (AKS)](../monitor-gpu-metrics).
 
 Note
 
 This article includes steps to deploy a cluster for evaluation purposes only. Before you deploy a production-ready cluster, familiarize yourself with the [baseline reference architecture](/en-us/azure/architecture/reference-architectures/containers/aks/baseline-aks?toc=/azure/aks/toc.json&amp;bc=/azure/aks/breadcrumb/toc.json) to consider how it aligns with your business requirements.
-
-Important
-
-AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
-
-- [AKS support policies](/en-us/azure/aks/support-policies)
-- [Azure support FAQ](/en-us/azure/aks/faq)
 
 ## Before you begin
 
@@ -78,45 +79,11 @@ This quickstart assumes a basic understanding of Kubernetes concepts. For more i
     - When you're prompted, install the Azure CLI extension on first use. For more information about extensions, see [Use and manage extensions with the Azure CLI](/en-us/cli/azure/azure-cli-extensions-overview).
     - Run [az version](/en-us/cli/azure/reference-index?#az-version) to find the version and dependent libraries that are installed. To upgrade to the latest version, run [az upgrade](/en-us/cli/azure/reference-index?#az-upgrade).
 
-- You need Azure CLI version 2.85.0 or later. To find the version, run `az --version`. If you need to install or upgrade Azure CLI, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
+- You need Azure CLI version 2.92.0 or later. To find the version, run `az --version`. If you need to install or upgrade Azure CLI, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
 - Ensure that the identity you're using to create your cluster has the appropriate minimum permissions. For more information on access and identity for AKS, see [Access and identity options for Azure Kubernetes Service (AKS)](../concepts-identity).
 - If you have multiple Azure subscriptions, select the appropriate subscription ID for billing by using the [az account set](/en-us/cli/azure/account#az-account-set) command. For more information, see [How to manage Azure subscriptions - Azure CLI](/en-us/cli/azure/manage-azure-subscriptions-azure-cli?tabs=bash#change-the-active-subscription).
 - Depending on your Azure subscription, you might need to request a vCPU quota increase for the GPU-enabled VM family you use in this quickstart. For more information, see [Increase VM-family vCPU quotas](/en-us/azure/quotas/per-vm-quota-requests).
 - GPU-enabled VM sizes contain specialized hardware subject to higher pricing and regional availability. For more information, see [GPU optimized virtual machine sizes](/en-us/azure/virtual-machines/sizes-gpu).
-
-## Install the `aks-preview` CLI extension
-
-Install the `aks-preview` CLI extension by using the [az extension add](/en-us/cli/azure/extension#az-extension-add) command.
-
-```azurecli
-az extension add --name aks-preview
-```
-
-Update the extension to ensure you have the latest version by using the [az extension update](/en-us/cli/azure/extension#az-extension-update) command.
-
-```azurecli
-az extension update --name aks-preview
-```
-
-## Register the preview feature
-
-Register the `ManagedGPUExperiencePreview` feature flag in your subscription by using the [az feature register](/en-us/cli/azure/feature#az-feature-register) command.
-
-```azurecli
-az feature register --namespace Microsoft.ContainerService --name ManagedGPUExperiencePreview
-```
-
-It takes a few minutes for the status to show **Registered**. Verify the registration status by using the [az feature show](/en-us/cli/azure/feature#az-feature-show) command.
-
-```azurecli
-az feature show --namespace Microsoft.ContainerService --name ManagedGPUExperiencePreview --query properties.state
-```
-
-When the status shows **Registered**, refresh the registration of the `Microsoft.ContainerService` resource provider by using the [az provider register](/en-us/cli/azure/provider#az-provider-register) command.
-
-```azurecli
-az provider register --namespace Microsoft.ContainerService
-```
 
 ## Define environment variables
 

@@ -54,7 +54,7 @@ This article walks you through how to create a multi-instance GPU node pool usin
 
 Tip
 
-For a fully managed MIG experience where AKS installs and maintains the NVIDIA driver, device plugin, and DCGM metrics exporter, see [Create a managed Multi-Instance GPU (MIG) node pool (preview)](aks-managed-gpu-nodes#create-a-managed-multi-instance-gpu-mig-node-pool-preview).
+For a fully managed MIG experience where AKS installs and maintains the NVIDIA driver, device plugin, and DCGM metrics exporter, see [Create a managed Multi-Instance GPU (MIG) node pool](aks-managed-gpu-nodes#create-a-managed-multi-instance-gpu-mig-node-pool).
 
 ## Prerequisites and limitations
 
