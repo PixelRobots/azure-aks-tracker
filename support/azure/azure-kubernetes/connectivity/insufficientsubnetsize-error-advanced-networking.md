@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: InsufficientSubnetSize error code - Azure | Microsoft Learn
+title: Troubleshoot InsufficientSubnetSize error code in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/insufficientsubnetsize-error-advanced-networking
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -9,14 +9,15 @@ uhfHeaderId: Azure
 feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
 manager: dcscontentpm
 audience: itpro
-author: jotavar
-ms.author: jotavar
+author: kaushika-msft
+ms.author: kaushika
 ms.topic: troubleshooting
 description: Fix the InsufficientSubnetSize error in AKS advanced networking. Learn how to restore subnet IP capacity and deploy your cluster successfully today.
-ms.date: 2026-06-09T00:00:00.0000000Z
-ms.reviewer: chiragpa, nickoman, v-leedennis
+ms.date: 2026-11-02T00:00:00.0000000Z
+ms.reviewer: chiragpa, nickoman, v-leedennis, jotavar, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: c55da4b6-33fb-a282-a9db-85224be315bc
 document_version_independent_id: c55da4b6-33fb-a282-a9db-85224be315bc
@@ -42,17 +43,19 @@ spProducts:
 platformId: c032dc9a-b7b2-9f1f-a593-7c5f05e3ec39
 ---
 
-# InsufficientSubnetSize error code - Azure | Microsoft Learn
+# Troubleshoot InsufficientSubnetSize error code in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-Use this article to fix the `InsufficientSubnetSize` error when deploying an Azure Kubernetes Service (AKS) cluster with advanced networking. You learn why it happens and how to restore enough subnet IP capacity for successful cluster and node pool operations across Kubenet, Azure CNI, and Azure CNI Overlay.
+Use this article to troubleshoot the `InsufficientSubnetSize` error when you deploy an Azure Kubernetes Service (AKS) cluster with advanced networking. Learn why the error occurs and how to restore subnet IP capacity for cluster and node pool operations in Kubenet, Azure CNI, and Azure CNI Overlay.
 
 ## Symptoms
 
 The `InsufficientSubnetSize` error occurs during any of the following operations. You also encounter this error in [AKS Diagnostics](/en-us/azure/aks/concepts-diagnostics), which proactively discovers issues such as an insufficient subnet size.
 
-#### Operation 1: Scaling an AKS cluster or an AKS node pool
+### Operation 1: Scale an AKS cluster or node pool
+
+The following table summarizes the symptoms for different cluster types when the `InsufficientSubnetSize` error occurs.
 
 | Cluster type | Symptom:The number of free IP addresses in the subnet is*less than*... |
 | --- | --- |
@@ -60,7 +63,9 @@ The `InsufficientSubnetSize` error occurs during any of the following operations
 | Azure CNI | The number of new nodes that you request **times** the node pool value in the `--max-pod` parameter. |
 | Azure CNI Overlay | The number of new nodes that you request.(In the node pools that use the autoscaler, the number of nodes is the value in the `--max-count` parameter.) |
 
-#### Operation 2: Upgrading an AKS cluster or an AKS node pool
+### Operation 2: Upgrade an AKS cluster or node pool
+
+The following table summarizes the symptoms for different cluster types when the `InsufficientSubnetSize` error occurs during an upgrade.
 
 | Cluster type | Symptom:The number of free IP addresses in the subnet is*less than*... |
 | --- | --- |
@@ -70,7 +75,9 @@ The `InsufficientSubnetSize` error occurs during any of the following operations
 
 By default, an AKS cluster sets a maximum surge (upgrade buffer) value of one (1). However, you can customize this upgrade behavior by setting the maximum surge value of a node pool. This action increases the number of available IP addresses that are necessary to complete an upgrade.
 
-#### Operation 3: Creating an AKS cluster or adding an AKS node pool
+### Operation 3: Create an AKS cluster or add a node pool
+
+The following table summarizes the symptoms for different cluster types when the `InsufficientSubnetSize` error occurs during cluster creation or node pool addition.
 
 | Cluster type | Symptom:The number of free IP addresses in the subnet is*less than*... |
 | --- | --- |
@@ -80,7 +87,7 @@ By default, an AKS cluster sets a maximum surge (upgrade buffer) value of one (1
 
 ## Cause
 
-A subnet that's in use for a cluster no longer has available IP addresses within its Classless Inter-Domain Routing (CIDR) address space for successful resource assignment.
+A subnet that a cluster uses no longer has available IP addresses within its Classless Inter-Domain Routing (CIDR) address space for resource assignment.
 
 | Cluster type | Requirement |
 | --- | --- |
@@ -88,11 +95,11 @@ A subnet that's in use for a cluster no longer has available IP addresses within
 | Azure CNI | Sufficient IP space for each *node and pod* in the cluster |
 | Azure CNI Overlay | Sufficient IP space for each *node* in the cluster |
 
-Read more about the [design of Azure CNI to assign IP addresses to pods](/en-us/azure/aks/configure-azure-cni#plan-ip-addressing-for-your-cluster).
+To learn more, see [design of Azure CNI to assign IP addresses to pods](/en-us/azure/aks/configure-azure-cni#plan-ip-addressing-for-your-cluster).
 
-AKS considers all node pools in the cluster and their respective subnet. If you upgrade a node pool, AKS considers the IP requirements of all node pools in the cluster. For example, if you upgrade node pool "pool-A" in subnet "subnet-A", and there's another subnet "subnet-B" linked to another node pool "pool-B" facing IP exhaustion, then the following error might happen:
+AKS considers all node pools in the cluster and their respective subnets. If you upgrade a node pool, AKS considers the IP requirements of all node pools in the cluster. For example, if you upgrade node pool `pool-A` in subnet `subnet-A`, and another subnet `subnet-B` links to another node pool `pool-B` that's facing IP exhaustion, the following error might occur.
 
-`Code: InsufficientSubnetSize; Message: Pre-allocated IPs <number> exceeds IPs available <number> in Subnet Cidr <CIDR>, Subnet Name <subnet-name>. If Autoscaler is enabled, the max-count from each nodepool is counted towards this total, which means that pre-allocated IPs count represents a theoretical max value, not the actual number of IPs requested. See http://aka.ms/aks/insufficientsubnetsize for troubleshooting steps. Surge nodes would also consume the subnet IP space, consider use smaller maxSurge or use maxUnavailable (aka.ms/aks/maxUnavailable).`
+`Code: InsufficientSubnetSize; Message: Pre-allocated IPs <number> exceeds IPs available <number> in Subnet Cidr <CIDR>, Subnet Name <subnet-name>. If Autoscaler is enabled, the max-count from each nodepool is counted towards this total, which means that pre-allocated IPs count represents a theoretical max value, not the actual number of IPs requested. See http://aka.ms/aks/insufficientsubnetsize for troubleshooting steps. Surge nodes also consume the subnet IP space. Consider using smaller maxSurge or use maxUnavailable (aka.ms/aks/maxUnavailable).`
 
 ## Solution
 

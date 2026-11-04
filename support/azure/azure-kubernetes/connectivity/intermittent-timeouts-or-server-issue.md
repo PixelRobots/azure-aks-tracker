@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Fix intermittent time-outs or server issues during app access - Azure | Microsoft Learn
+title: Troubleshoot intermittent time-outs or server issues during app access on AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/connectivity/intermittent-timeouts-or-server-issue
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -13,10 +13,11 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Fix intermittent AKS app access time-outs and server errors. Follow troubleshooting steps now to quickly restore reliable application connectivity.
-ms.date: 2024-09-19T00:00:00.0000000Z
-ms.reviewer: chiragpa, v-leedennis, v-weizhu
+ms.date: 2026-11-03T00:00:00.0000000Z
+ms.reviewer: chiragpa, v-leedennis, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: f782825b-0274-ac4f-ff32-91d957c942a3
 document_version_independent_id: f782825b-0274-ac4f-ff32-91d957c942a3
@@ -34,28 +35,32 @@ monikers: []
 item_type: Content
 source_path: support/azure/azure-kubernetes/connectivity/intermittent-timeouts-or-server-issue.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 90f7888e-031d-3840-447e-7a24cf91f919
 ---
 
-# Fix intermittent time-outs or server issues during app access - Azure | Microsoft Learn
+# Troubleshoot intermittent time-outs or server issues during app access on AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article describes how to troubleshoot intermittent connectivity issues that affect your applications that are hosted on an Azure Kubernetes Service (AKS) cluster.
+This article helps you troubleshoot intermittent time-outs or server issues that affect applications hosted on an Azure Kubernetes Service (AKS) cluster. Learn how to identify the cause, such as container memory limits, and restore reliable application access.
 
 ## Prerequisites
+
+Ensure you have the following prerequisites installed and configured:
 
 - The Client URL ([cURL](https://www.tecmint.com/install-curl-in-linux/)) tool, or a similar command-line tool.
 - The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) tool, or a similar tool to connect to the cluster. To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
 
 ## Symptoms
 
-When you run a cURL command, you occasionally receive a "Timed out" error message. The output might resemble the following text:
+When you run a cURL command, you occasionally receive a "Timed out" error message. The output might resemble the following text.
 
 ```console
 $ # One connection is successful, which results in a HTTP 200 response.
@@ -87,9 +92,9 @@ HTTP/1.1 200 OK
 
 ## Cause
 
-Intermittent time-outs suggest component performance issues, as opposed to networking problems.
+Intermittent timeouts suggest component performance issues, rather than networking problems.
 
-In this scenario, it's important to check the usage and health of the components. You can use the *inside-out* technique to check the status of the pods. Run the [kubectl top](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#top) and [kubectl get](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) commands, as follows:
+In this scenario, check the usage and health of the components. Use the *inside-out* technique to check the status of the pods. Run the [kubectl top](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#top) and [kubectl get](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#get) commands as follows.
 
 ```console
 $ kubectl top pods  # Check the health of the pods and the nodes.
@@ -109,7 +114,7 @@ The output shows that the current usage of the pods and nodes appears to be acce
 
 Although the pod is in the `Running` state, one restart occurs after the first 108 seconds of the pod running. This occurrence might indicate that some issues affect the pods or containers that run in the pod.
 
-If the issue persists, the status of the pod changes after some time:
+If the issue persists, the status of the pod changes after some time. The following example shows this scenario.
 
 ```console
 $ kubectl get pods
@@ -121,7 +126,7 @@ This example shows that the `Ready` state is changed, and there are several rest
 
 This situation occurs because the container fails after starting, and then Kubernetes tries to restart the container to force it to start working. However, if the issue persists, the application continues to fail after it runs for some time. Kubernetes eventually changes the status to `CrashLoopBackOff`.
 
-To check the logs for the pod, run the following [kubectl logs](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#logs) commands:
+To check the logs for the pod, run the following [kubectl logs](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#logs) commands.
 
 ```console
 $ kubectl logs my-deployment-fc94b7f98-m9z2l
@@ -159,7 +164,7 @@ Started increasing memory
 
 Log entries were made the previous time that the container was run. The existence of these entries suggests that the application did start, but it closed because of some issues.
 
-Check the service associated with the deployment and try to curl the cluster IP of the service from inside the cluster to identify the issue:
+Check the service associated with the deployment and try to curl the cluster IP of the service from inside the cluster to identify the issue.
 
 ```console
 $ kubectl get svc # Check the service associated with deployment 
@@ -168,7 +173,7 @@ kubernetes              ClusterIP      10.0.0.1      <none>         443/TCP     
 my-deployment-service   LoadBalancer   10.0.136.71   20.62.x.x      80:30790/TCP   21m
 ```
 
-The next step is to check the events of the pod by running the [kubectl describe](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#describe) command:
+The next step is to check the events of the pod by running the [kubectl describe](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#describe) command.
 
 ```console
 $ kubectl describe pod my-deployment-fc94b7f98-m9z2l
@@ -208,7 +213,7 @@ Events:
   Warning  BackOff  4m10s (x902 over 4h2m)  kubelet  Back-off restarting failed container
 ```
 
-Observations:
+The following are potential observations:
 
 - The exit code is 137. For more information about exit codes, see the [Docker run reference](https://docs.docker.com/engine/reference/run/#exit-status) and [Exit codes with special meanings](https://tldp.org/LDP/abs/html/exitcodes.html).
 - The termination reason is `OOMKilled`.

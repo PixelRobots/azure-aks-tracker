@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot SNAT port exhaustion on AKS nodes, identify high-connection pods, and take action to reduce outbound connectivity issues.
-ms.date: 2026-07-22T00:00:00.0000000Z
-ms.reviewer: v-rekhanain, v-weizhu, mariusbutuc
+description: Learn how to troubleshoot SNAT port exhaustion on AKS nodes, identify pods with high outbound connections, and reduce connectivity issues. Start now.
+ms.date: 2026-11-03T00:00:00.0000000Z
+ms.reviewer: v-rekhanain, v-weizhu, mariusbutuc, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: c6b95755-dd7b-f7de-7e0a-01ff343c2b87
 document_version_independent_id: c6b95755-dd7b-f7de-7e0a-01ff343c2b87
@@ -46,16 +47,20 @@ platformId: 592ad593-3188-7626-aa97-8cb059f6ef65
 
 ## Summary
 
-This article helps you find and troubleshoot Azure Kubernetes Service (AKS) nodes that experience Source Network Address Translation (SNAT) port exhaustion.
+This article helps you troubleshoot SNAT port exhaustion on Azure Kubernetes Service (AKS) nodes. Learn how to find the affected node, identify pods with high outbound connections, and reduce outbound connectivity issues caused by Source Network Address Translation (SNAT) port exhaustion.
 
 Note
 
 - To troubleshoot SNAT port exhaustion on AKS nodes in an AKS cluster running [Kubernetes jobs](https://kubernetes.io/docs/concepts/workloads/controllers/job/), perform the following steps only when the jobs are actively running on the AKS nodes.
 - To learn more about SNAT ports and their allocation per virtual machine, see [What SNAT ports are](/en-us/azure/load-balancer/load-balancer-outbound-connections#what-are-snat-ports).
 
-## Step 1: Locate the node with SNAT port exhaustion
+## Troubleshoot SNAT port exhaustion
 
-1. Get the IP address of the AKS node that experiences active SNAT port exhaustion from the Azure portal.
+Follow these steps to identify and troubleshoot SNAT port exhaustion on AKS nodes.
+
+### Step 1: Locate the node with SNAT port exhaustion
+
+1. Get the IP address of the AKS node that experiences active SNAT port exhaustion from the [Azure portal](https://portal.azure.com).
 
     1. Locate the default Kubernetes load balancer by navigating to your AKS cluster's resource group.
 
@@ -63,28 +68,28 @@ Note
     2. Locate the AKS node that's experiencing SNAT port exhaustion by [checking SNAT port usage and allocation](/en-us/azure/load-balancer/load-balancer-standard-diagnostics#how-do-i-check-my-snat-port-usage-and-allocation) on the load balancer metrics page. The **Values** drop-down list shows node IP addresses.
 
         [![Screenshot of load balancer metrics showing an AKS node IP address to identify SNAT port exhaustion.](media/snat-port-exhaustion/aks-node-ip-address.png)](media/snat-port-exhaustion/aks-node-ip-address.png#lightbox)
-2. Connect to your AKS cluster and use the node IP address to get the node name by running the following `kubectl` command:
+2. Connect to your AKS cluster and use the node IP address to get the node name by running the following `kubectl` command.
 
     ```console
     kubectl get nodes -o wide | grep <node IP>
     ```
 
-## Step 2: Locate the Linux pod with high outbound connections
+### Step 2: Locate the Linux pod with high outbound connections
 
 Note
 
-- [Tcptracer](https://github.com/iovisor/bcc/blob/master/tools/tcptracer.py) is one of the [BPF Compiler Collection (BCC) tools](https://github.com/iovisor/bcc#contents) that are pre-installed on Linux nodes. It allows you to trace TCP established connections (`connect()`, `accept()`, and `close()`). You can use it to find high outbound connections from the source IP address and network namespace (netns) of a pod.
-- To access the BCC tools, use [kubectl node-shell](https://github.com/kvaps/kubectl-node-shell)*only*.
-- All the following commands in this section are run as the root user on a Linux node that has the BCC tools installed.
+- [Tcptracer](https://github.com/iovisor/bcc/blob/master/tools/tcptracer.py) is one of the [BPF Compiler Collection (BCC) tools](https://github.com/iovisor/bcc#contents) that are preinstalled on Linux nodes. It allows you to trace TCP established connections (`connect()`, `accept()`, and `close()`). You can use it to find high outbound connections from the source IP address and network namespace (netns) of a pod.
+- Use *only*[kubectl node-shell](https://github.com/kvaps/kubectl-node-shell) to access the BCC tools.
+- Run all the following commands in this section as the root user on a Linux node that has the BCC tools installed.
 
-1. On your running terminal, install [kubectl node-shell](https://github.com/kvaps/kubectl-node-shell):
+1. On your running terminal, install [kubectl node-shell](https://github.com/kvaps/kubectl-node-shell).
 
     ```bash
     curl -LO https://github.com/kvaps/kubectl-node-shell/raw/master/kubectl-node_shell
     chmod +x ./kubectl-node_shell
     sudo mv ./kubectl-node_shell /usr/local/bin/kubectl-node_shell
     ```
-2. Use kube node-shell plugin to connect to the node that experiences SNAT port exhaustion and use `tcptracer` to trace TCP established connections:
+2. Use the kube node-shell plugin to connect to the node that experiences SNAT port exhaustion. Use `tcptracer` to trace TCP established connections.
 
     ```bash
     kubectl node-shell <node name>
@@ -92,7 +97,7 @@ Note
     /usr/share/bcc/tools# python3 tcptracer -t4v
     ```
 
-    Here's a command output example:
+    Here's a command output example.
 
     ```output
     Tracing TCP established connections. Ctrl-C to end.
@@ -106,9 +111,9 @@ Note
     7xxxx3      connect      18633  curl             4  1.2.3.4           13.14.15.16      35690  80     4026532785
     9xxxx7      close        18633  curl             4  1.2.3.4           13.14.15.16      35690  80     4026532785
     ```
-3. Write the previous command output to a log file, and then sort the output to review a list of high connections.
+3. Write the previous command output to a log file. Sort the output to review a list of high connections.
 
-    Because SNAT port exhaustion is caused only by outbound connections to *public* endpoints, filter the trace on the destination address (`DADDR`, the `$7` column) to keep only public IPv4 destinations before aggregating. This removes noise from traffic that doesn't consume SNAT ports, such as private (RFC 1918) addresses, localhost, the Azure Instance Metadata Service (IMDS), and Azure WireServer:
+    Because SNAT port exhaustion is caused only by outbound connections to *public* endpoints, filter the trace on the destination address (`DADDR`, the `$7` column`) to keep only public IPv4 destinations before aggregating. This filter removes noise from traffic that doesn't consume SNAT ports, such as private (RFC 1918) addresses, localhost, the Azure Instance Metadata Service (IMDS), and Azure WireServer.
 
     ```bash
     python3 tcptracer -t4v > log
@@ -125,7 +130,7 @@ Note
     - Link-local addresses, including the IMDS endpoint `169.254.169.254`: `169.254.0.0/16`
     - Azure WireServer: `168.63.129.16`
 
-    Here's a command output example:
+    Here's a command output example.
 
     ```output
     Count  SADDR         DADDR          NETNS
@@ -133,9 +138,9 @@ Note
     6      10.244.1.190  13.89.174.133  4026532293
     ```
 
-    The remaining sources (`SADDR`) are the pods that establish connections to public destinations, which are the ones actually consuming SNAT ports.
+    The remaining sources (`SADDR`) are the pods that establish connections to public destinations. These pods consume SNAT ports.
 4. Map the source IP address (`SADDR`) with the most connections from the previous output to a pod. If it doesn't work, you can continue.
-5. Note the `SADDR` or `NETNS` value with the most connections from the previous output, and then run the following [lsns](https://man7.org/linux/man-pages/man8/lsns.8.html) command to map it to a PID. Lsns is a Linux tool that lists namespaces and maps namespaces to PIDs in the Linux process tree.
+5. Note the `SADDR` or `NETNS` value with the most connections from the previous output. Run the following [lsns](https://man7.org/linux/man-pages/man8/lsns.8.html) command to map it to a PID. Lsns is a Linux tool that lists namespaces and maps namespaces to PIDs in the Linux process tree.
 
     ```bash
     lsns -t net
@@ -160,14 +165,14 @@ Note
       `-containerd-shim,20946 -namespace k8s.io -id 2xxxf...
     ```
 
-    Note the first five characters of the containerd `-id` in the command output. It will be used in step 7.
+    Note the first five characters of the containerd `-id` in the command output. It will be used in the next step.
 7. Map the previous containerd `-id` value to a POD ID by using [crictl](https://github.com/kubernetes-sigs/cri-tools/blob/master/docs/crictl.md). Crictl provides a CLI for CRI-compatible container runtimes.
 
     ```bash
     crictl ps -a
     ```
 
-    Here's a command output example:
+    Here's a command output example.
 
     ```output
     CONTAINER   IMAGE     CREATED      STATE     NAME    ATTEMPT    POD ID        POD
@@ -175,16 +180,16 @@ Note
     ```
 
     Use the first five characters of the previous containerd `-id` value to match a POD ID.
-8. Get all pods running on the node and use the previous POD ID to match the pod that has high outbound connections from the command output:
+8. Get all pods running on the node. Use the previous POD ID to match the pod that has high outbound connections from the command output.
 
     ```bash
     kubectl get pods --all-namespaces -o wide --field-selector spec.nodeName=<nodename>
     ```
 
-## Step 3: Find all outbound network connections made by the application
+### Step 3: Find all outbound network connections made by the application
 
 # [For a Linux pod](#tab/for-a-linux-pod)
-1. Execute into the pod that's identified as having high outbound connections in Step 2: Locate the Linux pod with high outbound connections by using one of the following commands:
+1. Use one of the following commands to connect to the pod that has high outbound connections, as identified in Step 2: Locate the Linux pod with high outbound connections:
 
     - ```bash
         kubectl exec -it <pod name> -n <namespace> /bin/bash
@@ -192,7 +197,7 @@ Note
     - ```bash
         kubectl exec -it <pod name> -n <namespace> /bin/sh
         ```
-2. Install the netstat command-line tool in the pod by running the following command. Netstat is a network troubleshooting tool for admins only.
+2. Install the netstat command-line tool in the pod by running the appropriate command for your Linux distribution. Netstat is a network troubleshooting tool for admins only.
 
     - On Debian, Ubuntu, or Linux Mint
 
@@ -226,31 +231,31 @@ Note
         ```bash
         zypper install net-tools
         ```
-3. Once netstat is installed in the pod, run the following command:
+3. After installing netstat in the pod, run the following command.
 
     ```bash
     netstat -ptn | grep -i established
     ```
 
-    Here's a command output example:
+    Here's a command output example.
 
     ```output
     tcp        0      0 10.x.x.x:xxxx        20.x.x.x:443       ESTABLISHED xxxxx3/telnet
     ```
 
 # [For a Windows pod](#tab/for-a-windows-pod)
-1. Execute into a Windows pod by running the following command:
+1. Connect to a Windows pod by running the following command.
 
     ```console
     kubectl exec -it <Windows pod name> -- cmd.exe
     ```
-2. Run the following netstat command to find established connections from the Windows application running in the pod:
+2. Run the following netstat command to find established connections from the Windows application running in the pod.
 
     ```console
     netstat -aon | find /i "established"
     ```
 
-    Here's a command output example:
+    Here's a command output example.
 
     ```output
     C:\inetpub\wwwroot>netstat -aon | find /i "established"
@@ -262,6 +267,6 @@ Note
 
 ---
 
-In the command output, the local address is the pod's IP address, and the foreign address is the IP to which the application connects. The public IP connections in the `ESTABLISHED` state are the connections that utilize SNAT. Ensure that you count only the connections in the `ESTABLISHED` state to public IP addresses and ignore any connections in the `ESTABLISHED` state to private IP addresses.
+In the command output, the local address is the pod's IP address, and the foreign address is the IP to which the application connects. The public IP connections in the `ESTABLISHED` state are the connections that use SNAT. Count only the connections in the `ESTABLISHED` state to public IP addresses. Ignore any connections in the `ESTABLISHED` state to private IP addresses.
 
-Repeat the steps in this section for all other pods running on the node. The pod that has the most connections in the `ESTABLISHED` state to public IP addresses hosts the application that causes SNAT port exhaustion on the node. Work with your application developers to tune the application for improved network performance using the recommendations mentioned in [Design connection-efficient applications](/en-us/azure/load-balancer/troubleshoot-outbound-connection#design-connection-efficient-applications). After implementing the recommendations, verify that you see less SNAT port exhaustion.
+Repeat the steps in this section for all other pods running on the node. The pod with the most connections in the `ESTABLISHED` state to public IP addresses hosts the application that causes SNAT port exhaustion on the node. Work with your application developers to tune the application for improved network performance by using the recommendations in [Design connection-efficient applications](/en-us/azure/load-balancer/troubleshoot-outbound-connection#design-connection-efficient-applications). After implementing the recommendations, verify that you see less SNAT port exhaustion.

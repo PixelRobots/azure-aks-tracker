@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Troubleshoot app connection issues in an AKS cluster with basic steps to identify causes and restore connectivity. Start resolving issues now.
-ms.date: 2026-07-31T00:00:00.0000000Z
-ms.reviewer: chiragpa, pkc, rissing, ookour, v-leedennis, v-weizhu, dandshi
+description: Troubleshoot app connection issues in an AKS cluster with basic steps to find the cause and restore connectivity. Start resolving issues now.
+ms.date: 2026-10-30T00:00:00.0000000Z
+ms.reviewer: chiragpa, pkc, rissing, ookour, v-leedennis, v-weizhu, dandshi, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
+ai-usage: ai-assisted
 locale: en-us
 document_id: c7f8e43c-0c81-1507-6b08-a2451e75d90d
 document_version_independent_id: c7f8e43c-0c81-1507-6b08-a2451e75d90d
@@ -48,7 +49,7 @@ platformId: adad3a9f-f2d1-3837-7510-7dc6ce69d366
 
 ## Summary
 
-If you experience app connection problems in an AKS cluster, this article helps you troubleshoot and resolve them. You learn basic checks for application, service, ingress, and network configuration so you can restore connectivity faster.
+This article helps you troubleshoot app connection issues in an Azure Kubernetes Service (AKS) cluster. You learn basic checks for application, service, ingress, and network configuration so you can restore connectivity faster.
 
 Note
 
@@ -56,7 +57,7 @@ To troubleshoot common problems when you try to connect to the AKS API server, s
 
 ## Prerequisites
 
-- The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) tool, or a similar tool to connect to the cluster. To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
+The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) tool, or a similar tool to connect to the cluster. To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
 
 ## Factors to consider
 
@@ -189,7 +190,7 @@ If the test pod can't reach the application pod's IP address, common causes incl
 
 ### Step 2: Access the ClusterIP service
 
-For scenarios in which the application inside the pod is running, focus mainly on troubleshooting how the pod is exposed.
+For scenarios where the application inside the pod is running, focus mainly on troubleshooting how the pod is exposed.
 
 Is the pod exposed as a service? In this case, check the service events. Also, check whether the pod IP address and application port are available as an endpoint in the service description:
 
@@ -278,7 +279,7 @@ If the `LoadBalancer` service IP address doesn't return a correct response, comm
 
 - **An NSG is blocking inbound traffic.** The NSG that's associated with the AKS node subnet must allow the service port from the load balancer or the client.
 - **Load balancer health probes are failing,** so the backend nodes are marked unhealthy and traffic isn't forwarded. For more information, see [Troubleshoot health probe failures in Azure Load Balancer](/en-us/troubleshoot/azure/load-balancer/troubleshoot-load-balancer-health-probe-failures) and [Troubleshoot issues when enabling the AKS cluster service health probe mode](/en-us/troubleshoot/azure/azure-kubernetes/availability-performance/cluster-service-health-probe-mode-issues).
-- **A user-defined route (UDR) breaks the return path.** Forced tunneling (a `0.0.0.0/0` route to a firewall or network virtual appliance) can cause asymmetric routing that resets or times out external connections. To mitigate this, route the inbound traffic through the same appliance so that the path is symmetric—for example, add a destination network address translation (DNAT) rule on the firewall or appliance that translates its public IP address to the load balancer's frontend IP address, or expose the application through an internal load balancer that's placed behind the appliance. For more information, see [Limit network traffic with Azure Firewall in AKS](/en-us/azure/aks/limit-egress-traffic).
+- **A user-defined route (UDR) breaks the return path.** Forced tunneling (a `0.0.0.0/0` route to a firewall or network virtual appliance) can cause asymmetric routing that resets or times out external connections. To mitigate this condition, route the inbound traffic through the same appliance so that the path is symmetric—for example, add a destination network address translation (DNAT) rule on the firewall or appliance that translates its public IP address to the load balancer's frontend IP address, or expose the application through an internal load balancer that's placed behind the appliance. For more information, see [Limit network traffic with Azure Firewall in AKS](/en-us/azure/aks/limit-egress-traffic).
 
 ## Scenarios that use an ingress instead of a service
 
@@ -327,7 +328,7 @@ This example contains an `Ingress` resource that:
 - Has two `Path` strings configured.
 - Routes to two `Services` in the back end.
 
-Verify that the back-end services are running and respond to the port that's mentioned in the ingress description:
+Verify that the back-end services are running and respond to the port that you mention in the ingress description:
 
 ```console
 $ kubectl get svc -n <namespace-of-ingress>
@@ -353,7 +354,7 @@ $ kubectl logs -n ingress-basic nginx-ingress-ingress-nginx-controller-9d8d5c57d
 
 What if the client makes requests to the ingress host name or IP address, but you don't see any entries in the logs of the ingress controller pod? In this case, the requests might not reach the cluster, and the user might receive a `Connection Timed Out` error message.
 
-Another possibility is that the components on top of the ingress pods, such as Load Balancer or Application Gateway, aren't routing the requests to the cluster correctly. If this condition is true, you can check the back-end configuration of these resources.
+Another possibility is that the components on top of the ingress pods, such as Load Balancer or Application Gateway, aren't routing the requests to the cluster correctly. If this condition is true, check the back-end configuration of these resources.
 
 If you receive a `Connection Timed Out` error message, check the network security group that's associated with the AKS nodes. Also, check the AKS subnet. It could be blocking the traffic from the load balancer or application gateway to the AKS nodes.
 
