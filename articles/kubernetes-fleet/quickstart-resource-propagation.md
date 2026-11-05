@@ -41,8 +41,10 @@ item_type: Content
 source_path: articles/kubernetes-fleet/quickstart-resource-propagation.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 7baae6f1-f42f-14c1-0f1d-d45ad63e6a0f
 ---
 
@@ -418,6 +420,8 @@ On the selected Kubernetes clusters, you find the namespace, Deployment, and Ser
 ## Delete the placement to remove resources
 
 When you delete the resource placement on the Fleet Manager hub cluster, you remove the distributed resources from selected member clusters.
+
+To remove distributed resources without deleting the placement, use `PickFixed` with an empty `clusterNames` array. For more information, see [PickFixed placement type](concepts-resource-placement#pickfixed-placement-type).
 
 ::: zone pivot="azure-cli"
 
