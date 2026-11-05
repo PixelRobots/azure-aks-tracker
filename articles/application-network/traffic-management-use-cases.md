@@ -21,7 +21,8 @@ author: Kochhars
 ms.author: kochhars
 ms.service: azure-kubernetes-app-net
 ms.topic: how-to
-ms.date: 2026-10-29T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
+ai-usage: ai-assisted
 locale: en-us
 document_id: 26a6168c-7b12-7421-5960-0549b3127a5c
 document_version_independent_id: 905a14a4-188f-3b88-67bd-bed6a038f8b7
@@ -62,6 +63,12 @@ Azure Kubernetes Application Network traffic management uses Istio [ambient mode
 - Fault injection
 
 This article provides step-by-step instructions on how to implement these traffic management use cases using Azure Kubernetes Application Network across multiple Azure Kubernetes Service (AKS) clusters.
+
+## Watch the demo
+
+This optional video demonstrates Application Network traffic policies across AKS clusters.
+
+For a separate viewing option, [open the demo](https://aka.ms/aks/appnetdemo).
 
 ## Prerequisites
 
@@ -137,7 +144,7 @@ Before you begin, ensure you have the following prerequisites in place:
 
 This architecture extends the [Bookinfo sample application](https://istio.io/latest/docs/ambient/getting-started/deploy-sample-app/) to run across multiple AKS clusters.
 
-![Screenshot of an architecture diagram showing the Bookinfo sample application architecture running across two AKS clusters.](media/traffic-management-use-cases/traffic-management-sample-architecture.png)
+[![Diagram of the Bookinfo sample across two AKS clusters, showing the productpage, details, reviews, and ratings services and the global reviews service endpoints.](media/traffic-management-use-cases/traffic-management-sample-architecture.svg)](media/traffic-management-use-cases/traffic-management-sample-architecture.svg#lightbox)
 
 - **Cluster 1**hosts:
     - `productpage-v1` (Python)
@@ -150,7 +157,7 @@ This architecture extends the [Bookinfo sample application](https://istio.io/lat
 
 The `productpage` service sends requests to `reviews.default.svc.cluster.local`. Since the `reviews` service is available in both AKS clusters with global service scope, requests can be routed to any available backends (`reviews-v1`, `reviews-v2`, or `reviews-v3`) across clusters. The `reviews-v2` and `reviews-v3` services also call the `ratings` service to retrieve rating data before returning the response to `productpage`.
 
-This architecture demonstrates how a distributed application can span across multiple clusters while continuing to use a consistent service name and communication pattern, enabling seamless service interaction across cluster boundaries.
+The arrows show logical service calls and candidate endpoints. The actual cross-cluster path depends on the members' network names and available reachability. For details, see [Configure multi-cluster connectivity](multi-cluster-connectivity).
 
 ### Deploy the application services
 

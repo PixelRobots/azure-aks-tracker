@@ -21,7 +21,7 @@ author: jack4it
 ms.author: mjac
 ms.service: azure-kubernetes-app-net
 ms.topic: how-to
-ms.date: 2026-10-30T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 ai-usage: ai-generated
 locale: en-us
 document_id: b1f8c38a-e120-5b2d-57e1-9068930ffb40
@@ -81,6 +81,10 @@ Private AKS clusters with API Server VNet Integration still require `enablePriva
 ## Understand the connectivity scope
 
 The private-connect subnet lets the Application Network control plane reach the member's Kubernetes API server. It doesn't create application connectivity between member clusters.
+
+The following diagram separates the private API-server connection from the data-plane control channel and application traffic:
+
+[![Diagram separating the managed control plane's private connection to the AKS Kubernetes API server, the member data plane's outbound TLS connection to the MCP FQDN, and application traffic between members.](media/private-connectivity/private-connectivity.svg)](media/private-connectivity/private-connectivity.svg#lightbox)
 
 In particular:
 

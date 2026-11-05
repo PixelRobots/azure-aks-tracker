@@ -21,7 +21,7 @@ author: Kochhars
 ms.author: kochhars
 ms.service: azure-kubernetes-app-net
 ms.topic: overview
-ms.date: 2026-10-30T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 ms.custom: references_regions
 ai-usage: ai-assisted
 locale: en-us
@@ -55,9 +55,40 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 - [AKS support policies](/en-us/azure/aks/support-policies)
 - [Azure support FAQ](/en-us/azure/aks/faq)
 
-Azure Kubernetes Application Network provides a fully managed, [ambient-based](https://istio.io/latest/docs/ambient/) service network solution for Azure Kubernetes Service (AKS). It enables secure, policy-driven communication between services without requiring sidecars or changes to your applications. Azure manages both the control plane and data plane, so you can focus on your workloads instead of operating and maintaining service-network infrastructure.
+Azure Kubernetes Application Network is a fully managed, [ambient-based](https://istio.io/latest/docs/ambient/) service network for Azure Kubernetes Service (AKS). It enables secure, policy-driven service-to-service communication without sidecars or application changes. Azure manages the control plane and data plane so you can focus on your workloads.
 
-When you create an Application Network resource, a dedicated, fully managed control and data plane is provisioned for service-to-service communication. You can then connect one or more AKS clusters to the Application Network resource to onboard them to the service network. Once connected, Application Network manages configuration, service identity, and version upgrades, providing consistent security and traffic policies across workloads with minimal configuration and operational overhead.
+## Watch an overview
+
+Watch the AKS Me Anything conversation with Jorge and Jack for an introduction to Application Network.
+
+You can also [watch the interview on YouTube](https://www.youtube.com/watch?v=Rg21m1YTdBA). To try it yourself, follow the [get-started guide](get-started) and check the [currently supported versions](supported-versions).
+
+## Core capabilities
+
+Application Network provides the following security and lifecycle capabilities:
+
+- **Automatic mutual TLS (mTLS)**: Secures service-to-service traffic by default, supporting both encrypted and unencrypted connections automatically.
+- **Managed certificate authority**: Issues and rotates SPIFFE compliant workload certificates automatically.
+- **Version and upgrade control**: Select minor versions manually or use release channels for automated upgrades. Application Network always manages rollout and patching.
+
+## Architecture overview
+
+Application Network uses an **ambient mesh model** composed of lightweight node-level and optional L7 proxies:
+
+- **Node-level proxies** secure all L4 service-to-service traffic in the cluster through mTLS.
+- **Optional L7 proxies** provide advanced routing and policy enforcement at the service level.
+
+Separating the data plane from individual workloads reduces resource usage and simplifies operations. For more details, see [Azure Kubernetes Application Network architecture](architecture).
+
+## Supported scenarios
+
+Create an Application Network resource to provision a dedicated control plane and data plane, then connect one or more AKS clusters as members. Application Network manages configuration and service identity for communication within and across member clusters.
+
+For multi-cluster deployments, choose a topology that matches your network reachability. Members in the same mesh network require direct pod-IP connectivity; members in different networks communicate through east-west gateways. Application Network doesn't create the underlying connectivity for either path. For configuration steps, see [Configure multi-cluster connectivity](multi-cluster-connectivity).
+
+Joining a cluster doesn't automatically enroll all application workloads or export every service. Enroll the intended workloads in ambient mode and configure global services as described in the [traffic management walkthrough](traffic-management-use-cases).
+
+## Limitations
 
 Important
 
@@ -66,35 +97,6 @@ Azure Kubernetes Application Network manages only service network-related compon
 Important
 
 Azure Kubernetes Application Network doesn't store any customer data.
-
-## Core capabilities
-
-Application Network delivers a streamlined approach to zero-trust networking in AKS. Key capabilities include:
-
-- **Ambient architecture**: Provides mesh functionality without sidecars, reducing resource usage and simplifying operations.
-- **Automatic mutual TLS (mTLS)**: Secures service-to-service traffic by default, supporting both encrypted and unencrypted connections automatically.
-- **Managed certificate authority**: Issues and rotates SPIFFE compliant workload certificates automatically.
-- **Version and upgrade control**: Select minor versions manually or use release channels for automated upgrades. Rollout and patching are always managed by Application Network.
-- **Integrated lifecycle management**: Operates as part of the AKS platform with control plane operations fully managed by Azure.
-
-## Architecture overview
-
-Application Network uses an **ambient mesh model** composed of lightweight node-level and optional L7 proxies:
-
-- **Node-level proxies** secure all L4 service-to-service traffic in the cluster through mTLS, eliminating the need for sidecars.
-- **Optional L7 proxies** provide advanced routing and policy enforcement at the service level.
-
-This design separates the data plane from individual workloads, improving efficiency, and simplifying adoption. For more details, see [Azure Kubernetes Application Network architecture](architecture).
-
-## Supported scenarios
-
-Application Network supports **single-cluster and multi-cluster AKS deployments** running **Linux-based node pools**. Connect multiple clusters to the same Application Network for service-to-service communication within and across member clusters, without managing sidecars or control plane components.
-
-For multi-cluster deployments, choose a topology that matches your network reachability. Members in the same mesh network require direct pod-IP connectivity; members in different networks communicate through east-west gateways. Application Network doesn't create the underlying connectivity for either path. For configuration steps, see [Configure multi-cluster connectivity](multi-cluster-connectivity).
-
-Joining a cluster doesn't automatically enroll all application workloads or export every service. Enroll the intended workloads in ambient mode and configure global services as described in the [traffic management walkthrough](traffic-management-use-cases).
-
-## Limitations
 
 Application Network currently has the following limitations:
 

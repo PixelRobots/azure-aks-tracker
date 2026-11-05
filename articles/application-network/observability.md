@@ -21,7 +21,8 @@ author: Kochhars
 ms.author: kochhars
 ms.service: azure-kubernetes-app-net
 ms.topic: overview
-ms.date: 2025-11-04T00:00:00.0000000Z
+ms.date: 2026-10-30T00:00:00.0000000Z
+ai-usage: ai-assisted
 locale: en-us
 document_id: e438be07-cd8f-63c3-7a39-48271e5d19ea
 document_version_independent_id: 03fcea6c-7f72-b631-034a-1f27e429ea0b
@@ -55,7 +56,7 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 - [AKS support policies](/en-us/azure/aks/support-policies)
 - [Azure support FAQ](/en-us/azure/aks/faq)
 
-Azure Kubernetes Application Network leverages [Azure Monitor](/en-us/azure/azure-monitor/fundamentals/overview) for comprehensive observability of member clusters. This article provides an overview of the observability features available for Azure Kubernetes Application Network, including supported metrics, logs, and tracing capabilities.
+Azure Kubernetes Application Network uses [Azure Monitor](/en-us/azure/azure-monitor/fundamentals/overview) to provide comprehensive observability for member clusters. This article gives an overview of the observability features available for Azure Kubernetes Application Network, including supported metrics, logs, and tracing capabilities.
 
 ## Observability features
 
@@ -64,12 +65,15 @@ Azure Kubernetes Application Network member observability infrastructure include
 | Feature | Workspace type | Description |
 | --- | --- | --- |
 | [**Managed Prometheus**](/en-us/azure/azure-monitor/metrics/prometheus-metrics-overview) | [Azure Monitor workspace](/en-us/azure/azure-monitor/metrics/azure-monitor-workspace-overview) | Stores Prometheus metrics scraped from your cluster. |
-| [**Container logging**](/en-us/azure/azure-monitor/containers/container-insights-log-query) | [Log Analytics workspace](/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview) | Stores container logs and control plane logs. |
+| [**Data plane logs**](logs#enable-data-plane-logs) | [Log Analytics workspace](/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview) | Stores application and in-cluster component logs collected through Container Insights. |
+| [**Control plane logs**](logs#enable-control-plane-logs) | [Log Analytics workspace](/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview) | Stores Istiod logs collected through a diagnostic setting on the Application Network member resource. |
 | [**Dashboards with Grafana**](/en-us/azure/azure-monitor/visualize/visualize-grafana-overview) | [Azure Monitor workspace](/en-us/azure/azure-monitor/metrics/azure-monitor-workspace-overview) | Links to your Azure Monitor workspace to visualize Prometheus metrics in Grafana dashboards. |
 
 ## Workspace options for Azure Kubernetes Application Network observability
 
-You can create new workspaces or use existing ones. If you don't specify a workspace ID during onboarding, a default workspace will be created in your resource group. You can onboard workspaces for [metrics](metrics) or [logs](logs). For more information about workspace options, see [Create workspaces](/en-us/azure/azure-monitor/containers/kubernetes-monitoring-enable?tabs=cli#create-workspaces).
+You can create new workspaces or use existing ones. Configure the Azure Monitor workspace when you enable [metrics collection](metrics), and configure the Log Analytics workspace when you enable Container Insights or create a member diagnostic setting for [logs](logs). For more information about workspace options, see [Create workspaces](/en-us/azure/azure-monitor/containers/kubernetes-monitoring-enable?tabs=cli#create-workspaces).
+
+Configure metrics collection, data plane log collection, and control plane diagnostic logs separately. A workspace alone doesn't enable collection. Envoy access logs also require a Telemetry configuration and traffic through the relevant proxy.
 
 ## Observability limitations
 

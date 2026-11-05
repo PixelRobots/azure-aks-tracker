@@ -21,7 +21,7 @@ author: Kochhars
 ms.author: kochhars
 ms.service: azure-kubernetes-app-net
 ms.topic: concept-article
-ms.date: 2026-10-30T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 ai-usage: ai-assisted
 locale: en-us
 document_id: c7073ca5-1133-e34e-63a1-8d0285c619c9
@@ -68,19 +68,19 @@ The architectural layers manage the following responsibilities:
 
 For multi-cluster deployments, Application Network synchronizes discovery for participating global services across member clusters. You configure workload enrollment, service participation, and the underlying connectivity required by your topology.
 
-The following diagram illustrates the architectural layers of Azure Kubernetes Application Network and how they interact with each other and with your AKS clusters:
+The following diagram shows the management plane, managed control plane, and data plane, with their separate API, control, and application traffic paths:
 
-[![Screenshot of a diagram illustrating the architectural layers of Azure Kubernetes Application Network and how they interact with each other and with AKS clusters.](media/architecture/application-network-architecture.png)](media/architecture/application-network-architecture.png#lightbox)
+[![Diagram of the Application Network management plane, managed control plane, and AKS member data plane, with separate control and application traffic paths.](media/architecture/application-network-architecture.svg)](media/architecture/application-network-architecture.svg#lightbox)
 
 ## Management plane
 
 The management plane is the Azure resource provider that handles all Application Network resource operations. When you create an Application Network resource or join a member cluster, the management plane validates the request, provisions supporting Azure resources such as Azure Key Vault for certificate storage, and orchestrates the creation of a regional control plane for the member.
 
-You interact with the management plane through the Azure CLI ([`az appnet`](/en-us/cli/azure/appnet)) or the ARM API. The management plane coordinates all downstream provisioning so that control plane and data plane components are deployed without manual intervention.
+You interact with the management plane through the Azure CLI ([`az appnet`](/en-us/cli/azure/appnet)) or the ARM API. The management plane coordinates all downstream provisioning so that control plane and data plane components deploy without manual intervention.
 
 ## Control plane
 
-The control plane is fully managed infrastructure that runs outside your AKS cluster. When a member cluster joins an Application Network, a dedicated control plane is provisioned in the same Azure region as the member cluster, keeping latency between control and data plane components low.
+The control plane is fully managed infrastructure that runs outside your AKS cluster. When a member cluster joins an Application Network, the service provisions a dedicated control plane in the same Azure region as the member cluster, keeping latency between control and data plane components low.
 
 Note
 
