@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "source": "Microsoft Azure Updates / Release Communications API",
+  "items": [
+    {
+      "id": "570232",
+      "title": "Retirement: Pod name dimension in AKS pod platform metrics",
+      "products": [
+        "AKS"
+      ],
+      "retirementDate": "2027-09-30",
+      "retirementMonth": "September 2027",
+      "description": "Beginning September 30, 2027, support for the pod name dimension on the following Azure\nMonitor platform metrics is retiring, and these metrics are transitioning to aggregate pod counters:\n\n- Number of pods by phase (kube_pod_status_phase)\n- Number of pods in Ready state (kube_pod_status_ready)\n\nAfter this change:\n- Metric names remain unchanged.\n- Aggregate pod counts remain available.\n- Namespace-level monitoring scenarios remain supported.\n- The pod name dimension will no longer be available for filtering, grouping, or alerting.\n\nDuring the deprecation period, AKS will maintain both the existing and the new aggregate implementations. Both are populated with data, existing monitoring experiences will continue to function, and you will have at least one year of historical data in the aggregate implementation before retirement.\nYou may be affected if any dashboard, workbook, alert, automation, or monitoring workflow:\n\n- Uses kube_pod_status_phase or kube_pod_status_ready and filters on the pod name dimension.\n- Splits or groups results by the pod name dimension.\n\nRecommended action:\n\n- If you use aggregate pod counts, no action is required.\n- If you use the pod name dimension, update dashboards, alerts, workbooks, and automation before September 30, 2027. For pod-level monitoring and troubleshooting, we recommend using Azure\nMonitor Managed Prometheus and Kubernetes-native\npod metrics.\n\nHelp and support\nIf you have questions, get answers from community experts in Microsoft Q&A.",
+      "url": "https://azure.microsoft.com/updates?id=570232",
+      "created": "2026-10-06T22:37:54Z",
+      "modified": "2026-10-06T22:37:54Z",
+      "sourceUpdated": "2026-10-06T22:37:54Z",
+      "filterVersion": 5
+    },
+    {
+      "id": "570313",
+      "title": "Retirement: Azure Key Vault Secrets Provider Extension for Azure Arc enabled Kubernetes clusters",
+      "products": [
+        "Azure Arc-enabled Kubernetes"
+      ],
+      "retirementDate": "2027-10-09",
+      "retirementMonth": "October 2027",
+      "description": "The Azure Key Vault Secrets Provider Extension for Azure Arc-enabled Kubernetes will be retired on October 9, 2027.\n\nCustomers currently using the extension should plan to migrate to the Azure Key Vault Secret Store Extension before the retirement date. The Azure Key Vault Secret Store Extension provides equivalent functionality for accessing and synchronizing secrets from Azure Key Vault for workloads running on Azure Arc-enabled Kubernetes clusters. In addition, the Azure Key Vault Secret Store Extension includes enhancements such as support for offline access to secrets and authentication using workload identity federation, enabling applications to access Azure Key Vault without storing long-lived credentials on the cluster.\n\nAfter retirement, the Azure Key Vault Secrets Provider Extension will no longer receive new features, bug fixes, security updates, or technical support.\n\nMigration guidance is available to help customers transition their workloads and configurations to the Azure Key Vault Secret Store Extension ahead of retirement.",
+      "url": "https://azure.microsoft.com/updates?id=570313",
+      "created": "2026-10-09T20:27:17Z",
+      "modified": "2026-10-09T20:27:17Z",
+      "sourceUpdated": "2026-10-09T20:27:17Z",
+      "filterVersion": 5
+    },
+    {
+      "id": "571257",
+      "title": "Retirement: Azure Linux with OS Guard in Azure Kubernetes Service",
+      "products": [
+        "AKS",
+        "Azure Linux"
+      ],
+      "retirementDate": "2026-12-10",
+      "retirementMonth": "December 2026",
+      "description": "Support for Azure Linux with OS Guard in Azure Kubernetes Service will end on December 10, 2026. Azure Container Linux is the replacement for Azure Linux with OS Guard (preview). Starting on December 10, 2026:\n- Users won’t be able to create new Azure Linux with OS Guard (preview) node pools.\n- AKS won’t produce new node images for affected node pools.\n- Existing node pools won’t receive security patches.\n\nOn March 10, 2027, AKS will remove the Azure Linux with OS Guard node images. After the images are removed, scaling and remediation operations, including reimage and redeploy operations, will fail for affected node pools. You can use either of the following migration options:\n- Migrate an existing Azure Linux with OS Guard node pool in place by following the Migrate nodes to Azure Container Linux for Azure Kubernetes Service documentation. This operation preforms a standard node image upgrade.\n- Alternatively, create a new Azure Container Linux node pool, migrate and validate workloads, and then delete the Azure Linux with OS Guard node pool. Follow Add Azure Container Linux node pools and remove existing node pools.\n\nFor other available options, see the AKS node operating system. If you have questions, get answers from community experts in Microsoft Q&A or AKS GitHub Repository. If you have a support plan and need technical help, create a support request.",
+      "url": "https://azure.microsoft.com/updates?id=571257",
+      "created": "2026-09-11T18:08:28Z",
+      "modified": "2026-09-11T18:08:28Z",
+      "sourceUpdated": "2026-09-11T18:08:28Z",
+      "filterVersion": 5
+    }
+  ]
+}

@@ -26,6 +26,9 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 * **AKS and App Net releases**
   Fetches the latest AKS releases from `Azure/AKS`, merges in dated App Net release notes from `Azure/AKS/appnet-notes`, and generates short summaries with highlights.
 
+* **Azure product retirements**
+  Polls the public Azure Updates RSS feed for retirement notices, fetches full notice details from the Microsoft Release Communications API, and filters to the tracked AKS and cloud-native product scope. A normalized archive is committed to the main branch so notices remain available after they leave the rolling feed.
+
 * **Publishes to WordPress**
   Updates a single WordPress Page every 6 hours via REST API.
 

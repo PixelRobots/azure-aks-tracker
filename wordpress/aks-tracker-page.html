@@ -148,6 +148,7 @@ dialog.aks-diff-dialog[open] { display: flex; flex-direction: column; gap: 16px;
     <nav class="aks-tabs-nav">
       <a class="aks-tab-link active" href="#aks-tab-docs">Documentation Updates</a>
       <a class="aks-tab-link" href="#aks-tab-releases">AKS Releases</a>
+      <a class="aks-tab-link" href="#aks-tab-retirements">Retirements</a>
       <a class="aks-tab-link" href="#aks-tab-cve">🛡️ CVE Security</a>
     </nav>
 
@@ -284,6 +285,61 @@ dialog.aks-diff-dialog[open] { display: flex; flex-direction: column; gap: 16px;
   <ul class="aks-rel-list"><li>Node Auto Provisioning now supports restricted public network access</li><li>Automatic availability zone placement is enabled globally</li><li>Control-plane only upgrades to AKS Long Term Support are allowed</li><li>Node pool rollback feature is now generally available</li><li>Encryption in Transit for Azure File CSI driver is now available</li></ul>
 </div>
 </div>
+      </div>
+    </div>
+
+    <div class="aks-tab-panel" id="aks-tab-retirements">
+      <h2>AKS and Azure Product Retirements</h2>
+      <p>Retirement notices for products tracked by this page. Dates and actions come from Microsoft Azure Updates.</p>
+      <div class="aks-docs-list">
+        <div class="aks-rel-card aks-retirement-card">
+          <div class="aks-rel-head">
+            <div class="aks-rel-title">
+              <h2>Retirement: Azure Linux with OS Guard in Azure Kubernetes Service</h2><span class="aks-rel-badge">AKS</span> <span class="aks-rel-badge">Azure Linux</span>
+            </div>
+            <a class="aks-rel-link" href="https://azure.microsoft.com/updates?id=571257" target="_blank" rel="noopener">View notice</a>
+          </div>
+          <div class="aks-rel-meta">
+            <span class="aks-rel-date"><strong>RETIREMENT</strong> December 10, 2026</span>
+            <span class="aks-rel-date">Notice updated: 2026-09-11</span>
+          </div>
+          <details class="aks-retirement-details">
+            <summary>Full notice and recommended action</summary>
+            <div class="aks-rel-summary aks-retirement-description">Support for Azure Linux with OS Guard in Azure Kubernetes Service will end on December 10, 2026. Azure Container Linux is the replacement for Azure Linux with OS Guard (preview). Starting on December 10, 2026:<br>- Users won't be able to create new Azure Linux with OS Guard (preview) node pools.<br>- AKS won't produce new node images for affected node pools.<br>- Existing node pools won't receive security patches.<br><br>On March 10, 2027, AKS will remove the Azure Linux with OS Guard node images. After the images are removed, scaling and remediation operations, including reimage and redeploy operations, will fail for affected node pools. You can use either of the following migration options:<br>- Migrate an existing Azure Linux with OS Guard node pool in place by following the Migrate nodes to Azure Container Linux for Azure Kubernetes Service documentation. This operation preforms a standard node image upgrade.<br>- Alternatively, create a new Azure Container Linux node pool, migrate and validate workloads, and then delete the Azure Linux with OS Guard node pool. Follow Add Azure Container Linux node pools and remove existing node pools.<br><br>For other available options, see the AKS node operating system. If you have questions, get answers from community experts in Microsoft Q&amp;A or AKS GitHub Repository. If you have a support plan and need technical help, create a support request.</div>
+          </details>
+        </div>
+        <div class="aks-rel-card aks-retirement-card">
+          <div class="aks-rel-head">
+            <div class="aks-rel-title">
+              <h2>Retirement: Pod name dimension in AKS pod platform metrics</h2><span class="aks-rel-badge">AKS</span>
+            </div>
+            <a class="aks-rel-link" href="https://azure.microsoft.com/updates?id=570232" target="_blank" rel="noopener">View notice</a>
+          </div>
+          <div class="aks-rel-meta">
+            <span class="aks-rel-date"><strong>RETIREMENT</strong> September 30, 2027</span>
+            <span class="aks-rel-date">Notice updated: 2026-10-06</span>
+          </div>
+          <details class="aks-retirement-details">
+            <summary>Full notice and recommended action</summary>
+            <div class="aks-rel-summary aks-retirement-description">Beginning September 30, 2027, support for the pod name dimension on the following Azure Monitor platform metrics is retiring, and these metrics are transitioning to aggregate pod counters:<br><br>- Number of pods by phase (kube_pod_status_phase)<br>- Number of pods in Ready state (kube_pod_status_ready)<br><br>After this change:<br>- Metric names remain unchanged.<br>- Aggregate pod counts remain available.<br>- Namespace-level monitoring scenarios remain supported.<br>- The pod name dimension will no longer be available for filtering, grouping, or alerting.<br><br>During the deprecation period, AKS will maintain both the existing and the new aggregate implementations. Both are populated with data, existing monitoring experiences will continue to function, and you will have at least one year of historical data in the aggregate implementation before retirement.<br>You may be affected if any dashboard, workbook, alert, automation, or monitoring workflow:<br><br>- Uses kube_pod_status_phase or kube_pod_status_ready and filters on the pod name dimension.<br>- Splits or groups results by the pod name dimension.<br><br>Recommended action:<br><br>- If you use aggregate pod counts, no action is required.<br>- If you use the pod name dimension, update dashboards, alerts, workbooks, and automation before September 30, 2027. For pod-level monitoring and troubleshooting, we recommend using Azure Monitor Managed Prometheus and Kubernetes-native pod metrics.<br><br>Help and support<br>If you have questions, get answers from community experts in Microsoft Q&amp;A.</div>
+          </details>
+        </div>
+        <div class="aks-rel-card aks-retirement-card">
+          <div class="aks-rel-head">
+            <div class="aks-rel-title">
+              <h2>Retirement: Azure Key Vault Secrets Provider Extension for Azure Arc enabled Kubernetes clusters</h2><span class="aks-rel-badge">Azure Arc-enabled Kubernetes</span>
+            </div>
+            <a class="aks-rel-link" href="https://azure.microsoft.com/updates?id=570313" target="_blank" rel="noopener">View notice</a>
+          </div>
+          <div class="aks-rel-meta">
+            <span class="aks-rel-date"><strong>RETIREMENT</strong> October 9, 2027</span>
+            <span class="aks-rel-date">Notice updated: 2026-10-09</span>
+          </div>
+          <details class="aks-retirement-details">
+            <summary>Full notice and recommended action</summary>
+            <div class="aks-rel-summary aks-retirement-description">The Azure Key Vault Secrets Provider Extension for Azure Arc-enabled Kubernetes will be retired on October 9, 2027.<br><br>Customers currently using the extension should plan to migrate to the Azure Key Vault Secret Store Extension before the retirement date. The Azure Key Vault Secret Store Extension provides equivalent functionality for accessing and synchronizing secrets from Azure Key Vault for workloads running on Azure Arc-enabled Kubernetes clusters. In addition, the Azure Key Vault Secret Store Extension includes enhancements such as support for offline access to secrets and authentication using workload identity federation, enabling applications to access Azure Key Vault without storing long-lived credentials on the cluster.<br><br>After retirement, the Azure Key Vault Secrets Provider Extension will no longer receive new features, bug fixes, security updates, or technical support.<br><br>Migration guidance is available to help customers transition their workloads and configurations to the Azure Key Vault Secret Store Extension ahead of retirement.</div>
+          </details>
+        </div>
       </div>
     </div>
 

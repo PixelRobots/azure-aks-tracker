@@ -97,6 +97,15 @@ jobs:
       - name: PowerShell 7 is preinstalled
         run: pwsh -v
 
+      - name: Test retirement notice normalization
+        if: needs.collect.result == 'success'
+        run: node --test .github/scripts/tests/retirements.test.cjs
+
+      - name: Refresh public retirement notices
+        if: github.event.inputs.ssh_upload_only != 'true' && github.event.inputs.refresh_cve_data != 'true'
+        shell: pwsh
+        run: ./.github/scripts/retirements.ps1 -UpdateCache
+
       - name: Generate HTML JSON (content + hash)
         if: github.event.inputs.ssh_upload_only != 'true'
         id: gen
@@ -164,6 +173,12 @@ jobs:
           else
             echo "No releases-summary-cache.json produced."
           fi
+          if [ -f retirements-cache.json ]; then
+            cp retirements-cache.json "$TMP_CACHE_DIR/retirements-cache.json"
+            FILES_TO_ADD="$FILES_TO_ADD retirements-cache.json"
+          else
+            echo "No retirements-cache.json produced."
+          fi
 
           if [ -z "$FILES_TO_ADD" ]; then
             echo "No cache files produced — skipping cache commit."
@@ -183,6 +198,9 @@ jobs:
           fi
           if [ -f "$TMP_CACHE_DIR/releases-summary-cache.json" ]; then
             cp "$TMP_CACHE_DIR/releases-summary-cache.json" releases-summary-cache.json
+          fi
+          if [ -f "$TMP_CACHE_DIR/retirements-cache.json" ]; then
+            cp "$TMP_CACHE_DIR/retirements-cache.json" retirements-cache.json
           fi
 
           git add $FILES_TO_ADD

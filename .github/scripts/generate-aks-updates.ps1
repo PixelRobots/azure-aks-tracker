@@ -192,6 +192,7 @@ $DocsSummaryCacheMaxEntries = 2000
 $DocsSummaryCacheVersion = 'openai-responses-v1'
 $ReleasesSummaryCachePath = 'releases-summary-cache.json'
 if ($SnapshotPreview) { $ReleasesSummaryCachePath = Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'releases-summary-cache.json' }
+$RetirementsCachePath = Join-Path $PSScriptRoot '../../retirements-cache.json'
 $ReleasesSummaryCacheMaxEntries = 100
 $ReleasesSummaryCacheVersion = 'openai-responses-v1'
 # The CVE section is served as remote HTML by the WordPress plugin. Keep a guardrail,
@@ -4593,6 +4594,74 @@ dialog.aks-diff-dialog[open] { display: flex; flex-direction: column; gap: 16px;
 '@
 } else { '' }
 
+function Get-AksRetirementsHtml {
+  if (-not (Test-Path -LiteralPath $RetirementsCachePath)) {
+    return '<p class="aks-rel-empty">Retirement notices will appear here after the first refresh.</p>'
+  }
+
+  try {
+    $archive = Get-Content -LiteralPath $RetirementsCachePath -Raw | ConvertFrom-Json -ErrorAction Stop
+    $items = @($archive.items)
+  }
+  catch {
+    Write-Warning "Could not read retirement archive: $_"
+    return '<p class="aks-rel-empty">Retirement notices are temporarily unavailable.</p>'
+  }
+
+  if ($items.Count -eq 0) {
+    return '<p class="aks-rel-empty">No matching Azure product retirements found.</p>'
+  }
+
+  $sortDate = @{ Expression = { if ($_.retirementDate) { [string]$_.retirementDate } else { '9999-12-31' } } }
+  $sortedItems = @($items | Sort-Object -Property @($sortDate, 'title'))
+  $cards = [System.Collections.Generic.List[string]]::new()
+
+  foreach ($item in $sortedItems) {
+    $title = Escape-Html ([string]$item.title)
+    $url = Escape-Html ([string]$item.url)
+    $displayDate = if ($item.retirementDate) {
+      try { [DateTime]::ParseExact([string]$item.retirementDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture).ToString('MMMM d, yyyy') }
+      catch { [string]$item.retirementDate }
+    } elseif ($item.retirementMonth) { [string]$item.retirementMonth } else { 'Date not specified' }
+    $productBadges = @(
+      foreach ($product in @($item.products)) {
+        '<span class="aks-rel-badge">{0}</span>' -f (Escape-Html ([string]$product))
+      }
+    ) -join ' '
+    $description = (Escape-Html ([string]$item.description)) -replace '\r?\n', '<br>'
+    $modifiedSource = if ($item.sourceUpdated) { [string]$item.sourceUpdated } else { [string]$item.modified }
+    $modified = if ($modifiedSource) {
+      try { [DateTimeOffset]::Parse($modifiedSource, [Globalization.CultureInfo]::InvariantCulture).ToUniversalTime().ToString('yyyy-MM-dd') }
+      catch { $modifiedSource }
+    } else { '' }
+    $modifiedHtml = if ($modified) { '<span class="aks-rel-date">Notice updated: {0}</span>' -f (Escape-Html $modified) } else { '' }
+
+    $card = @"
+<div class="aks-rel-card aks-retirement-card">
+  <div class="aks-rel-head">
+    <div class="aks-rel-title">
+      <h2>$title</h2>$productBadges
+    </div>
+    <a class="aks-rel-link" href="$url" target="_blank" rel="noopener">View notice</a>
+  </div>
+  <div class="aks-rel-meta">
+    <span class="aks-rel-date"><strong>RETIREMENT</strong> $([System.Net.WebUtility]::HtmlEncode($displayDate))</span>
+    $modifiedHtml
+  </div>
+  <details class="aks-retirement-details">
+    <summary>Full notice and recommended action</summary>
+    <div class="aks-rel-summary aks-retirement-description">$description</div>
+  </details>
+</div>
+"@
+    $cards.Add($card.Trim())
+  }
+
+  return ($cards -join "`n")
+}
+
+$retirementsHtml = Get-AksRetirementsHtml
+
 $html = @"
 $snapshotDiffStyles
 <div class="aks-updates" data-since="$SINCE_ISO">
@@ -4623,6 +4692,7 @@ $snapshotDiffStyles
     <nav class="aks-tabs-nav">
       <a class="aks-tab-link active" href="#aks-tab-docs">Documentation Updates</a>
       <a class="aks-tab-link" href="#aks-tab-releases">AKS Releases</a>
+      <a class="aks-tab-link" href="#aks-tab-retirements">Retirements</a>
       <a class="aks-tab-link" href="#aks-tab-cve">🛡️ CVE Security</a>
     </nav>
 
@@ -4638,6 +4708,14 @@ $snapshotDiffStyles
           </div>
       </div>
         $releasesHtml
+      </div>
+    </div>
+
+    <div class="aks-tab-panel" id="aks-tab-retirements">
+      <h2>AKS and Azure Product Retirements</h2>
+      <p>Retirement notices for products tracked by this page. Dates and actions come from Microsoft Azure Updates.</p>
+      <div class="aks-docs-list">
+        $retirementsHtml
       </div>
     </div>
 
