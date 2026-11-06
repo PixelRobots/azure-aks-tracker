@@ -40,9 +40,11 @@ source_path: articles/kubernetes-fleet/concepts-lifecycle.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: a1b01667-090b-5973-c008-600e3c657437
 ---
 
@@ -148,4 +150,5 @@ In order for Fleet Manager to create and keep hub clusters up-to-date with the l
 - **Azure policy doesn't block cluster creation.** The hub cluster is a managed AKS cluster. If you can't create AKS clusters you can't create a Fleet Manager hub cluster.
 - **Subscription has sufficient quota.** One extra VM instance of the hub cluster's node is required during the cluster upgrade process. For more information on increasing quota, see [documentation on quota](/en-us/azure/quotas/regional-quota-requests).
 - **Hub cluster has internet access.** Outbound connectivity is required to install updates. Private hubs on networks with user-defined routing (UDR) or firewall rules might block outbound connectivity. For more information on outbound connectivity, see [documentation on AKS outbound network](/en-us/azure/aks/outbound-rules-control-egress).
+- **API server can reach the hub nodes.** If NSG rules on a private hub cluster with [API server VNet integration](../aks/api-server-vnet-integration) restrict traffic between subnets, allow inbound traffic from the API server subnet to the cluster subnet on TCP port 10250. Without this rule, operations that use the kubelet API, such as retrieving logs or running `exec`, fail. For all required rules, see [NSG security rules for API server VNet integration](../aks/api-server-vnet-integration#network-security-group-nsg-security-rules).
 - **No need to manage updates to the Fleet Manager hub cluster.** Microsoft automatically updates the hub cluster to the latest version of Kubernetes or node image as they become available from AKS. Update releases can be tracked on the [AKS Release Tracker](https://releases.aks.azure.com).
