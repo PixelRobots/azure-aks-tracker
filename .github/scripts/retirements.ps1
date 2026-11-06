@@ -1,8 +1,7 @@
 param(
   [switch]$UpdateCache,
   [string]$CachePath = 'retirements-cache.json',
-  [string]$FeedUri = 'https://www.microsoft.com/releasecommunications/api/v2/azure/rss',
-  [string]$ItemApiBaseUri = 'https://www.microsoft.com/releasecommunications/api/v2/azure'
+  [string]$CollectionUri = 'https://www.microsoft.com/releasecommunications/api/v2/azure'
 )
 
 function ConvertTo-RetirementPlainText {
@@ -40,7 +39,7 @@ function ConvertTo-AksRetirementRecord {
   $metadataProducts = @($Item.products | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })
 
   $productRules = @(
-    @{ name = 'AKS'; pattern = '(?i)Azure Kubernetes Service|\bAKS\b' },
+    @{ name = 'AKS'; pattern = '(?i)Azure Kubernetes Service|\bAKS\b(?!-Engine\b)' },
     @{ name = 'AKS Application Network'; pattern = '(?i)AKS Application Network|Application Network|\bIstio\b' },
     @{ name = 'Azure Arc-enabled Kubernetes'; pattern = '(?i)Azure Arc[- ]enabled Kubernetes|Kubernetes - Azure Arc|AKS Arc|Arc-enabled Kubernetes' },
     @{ name = 'Kubernetes Fleet Manager'; pattern = '(?i)Kubernetes Fleet Manager|\bFleet Manager\b' },
@@ -53,9 +52,8 @@ function ConvertTo-AksRetirementRecord {
       if (($metadataProducts -join ' ') -match $rule.pattern) { $rule.name }
     }
   )
-  if ($products.Count -eq 0) {
-    $openingDescription = [regex]::Split($description, '(?<=[.!?])\s+', 2)[0]
-    $fallbackText = '{0} {1}' -f [string]$Item.title, $openingDescription
+  if ($products.Count -eq 0 -and $metadataProducts.Count -eq 0) {
+    $fallbackText = [string]$Item.title
     $products = @(
       foreach ($rule in $productRules) {
         if ($fallbackText -match $rule.pattern) { $rule.name }
@@ -89,17 +87,41 @@ function ConvertTo-AksRetirementRecord {
   $retirementMonth = $null
   if ($availability) {
     $retirementMonth = '{0} {1}' -f $availability.month, $availability.year
-    $datePattern = '(?i)\b(?<month>January|February|March|April|May|June|July|August|September|October|November|December)\s+(?<day>\d{1,2}),?\s+(?<year>\d{4})\b'
-    foreach ($match in [regex]::Matches($description, $datePattern)) {
-      $date = [DateTime]::ParseExact(
-        ('{0} {1} {2}' -f $match.Groups['month'].Value, $match.Groups['day'].Value, $match.Groups['year'].Value),
-        'MMMM d yyyy',
-        [Globalization.CultureInfo]::InvariantCulture
-      )
-      if ($date.Year -eq $availability.year -and $date.Month -eq $availability.monthNumber) {
-        $retirementDate = $date.ToString('yyyy-MM-dd')
-        break
+    $dateText = '{0}`n{1}' -f [string]$Item.title, $description
+    $monthNames = 'January|February|March|April|May|June|July|August|September|Sept|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec'
+    $datePatterns = @(
+      @{ pattern = "(?i)\b(?<month>$monthNames)\s+(?<day>\d{1,2})(?:st|nd|rd|th)?[,]?\s+(?<year>\d{4})\b"; order = 'month-first' },
+      @{ pattern = "(?i)\b(?<day>\d{1,2})(?:st|nd|rd|th)?\s+(?<month>$monthNames)\s+(?<year>\d{4})\b"; order = 'day-first' },
+      @{ pattern = '\b(?<year>\d{4})-(?<monthNumber>\d{2})-(?<day>\d{2})\b'; order = 'iso' }
+    )
+    foreach ($datePattern in $datePatterns) {
+      foreach ($match in [regex]::Matches($dateText, $datePattern.pattern)) {
+        try {
+          if ($datePattern.order -eq 'iso') {
+            $date = [DateTime]::ParseExact(
+              ('{0}-{1}-{2}' -f $match.Groups['year'].Value, $match.Groups['monthNumber'].Value, $match.Groups['day'].Value),
+              'yyyy-MM-dd',
+              [Globalization.CultureInfo]::InvariantCulture
+            )
+          }
+          else {
+            $monthName = $match.Groups['month'].Value
+            if ($monthName -eq 'Sept') { $monthName = 'Sep' }
+            $monthFormat = if ($monthName.Length -gt 3) { 'MMMM' } else { 'MMM' }
+            $date = [DateTime]::ParseExact(
+              ('{0} {1}, {2}' -f $monthName, $match.Groups['day'].Value, $match.Groups['year'].Value),
+              ($monthFormat + ' d, yyyy'),
+              [Globalization.CultureInfo]::InvariantCulture
+            )
+          }
+          if ($date.Year -eq $availability.year -and $date.Month -eq $availability.monthNumber) {
+            $retirementDate = $date.ToString('yyyy-MM-dd')
+            break
+          }
+        }
+        catch { }
       }
+      if ($retirementDate) { break }
     }
   }
 
@@ -119,8 +141,7 @@ function ConvertTo-AksRetirementRecord {
 function Update-AksRetirementCache {
   param(
     [Parameter(Mandatory)][string]$Path,
-    [Parameter(Mandatory)][string]$RssUri,
-    [Parameter(Mandatory)][string]$ApiBaseUri
+    [Parameter(Mandatory)][string]$CollectionUri
   )
 
   $records = @{}
@@ -141,60 +162,61 @@ function Update-AksRetirementCache {
   }
 
   try {
-    $feedResponse = Invoke-WebRequest -Uri $RssUri -Headers @{ 'User-Agent' = 'azure-aks-tracker-action/1.0' }
-    $feedContent = ([string]$feedResponse.Content).TrimStart([char]0xFEFF, [char]0x20, [char]0x09, [char]0x0D, [char]0x0A)
-    $feed = [xml]$feedContent
-    $feedItems = @($feed.SelectNodes('/rss/channel/item'))
-    if ($feedItems.Count -eq 0) { throw 'Azure Updates RSS feed returned no items.' }
+    $filter = [uri]::EscapeDataString("tags/any(t:t eq 'Retirements')")
+    $select = [uri]::EscapeDataString('id,title,tags,products,description,availabilities,created,modified')
+    $sourceItems = [System.Collections.Generic.List[object]]::new()
+    $expectedCount = $null
+    $skip = 0
+
+    while ($null -eq $expectedCount -or $sourceItems.Count -lt $expectedCount) {
+      $requestUri = '{0}?$filter={1}&$select={2}&$count=true&$top=100&$skip={3}' -f $CollectionUri.TrimEnd('/'), $filter, $select, $skip
+      $page = Invoke-RestMethod -Uri $requestUri -Headers @{ 'User-Agent' = 'azure-aks-tracker-action/1.0' }
+      if ($null -eq $expectedCount) {
+        $expectedCount = [int]$page.'@odata.count'
+        if ($expectedCount -lt 0) { throw 'Retirement collection returned an invalid item count.' }
+      }
+      $pageItems = @($page.value)
+      if ($pageItems.Count -eq 0) { throw 'Retirement collection returned an empty page before all records were fetched.' }
+      foreach ($item in $pageItems) { $sourceItems.Add($item) }
+      $skip += $pageItems.Count
+    }
+
+    if ($null -eq $expectedCount -or $sourceItems.Count -ne $expectedCount) {
+      throw "Retirement collection was incomplete: fetched $($sourceItems.Count) of $expectedCount records."
+    }
+    if ($expectedCount -eq 0 -and $records.Count -gt 0) {
+      throw 'Retirement collection unexpectedly returned no records; preserving the existing archive.'
+    }
   }
   catch {
-    Write-Warning "Could not refresh retirement feed; keeping the existing archive: $_"
+    Write-Warning "Could not refresh the complete retirement collection; keeping the existing archive: $_"
     return
   }
 
   $changed = -not (Test-Path -LiteralPath $Path)
-  $detailFailures = 0
-  foreach ($feedItem in $feedItems) {
-    $categories = @($feedItem.SelectNodes('./category') | ForEach-Object { [string]$_.InnerText })
-    if ($categories -notcontains 'Retirements') { continue }
-
-    $idNode = $feedItem.SelectSingleNode('./guid')
-    $id = if ($idNode) { [string]$idNode.InnerText } else { '' }
+  foreach ($item in $sourceItems) {
+    $id = [string]$item.id
     if ([string]::IsNullOrWhiteSpace($id)) { continue }
-
-    $updatedNode = $feedItem.SelectSingleNode('./*[local-name()="updated"]')
-    $sourceUpdated = if ($updatedNode) { [string]$updatedNode.InnerText } else { [string]$feedItem.pubDate }
+    $sourceUpdated = ConvertTo-RetirementIsoTimestamp $item.modified
+    if ([string]::IsNullOrWhiteSpace($sourceUpdated)) { $sourceUpdated = ConvertTo-RetirementIsoTimestamp $item.created }
     $storedFilterVersion = 0
     if ($records.ContainsKey($id)) {
       try { $storedFilterVersion = [int]$records[$id].filterVersion } catch { }
     }
-    if ($records.ContainsKey($id) -and [string]$records[$id].sourceUpdated -eq $sourceUpdated -and $storedFilterVersion -eq 5) { continue }
+    if ($records.ContainsKey($id) -and [string]$records[$id].sourceUpdated -eq $sourceUpdated -and $storedFilterVersion -eq 7) { continue }
 
-    try {
-      $detailUri = '{0}/{1}' -f $ApiBaseUri.TrimEnd('/'), [uri]::EscapeDataString($id)
-      $detail = Invoke-RestMethod -Uri $detailUri -Headers @{ 'User-Agent' = 'azure-aks-tracker-action/1.0' }
-      $record = ConvertTo-AksRetirementRecord $detail
-      if (-not $record) {
-        if ($records.ContainsKey($id) -and $storedFilterVersion -lt 5) {
-          $records.Remove($id)
-          $changed = $true
-        }
-        continue
+    $record = ConvertTo-AksRetirementRecord $item
+    if (-not $record) {
+      if ($records.ContainsKey($id)) {
+        $records.Remove($id)
+        $changed = $true
       }
-      $record | Add-Member -NotePropertyName sourceUpdated -NotePropertyValue $sourceUpdated -Force
-      $record | Add-Member -NotePropertyName filterVersion -NotePropertyValue 5 -Force
-      $records[$id] = $record
-      $changed = $true
+      continue
     }
-    catch {
-      $detailFailures++
-      Write-Warning "Could not fetch retirement update '$id'; keeping its previous record if available: $_"
-    }
-  }
-
-  if ($detailFailures -gt 0 -and $records.Count -eq 0) {
-    Write-Warning 'No retirement details were fetched; leaving the archive untouched.'
-    return
+    $record | Add-Member -NotePropertyName sourceUpdated -NotePropertyValue $sourceUpdated -Force
+    $record | Add-Member -NotePropertyName filterVersion -NotePropertyValue 7 -Force
+    $records[$id] = $record
+    $changed = $true
   }
 
   if (-not $changed) {
@@ -212,5 +234,5 @@ function Update-AksRetirementCache {
 }
 
 if ($UpdateCache) {
-  Update-AksRetirementCache -Path $CachePath -RssUri $FeedUri -ApiBaseUri $ItemApiBaseUri
+  Update-AksRetirementCache -Path $CachePath -CollectionUri $CollectionUri
 }
