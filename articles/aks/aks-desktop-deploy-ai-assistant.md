@@ -26,6 +26,7 @@ ms.reviewer: schaffererin
 ms.topic: how-to
 ms.date: 2026-04-16T00:00:00.0000000Z
 ms.author: danis
+ai-usage: ai-assisted
 locale: en-us
 document_id: 33b17975-df86-462f-450f-a1450d9da3a6
 document_version_independent_id: 36e11c87-eebf-3c47-1441-b6b2c5385d7d
@@ -41,89 +42,149 @@ item_type: Content
 source_path: articles/aks/aks-desktop-deploy-ai-assistant.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/341fdab2-4964-4759-8241-f5820b012a47
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/cc1f92bb-c0d6-4d40-99ce-dabea3161a84
 platformId: 1d472a12-47ab-661d-d2c5-af2f6bba97b7
 ---
 
 # Troubleshoot Azure Kubernetes Service (AKS) Workloads with Natural Language in AKS Desktop (preview) - Azure Kubernetes Service | Microsoft Learn
 
-AKS desktop includes an AI-powered troubleshooting assistant that provides natural language diagnostics for your AKS workloads. By securely connecting to your cluster, the assistant can analyze logs, events, and metrics to identify issues and recommend resolutions in plain language. This allows developers and operators to quickly understand and fix problems without needing deep Kubernetes expertise. This article walks you through how to enable and use the AI troubleshooting assistant in AKS desktop.
+The AI Assistant in AKS desktop provides enhanced natural language troubleshooting for AKS workloads. Powered by the Headlamp AI Assistant, it delivers AKS-specific skills, cluster-aware observability, guided troubleshooting workflows, and seamless integration with your existing GitHub Copilot entitlement.
 
-Important
+After securely connecting to your cluster, the assistant combines language models with AKS-specific context, logs, events, and metrics to identify issues and recommend resolutions in plain language. This approach allows developers and operators to quickly understand and fix problems without needing deep Kubernetes expertise. This article walks you through how to enable and use the AI Assistant in AKS desktop.
 
-AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+## Prerequisites
 
-- [AKS support policies](/en-us/azure/aks/support-policies)
-- [Azure support FAQ](/en-us/azure/aks/faq)
+Before you enable the AI Assistant in AKS desktop, make sure you have:
 
-## What is the AI troubleshooting assistant?
+- [AKS desktop v0.10.0 or later installed](aks-desktop-overview#install-aks-desktop).
+- Access to one or more Kubernetes clusters that you want to investigate.
+- The AI Assistant plugin enabled in **Settings** &gt; **Plugins**. The plugin is enabled by default.
+- One of the following provider configurations:
+    - **GitHub Copilot Auto Detect (recommended)**: A GitHub Copilot subscription, [GitHub CLI (`gh`)](https://cli.github.com/) installed on your machine, and GitHub CLI authenticated with your GitHub account.
+    - **Another supported AI provider**: Access to a supported provider or OpenAI-compatible endpoint.
 
-The AKS desktop troubleshooting assistant is built into [AKS desktop](aks-desktop-overview) and provides a guided experience for diagnosing issues in your cluster. With the assistant, you can:
+## What is the AI Assistant?
 
-- Select a project, namespace, or workload to investigate.
+The AI Assistant is bundled with AKS desktop and provides a guided experience for diagnosing issues in your cluster. The assistant helps you:
+
 - Run scoped diagnostics that analyze logs, events, and metrics.
 - Receive AI-generated summaries with clear reasoning and evidence.
 - Preview recommended actions and apply them with confidence.
-- Use your own language models or connect to Azure managed options.
-- Work alongside existing dashboards in AKS desktop for a cohesive troubleshooting experience.
+- Use GitHub Copilot when available for a streamlined setup experience.
+- Use cluster-aware observability and AKS-specific skills to bring additional context and best practices into investigations.
 
-Warning
+## How does the AI Assistant work?
 
-This plugin is in early development and isn't ready for production use. Using it might incur costs from your AI provider.
+You have two options for enabling the AI Assistant in AKS desktop:
 
-## How does the AI troubleshooting assistant work?
+- Use **GitHub Copilot (recommended)**. If GitHub CLI is installed and authenticated with an account that has a GitHub Copilot subscription, AKS desktop can detect and configure GitHub Copilot as the provider.
+- **Another supported AI provider**: Manually configure a supported provider or OpenAI-compatible endpoint.
 
-You have two options for enabling the AI troubleshooting assistant in AKS desktop:
+For either option, AKS desktop can provide cluster context and enabled AKS skills to the configured provider.
 
-- Use the **[Azure AKS Agentic CLI Agent](https://blog.aks.azure.com/2025/08/15/cli-agent-for-aks)** (recommended for AKS): This is an AI-powered tool that helps diagnose, troubleshoot, and optimize AKS clusters using natural language queries. It provides root cause analysis by connecting to your AKS cluster (using your permissions) and remediation suggestions. This is backed by an LLM of your choice.
-- Use the **AKS desktop Agent**: AKS desktop acts as an Agent itself, providing context to your model of your choice.
+The AI Assistant runs as part of AKS desktop and doesn't deploy an agent or other workload to your cluster. AKS desktop connects to the selected cluster through the Kubernetes API by using the credentials in your kubeconfig. The assistant is limited to the operations allowed by your Kubernetes RBAC permissions.
 
-### Which option should I choose?
+## Enable GitHub Copilot (Auto Detect)
 
-Asking a standalone LLM a question is similar to asking an expert for advice based only on what you tell them. In contrast, the AKS Agentic CLI integrates the HolmesGPT agentic framework with the AKS Model Context Protocol (MCP) server. Combined, they know which tools, troubleshooting techniques, and other MCP servers to use, enabling the agent to securely access live cluster state, logs, metrics, and Azure resource data to perform iterative, context-aware investigations within Role-Based Access Control (RBAC) boundaries rather than relying solely on static user-provided input.
+1. Install GitHub CLI (`gh`) on your machine and sign in to your GitHub account.
+2. In AKS desktop, go to **Settings** &gt; **Plugins** &gt; **AI Assistant**.
+3. Select **Auto Detect**.
+4. Verify that GitHub Copilot appears as the configured provider.
 
-By default, the AKS Agentic CLI connects to a hosted LLM endpoint using a customer‑provided API key, but organizations with strict data residency or compliance requirements might instead choose to deploy a model within their own environment.
+    ![Screenshot of AKS desktop AI Assistant settings showing the Auto Detect button.](media/aks-desktop-app/aks-desktop-github-copilot-auto-detect.png)
 
-In the following sections, we provide end-to-end steps for setting up both options, but we recommend the AKS Agentic CLI for the best experience with AKS desktop.
+## Configure your own AI provider
 
-## Enable the AI troubleshooting assistant in AKS desktop
+1. In AKS desktop, go to **Settings** &gt; **Plugins** &gt; **AI Assistant**.
+2. Select **Add Provider**.
+3. Select the AI provider you want to use.
+4. Enter the required configuration information for your provider.
+5. Verify that the provider appears in the configured providers list.
 
-1. Go to **Settings** &gt; **Plugins**, and make sure the AI Assistant plugin is enabled.
-2. Select **AI Assistant** in the list of plugins.
-3. Toggle **Preview** to the enabled state. After this, the AI Assistant icon appears in the top right.
-
-## Configure a provider for the AI troubleshooting assistant
-
-1. Go to **Settings** &gt; **Plugins** &gt; **AI Assistant** &gt; **Add provider**.
-
-    ![Screenshot of the AKS desktop Settings panel showing the AI Assistant plugin with the Enable toggle.](media/aks-desktop-app/aks-desktop-enable-ai-assistant.png)
-2. Choose your provider option:
-
-    - **Use the Azure AKS Agentic CLI Agent** (recommended for AKS): Install the [Agentic CLI Agent](agentic-cli-for-aks-install) on your cluster, configure it to connect to a model, and ensure the cluster running the Agentic CLI Agent is a registered cluster in AKS desktop (you should see it in your cluster list).
-    - **Use an existing model**: Configure the provider so that AKS desktop can act as an agent and send cluster context to your existing model.
+    ![Screenshot of the AKS desktop provider selection dialog showing the supported AI providers.](media/aks-desktop-app/aks-desktop-select-ai-provider.png)
 
 ## Enable Kubernetes API requests for the assistant
 
-The **AI tool Kubernetes Requests** setting allows the AI Assistant to make live Kubernetes API requests against your cluster. When enabled, the assistant can query resource state, pod logs, events, and metrics to provide context-aware analysis. If disabled, the assistant can only reason from information you manually provide in the chat.
+The **Kubernetes API Request** setting allows the AI Assistant to make live Kubernetes API requests against your cluster. When enabled, the assistant can query resource state, pod logs, events, and metrics to provide context-aware analysis. If disabled, the assistant can only reason from information you manually provide in the chat.
+
+Read requests can run automatically. Requests that create, update, or delete Kubernetes resources require your approval and are still subject to your Kubernetes RBAC permissions.
 
 1. Go to **Settings** &gt; **Plugins** &gt; **AI Assistant**.
-2. Enable the **AI tool Kubernetes Requests** toggle.
+2. Enable the **Kubernetes API Request** toggle.
 
-## Set the AI Assistant to use the AKS Agentic CLI Agent
+    ![Screenshot of AKS desktop AI Tools settings showing Kubernetes API Request enabled.](media/aks-desktop-app/aks-desktop-kubernetes-api-request.png)
 
-1. Open the AI Assistant.
-2. Select **Agent**.
-3. Select the cluster where the Agentic CLI Agent is running.
+## Enable MCP servers
 
-    ![Screenshot of the AKS desktop AI Assistant panel with Agent mode selected and a cluster dropdown.](media/aks-desktop-app/aks-desktop-set-agent-mode.png)
+Model Context Protocol (MCP) servers allow the AI Assistant to connect to external tools and data sources. MCP servers extend the capabilities of the AI Assistant by providing additional context and actions that can be used during troubleshooting and investigation workflows.
 
-## Investigate degraded resources
+AKS desktop supports connections to MCP servers, but MCP servers aren't enabled by default.
 
-The assistant is context-aware. When you see errors or warnings highlighted in the interface, select the resource and ask the assistant for an explanation and recommended resolution.
+MCP servers are optional and aren't required for the AI Assistant's built-in AKS troubleshooting and cluster-aware observability. Configure an MCP server only when you need to connect the AI Assistant to a specific external tool or data source.
 
-1. Go to the cluster resource (for example a service) or go to the AKS desktop Project and select the workload.
-2. Select the Kubernetes resource that's degraded or showing errors in the event log.
-3. Select **Agent** and start chatting.
+### Choose an MCP server
 
-    ![Screenshot of a chat with natural language feature in AKS desktop.](media/aks-desktop-app/aks-desktop-ai-assistant.png)
+Choose a server based on the capability you need:
+
+- Use Flux Operator MCP to investigate Flux GitOps resources and workflows.
+- Use Inspektor Gadget for eBPF tracing and runtime diagnostics.
+
+Before you configure an MCP server in AKS desktop, install the server and confirm that it can run as a local command. If you don't need one of these additional integrations, continue using the AI Assistant without an MCP server.
+
+### Configure an MCP server
+
+1. In AKS desktop, go to **Settings** &gt; **Plugins** &gt; **AI Assistant**.
+2. View **MCP Servers**.
+3. Turn on **Enable MCP Servers**.
+4. Select **Add MCP Server**.
+5. Enter the required configuration information for the MCP server.
+6. Configure the approval settings for the server.
+
+    ![Screenshot of AKS desktop MCP Servers settings showing the Enable MCP Servers toggle and Add MCP Server button.](media/aks-desktop-app/aks-desktop-mcp-servers.png)
+
+### MCP server approvals
+
+When an MCP server performs an action on behalf of the AI Assistant, AKS desktop can require approval before the action is executed. Configure approval settings for each MCP server.
+
+By default, **Auto Approve Actions** is disabled. The AI Assistant displays each requested action in the chat window and requires your approval before the MCP server can execute it.
+
+Enable **Auto Approve Actions** for a specific MCP server to automatically approve requests from that server. When enabled, the AI Assistant can use MCP tools without prompting for approval for each request.
+
+## Enable skill repositories
+
+Skills provide instructions and supporting information for specific tasks. AKS desktop includes an AKS skill from the Azure Skills repository, which is enabled by default. You can enable other skill repositories or add a custom repository.
+
+1. In AKS desktop, go to **Settings** &gt; **Plugins** &gt; **AI Assistant**.
+2. Review the list of built-in skill repositories.
+3. Use the toggle next to each repository to enable or disable repositories.
+4. Select **Add Repository** to add a custom repository.
+5. Enter the repository URL and save your changes.
+
+    ![Screenshot of AKS desktop skill settings showing the Azure Skills repository configured with the azure-kubernetes path and enabled.](media/aks-desktop-app/aks-desktop-azure-skills-repository.png)
+
+## Proactive diagnosis
+
+Proactive diagnosis is a separate, opt-in feature that's disabled by default. When enabled, it uses one-shot requests through Headlamp's Kubernetes API proxy to poll selected clusters for recent events with a type of `Warning` or `Error` rather than continuously watching the clusters.
+
+The first check occurs shortly after the AI backend is ready, and the scheduler checks once per minute. When qualifying events are found, the assistant diagnoses up to three of the most recent distinct affected workloads sequentially. After a diagnosis cycle completes, a 20-minute cooldown begins before another cycle can run. If no qualifying events are found, no diagnosis cycle starts, so the lightweight event query can run again at the next one-minute check. Successful results are cached to avoid repeatedly diagnosing the same resource.
+
+### Enable proactive diagnosis
+
+1. In AKS desktop, go to **Settings** &gt; **Plugins** &gt; **AI Assistant**.
+2. Turn on the **Proactive Diagnosis** toggle.
+3. Review detected problems and recommendations surfaced by the AI Assistant.
+4. Select a recommendation to investigate or begin troubleshooting.
+
+    ![Screenshot of AKS desktop AI Assistant settings showing the Proactive Diagnosis toggle.](media/aks-desktop-app/aks-desktop-proactive-diagnosis.png)
+
+## Disable the AI Assistant
+
+1. Go to **Settings** &gt; **Plugins**.
+2. Turn off **AI Assistant**.
+3. Select **Save & Apply**.
+4. Reload AKS desktop if prompted.
+
+    ![Screenshot of the AKS desktop plugin list showing the AI Assistant toggle turned off.](media/aks-desktop-app/aks-desktop-disable-ai-assistant.png)
