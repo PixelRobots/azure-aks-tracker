@@ -4598,8 +4598,8 @@ $snapshotDiffStyles
 <div class="aks-updates" data-since="$SINCE_ISO">
 
   <div class="aks-intro">
-    <h1>About this tracker</h1>
-    <p>This tool keeps an eye on Microsoft's Azure Kubernetes Service (AKS), AKS Application Network, Azure Arc-enabled Kubernetes, AKS Arc, Kubernetes Fleet Manager, Azure Linux, Azure Container Registry (ACR), and Azure Application Gateway for Containers (AGC) documentation. AKS everywhere! It also shows the last 5 AKS and App Net release notes.</p>
+    <h1>Azure Cloud-Native Platform Updates</h1>
+    <p>Follow meaningful documentation updates across Microsoft's Azure cloud-native platform, spanning container orchestration and fleet management (AKS, AKS Automatic, Application Network, AKS Support, AKS Arc, Azure Arc-enabled Kubernetes, and Kubernetes Fleet Manager), container registry (Azure Container Registry), application networking (Application Gateway for Containers), and Azure Linux. The tracker also summarizes the latest five AKS and Application Network releases.</p>
     <p>It automatically scans for changes, then uses AI to summarize and highlight updates that are most likely to matter — such as new features, deprecations, and significant content revisions.</p>
     <p>Minor edits (like typos, formatting tweaks, and other low-impact changes) are usually filtered out. Because the process is automated, some updates may be missed or summaries may not capture every nuance.</p>
     <p>For complete accuracy, you can always follow the provided links to the original Microsoft documentation.</p>
