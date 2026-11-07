@@ -13,8 +13,8 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Troubleshoot connections to pods and services in an AKS cluster to find internal traffic failures fast and restore app communication. Start now.
-ms.date: 2026-09-22T00:00:00.0000000Z
-ms.reviewer: chiragpa, rissing, v-leedennis, andraciobanu
+ms.date: 2026-11-04T00:00:00.0000000Z
+ms.reviewer: chiragpa, rissing, v-leedennis, andraciobanu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Connectivity
 ai-usage: ai-assisted
@@ -37,9 +37,11 @@ source_path: support/azure/azure-kubernetes/connectivity/troubleshoot-connection
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 1ddcc3c6-b9a0-45b1-46b5-f0d4a138624d
 ---
 
@@ -47,7 +49,7 @@ platformId: 1ddcc3c6-b9a0-45b1-46b5-f0d4a138624d
 
 ## Summary
 
-This article helps you troubleshoot connections to pods and services for internal traffic within the same Azure Kubernetes Service (AKS) cluster. Use it to quickly identify and fix connectivity issues.
+This article helps you troubleshoot connections to pods and services for internal traffic within the same Azure Kubernetes Service (AKS) cluster. Use it to quickly identify the failing network layer, fix connectivity issues, and restore application communication.
 
 ## Prerequisites
 
@@ -55,7 +57,7 @@ Ensure you meet these prerequisites by having the following items:
 
 - The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) tool, or a similar tool to connect to the cluster. To install kubectl by using [Azure CLI](/en-us/cli/azure/install-azure-cli), run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
 - The [apt-get](https://linux.die.net/man/8/apt-get) command-line tool for handling packages.
-- The Client URL ([cURL](https://www.tecmint.com/install-curl-in-linux/)) tool, or a similar command-line tool.
+- The client URL ([cURL](https://www.tecmint.com/install-curl-in-linux/)) tool, or a similar command-line tool.
 - The [Netcat](https://linux.die.net/man/1/nc) (`nc`) command-line tool for TCP connections.
 
 ## Troubleshooting checklist
@@ -282,9 +284,9 @@ The error type narrows the investigation:
 
 ## 2. Create a temporary troubleshooting pod
 
-Prefer a purpose-built troubleshooting image or an ephemeral debug container instead of installing packages interactively into a generic operating-system image. This reduces setup time and avoids changing the application container.
+Use a purpose-built troubleshooting image or an ephemeral debug container instead of installing packages interactively into a generic operating-system image. This approach reduces setup time and avoids changing the application container.
 
-The following is an example of a temporary pod.
+The following example shows a temporary pod.
 
 ```bash
 kubectl run network-debug \
@@ -311,20 +313,20 @@ Replace the placeholder image with an image approved for your environment. The i
 
 ## 3. Test service discovery first
 
-From the source pod or troubleshooting container, resolve the fully qualified service name.
+From the source pod or troubleshooting container, resolve the fully qualified service name. Also, verify the short forms that the application uses.
 
 ```bash
 nslookup <service>.<destination-namespace>.svc.cluster.local
 ```
 
-Also verify the short forms that the application uses.
+If the fully qualified name resolves but a short name doesn't, inspect the pod's DNS search domains and `dnsPolicy`.
 
 ```bash
 nslookup <service>
 nslookup <service>.<destination-namespace>
 ```
 
-If the fully qualified name resolves but a short name does not, inspect the pod's DNS search domains and `dnsPolicy`.
+If name resolution fails, don't continue with application-layer troubleshooting until DNS is validated. To validate DNS, review CoreDNS health, configuration, logs, and upstream resolution by using the dedicated AKS DNS troubleshooting guidance.
 
 ```bash
 cat /etc/resolv.conf
@@ -377,7 +379,7 @@ Interpret the results using the following list:
 
 ## 5. Validate selectors and endpoint slices
 
-Make sure the service selector matches the pods you want.
+Ensure the service selector matches the pods you want.
 
 ```bash
 kubectl get service <service> \
@@ -401,9 +403,9 @@ kubectl get endpointslice \
 If there are no ready endpoints, follow these steps:
 
 1. Confirm that the service selector matches the pod labels.
-2. Make sure the destination pods are running and ready.
+2. Ensure the destination pods are running and ready.
 3. Check for readiness probe failures and recent events.
-4. Make sure `targetPort` matches the port where the application listens.
+4. Ensure `targetPort` matches the port where the application listens.
 
 ```bash
 kubectl get pods \
@@ -515,7 +517,7 @@ If failures consistently follow a node, preserve the relevant timestamps, pod pl
 
 Before you make disruptive changes, use the AKS **Diagnose and solve problems** experience to check for known cluster, node, and networking conditions.
 
-If Advanced Container Networking Services and network observability are enabled for the cluster, use the available flow and packet-drop signals to answer these questions:
+If you enable Advanced Container Networking Services and network observability for the cluster, use the available flow and packet-drop signals to answer these questions:
 
 - Did traffic leave the source pod?
 - Did policy deny the traffic?

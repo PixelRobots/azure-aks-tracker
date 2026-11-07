@@ -27,7 +27,7 @@ author: nshankar
 ms.topic: how-to
 ms.date: 2026-08-31T00:00:00.0000000Z
 ms.author: nshankar
-zone_pivot_groups: azure-cli-or-terraform
+zone_pivot_groups: azure-portal-azure-cli-terraform
 locale: en-us
 document_id: 8c78801c-d2b6-80e0-5bf5-2b6314732678
 document_version_independent_id: e9e5c7b0-668e-85d3-4821-988dc0eaff19
@@ -44,8 +44,10 @@ item_type: Content
 source_path: articles/aks/app-routing-gateway-api.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: a7f3bba4-2394-88c0-e044-2baec5133498
 ---
 
@@ -610,6 +612,86 @@ You should see an `HTTP 200` response.
 
 ::: zone-end
 
+::: zone pivot="azure-portal"
+
+To use the Azure portal to enable application routing with Gateway API implementation, you need:
+
+- An existing standard Kubernetes cluster.
+
+### Enable for an existing cluster
+
+To enable application routing with Gateway API for an existing cluster, open the Azure portal, select your cluster, and go to the **Networking** menu &gt; **Ingress profile**. Select **Manage** to enable Application routing with Gateway API.
+
+![A screenshot of the Ingress profile tab on the Networking menu in Azure portal](media/gateway-api-portal/ingress-profile-portal.png)
+
+Note
+
+The Azure portal installs the Managed Gateway API while enabling Application routing with Gateway API on your cluster.
+
+## Configure Ingress using a Kubernetes Gateway
+
+### Deploy sample application
+
+First, go to the **Run command** menu and use the following command to deploy the sample `httpbin` application in the `default` namespace:
+
+```bash
+ISTIO_RELEASE=release-1.27
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/$ISTIO_RELEASE/samples/httpbin/httpbin.yaml
+```
+
+### Create Kubernetes Gateway and HTTPRoute
+
+Go to **Services, gateways, and ingresses** &gt; **Apply a YAML**. The following YAML file deploys a Gateway API configuration in the `default` namespace with the `gatewayClassName` set to `approuting-istio`.
+
+```yml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: httpbin-gateway
+spec:
+  gatewayClassName: approuting-istio
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: httpbin
+spec:
+  parentRefs:
+  - name: httpbin-gateway
+  hostnames: ["httpbin.example.com"]
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /get
+    backendRefs:
+    - name: httpbin
+      port: 8000
+```
+
+Note
+
+The preceding example creates an external ingress load balancer service that's accessible from outside the cluster. You can add [annotations](istio-gateway-api#annotation-customizations) to create an [internal load balancer](internal-lb) and customize other load balancer settings.
+
+## View and manage Gateway and HTTPRoute resources
+
+You can view created Gateway and HTTPRoute resources in the **Services, gateways, and ingresses** menu and easily verify their status and address.
+
+![A screenshot of a sample gateway resource](media/gateway-api-portal/gateways-routes.png)
+
+You can also view more information about your Gateways and HTTPRoutes by selecting their name. For example:
+
+![A screenshot of a sample gateway overview](media/gateway-api-portal/gateway-overview.png)
+
+::: zone-end
+
 ## Access logging
 
 The application routing Gateway API implementation enables Envoy access logging by default on all managed `Gateway` proxy pods. Access logs are written to the proxy container's standard output in the default Envoy text format. You can view the logs by using `kubectl logs`:
@@ -742,5 +824,19 @@ Remove the Azure resources created by Terraform by using the [`terraform destroy
 ```console
 terraform destroy
 ```
+
+::: zone-end
+
+::: zone pivot="azure-portal"
+
+## Disable the application routing Gateway API implementation by using Azure portal
+
+Go to the **Networking** menu &gt; **Ingress profile**. Under **Application routing**, select **Manage**, clear the checkbox, and select **Save**.
+
+### Clean up resources by using Azure portal
+
+Under **Services, gateways, and ingresses**, select the checkbox next to the Gateway or HTTPRoute resource you want to delete, and then select **Delete** in the toolbar.
+
+![A screenshot showing how to delete a gateway resource](media/gateway-api-portal/delete-gateway.png)
 
 ::: zone-end

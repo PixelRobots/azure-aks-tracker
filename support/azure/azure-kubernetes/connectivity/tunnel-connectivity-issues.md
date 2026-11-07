@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Resolve tunnel connectivity issues in your Azure Kubernetes Service (AKS) cluster to restore kubectl logs, exec, and port-forward access. Follow these steps.
-ms.date: 2026-10-29T00:00:00.0000000Z
-ms.reviewer: chiragpa, andbar, v-leedennis, v-weizhu, albarqaw, andraciobanu
+description: Resolve tunnel connectivity issues in your Azure Kubernetes Service (AKS) cluster to restore kubectl logs, exec, and port-forward access. Learn the causes and fixes.
+ms.date: 2026-11-05T00:00:00.0000000Z
+ms.reviewer: chiragpa, andbar, v-leedennis, v-weizhu, albarqaw, andraciobanu, kaushika
 ms.service: azure-kubernetes-service
 keywords: Azure Kubernetes Service, AKS cluster, Kubernetes cluster, tunnels, connectivity, tunnel-front, aks-link, Konnectivity agent, Cluster Proportional Autoscaler, CPA, Resource allocation, Performance bottlenecks, Networking reliability, Azure Kubernetes troubleshooting, AKS performance issues
 ms.custom: sap:Connectivity
@@ -50,11 +50,11 @@ platformId: fdf93b0c-3dc7-41a6-b999-eb9ae4f3bb7f
 
 ## Summary
 
-Tunnel connectivity issues in Azure Kubernetes Service (AKS) can disrupt secure communication between cluster nodes and the control plane. This article helps you troubleshoot and resolve these issues so that you can restore kubectl logs, exec, and port-forward functionality.
+Tunnel connectivity issues in Azure Kubernetes Service (AKS) can disrupt secure communication between cluster nodes and the control plane. This article helps you troubleshoot tunnel connectivity issues, identify common causes, and restore kubectl logs, exec, and port-forward functionality.
 
 [Tunnel connectivity is used specifically for API server to kubelet communication](/en-us/azure/aks/faq#how-does-the-managed-control-plane-communicate-with-my-nodes-) (not general pod-to-pod) or ingress traffic.
 
-[![Screenshot of AKS tunnel architecture showing node-to-control-plane communication through the tunnel pod.](media/tunnel-connectivity-issues/kubernetes-tunnel-architecture.png)](media/tunnel-connectivity-issues/kubernetes-tunnel-architecture.png#lightbox)
+[![Screenshot of the AKS tunnel architecture that shows node-to-control-plane communication through the tunnel pod.](media/tunnel-connectivity-issues/kubernetes-tunnel-architecture.png)](media/tunnel-connectivity-issues/kubernetes-tunnel-architecture.png#lightbox)
 
 Note
 

@@ -24,7 +24,7 @@ author: shaifaligargmsft
 ms.author: shaifaligarg
 ms.subservice: aks-networking
 ms.topic: overview
-ms.date: 2025-05-10T00:00:00.0000000Z
+ms.date: 2026-11-04T00:00:00.0000000Z
 ai-usage: ai-assisted
 locale: en-us
 document_id: 475f19b1-832c-2836-d836-c70fae3c2bb0
@@ -42,52 +42,40 @@ source_path: articles/aks/container-network-observability-metrics.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/07bb3e10-d135-43ff-bc8b-360497cb39fa
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
 platformId: 13bfda79-4bf2-afba-ad96-bd38dcaf34db
 ---
 
 # Container network metrics overview - Azure Kubernetes Service | Microsoft Learn
 
-Every pod, service, and node in a Kubernetes cluster is constantly generating network activity: connections opening, packets being forwarded or dropped, DNS queries resolving or failing. Understanding that activity is essential for debugging, capacity planning, and keeping services healthy. But most monitoring setups fall short in two ways:
+Container network metrics in [Advanced Container Networking Services](advanced-container-networking-services-overview) for Azure Kubernetes Service (AKS) help you identify packet drops, track network activity, and investigate DNS behavior. Start with node-level metrics to find a network-health issue, then use pod-level metrics to identify the workloads involved.
 
-- **Not enough visibility.** Node-level aggregates tell you something is wrong, but not *where*. Without pod-level breakdowns that include source and destination context, isolating a failing workload means guessing.
-- **Too much data at scale.** A cluster running hundreds of microservices can produce thousands of metric time series per node. Collecting everything drives up storage costs and slows down dashboards.
+Metric collection is available across supported Cilium and non-Cilium data planes. Pod-level metrics require Linux; the reference tables show which node-level metrics are also available on Windows.
 
-Container network metrics in [Advanced Container Networking Services](advanced-container-networking-services-overview) for Azure Kubernetes Service (AKS) tackle both. The feature collects network metrics at the node level and the pod level across supported Cilium and non-Cilium data planes, on Linux and Windows.
+## Metric collection at a glance
 
-On Cilium clusters, you can go a step further with source-level filtering, which lets you select exactly which namespaces, workloads, and metric types are collected *before* data leaves the node.
-
-Container metrics filtering is a pre-ingestion control for observability data. Instead of collecting every available metric and filtering later in dashboards or queries, you define what to collect at the source. This keeps high-value metrics for the workloads you care about and avoids ingesting low-value or noisy time series.
-
-The result: actionable network observability on any supported data plane, with optional cost-efficient filtering on Cilium.
-
-Container network metrics give you deep workload-level visibility for troubleshooting and planning, while source-level filtering on Cilium helps keep observability costs proportional to business-critical workloads.
-
-## Collection and filtering at a glance
-
-Use this table to quickly understand where broad collection is available and where fine-grained filtering is available:
+Use this table to check metric collection support across data planes:
 
 | Capability | Cilium clusters | Non-Cilium clusters |
 | --- | --- | --- |
 | Node-level metric collection | ✅ | ✅ |
 | Pod-level metric collection | ✅ (Linux) | ✅ (Linux) |
-| Source-level filtering by namespace, pod label, and metric type | ✅ | ❌ |
-| Cost control through pre-ingestion filtering | ✅ | ❌ |
+
+For initial collection, follow [Set up container network metrics](container-network-observability-how-to). For records of individual traffic details rather than counters, use [container network logs](container-network-observability-logs).
 
 Important
 
-Starting on **November 30, 2025**, Azure Kubernetes Service (AKS) no longer supports or provides security updates for Azure Linux 2.0. The Azure Linux 2.0 node image is frozen at the `202512.06.0` release. Beginning on **October 31, 2026**, node images will be removed, and you'll be unable to scale your node pools. Migrate to a supported Azure Linux version by [upgrading your node pools](/en-us/azure/aks/upgrade-aks-cluster) to a supported Kubernetes version or migrating to [osSku AzureLinux3](/en-us/azure/aks/upgrade-os-version). For more information, see the [Retirement GitHub issue](https://github.com/Azure/AKS/issues/4988) and the [Azure Updates retirement announcement](https://azure.microsoft.com/updates?id=500645). To stay informed on announcements and updates, follow the [AKS release notes](https://github.com/Azure/AKS/releases).
+Starting on **November 30, 2025**, Azure Kubernetes Service (AKS) no longer supports or provides security updates for Azure Linux 2.0. The Azure Linux 2.0 node image is frozen at the `202512.06.0` release. Beginning on **October 31, 2026**, node images are removed, and you can't scale your node pools. Migrate to a supported Azure Linux version by [upgrading your node pools](upgrade-aks-control-plane) to a supported Kubernetes version or migrating to [osSku AzureLinux3](upgrade-os-version). For more information, see the [Retirement GitHub issue](https://github.com/Azure/AKS/issues/4988) and the [Azure Updates retirement announcement](https://azure.microsoft.com/updates?id=500645). To stay informed on announcements and updates, follow the [AKS release notes](https://github.com/Azure/AKS/releases).
 
 ## Key benefits
 
 - **Node and pod-level granularity.** Track traffic volume, drop rates, and connection states at the node level for infrastructure health. Drill down to individual pods with source and destination labels to pinpoint the exact workload causing an issue.
-- **Faster troubleshooting.** When a service starts dropping packets or DNS queries fail, pod-level metrics let you isolate the problem to a specific pod, namespace, or protocol in seconds, not hours.
-- **Flexible visualization.** Store metrics in Azure Managed Prometheus and visualize in Azure Managed Grafana (fully managed), or bring your own Prometheus and Grafana infrastructure.
-- **Scalable by design.** The pipeline handles large, dynamic clusters with hundreds of nodes and thousands of pods without requiring you to choose between comprehensive coverage and manageable data volumes.
-- **Targeted observability (Cilium clusters).** On Cilium clusters, source-level filtering lets you define the namespaces, pod labels, or metric types you care about and collect only those. No post-collection trimming required.
-- **Lower metrics ingestion costs (Cilium clusters).** Because filtering happens at the source on each node, unwanted metric time series are never scraped, transmitted, or ingested into your Prometheus backend. You pay only for the metrics you actually need. In large clusters where unfiltered collection can produce thousands of time series per node, source-level filtering can significantly reduce Azure Managed Prometheus ingestion and storage costs.
+- **Faster troubleshooting.** When a service starts dropping packets or DNS queries fail, pod-level metrics help you isolate the problem to a specific pod, namespace, or protocol.
+- **Built-in visualization.** Store metrics in Azure Monitor managed service for Prometheus and open networking dashboards directly in the Azure portal with **Dashboards with Grafana**. The dashboard experience is free and doesn't require an Azure Managed Grafana instance; ACNS and metrics ingestion and storage charges still apply. You can also use a separate Grafana deployment.
 
 ## How it works
 
@@ -95,34 +83,22 @@ Starting on **November 30, 2025**, Azure Kubernetes Service (AKS) no longer supp
 
 The agent stack on each node depends on the data plane, as shown in the diagram.
 
-**Linux Cilium nodes** use a layered eBPF-based stack: eBPF kernel hooks capture raw traffic data, Cilium processes it, and Hubble exposes it as Prometheus-format metrics. Because Hubble sits between the node and the scrape endpoint, source-level filtering runs at this layer — you select which namespaces, pod labels, and metric types are exported before data leaves the node.
+**Linux Cilium nodes** use a layered eBPF-based stack: eBPF kernel hooks capture raw traffic data, Cilium processes it, and Hubble exposes it as Prometheus-format metrics.
 
 **Linux non-Cilium nodes** use eBPF kernel hooks feeding into Microsoft Retina, with a Hubble layer on top for flow inspection. Microsoft Retina handles metric collection and exports node-level and pod-level metrics in Prometheus format.
 
-From all paths, metrics are scraped in Prometheus format and ingested into Azure Managed Prometheus or your own Prometheus backend, then visualized in Azure Managed Grafana or your own Grafana stack.
+From all paths, you scrape metrics in Prometheus format and ingest them into Azure Monitor managed service for Prometheus or your own Prometheus backend. For the managed path, open your AKS cluster in the Azure portal and select **Monitoring** &gt; **Dashboards with Grafana** to view networking dashboards. Azure Managed Grafana and your own Grafana deployment are optional alternatives. See [Use dashboards with Grafana with AKS](/en-us/azure/azure-monitor/visualize/grafana-kubernetes).
 
-To get started, [Set up container network metrics](container-network-observability-how-to), and then [configure container network metrics filtering](how-to-configure-container-network-metrics-filtering) for Cilium clusters.
+To get started, [Set up container network metrics](container-network-observability-how-to).
 
 ## When to use container network metrics
 
 Container network metrics are designed for teams that need focused, actionable network data rather than raw telemetry. Common scenarios include:
 
-- **Debugging a specific workload.** Use pod-level metrics to isolate packet drops, TCP resets, or DNS failures for a particular service. On Cilium clusters, filtering can narrow collection to just that namespace or pod label, cutting through cluster-wide noise.
-- **Monitoring multi-tenant clusters.** Track network health per namespace so each team has visibility into its own traffic patterns. On Cilium clusters, scoped filtering keeps collection limited to tenant-specific namespaces.
+- **Debugging a specific workload.** Use pod-level metrics to isolate packet drops, TCP resets, or DNS failures for a particular service.
+- **Monitoring multitenant clusters.** Use pod-level metrics to track network health by namespace and understand each team's traffic patterns.
 - **Capacity planning.** Track forwarded and dropped byte counts per node to identify saturated links or imbalanced workload placement.
 - **DNS health monitoring.** Surface DNS query failures and slow resolution times to catch issues before they cascade into application errors.
-- **Reducing observability costs at scale.** In large clusters, unfiltered collection can generate thousands of time series per node. On Cilium clusters, source-level filtering removes unwanted series before ingestion so costs stay aligned with the workloads and metric types you choose.
-
-## How to choose what to collect (Cilium clusters)
-
-Use this rollout model to balance visibility and cost:
-
-1. Start with broad collection in a nonproduction namespace to establish a baseline.
-2. Keep packet drop, DNS, and TCP state metrics for critical namespaces.
-3. Scope high-cardinality flow metrics to business-critical workloads only.
-4. Review Prometheus ingestion trends and refine filters weekly.
-
-This approach helps you keep high-value metrics while controlling time-series growth and ingestion costs.
 
 ## Before you review the metrics tables
 
@@ -130,7 +106,6 @@ Keep these points in mind:
 
 - Node-level metrics are available across supported Cilium and non-Cilium data planes.
 - Pod-level metrics are available on Linux.
-- Source-level filtering is available on Cilium clusters only.
 - On Cilium clusters, DNS metrics require a Cilium FQDN network policy.
 
 ## Metrics reference
@@ -144,7 +119,8 @@ The following metrics are aggregated per node. All metrics include these labels:
 - `cluster`
 - `instance` (node name)
 
-# [Cilium](#tab/Cilium)
+#### Cilium
+
 For Cilium data plane clusters, node-level metrics are available on Linux only. Cilium exposes the following metrics used by container network metrics:
 
 | Metric name | Description | Extra labels | Linux | Windows |
@@ -154,7 +130,8 @@ For Cilium data plane clusters, node-level metrics are available on Linux only. 
 | **cilium\_drop\_count\_total** | Total dropped packet count | `direction`, `reason` | ✅ | ❌ |
 | **cilium\_drop\_bytes\_total** | Total dropped byte count | `direction`, `reason` | ✅ | ❌ |
 
-# [Non-Cilium](#tab/non-Cilium)
+#### Non-Cilium
+
 For non-Cilium data plane scenarios, container network metrics are available for both Linux and Windows.
 
 | Metric name | Description | Extra labels | Linux | Windows |
@@ -187,8 +164,6 @@ For non-Cilium data plane scenarios, container network metrics are available for
 | **networkobservability\_udp\_connection\_stats** | UDP connection statistics | `statistic_name` | ✅ | ❌ |
 | **networkobservability\_windows\_hns\_stats** | Windows HNS statistics (packets sent and received) | `direction` | ❌ | ✅ |
 
----
-
 ### Pod-level metrics (Hubble metrics)
 
 Pod-level metrics include source and destination pod information, so you can pinpoint network issues at the individual workload level. These metrics cover traffic volume, dropped packets, TCP resets, and Layer 4/Layer 7 flows.
@@ -214,6 +189,67 @@ All metrics include labels:
 | **hubble\_tcp\_flags\_total** | Total TCP packet count by flag | `source` or `destination`, `flag` | ✅ | ❌ |
 | **hubble\_flows\_processed\_total** | Total network flows processed (Layer 4/Layer 7 traffic) | `source` or `destination`, `protocol`, `verdict`, `type`, `subtype` | ✅ | ❌ |
 
+## Choose which metrics to collect on Cilium clusters
+
+On Cilium clusters, use **source-level filtering** to select which observations contribute to individual Hubble metrics before they reach your monitoring backend. This filtering is different from filtering a Grafana dashboard, which changes only what you see. Narrow collection to an application, and then selectively enable external-IP or destination-port metrics when an investigation needs that detail.
+
+Filtering can reduce unnecessary collection and help control ingestion costs. Additional metrics can increase time-series count and cost, so verify their value and volume before expanding them. Previously created series and historical samples can remain visible; savings depend on your traffic and configuration.
+
+When you enable Container Network Observability, the agents expose the service's default network metrics. On Cilium clusters, use a `ContainerNetworkMetric` custom resource to select traffic for individual metric types.
+
+Making a metric available on the cluster doesn't automatically make it available in Azure Monitor managed service for Prometheus. By default, the cluster agents expose `hubble_flows_processed_total`, but managed Prometheus excludes it from collection because it can produce a large number of time series. Managed Prometheus also excludes `hubble_flows_to_world_total` and `hubble_port_distribution_total` by default, even when you enable them on the cluster. To collect and query any of these metrics, add its name to the Hubble allow list in the `ama-metrics-settings-configmap` ConfigMap. For steps, see [Allow the metric families in managed Prometheus](container-network-observability-how-to#allow-the-metric-families-in-managed-prometheus).
+
+There's one shared `ContainerNetworkMetric` resource per cluster, named `container-network-metric`. Coordinate updates with other administrators and preserve metric settings used by other teams.
+
+Start with include filters to select traffic for an application or destination. Exclude filters are optional: use them to omit a subset of selected traffic, or use exclude-only filters to retain broad collection with specific exceptions. An exclusion takes precedence over a matching inclusion.
+
+Filtering isn't limited to the optional world and destination-port metrics. Use the following configuration names for existing metrics:
+
+| Metric type | `spec.filters[].metric` | Example filtering task |
+| --- | --- | --- |
+| DNS | `dns` | Select DNS observations from or to an application client. |
+| TCP | `tcp` | Select TCP observations for pods with a particular label. |
+| HTTP | `httpV2` | Select HTTP observations involving an application. |
+| Flow | `flow` | Select flow observations by workload or security identity. |
+| Drop | `drop` | Select drop observations for an application; optionally exclude load-test observations from broad collection. |
+
+These filters apply when the metric is present in the service's base configuration. Filter configuration and observation generation are separate: DNS metric observations require an applied DNS inspection policy and DNS traffic. HTTP metric observations require cluster-level L7 enablement, an HTTP inspection policy applied to the workload, and HTTP traffic through that policy. Filter status doesn't verify these prerequisites. Filtering doesn't enable inspection or decrypt HTTPS traffic. For HTTP, use the case-sensitive name `httpV2`, not `http`.
+
+For examples, see [DNS, TCP, HTTP, and drop filtering](how-to-configure-container-network-metrics-filtering#dns-tcp-http-and-drop-filtering-examples).
+
+For example, use include filters to select flow metrics for TCP traffic from the `production` namespace to endpoints Cilium classifies as world. This changes flow metric collection without changing collection for other metric types. Filters support namespace and pod names, labels, IP addresses, Cilium security identities, protocols, and verdicts.
+
+Filtering controls which observations contribute to a metric. It doesn't add or remove metric labels. Unlike additional aggregation fields for logs, metric dimensions remain managed by the service.
+
+Filtering affects new metric observations at the source. Selecting a workload in Grafana changes the displayed results, not the collection configuration. Previously collected data remains in your metrics backend.
+
+### Additional metrics
+
+To collect either of the following metrics, add an entry to the cluster's `ContainerNetworkMetric` resource with include filters that select the traffic you want to monitor. If the metric isn't already enabled, the entry enables it for the selected traffic. If it's already enabled, the entry filters which traffic contributes to it without changing its existing labels or options.
+
+| Metric | Use | What it counts |
+| --- | --- | --- |
+| **`hubble_flows_to_world_total`** | Identify destination IP addresses for selected TCP traffic to endpoints that Cilium classifies as world. Configure as `flows-to-world`. | Non-reply TCP SYN observations. With the service's SYN-only configuration, UDP traffic isn't counted. |
+| **`hubble_port_distribution_total`** | Examine selected traffic by protocol and destination port. Configure as `port-distribution`. | Forwarded or redirected observations identified as non-reply traffic. Dropped traffic and traffic with unknown reply status aren't counted. |
+
+For metrics newly enabled through this resource, the service configures source pod and destination IP labels for `flows-to-world`. For `port-distribution`, it configures source and destination pod labels and traffic direction. Protocol and verdict labels are included for `flows-to-world`; protocol and destination port labels are included for `port-distribution`. With these service-supplied options, the world metric doesn't count UDP traffic or non-policy drops.
+
+These metrics count observed network events, not unique connections or application requests. For example, if a client sends a TCP SYN packet and then retransmits it while trying to connect, `hubble_flows_to_world_total` can count both observations even though they belong to the same connection attempt. Labels such as pod names are populated only when that information is available for the observed traffic.
+
+For a complete custom resource and screenshots of both metrics collected from a test workload, see [Example configuration and captured results](how-to-configure-container-network-metrics-filtering#example-configuration-and-captured-results).
+
+### Manage data relevance and noise
+
+Use filtering to focus metrics on the workloads and traffic relevant to your monitoring or investigation. Excluding unrelated traffic reduces data noise and helps you focus on the network signals that matter.
+
+Destination IP addresses, pod names, and ports can produce many time series. This detail can be useful, but collecting it for unrelated traffic adds noise and can increase ingestion costs. Start with a specific workload or namespace, review whether the metrics answer your questions, and check the resulting data volume before expanding collection.
+
+The custom resource reports a warning for each enabled extra metric. The warning identifies a potential cost increase; it doesn't estimate your bill or indicate that a limit was exceeded. The service manages metric labels and you can't change them through this resource.
+
+Removing an entry disables the metric only if that entry was what enabled it. If the service supplies the metric, it remains enabled without that entry's filters. Deleting the shared resource removes all its filters and restores service-provided collection, which can broaden the traffic included in those metrics and **increase** data noise and ingestion volume.
+
+For YAML examples, verification queries, and cleanup steps, see [Configure container network metrics filtering](how-to-configure-container-network-metrics-filtering).
+
 ## Limitations
 
 **Platform and data plane:**
@@ -221,6 +257,7 @@ All metrics include labels:
 - Pod-level metrics are available only on Linux.
 - Cilium data plane is supported starting with Kubernetes version 1.29.
 - Source-level metrics filtering is available only on Cilium clusters.
+- Filter entries can enable `flows-to-world` and `port-distribution` when the service doesn't already supply them. The service manages their labels; this resource doesn't expose custom metric dimensions.
 - Metric labels have subtle differences between Cilium and non-Cilium clusters.
 
 **DNS metrics:**
