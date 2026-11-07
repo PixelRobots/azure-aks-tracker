@@ -115,7 +115,6 @@ If you're using **Azure Container Linux (ACL)** on AKS, make sure you review the
 - `NodeImage` and `None` are the only supported [operating system (OS) upgrade channels](/en-us/azure/aks/auto-upgrade-node-os-image). `Unmanaged` and `SecurityPatch` are incompatible with ACL due to the immutable `/usr` directory.
 - [Artifact Streaming](/en-us/azure/aks/artifact-streaming) isn't supported.
 - [Pod Sandboxing](/en-us/azure/aks/use-pod-sandboxing) isn't supported.
-- [Confidential Virtual Machines (CVMs)](/en-us/azure/aks/confidential-containers-overview) aren't supported.
 - [Generation 1 VMs](/en-us/azure/aks/aks-virtual-machine-sizes#vm-support-on-aks) aren't supported.
 
 ## Create specialized node pools
