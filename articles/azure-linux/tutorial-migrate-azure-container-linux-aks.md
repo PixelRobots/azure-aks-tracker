@@ -73,7 +73,6 @@ Before you begin, review the following considerations and limitations for ACL:
 - `NodeImage` and `None` are the only supported [operating system (OS) upgrade channels](/en-us/azure/aks/auto-upgrade-node-os-image). `Unmanaged` and `SecurityPatch` are incompatible with ACL due to the immutable `/usr` directory.
 - [Artifact Streaming](/en-us/azure/aks/artifact-streaming) isn't supported.
 - [Pod Sandboxing](/en-us/azure/aks/use-pod-sandboxing) isn't supported.
-- [Confidential Virtual Machines (CVMs)](/en-us/azure/aks/confidential-containers-overview) aren't supported.
 - [Generation 1 VMs](/en-us/azure/aks/aks-virtual-machine-sizes#vm-support-on-aks) aren't supported.
 
 ## Add ACL node pools and remove existing node pools
@@ -121,7 +120,6 @@ There are several settings that can block the OS SKU migration request. To ensur
 - ACL requires Trusted Launch. If not already enabled on your node pool, you must include `--enable-secure-boot` and `--enable-vtpm` when migrating to the `AzureContainerLinux` OS SKU. Your node pool's VM size must also support Trusted Launch. If your current VM size doesn't support it, you need to resize or recreate the node pool with a supported VM size before migrating.
 - [Generation 1 VMs](/en-us/azure/aks/aks-virtual-machine-sizes#vm-support-on-aks) aren't supported.
 - An Ubuntu OS SKU with `UseGPUDedicatedVHD` enabled can't perform an OS SKU migration.
-- [Confidential Virtual Machines (CVMs)](/en-us/azure/aks/confidential-containers-overview) aren't supported.
 - [Pod Sandboxing](/en-us/azure/aks/use-pod-sandboxing) isn't supported.
 - Windows OS SKU migration isn't supported.
 

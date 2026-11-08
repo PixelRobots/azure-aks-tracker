@@ -68,7 +68,6 @@ Before you begin, review the following considerations and limitations for ACL:
 - `NodeImage` and `None` are the only supported [operating system (OS) upgrade channels](/en-us/azure/aks/auto-upgrade-node-os-image). `Unmanaged` and `SecurityPatch` are incompatible with ACL due to the immutable `/usr` directory.
 - [Artifact Streaming](/en-us/azure/aks/artifact-streaming) isn't supported.
 - [Pod Sandboxing](/en-us/azure/aks/use-pod-sandboxing) isn't supported.
-- [Confidential Virtual Machines (CVMs)](/en-us/azure/aks/confidential-containers-overview) aren't supported.
 - [Generation 1 VMs](/en-us/azure/aks/aks-virtual-machine-sizes#vm-support-on-aks) aren't supported.
 
 ## Prerequisites
