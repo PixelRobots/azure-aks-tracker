@@ -22,7 +22,7 @@ ms.service: azure-kubernetes-service
 description: Use Kubernetes dynamic resource allocation in AKS to express GPU requirements, schedule workloads with resource claims, and verify GPU access.
 author: sdesai345
 ms.author: sachidesai
-ms.date: 2026-11-04T00:00:00.0000000Z
+ms.date: 2026-11-07T00:00:00.0000000Z
 ms.topic: how-to
 ms.subservice: aks-nodes
 locale: en-us
@@ -41,11 +41,9 @@ source_path: articles/aks/managed-dra-for-gpus.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/63959238-cb90-4871-a33d-4a5519097e47
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/78d87f42-5582-4a6b-90be-7db2f12b34e6
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: e3ac3533-d76f-6f29-be15-708154727425
 ---
 
@@ -219,44 +217,6 @@ Output should look like the following example:
 {
   "state": "Succeeded",
   "osSku": "Ubuntu",
-  "driver": "Install",
-  "managementMode": "Managed",
-  "driverMode": "DRA"
-}
-```
-
-# [Azure Linux node pool](#tab/add-azure-linux-gpu-node-pool)
-To use Azure Linux, specify the OS SKU by setting `os-sku` to `AzureLinux` during node pool creation. The `os-type` is set to `Linux` by default. Create the uniform pool with `--enable-managed-gpu=true` and driver mode set to `DRA`:
-
-```azurecli
-az aks nodepool add \
-    --resource-group "$RESOURCE_GROUP" \
-    --cluster-name "$CLUSTER_NAME" \
-    --name gpunp \
-    --os-sku AzureLinux
-    --node-vm-size "$GPU_VM_SIZE" \ \
-    --enable-managed-gpu=true \
-    --gpu-driver-mode DRA \
-    --node-count 1
-```
-
-Verify the accepted configuration:
-
-```azurecli
-az aks nodepool show \
-    --resource-group "$RESOURCE_GROUP" \
-    --cluster-name "$CLUSTER_NAME" \
-    --name gpunp \
-    --query '{state:provisioningState,osSku:osSku,driver:gpuProfile.driver,managementMode:gpuProfile.nvidia.managementMode,driverMode:gpuProfile.nvidia.driverMode}' \
-    --output json
-```
-
-Output should look like the following example:
-
-```json
-{
-  "state": "Succeeded",
-  "osSku": "AzureLinux",
   "driver": "Install",
   "managementMode": "Managed",
   "driverMode": "DRA"
