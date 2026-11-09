@@ -112,7 +112,7 @@ Azure Kubernetes Fleet Manager preview features are available on a self-service,
         --scope cluster
     ```
 
-    If you want to limit Flux to managing resources in a namespace other than the default `flux-system`, provide the namespace by using the `--release-namespace` parameter. To use the Flux extension in a [multi-tenancy configuration](/en-us/azure/azure-arc/kubernetes/conceptual-gitops-flux2#multi-tenancy) update the `--scope` argument to `namespace`.
+    If you want to change the namespace the Flux extension uses to be other than the default `flux-system`, provide the namespace by using the `--release-namespace` parameter.
 
     Note
 
