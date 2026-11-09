@@ -19,10 +19,10 @@ manager: kumud
 learn_banner_products:
 - azure
 ms.service: azure-kubernetes-service
-description: Learn the cluster operator best practices for storage, data encryption, and backups in Azure Kubernetes Service (AKS)
+description: Learn cluster operator best practices for storage, distributed caching, data encryption, and backups in Azure Kubernetes Service (AKS).
 ms.topic: best-practice
 ms.subservice: aks-storage
-ms.date: 2023-04-28T00:00:00.0000000Z
+ms.date: 2026-11-08T00:00:00.0000000Z
 author: schaffererin
 ms.author: schaffererin
 locale: en-us
@@ -41,11 +41,11 @@ source_path: articles/aks/operator-best-practices-storage.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/01a89bec-e73f-4ce0-a00a-ae34ad62e5fe
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/50038ab9-5431-4515-9dfc-c24291ef4fce
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 3c55e150-04ac-8ffc-7e80-321d23e4af61
 ---
 
@@ -57,6 +57,7 @@ This best practices article focuses on storage considerations for cluster operat
 
 - What types of storage are available.
 - How to correctly size AKS nodes for storage performance.
+- How to plan and operate distributed caching for repeated Azure Blob reads.
 - Differences between dynamic and static provisioning of volumes.
 - Ways to back up and secure your data volumes.
 
@@ -159,6 +160,31 @@ Important
 
 Use NVMe data disks only for workloads that can tolerate data loss and recover quickly. Keep business-critical data on durable storage such as Azure Disk or Azure Files.
 
+## Use distributed accelerator for cloud storage (preview)
+
+> 
+> **Best practice guidance**
+> 
+> Consider distributed accelerator for cloud storage (DACS) when applications repeatedly read model files or datasets from Azure Blob Storage. Plan cache capacity, warm-up, and recovery around your workload's access patterns.
+
+DACS uses local NVMe disks across Linux cache nodes to cache Azure Blob data. It can reduce model-loading time for AI inference and accelerate repeated dataset reads for training. You enable and manage DACS through Azure Container Storage. DACS doesn't provision persistent volumes or storage classes.
+
+When you plan and operate DACS:
+
+- **Dedicate cache storage.** Use Linux cache nodes with local NVMe disks dedicated to DACS. Cache prerequisites can format those disks. Preserve cache-node labels in the node-pool configuration so they survive node replacement.
+- **Size for the active working set.** Include headroom for overlapping model versions and dataset changes. Account for concurrent readers, node CPU and memory, and network bandwidth, not just NVMe capacity.
+- **Plan for cold reads.** Consider prefetching model data before inference deployments or scale-out. Verify cache hits before increasing concurrency. Prefetch doesn't pin data, and eviction, node replacement, or maintenance can require another warm-up. Plan for additional Blob traffic when cached data is unavailable.
+- **Measure application and cache behavior.** Compare cold and warm reads under expected concurrency. Monitor client cache hits, cache-server requests, latency, capacity, and Blob traffic. Successful or faster reads alone don't prove cache use because clients can fall back to Azure Blob Storage.
+- **Keep authoritative data durable.** Store model files and datasets in Azure Blob Storage, preferably at immutable, versioned paths. Cached data is ephemeral and isn't replicated for durability. Don't use DACS as persistent storage for training outputs or checkpoints.
+
+Important
+
+DACS is in preview. Preview features are provided without a service-level agreement and aren't recommended for production workloads. For more information, see [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/support/legal/preview-supplemental-terms/).
+
+Use DACS within a trusted cluster; the cache doesn't isolate mutually untrusted tenants. Grant workloads only the Blob access permissions they need.
+
+For deployment and operational guidance, see [Manage distributed accelerator for cloud storage](/en-us/azure/storage/container-storage/manage-distributed-accelerator-for-cloud-storage?toc=/azure/aks/toc.json&amp;bc=/azure/aks/breadcrumb/toc.json) and [Monitor distributed accelerator for cloud storage](/en-us/azure/storage/container-storage/monitor-distributed-accelerator-for-cloud-storage?toc=/azure/aks/toc.json&amp;bc=/azure/aks/breadcrumb/toc.json).
+
 ## Dynamically provision volumes
 
 > 
@@ -192,3 +218,5 @@ For more information about storage class options, see [storage reclaim policies]
 When your applications store and consume data persisted on disks or in files, you need to take regular backups or snapshots of that data. Azure Disks can use built-in snapshot technologies. Your applications may need to flush writes-to-disk before you perform the snapshot operation. [Velero](https://github.com/heptio/velero) can back up persistent volumes along with additional cluster resources and configurations. If you can't [remove state from your applications](operator-best-practices-multi-region#remove-service-state-from-inside-containers), back up the data from persistent volumes and regularly test the restore operations to verify data integrity and the processes required.
 
 Understand the limitations of the different approaches to data backups and if you need to quiesce your data prior to snapshot. Data backups don't necessarily let you restore your application environment of cluster deployment. For more information about those scenarios, see [Best practices for business continuity and disaster recovery in AKS](operator-best-practices-multi-region).
+
+If you use DACS, protect the authoritative model files and datasets in Azure Blob Storage rather than backing up ephemeral cache contents. Keep cache configuration in version control and test recreating and warming the cache after node replacement or cluster recovery. DACS isn't a backup solution.
