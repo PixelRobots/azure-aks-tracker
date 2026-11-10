@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-11-10T06:44:12.859Z",
+  "checked_at": "2026-11-10T08:32:24.062Z",
   "complete": true,
   "errors": 0,
   "unreached": 0,
-  "article_count": 1464,
+  "article_count": 1467,
   "products": [
     "ACR",
     "AGC",
@@ -17,8 +17,8 @@
     "Azure Linux",
     "Fleet"
   ],
-  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/42769772300",
-  "attempted": 1499,
+  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/42782567494",
+  "attempted": 1504,
   "failed_pages": [],
   "publishable": true
 }

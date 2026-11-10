@@ -345,12 +345,12 @@ The following table lists the metrics available for the Microsoft.Compute/virtua
 | **Disk Read Operations/Sec**Disk Read IOPS | `Disk Read Operations/Sec` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **Disk Write Bytes**Bytes written to disk during monitoring period | `Disk Write Bytes` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
 | **Disk Write Operations/Sec**Disk Write IOPS | `Disk Write Operations/Sec` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
-| **Inbound Flows**Inbound Flows are number of current flows in the inbound direction (traffic going into the VM) | `Inbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | No |
-| **Inbound Flows Maximum Creation Rate**The maximum creation rate of inbound flows (traffic going into the VM) | `Inbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | No |
+| **Inbound Flows**Inbound Flows are number of current flows in the inbound direction (traffic going into the VM) | `Inbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | Yes |
+| **Inbound Flows Maximum Creation Rate**The maximum creation rate of inbound flows (traffic going into the VM) | `Inbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **Network In Billable (Deprecated)**The number of billable bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) (Deprecated) | `Network In` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
-| **Network In Total**The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) | `Network In Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | No |
+| **Network In Total**The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) | `Network In Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
 | **Network Out Billable (Deprecated)**The number of billable bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) (Deprecated) | `Network Out` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
-| **Network Out Total**The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) | `Network Out Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | No |
+| **Network Out Total**The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) | `Network Out Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
 | **OS Disk Bandwidth Consumed Percentage**Percentage of operating system disk bandwidth consumed per minute. Only available on VM series that support premium storage. | `OS Disk Bandwidth Consumed Percentage` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **OS Disk IOPS Consumed Percentage**Percentage of operating system disk I/Os consumed per minute. Only available on VM series that support premium storage. | `OS Disk IOPS Consumed Percentage` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **OS Disk Latency**Average time to complete each IO during monitoring period for OS Disk. Values are in milliseconds. | `OS Disk Latency` | No | Milliseconds | Average | &lt;none&gt; | PT1M | Yes |
@@ -365,8 +365,8 @@ The following table lists the metrics available for the Microsoft.Compute/virtua
 | **OS Disk Used Burst IO Credits Percentage**Percentage of OS Disk burst I/O credits used so far | `OS Disk Used Burst IO Credits Percentage` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **OS Disk Write Bytes/Sec**Bytes/Sec written to a single disk during monitoring period for OS disk | `OS Disk Write Bytes/sec` | No | BytesPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **OS Disk Write Operations/Sec**Write IOPS from a single disk during monitoring period for OS disk | `OS Disk Write Operations/Sec` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
-| **Outbound Flows**Outbound Flows are number of current flows in the outbound direction (traffic going out of the VM) | `Outbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | No |
-| **Outbound Flows Maximum Creation Rate**The maximum creation rate of outbound flows (traffic going out of the VM) | `Outbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | No |
+| **Outbound Flows**Outbound Flows are number of current flows in the outbound direction (traffic going out of the VM) | `Outbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | Yes |
+| **Outbound Flows Maximum Creation Rate**The maximum creation rate of outbound flows (traffic going out of the VM) | `Outbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **Percentage CPU**The percentage of allocated compute units that are currently in use by the Virtual Machine(s) | `Percentage CPU` | No | Percent | Average | &lt;none&gt; | PT1M | Yes |
 | **Premium Data Disk Cache Read Hit**Premium Data Disk Cache Read Hit | `Premium Data Disk Cache Read Hit` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **Premium Data Disk Cache Read Miss**Premium Data Disk Cache Read Miss | `Premium Data Disk Cache Read Miss` | No | Percent | Average | `LUN` | PT1M | Yes |
@@ -430,12 +430,12 @@ The following table lists the metrics available for the Microsoft.Compute/virtua
 | **Disk Read Operations/Sec**Disk Read IOPS | `Disk Read Operations/Sec` | No | CountPerSecond | Average | `VMName` | PT1M | Yes |
 | **Disk Write Bytes**Bytes written to disk during monitoring period | `Disk Write Bytes` | No | Bytes | Total (Sum) | `VMName` | PT1M | Yes |
 | **Disk Write Operations/Sec**Disk Write IOPS | `Disk Write Operations/Sec` | No | CountPerSecond | Average | `VMName` | PT1M | Yes |
-| **Inbound Flows**Inbound Flows are number of current flows in the inbound direction (traffic going into the VM) | `Inbound Flows` | No | Count | Average | `VMName` | PT1M | No |
-| **Inbound Flows Maximum Creation Rate**The maximum creation rate of inbound flows (traffic going into the VM) | `Inbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | `VMName` | PT1M | No |
+| **Inbound Flows**Inbound Flows are number of current flows in the inbound direction (traffic going into the VM) | `Inbound Flows` | No | Count | Average | `VMName` | PT1M | Yes |
+| **Inbound Flows Maximum Creation Rate**The maximum creation rate of inbound flows (traffic going into the VM) | `Inbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | `VMName` | PT1M | Yes |
 | **Network In Billable (Deprecated)**The number of billable bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) (Deprecated) | `Network In` | No | Bytes | Total (Sum) | `VMName` | PT1M | Yes |
-| **Network In Total**The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) | `Network In Total` | No | Bytes | Total (Sum) | `VMName` | PT1M | No |
+| **Network In Total**The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) | `Network In Total` | No | Bytes | Total (Sum) | `VMName` | PT1M | Yes |
 | **Network Out Billable (Deprecated)**The number of billable bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) (Deprecated) | `Network Out` | No | Bytes | Total (Sum) | `VMName` | PT1M | Yes |
-| **Network Out Total**The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) | `Network Out Total` | No | Bytes | Total (Sum) | `VMName` | PT1M | No |
+| **Network Out Total**The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) | `Network Out Total` | No | Bytes | Total (Sum) | `VMName` | PT1M | Yes |
 | **OS Disk Bandwidth Consumed Percentage**Percentage of operating system disk bandwidth consumed per minute. Only available on VM series that support premium storage. | `OS Disk Bandwidth Consumed Percentage` | No | Percent | Average | `LUN`, `VMName` | PT1M | Yes |
 | **OS Disk IOPS Consumed Percentage**Percentage of operating system disk I/Os consumed per minute. Only available on VM series that support premium storage. | `OS Disk IOPS Consumed Percentage` | No | Percent | Average | `LUN`, `VMName` | PT1M | Yes |
 | **OS Disk Latency**Average time to complete each IO during monitoring period for OS Disk. Values are in milliseconds. | `OS Disk Latency` | No | Milliseconds | Average | `VMName` | PT1M | Yes |
@@ -450,8 +450,8 @@ The following table lists the metrics available for the Microsoft.Compute/virtua
 | **OS Disk Used Burst IO Credits Percentage**Percentage of OS Disk burst I/O credits used so far | `OS Disk Used Burst IO Credits Percentage` | No | Percent | Average | `LUN`, `VMName` | PT1M | Yes |
 | **OS Disk Write Bytes/Sec**Bytes/Sec written to a single disk during monitoring period for OS disk | `OS Disk Write Bytes/sec` | No | BytesPerSecond | Average | `VMName` | PT1M | Yes |
 | **OS Disk Write Operations/Sec**Write IOPS from a single disk during monitoring period for OS disk | `OS Disk Write Operations/Sec` | No | CountPerSecond | Average | `VMName` | PT1M | Yes |
-| **Outbound Flows**Outbound Flows are number of current flows in the outbound direction (traffic going out of the VM) | `Outbound Flows` | No | Count | Average | `VMName` | PT1M | No |
-| **Outbound Flows Maximum Creation Rate**The maximum creation rate of outbound flows (traffic going out of the VM) | `Outbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | `VMName` | PT1M | No |
+| **Outbound Flows**Outbound Flows are number of current flows in the outbound direction (traffic going out of the VM) | `Outbound Flows` | No | Count | Average | `VMName` | PT1M | Yes |
+| **Outbound Flows Maximum Creation Rate**The maximum creation rate of outbound flows (traffic going out of the VM) | `Outbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | `VMName` | PT1M | Yes |
 | **Percentage CPU**The percentage of allocated compute units that are currently in use by the Virtual Machine(s) | `Percentage CPU` | No | Percent | Average | `VMName` | PT1M | Yes |
 | **Premium Data Disk Cache Read Hit**Premium Data Disk Cache Read Hit | `Premium Data Disk Cache Read Hit` | No | Percent | Average | `LUN`, `VMName` | PT1M | Yes |
 | **Premium Data Disk Cache Read Miss**Premium Data Disk Cache Read Miss | `Premium Data Disk Cache Read Miss` | No | Percent | Average | `LUN`, `VMName` | PT1M | Yes |
@@ -515,12 +515,12 @@ The following table lists the metrics available for the Microsoft.Compute/virtua
 | **Disk Read Operations/Sec**Disk Read IOPS | `Disk Read Operations/Sec` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **Disk Write Bytes**Bytes written to disk during monitoring period | `Disk Write Bytes` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
 | **Disk Write Operations/Sec**Disk Write IOPS | `Disk Write Operations/Sec` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
-| **Inbound Flows**Inbound Flows are number of current flows in the inbound direction (traffic going into the VM) | `Inbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | No |
-| **Inbound Flows Maximum Creation Rate**The maximum creation rate of inbound flows (traffic going into the VM) | `Inbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | No |
+| **Inbound Flows**Inbound Flows are number of current flows in the inbound direction (traffic going into the VM) | `Inbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | Yes |
+| **Inbound Flows Maximum Creation Rate**The maximum creation rate of inbound flows (traffic going into the VM) | `Inbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **Network In Billable (Deprecated)**The number of billable bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) (Deprecated) | `Network In` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
-| **Network In Total**The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) | `Network In Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | No |
+| **Network In Total**The number of bytes received on all network interfaces by the Virtual Machine(s) (Incoming Traffic) | `Network In Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
 | **Network Out Billable (Deprecated)**The number of billable bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) (Deprecated) | `Network Out` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
-| **Network Out Total**The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) | `Network Out Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | No |
+| **Network Out Total**The number of bytes out on all network interfaces by the Virtual Machine(s) (Outgoing Traffic) | `Network Out Total` | No | Bytes | Total (Sum) | &lt;none&gt; | PT1M | Yes |
 | **OS Disk Bandwidth Consumed Percentage**Percentage of operating system disk bandwidth consumed per minute. Only available on VM series that support premium storage. | `OS Disk Bandwidth Consumed Percentage` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **OS Disk IOPS Consumed Percentage**Percentage of operating system disk I/Os consumed per minute. Only available on VM series that support premium storage. | `OS Disk IOPS Consumed Percentage` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **OS Disk Latency**Average time to complete each IO during monitoring period for OS Disk. Values are in milliseconds. | `OS Disk Latency` | No | Milliseconds | Average | &lt;none&gt; | PT1M | Yes |
@@ -535,8 +535,8 @@ The following table lists the metrics available for the Microsoft.Compute/virtua
 | **OS Disk Used Burst IO Credits Percentage**Percentage of OS Disk burst I/O credits used so far | `OS Disk Used Burst IO Credits Percentage` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **OS Disk Write Bytes/Sec**Bytes/Sec written to a single disk during monitoring period for OS disk | `OS Disk Write Bytes/sec` | No | BytesPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **OS Disk Write Operations/Sec**Write IOPS from a single disk during monitoring period for OS disk | `OS Disk Write Operations/Sec` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
-| **Outbound Flows**Outbound Flows are number of current flows in the outbound direction (traffic going out of the VM) | `Outbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | No |
-| **Outbound Flows Maximum Creation Rate**The maximum creation rate of outbound flows (traffic going out of the VM) | `Outbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | No |
+| **Outbound Flows**Outbound Flows are number of current flows in the outbound direction (traffic going out of the VM) | `Outbound Flows` | No | Count | Average | &lt;none&gt; | PT1M | Yes |
+| **Outbound Flows Maximum Creation Rate**The maximum creation rate of outbound flows (traffic going out of the VM) | `Outbound Flows Maximum Creation Rate` | No | CountPerSecond | Average | &lt;none&gt; | PT1M | Yes |
 | **Percentage CPU**The percentage of allocated compute units that are currently in use by the Virtual Machine(s) | `Percentage CPU` | No | Percent | Average | &lt;none&gt; | PT1M | Yes |
 | **Premium Data Disk Cache Read Hit**Premium Data Disk Cache Read Hit | `Premium Data Disk Cache Read Hit` | No | Percent | Average | `LUN` | PT1M | Yes |
 | **Premium Data Disk Cache Read Miss**Premium Data Disk Cache Read Miss | `Premium Data Disk Cache Read Miss` | No | Percent | Average | `LUN` | PT1M | Yes |
