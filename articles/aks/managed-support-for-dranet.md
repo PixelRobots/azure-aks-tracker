@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn how to enable managed support for DRANET on an AKS node pool for RDMA workloads and migrate from a self-deployed network operator.
 ms.topic: how-to
-ms.date: 2026-11-07T00:00:00.0000000Z
+ms.date: 2026-11-09T00:00:00.0000000Z
 author: sdesai345
 ms.author: sachidesai
 ai-usage: ai-assisted
@@ -310,7 +310,7 @@ The following example uses a [`Standard_ND96isr_H200_v5`](/en-us/azure/virtual-m
     kubectl get deviceclass.resource.k8s.io
     ```
 
-    The output should show the `dranet.azure.com` device class and the `dranet.dra.azure.com` driver.
+    The output should show the `rdma.kubernetes.azure.com` device class and the `dra.net` driver.
 3. Create a file named `dranet-workload.yaml` with the following resource claim template and pod. Replace `<node-pool-name>` with the value of `$NODE_POOL_NAME`:
 
     ```yaml
@@ -324,11 +324,11 @@ The following example uses a [`Standard_ND96isr_H200_v5`](/en-us/azure/virtual-m
         devices:
           requests:
             - name: ib-interfaces
-              deviceClassName: dranet.azure.com
+              deviceClassName: rdma.kubernetes.azure.com
               count: 8
               selectors:
                 - cel:
-                    expression: 'device.driver == "dranet.dra.azure.com"'
+                    expression: 'device.driver == "dra.net" && device.attributes["dra.net"].rdma == true'
     ---
     apiVersion: v1
     kind: Pod
