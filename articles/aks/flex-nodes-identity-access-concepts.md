@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn why flex nodes use different identity options depending on where your host runs, and how AKS authorizes a host to join a cluster.
 ms.topic: concept-article
-ms.date: 2026-08-28T00:00:00.0000000Z
+ms.date: 2026-11-05T00:00:00.0000000Z
 author: sdesai345
 ms.author: sachidesai
 ms.subservice: aks-nodes
@@ -39,6 +39,14 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks/flex-nodes-identity-access-concepts.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
 platformId: 3b6e28da-df95-67c6-ba7b-83ee2d649c7e
 ---
 
@@ -57,7 +65,7 @@ Before a customer-managed host can join an Azure Kubernetes Service (AKS) cluste
 
 A flex node runs on hardware that you manage or an Azure virtual machine that AKS didn't directly create. Because AKS didn't provision the host, the cluster doesn't automatically recognize that a connection request comes from your host machine and not from somewhere else.
 
-An identity gives the host machine a verifiable mechanism to authenticate to Azure, so that AKS can confirm the request is legitimate before letting the host register itself and join the cluster. The host keeps using that identity after it joins: the agent communicates with Azure to read the node's desired configuration and to report its status. The identity also carries the permissions that authorize the host to read and write for your specific AKS cluster.
+An identity gives the host machine a verifiable mechanism to authenticate to Azure, so that AKS can confirm the request is legitimate before letting the host register itself and join the cluster. The host keeps using that identity after it joins: the agent communicates with Azure to read the node's desired configuration and to report its status. The identity also carries the permissions that authorize the host to read and write Azure Machine resources in the target flex node pool.
 
 Every flex node identity option serves this same purpose. The options differ in *how* the host proves its identity, and that difference depends on the host location.
 
@@ -94,11 +102,11 @@ A service principal shifts credential management to you. Where a managed identit
 
 Choose this option only when your host doesn't qualify for either managed identity path.
 
-## Authorize the identity at your AKS cluster
+## Authorize the identity at your flex node pool
 
-Every identity option ends at the same checkpoint: before a host can join a cluster, its identity needs permission on that specific AKS cluster. You grant this permission by assigning the identity the role that lets it register as a node, scoped to that one cluster instead of your whole subscription. Scoping the permission to a single cluster limits what a compromised or misconfigured host identity could otherwise reach.
+Every identity option ends at the same checkpoint: before a host can join a cluster, its identity needs permission on the target flex node pool. Assign **Azure Kubernetes Service Flex Node Agent Role** to the identity at the exact flex node pool scope. This role lets the agent retrieve bootstrap data and read or write Azure Machine resources for that pool without granting access across the complete AKS cluster or subscription.
 
-This authorization step doesn't depend on which identity option you choose. A managed identity and a service principal both need this same cluster-scoped permission before a host can successfully register.
+This authorization step doesn't depend on which identity option you choose. A managed identity and a service principal both need this same pool-scoped permission before a host can successfully register.
 
 ## Choose the identity option for your host machine
 

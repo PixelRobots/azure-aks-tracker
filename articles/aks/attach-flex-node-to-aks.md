@@ -288,7 +288,7 @@ Continue when `${WORK_DIR}/base-config.json` exists and isn't empty. Complete th
 Complete only the section that matches the identity configured in the preceding article.
 
 # [Azure Arc managed identity](#tab/arc-managed-identity)
-Use this section only after the Arc machine resource matches the SSH host, `himdsd` is active, the HIMDS verification returns HTTP 200 for the exact AKS resource, and the AKS-scoped role assignment is present, as verified in the preceding article. This path retrieves fresh bootstrap data through the Arc machine identity and doesn't use the `base-config.json` file from your Bash environment.
+Use this section only after the Arc machine resource matches the SSH host, `himdsd` is active, the Arc identity can obtain an Azure Resource Manager token, and **Azure Kubernetes Service Flex Node Agent Role** is assigned at the exact target flex node pool scope, as verified in the preceding article. This path retrieves fresh bootstrap data through the Arc machine identity and doesn't use the `base-config.json` file from your Bash environment.
 
 ```bash
 CONFIG_OVERRIDES="$(jq -cn \
@@ -306,7 +306,7 @@ bash /tmp/bootstrap.sh \
     --config-overrides "${CONFIG_OVERRIDES}"
 ```
 
-Continue when the output reports `Arc preflight: OK`, machine registration completes, and the bootstrap script reports that the flex node agent service started. If bootstrap can't retrieve data, verify the Arc connection, `himdsd`, AKS-scoped role assignment, and host access to Azure Resource Manager.
+Continue when the output reports `Arc preflight: OK`, machine registration completes, and the bootstrap script reports that the flex node agent service started. If bootstrap can't retrieve data, verify the Arc connection, `himdsd`, the exact pool-scoped role assignment and its propagation, and host access to Azure Resource Manager.
 
 # [Service principal](#tab/service-principal)
 Before you continue, make the combined PEM certificate and private key available on the host at `/etc/aks-flex-node/credentials/sp-client-certificate` through your approved credential-management process. The credentials directory must be root-owned with permissions `700`. Don't store the credential or its path in the shared environment file.
