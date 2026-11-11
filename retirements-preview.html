@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Production-layout snapshot preview</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("scoutTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font: 16px/1.6 "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+main { max-width: 1040px; padding: 32px 20px; margin: auto; }
+h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 16px 0; }
+h2 { font-size: 21px; margin: 12px 0; }
+a { color: var(--cp-link); overflow-wrap: anywhere; }
+a:hover { text-decoration-thickness: 2px; }
+.notice { border-left: 4px solid var(--cp-accent); background: var(--cp-accent-soft); padding: 16px 20px; border-radius: 0.625rem; }
+.muted, small { color: var(--cp-text-muted); }
+.controls { display: flex; gap: 16px; flex-wrap: wrap; margin: 24px 0; }
+label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+input, select { padding: 12px; border: 1px solid var(--cp-border-strong); border-radius: 0.625rem; background: var(--cp-surface); color: var(--cp-text); font: inherit; }
+article { padding: 24px; margin: 20px 0; background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; }
+article[hidden] { display: none; }
+.badges, .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); color: var(--cp-text-soft); border-radius: 0.625rem; padding: 4px 8px; font-size: 13px; }
+.links a { padding: 8px 12px; border: 1px solid var(--cp-border); border-radius: 0.625rem; }
+pre { background: var(--cp-surface-soft); border: 1px solid var(--cp-border); padding: 16px; overflow: auto; font: 13px/1.6 Consolas, "Courier New", Courier, monospace; }
+summary { cursor: pointer; margin-top: 16px; color: var(--cp-text-muted); }
+footer { margin-top: 32px; border-top: 1px solid var(--cp-border); padding-top: 16px; }
+[data-mode="digest"] .controls { display: none; }
+@media (max-width: 520px) { main { padding: 20px 12px; } article { padding: 16px; } }
+</style><style id="aks-cve-tracker-page-inline-css">
+.aks-updates .aks-docs-list > div .aks-doc-header {
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+.aks-updates .aks-docs-list > div .aks-doc-category {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 30px !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    background: #3b0764 !important;
+    border: 1px solid #2f3540 !important;
+    color: #f9fafb !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.aks-updates .aks-docs-list > div .aks-doc-updated-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 30px !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    background: var(--aks-accent, #ffea00) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    color: #18181b !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.aks-updates .aks-weekly-digest-link-wrap {
+    margin: 18px 0 0 !important;
+}
+
+.aks-updates .aks-weekly-digest-archive {
+    margin-top: 22px !important;
+}
+
+.aks-updates .aks-weekly-digest-archive-text {
+    margin: 0 0 10px !important;
+    color: #e5e5e5 !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+}
+
+.aks-updates .aks-weekly-digest-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 42px !important;
+    padding: 10px 18px !important;
+    border-radius: 6px !important;
+    background: #9f62eb !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    color: #18181b !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+}
+
+.aks-updates .aks-weekly-digest-link:hover,
+.aks-updates .aks-weekly-digest-link:focus {
+    background: #b076f2 !important;
+    color: #18181b !important;
+    text-decoration: none !important;
+}
+
+@media (max-width: 640px) {
+    .aks-updates .aks-docs-list > div .aks-doc-header {
+        align-items: flex-start !important;
+    }
+
+    .aks-updates .aks-weekly-digest-link {
+        width: 100% !important;
+    }
+}
+/*# sourceURL=aks-cve-tracker-page-inline-css */
+</style>
+<style id="wp-custom-css">
+.header-filter-gradient {
+    background: linear-gradient(45deg, #ffea00 100%, #ffea00 100%);
+}
+
+.navbar .navbar-brand, .carousel .sub-title, .hestia-about p {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.page-header .container, .page-header .author, .page-header .author a, .page-header .hestia-title, .page-header .title, .page-header .description {
+	    color: #000;
+
+}
+
+/* .blog-post .section-text p {
+    padding-top: 2.5em;
+} */
+
+.blog-post .section-text h2 {
+    padding-top: 15px;
+}
+
+.blog-post .section-text h3 {
+    padding-top: 15px;
+}
+
+a:not(.btn) {
+	color: #ffea00
+}
+
+.footer-black a {
+    opacity: 0.86;
+	color: #fff;
+}
+
+.card-title a {
+	color: #ffea00;
+}
+
+.buttons a{
+color: #000 !important;
+}
+
+.table2 tr:hover {background-color: #EEEEEE;}
+
+.table2 th, td {
+    border-bottom: 1px solid #ffea00;
+}
+
+.main {
+	background: #272727
+}
+
+.card, .card-no-width {
+	color: #ffffff
+}
+
+.card-blog {
+	background: #272727
+}
+
+body {
+	color: #e5e5e5
+}
+
+.btn.btn-primary {
+	color: #000000
+}
+
+input[type=submit] {
+	color: #000000
+}
+
+.hestia-title {
+	color: #FFFFFF
+}
+
+.blog-post .section-blog-info .entry-categories a {
+	color: #000000
+}
+
+.pagination span.current {
+	color: #000000
+}
+.blog-post .media p {
+    color: #e5e5e5;
+}
+
+.tnp-subscription input.tnp-submit {
+	  background-color: #ffea00;
+		color: #000000
+}
+
+add_filter('newsletter_enqueue_style', '__return_false');
+
+/* ===== Shared bits ===== */
+:root { --aks-accent: #facc15; } /* Theme yellow accent */
+
+.aks-updates {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+.aks-updates h2 { margin: 0 0 .75rem; }
+
+/* Main "last updated" + count row */
+.aks-docs-updated-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+
+.aks-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.95em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.aks-pill-updated {
+  background: #3b0764;
+  color: #e5e7eb;
+  border: 1px solid #2f3540;
+}
+
+.aks-pill-count {
+  margin-left: auto;
+  background: #ffea00;
+  color: #18181b;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 1px 0 rgba(0,0,0,.06) inset;
+}
+
+@media (max-width: 480px) {
+  .aks-docs-updated-main {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .aks-pill-count { margin-left: 0; }
+}
+
+/* ===== Card (no class needed on the wrapper) ===== */
+.aks-updates .aks-docs-list > div {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 18px 0;
+  background: #18181b;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+/* Header row inside a card */
+.aks-updates .aks-docs-list > div .aks-doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Category chip */
+.aks-updates .aks-docs-list > div .aks-doc-category {
+  background: #3b0764;
+  color: #f9fafb;
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+/* Updated text inside cards */
+.aks-updates .aks-docs-list > div .aks-doc-updated {
+  color: #a1a1aa;
+  font-size: 0.85em;
+}
+
+/* Body sections */
+.aks-updates .aks-docs-list > div .aks-doc-summary,
+.aks-updates .aks-docs-list > div .aks-doc-impact {
+  margin: 10px 0;
+}
+
+/* Buttons row */
+.aks-updates .aks-docs-list > div .aks-doc-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Links/buttons */
+.aks-updates .aks-docs-list > div .aks-doc-link {
+  flex: 1 1 0;
+  text-align: center;
+  background: #9f62eb;
+  color: #18181b;
+  padding: 10px 0;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s;
+  min-width: 0;
+}
+.aks-updates .aks-docs-list > div .aks-doc-link-pr {
+  background: #9f62eb;
+  color: #18181b;
+}
+.aks-updates .aks-docs-list > div .aks-doc-link:hover,
+.aks-updates .aks-docs-list > div .aks-doc-link-pr:hover {
+  background: #c4b5fd;
+  color: #18181b;
+}
+
+@media (max-width: 600px) {
+  .aks-updates .aks-docs-list > div .aks-doc-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Lists inside cards */
+.aks-updates ul { margin: 8px 0 0 1rem; }
+.aks-updates li { margin: 4px 0; }
+.aks-updates small { color: #a1a1aa; margin-left: .5rem; }
+
+/* Optional category color helpers */
+.aks-cat-general { background: #27272a; color: #a3e635; }
+.aks-cat-ingress { background: #1e293b; color: #38bdf8; }
+.aks-cat-security { background: #2d2a32; color: #f472b6; }
+.aks-cat-upgrade { background: #312e81; color: #facc15; }
+.aks-cat-network { background: #0f766e; color: #fbbf24; }
+.aks-cat-other { background: #3b0764; color: #f9fafb; }
+
+/* ===== Tabs (hash/:target based) ===== */
+.aks-tabs-nav {
+  display: flex;
+  gap: .5rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+.aks-tab-link {
+  padding: .5rem 1rem;
+  font-weight: 600;
+  color: #4b5563;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+/* ===== Tabs (class-based) ===== */
+.aks-tabs-nav {
+  display: flex;
+  gap: .5rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.aks-tab-link {
+  padding: .5rem 1rem;
+  font-weight: 600;
+  color: #4b5563;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease-in-out;
+}
+
+.aks-tab-link:hover {
+  color: #9f62eb;
+}
+
+/* Active tab (keep your colors) */
+.aks-tab-link.active {
+  color: #9f62eb;              /* your purple */
+  border-bottom-color: #ffea00; /* your yellow underline */
+}
+
+/* Panels: hidden by default, fade in when active */
+.aks-tab-panel {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.aks-tab-panel.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Ensure default panel fades in on page load */
+body:not(:target) .aks-tab-panel.default {
+  opacity: 1;
+}
+
+/* Slide-up + fade for tab panels */
+.aks-tab-panel {
+  display: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  will-change: opacity, transform;
+}
+
+.aks-tab-panel.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aks-tab-panel {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ===== AKS Releases styling ===== */
+.aks-releases { margin-top: .5rem; }
+.aks-rel-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom: .75rem;
+}
+.aks-rel-header h2 { margin:0; }
+.aks-rel-count {
+  font-size:.9rem; color:#a1a1aa; background:#23272f; border-radius:999px; padding:4px 10px;
+}
+
+.aks-rel-card {
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:18px 20px;
+  margin:16px 0;
+  background:#0f1115; /* a hair darker than docs cards for contrast */
+  color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
+}
+.aks-rel-head {
+  display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:6px;
+}
+.aks-rel-title { display:flex; align-items:center; gap:8px; }
+.aks-rel-title h3 { margin:0; font-size:1.1rem; }
+.aks-rel-badge {
+  font-size:.75rem; font-weight:600; padding:2px 8px; border-radius:999px;
+  background:#312e81; color:#facc15; border:1px solid rgba(255,255,255,.08);
+}
+.aks-rel-link {
+  text-decoration:none; font-weight:600; padding:6px 10px; border-radius:8px;
+  background:#9f62eb; color:#18181b; transition:background .2s;
+}
+.aks-rel-link:hover { background:#c4b5fd; color:#18181b; }
+
+.aks-rel-meta {
+  display:flex; gap:10px; align-items:center; color:#a1a1aa; margin-bottom:8px;
+}
+.aks-rel-version {
+  background:#27272a; color:#f1f5f9; border-radius:6px; padding:2px 8px; font-weight:600;
+}
+.aks-rel-summary p { margin:0; color:#e5e7eb; line-height:1.5; }
+.aks-rel-empty { color:#a1a1aa; }
+
+.aks-rel-sec { margin-top:14px; }
+.aks-rel-sec-head { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.aks-rel-sec-head h4 { margin:0; font-size:0.95rem; font-weight:600; }
+.aks-rel-ico { font-size:16px; opacity:.9; }
+.aks-rel-list {
+    list-style: none; /* remove default browser bullets */
+    padding-left: 0;
+    margin: 0;
+}
+
+.aks-rel-list li {
+    position: relative;
+    margin: 6px 0;
+    color: #cbd5e1;
+    padding-left: 20px; /* space for bullet */
+}
+
+.aks-rel-list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #ffea00; /* bright yellow bullet */
+    font-size: 2em; /* make it a bit larger */
+    line-height: 1;
+}
+/* --- AKS Filter dropdowns --- */
+.aks-filterbar select{
+  font: inherit;
+  height: 40px;
+  padding: 0 .85rem;
+  border-radius: 10px;
+  border: 1px solid #2f3540;
+  background: #0f1115;
+  color: #e5e7eb;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+  
+  /* remove default arrow & add custom */
+  -webkit-appearance:none; appearance:none;
+  padding-right: 2.2rem; /* room for caret */
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23e5e7eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position: right .6rem center;
+}
+
+/* Hover + focus states */
+.aks-filterbar select:hover{
+  border-color:#3b3f4a;
+}
+.aks-filterbar select:focus-visible{
+  border-color: var(--aks-accent, #ffea00);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, .25);
+  background-color:#121318;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2318181b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+.aks-filterbar .aks-filter-search.form-control {
+  color: #e5e5e5;     /* typed text color */
+  font-size: 2rem; /* slightly larger text */
+}
+
+.aks-loadmore {
+  display: block;
+  margin: 1rem auto;      /* centers horizontally */
+  text-align: center;
+  color: #000000;         /* black text */
+}
+
+
+/* Clear filters button */
+.aks-clear{
+  height: 40px;
+  padding: 0 .9rem;
+  border-radius: 10px;
+  border: 1px solid var(--aks-accent, #ffea00);
+  background: transparent;
+  color: var(--aks-accent, #ffea00);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s, color .2s, opacity .2s;
+}
+.aks-clear:hover{ background: var(--aks-accent, #ffea00); color:#18181b; }
+.aks-clear:disabled{ opacity:.45; cursor: default; }
+
+/* Intro info box */
+.aks-intro {
+  background: #0f1115; /* dark card background */
+  border: 1px solid #2f3540;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0 2rem;
+  color: #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.aks-intro h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.4rem;
+  color: var(--aks-accent, #ffea00);
+}
+
+.aks-intro p {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.aks-intro ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.aks-intro li {
+  margin-bottom: 0.4rem;
+}
+
+.aks-intro strong {
+  color: #ffffff;
+}
+
+
+/* New badge on a specific menu item */
+.menu-new > a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem; /* space before badge */
+}
+
+.menu-new > a::after {
+  content: "NEW";
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: var(--aks-accent, #ffea00);
+  color: #18181b;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 1px 0 rgba(0,0,0,.06) inset;
+  transform: translateY(-1px); /* nudge to align nicely */
+}
+
+/* optional: subtle pulse for first month */
+@keyframes newpulse {
+  0% { box-shadow: 0 0 0 0 rgba(250,204,21,.35); }
+  70% { box-shadow: 0 0 0 8px rgba(250,204,21,0); }
+  100% { box-shadow: 0 0 0 0 rgba(250,204,21,0); }
+}
+.menu-new > a::after { animation: newpulse 2.4s ease-out infinite; }
+
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .menu-new > a::after { animation: none; }
+}
+
+.menu-new > a::after {
+  margin-left: 0.5rem; /* adds space between text and badge */
+}
+
+form[data-form-id="2"] .es-form-field-container .gjs-row input:not([type="submit"]),
+form[data-form-id="2"] .es-form-field-container .gjs-row select,
+form[data-form-id="2"] .es-form-field-container .gjs-row textarea {
+    border: none !important;
+}
+
+form[data-form-id="2"] .es-form-field-container {
+    align-items: baseline !important;
+}
+
+form[data-form-id="2"] .es-form-field-container .gjs-row input[type="submit"] {
+    border-radius: 8px !important;
+}
+form[data-form-id="2"] .es-form-field-container {
+    width: 100% !important;
+}
+
+form[data-form-id="2"] .es-form-field-container > * {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+}
+
+/* Make the block editor canvas readable without changing the front end */
+.editor-styles-wrapper,
+.editor-styles-wrapper p,
+.editor-styles-wrapper li {
+    color: #1e1e1e;
+}
+
+
+</style>
+<style>
+.aks-updates .aks-doc-summary { overflow-wrap: anywhere; }
+.aks-doc-changes, .aks-diff-dialog {
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-accent: #ffea00;
+  --cp-diff-scroll-track: #18181b;
+  --cp-diff-surface: #18181b;
+  --cp-diff-text: #f5f5f5;
+  --cp-diff-backdrop: rgba(0, 0, 0, 0.75);
+}
+.aks-doc-changes, .aks-updates .aks-doc-new-notice {
+  margin-top: 16px; border-top: 1px solid currentColor; padding-top: 12px; min-width: 0;
+}
+html[data-theme="dark"] .aks-doc-changes, .aks-diff-dialog { --cp-success: #4ade80; --cp-danger: #f87171; }
+.aks-doc-changes > summary { display: block; list-style: none; cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.aks-doc-changes > summary::-webkit-details-marker { display: none; }
+.aks-doc-changes > summary::before { content: ""; display: inline-block; width: 0.45em; height: 0.45em; margin-right: 0.65em; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); vertical-align: 0.1em; }
+.aks-doc-changes[open] > summary::before { transform: rotate(45deg); }
+.aks-doc-changes > summary .aks-diff-hide, .aks-doc-changes[open] > summary .aks-diff-show { display: none; }
+.aks-doc-changes[open] > summary .aks-diff-hide { display: inline; }
+.aks-doc-changes summary:focus-visible, .aks-diff-scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.aks-doc-changes .aks-diff-count { font-weight: 400; font-size: 0.85em; }
+.aks-doc-changes .aks-diff-help, .aks-doc-new-notice { font-size: 0.85em; margin: 12px 0; }
+.aks-updates .aks-doc-new-notice { margin-top: 16px !important; }
+.aks-diff-scroll { max-height: 24rem; overflow: auto; border: 1px solid currentColor; border-radius: 0.625rem; margin-top: 12px; scrollbar-width: thin; scrollbar-color: var(--cp-accent) var(--cp-diff-scroll-track); }
+.aks-diff-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.aks-diff-scroll::-webkit-scrollbar-track, .aks-diff-scroll::-webkit-scrollbar-corner { background: var(--cp-diff-scroll-track); }
+.aks-diff-scroll::-webkit-scrollbar-thumb { background: var(--cp-accent); border: 2px solid var(--cp-diff-scroll-track); border-radius: 8px; }
+.aks-diff-scroll pre, .aks-diff-scroll code { font: 13px/1.6 Consolas, "Courier New", Courier, monospace; color: inherit; background: inherit; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+.aks-diff-scroll pre { margin: 0; padding: 12px; }
+.aks-diff-scroll code > span { display: block; min-height: 1.6em; padding: 0 8px; border-left: 3px solid transparent; }
+.aks-diff-scroll .aks-diff-added { border-left-color: var(--cp-success); }
+.aks-diff-scroll .aks-diff-removed { border-left-color: var(--cp-danger); }
+.aks-diff-scroll .aks-diff-hunk { font-weight: 700; margin-top: 8px; }
+.aks-doc-changes > summary .aks-diff-expand, .aks-diff-dialog .aks-diff-close { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid currentColor; border-radius: 6px; background: transparent; color: var(--cp-accent); cursor: pointer; vertical-align: middle; flex-shrink: 0; }
+.aks-doc-changes > summary .aks-diff-expand { position: relative; width: 28px; height: 28px; margin-left: 8px; }
+.aks-doc-changes > summary .aks-diff-expand::after { content: ""; position: absolute; inset: -8px; }
+.aks-doc-changes:not([open]) > summary .aks-diff-expand, .aks-doc-changes > summary .aks-diff-expand[hidden] { display: none; }
+.aks-diff-expand svg, .aks-diff-close svg { width: 20px; height: 20px; pointer-events: none; }
+.aks-doc-changes > summary .aks-diff-expand svg { width: 16px; height: 16px; }
+.aks-doc-changes > summary .aks-diff-expand:hover, .aks-diff-dialog .aks-diff-close:hover { background: var(--cp-accent); color: var(--cp-diff-surface); }
+.aks-diff-expand:focus-visible, .aks-diff-close:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 3px; }
+html.aks-diff-modal-open { overflow: hidden; }
+dialog.aks-diff-dialog { box-sizing: border-box; width: calc(100% - 48px); max-width: 1200px; height: 88vh; height: 88dvh; max-height: calc(100% - 48px); margin: auto; padding: 24px; border: 1px solid var(--cp-accent); border-radius: 8px; background: var(--cp-diff-surface); color: var(--cp-diff-text); }
+dialog.aks-diff-dialog[open] { display: flex; flex-direction: column; gap: 16px; }
+.aks-diff-dialog::backdrop { background: var(--cp-diff-backdrop); }
+.aks-diff-dialog .aks-diff-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; min-width: 0; }
+.aks-diff-dialog .aks-diff-dialog-heading { min-width: 0; }
+.aks-diff-dialog h2 { margin: 0; font: inherit; font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--cp-accent); }
+.aks-diff-dialog .aks-diff-dialog-article { margin: 8px 0; overflow-wrap: anywhere; font-size: 16px; line-height: 1.4; }
+.aks-diff-dialog .aks-diff-dialog-count { margin: 0; font-size: 14px; }
+.aks-diff-dialog .aks-diff-scroll { flex: 1; min-height: 0; max-height: none; margin: 0; }
+@media (max-width: 600px) {
+  dialog.aks-diff-dialog { width: 100%; max-width: 100%; height: 100%; height: 100dvh; max-height: 100%; margin: 0; padding: 16px; border: 0; border-radius: 0; }
+}
+</style><style>.notice,.notice strong{color:var(--cp-text)!important}.notice{background:var(--cp-bg-elevated)!important}</style></head><body>
+<div class="notice"><strong>REAL SNAPSHOT PREVIEW - not published to WordPress</strong><br>Existing production markup and live-site tracker CSS. Signup and publishing are disabled; WordPress plugin injection is not run here.</div>
+<div class="aks-updates"><div class="aks-tabs"><div class="aks-tab-panel active" id="aks-tab-retirements"><h2>AKS and Azure Product Retirements</h2><p>Upcoming retirements and retirements from the past 12 months, plus notices without a confirmed date.</p><div class="aks-retirement-filters">
+  <label>Product<select data-retirement-filter="product"><option value="">All products</option><option value="AKS">AKS</option><option value="Azure Arc-enabled Kubernetes">Azure Arc-enabled Kubernetes</option><option value="Azure Container Registry">Azure Container Registry</option><option value="Azure Linux">Azure Linux</option></select></label>
+  <label>Retirement date<select data-retirement-filter="period"><option value="all">Upcoming and past 12 months</option><option value="upcoming">Upcoming</option><option value="90days">Next 90 days</option><option value="365days">Next 12 months</option><option value="recent">Past 12 months</option><option value="undated">Date not specified</option></select></label>
+  <label>Sort by<select data-retirement-filter="sort"><option value="priority">Upcoming first</option><option value="ascending">Retirement date: oldest first</option><option value="descending">Retirement date: newest first</option></select></label>
+  <label>Search<input type="search" data-retirement-filter="search" placeholder="Search notices" /></label>
+</div>
+<p class="aks-retirement-count" role="status" aria-live="polite">21 notices</p>
+<div class="aks-docs-list aks-retirement-list" data-today="2026-11-11"><div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2026-11-30" data-end-date="2026-11-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=555839" target="_blank" rel="noopener">Retirement: Managed NGINX Ingress with Application Routing Add-on Retiring November 2026</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Due within 30 days</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-urgent"><strong>Retirement:</strong> November 30, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-02-27</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-description">The upstream Ingress-NGINX project is being deprecated and will stop receiving updates after March 2026. Microsoft will continue providing critical security patches through 30 November 2026, after which the NGINX ingress controller will no longer be supported within the Application Routing add-on. Supported alternatives include Gateway API with Application Routing (in development), Application Gateway for Containers, and Istio Service Mesh. Learn more.</div></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=555839" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;,&quot;Azure Linux&quot;]" data-period="upcoming" data-date="2026-12-10" data-end-date="2026-12-10">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=571257" target="_blank" rel="noopener">Retirement: Azure Linux with OS Guard in Azure Kubernetes Service</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span> <span class="aks-retirement-product"><img class="aks-doc-icon" src="https://az-icons.com/images/azure-linux/icon.svg" alt="" loading="lazy" width="24" height="24" />Azure Linux</span></div>
+    <span class="aks-retirement-status">Due within 30 days</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-urgent"><strong>Retirement:</strong> December 10, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-09-11</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Support for Azure Linux with OS Guard in Azure Kubernetes Service will end on December 10, 2026. Azure Container Linux is the replacement for Azure Linux with OS Guard (preview). Starting on December 10, 2026:
+- Users won’t be able to create new Azure Linux with OS Guard (preview) node pools.
+- AKS won’t produce new node images for affected node pools.
+- Existing node pools won’t receive security patches.
+
+On March 10, 2027, AKS will remove the Azure Linux with OS Guard node images. After the images are removed, scaling and remediation operations, including reimage and redeploy operations,...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Support for Azure Linux with OS Guard in Azure Kubernetes Service will end on December 10, 2026. Azure Container Linux is the replacement for Azure Linux with OS Guard (preview). Starting on December 10, 2026:
+- Users won’t be able to create new Azure Linux with OS Guard (preview) node pools.
+- AKS won’t produce new node images for affected node pools.
+- Existing node pools won’t receive security patches.
+
+On March 10, 2027, AKS will remove the Azure Linux with OS Guard node images. After the images are removed, scaling and remediation operations, including reimage and redeploy operations, will fail for affected node pools. You can use either of the following migration options:
+- Migrate an existing Azure Linux with OS Guard node pool in place by following the Migrate nodes to Azure Container Linux for Azure Kubernetes Service documentation. This operation preforms a standard node image upgrade.
+- Alternatively, create a new Azure Container Linux node pool, migrate and validate workloads, and then delete the Azure Linux with OS Guard node pool. Follow Add Azure Container Linux node pools and remove existing node pools.
+
+For other available options, see the AKS node operating system. If you have questions, get answers from community experts in Microsoft Q&amp;A or AKS GitHub Repository. If you have a support plan and need technical help, create a support request.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=571257" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-03-15" data-end-date="2027-03-15">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=ws2022-retirement-aks" target="_blank" rel="noopener">Retirement notice: Windows Server 2022 will retire with k8s 1.34 in March 2027</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> March 15, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2024-03-29</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">On 15 March 2027, Windows Server 2022 will be retired when Kubernetes 1.34 reaches the end of platform support. You will not be able to create new Windows Server 2022 node pools on Kubernetes 1.35 and above. We encourage you to make the switch before 15 March 2027 to gain the richer benefits of Windows Server 2025 or Windows Server Annual Channel. These new Windows OS versions will be supported on AKS before Windows Server 2022 is retired. For more updates, see our AKS public roadmap.
+
+Required action
+
+From now through 14 March 2027, you can continue to use Windows Server 2022 on Kubernetes...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">On 15 March 2027, Windows Server 2022 will be retired when Kubernetes 1.34 reaches the end of platform support. You will not be able to create new Windows Server 2022 node pools on Kubernetes 1.35 and above. We encourage you to make the switch before 15 March 2027 to gain the richer benefits of Windows Server 2025 or Windows Server Annual Channel. These new Windows OS versions will be supported on AKS before Windows Server 2022 is retired. For more updates, see our AKS public roadmap.
+
+Required action
+
+From now through 14 March 2027, you can continue to use Windows Server 2022 on Kubernetes version 1.34 and below. After 15 March 2027, Windows Server 2022 won't be supported. You won’t be able to create Windows Server 2022 node pools on Kubernetes 1.35 and above. Follow the detailed steps in our documentation to upgrade to a supported Windows Server version (Windows Server 2025 or Windows Server Annual Channel) by 15 March 2027.
+
+Help and Support
+
+If you have questions, get answers from community experts in Microsoft Q&amp;A. If you have a support plan and you need technical help, please create a support request.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=ws2022-retirement-aks" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-03-17" data-end-date="2027-03-17">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=485795" target="_blank" rel="noopener">Retirement: Ubuntu 20.04 Node Pools in AKS </a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> March 17, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-03-28</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Ubuntu 20.04 on Azure Kubernetes Service will be retired on March 17, 2027. Please transition to a supported Ubuntu version by that date.
+
+Ubuntu 20.04 has been replaced by newer supported versions, including Ubuntu 22.04 and Ubuntu 24.04. We encourage you to transition to Ubuntu 22.04+ before the retirement date.
+
+Starting on March 17, 2027, AKS will no longer create new node images for Ubuntu 20.04 or provide security updates. Existing node images will be deleted. Your node pools will be unsupported and you will no longer be able to scale.
+
+Required action:
+
+If you’re currently using Ubuntu...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Ubuntu 20.04 on Azure Kubernetes Service will be retired on March 17, 2027. Please transition to a supported Ubuntu version by that date.
+
+Ubuntu 20.04 has been replaced by newer supported versions, including Ubuntu 22.04 and Ubuntu 24.04. We encourage you to transition to Ubuntu 22.04+ before the retirement date.
+
+Starting on March 17, 2027, AKS will no longer create new node images for Ubuntu 20.04 or provide security updates. Existing node images will be deleted. Your node pools will be unsupported and you will no longer be able to scale.
+
+Required action:
+
+If you’re currently using Ubuntu 20.04 with a Confidential VM (CVM) on AKS, follow our instructions to upgrade your Kubernetes version to 1.33+ where Ubuntu 24.04 will be the default Ubuntu version for CVM workloads.
+
+If you’re currently using Ubuntu 20.04 with Federal Information Process Standard (FIPS) on AKS, follow our instructions to upgrade your Kubernetes version to 1.34+ where Ubuntu 22.04 will be the default Ubuntu version for FIPS workloads.
+
+To avoid service disruptions, scaling restrictions, and remain supported, please follow our instructions to upgrade your Kubernetes version to 1.34+ by March 17, 2027. For more information on this retirement, see AKS GitHub.
+
+More Information:
+
+If you have questions, get answers from community experts in Microsoft Q&amp;A. If you have a support plan and you need technical help, create a support request.
+
+Learn more.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=485795" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-03-31" data-end-date="2027-03-31">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=550519" target="_blank" rel="noopener">Retirement: Deprecation of sidecar for remote-write for Azure Monitor managed service for Prometheus</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> March 31, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-03-30</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">On March 31, 2027 Azure Monitor will be deprecating the sidecar for remote-write of Prometheus metrics to Azure Monitor Workspace. This is as part of our ongoing efforts to improve reliability and reduce complexity.
+
+We recommend configuring your self-hosted Prometheus or Prometheus Operator to remote-write directly to Azure Monitor Workspace. All authentication methods are supported in the Prometheus remote-write configuration, and direct remote-write is fully compatible with the Prometheus Operator. You can find detailed configuration guidance in the official documentation. This approach...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">On March 31, 2027 Azure Monitor will be deprecating the sidecar for remote-write of Prometheus metrics to Azure Monitor Workspace. This is as part of our ongoing efforts to improve reliability and reduce complexity.
+
+We recommend configuring your self-hosted Prometheus or Prometheus Operator to remote-write directly to Azure Monitor Workspace. All authentication methods are supported in the Prometheus remote-write configuration, and direct remote-write is fully compatible with the Prometheus Operator. You can find detailed configuration guidance in the official documentation. This approach removes the need for the sidecar and simplifies your setup.
+
+We encourage you to transition to direct Prometheus remote-write as soon as possible to take advantage of the improved experience and ensure uninterrupted service.
+
+If you have any questions or need assistance during this transition, please feel free to contact ciprometheus@microsoft.com with your name, company name, email contact and subscription IDs.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=550519" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-06-30" data-end-date="2027-06-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=557928" target="_blank" rel="noopener">Retirement: Azure Kubernetes Service support for Ubuntu 22.04 </a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> June 30, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-04-16</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">On June 30, 2027, we'll retire Ubuntu 22.04 on Azure Kubernetes Service. To avoid disruptions, transition to Ubuntu 24.04 or later by that date. Newer supported versions include kernel updates and security improvements.
+
+Until June 30, 2027, you can continue to use Ubuntu 22.04 on AKS without disruption. If you don't migrate by June 30, 2027, you won't be able to create new node pools, AKS won't produce new node images, and you'll no longer receive security patches for existing node pools. If you'd like to enable long-term support with Kubernetes version 1.33+, first update your node pools to...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">On June 30, 2027, we'll retire Ubuntu 22.04 on Azure Kubernetes Service. To avoid disruptions, transition to Ubuntu 24.04 or later by that date. Newer supported versions include kernel updates and security improvements.
+
+Until June 30, 2027, you can continue to use Ubuntu 22.04 on AKS without disruption. If you don't migrate by June 30, 2027, you won't be able to create new node pools, AKS won't produce new node images, and you'll no longer receive security patches for existing node pools. If you'd like to enable long-term support with Kubernetes version 1.33+, first update your node pools to Ubuntu 24.04.
+
+On April 30, 2028 AKS will remove Ubuntu 22.04 node images and existing code, causing scaling and remediation operations to fail.
+
+Migration Options:
+
+- Default Operating System SKU (OSSku): If you're using 'Ubuntu,' you'll automatically migrate to Ubuntu 24.04 when you upgrade your Kubernetes version to 1.35 or later.
+
+- Versioned OSSku: If you're using 'Ubuntu2204,' update your OSSku to 'Ubuntu' for Kubernetes 1.35 or later, or 'Ubuntu2404' for Kubernetes 1.32 or later.
+
+Learn more:
+
+- Get answers from community experts in Microsoft Q&amp;A or AKS GitHub.
+
+- For support plan and need technical help, follow the documentation
+
+- Find out about service retirements that may impact your resources in the Azure Retirement Workbook. Retirements may not be visible in the workbook for up to two weeks after being announced.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=557928" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-09-30" data-end-date="2027-09-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=open-service-mesh-add-on-for-aks-will-be-retired-on-september-30-2027" target="_blank" rel="noopener">Retirement: Open Service Mesh add-on for AKS will be retired on September 30, 2027</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> September 30, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2024-09-26</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Following the archival of the Open Service Mesh project, the Istio service mesh add-on was released for Azure Kubernetes Service (AKS) and is Generally Available since February 28,2024.
+
+Due to the upstream archival of open-source Open Service Mesh, the Open Service Mesh add-on for AKS will no longer receive any new minor version releases or new features and will be retired on September 30, 2027. Security patch updates will be provided up until September 30, 2027.
+
+You can continue to use the existing Open Service Mesh add-on for Azure Kubernetes Service (AKS) until September 30, 2027 or...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Following the archival of the Open Service Mesh project, the Istio service mesh add-on was released for Azure Kubernetes Service (AKS) and is Generally Available since February 28,2024.
+
+Due to the upstream archival of open-source Open Service Mesh, the Open Service Mesh add-on for AKS will no longer receive any new minor version releases or new features and will be retired on September 30, 2027. Security patch updates will be provided up until September 30, 2027.
+
+You can continue to use the existing Open Service Mesh add-on for Azure Kubernetes Service (AKS) until September 30, 2027 or transition to Istio add-on for Azure Kubernetes Service (AKS) before that time. Migration guidance from Open Service Mesh (OSM) configurations to Istio can be found here. There are no changes in pricing between the two add-ons.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=open-service-mesh-add-on-for-aks-will-be-retired-on-september-30-2027" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-09-30" data-end-date="2027-09-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=open-service-mesh-extension-for-aks-retirement" target="_blank" rel="noopener">Retirement: Open Service Mesh extension for Arc-enabled Kubernetes will be retired on September 30, 2027</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> September 30, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2024-09-26</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-description">Following the archival of the upstream open-source Open Service Mesh project in upstream open source, the Open Service Mesh extension for Azure Arc-enabled Kubernetes will no longer receive any new minor version releases or new features and will be retired on 30 September 30, 2027. Security patch updates will be provided up until September 30, 2027.
+
+You can continue to use the existing Open Service Mesh extension for Azure Arc-enabled Kubernetes until September 30, 2027 or transition to an open-source alternative such as Istio before that time. Migration guidance from Open Service Mesh (OSM) configurations to Istio can be found here.</div></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=open-service-mesh-extension-for-aks-retirement" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2027-09-30" data-end-date="2027-09-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=570232" target="_blank" rel="noopener">Retirement: Pod name dimension in AKS pod platform metrics</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> September 30, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-10-06</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Beginning September 30, 2027, support for the pod name dimension on the following Azure Monitor platform metrics is retiring, and these metrics are transitioning to aggregate pod counters:
+
+- Number of pods by phase (kube_pod_status_phase)
+- Number of pods in Ready state (kube_pod_status_ready)
+
+After this change:
+- Metric names remain unchanged.
+- Aggregate pod counts remain available.
+- Namespace-level monitoring scenarios remain supported.
+- The pod name dimension will no longer be available for filtering, grouping, or alerting.
+
+During the deprecation period, AKS will maintain both the...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Beginning September 30, 2027, support for the pod name dimension on the following Azure Monitor platform metrics is retiring, and these metrics are transitioning to aggregate pod counters:
+
+- Number of pods by phase (kube_pod_status_phase)
+- Number of pods in Ready state (kube_pod_status_ready)
+
+After this change:
+- Metric names remain unchanged.
+- Aggregate pod counts remain available.
+- Namespace-level monitoring scenarios remain supported.
+- The pod name dimension will no longer be available for filtering, grouping, or alerting.
+
+During the deprecation period, AKS will maintain both the existing and the new aggregate implementations. Both are populated with data, existing monitoring experiences will continue to function, and you will have at least one year of historical data in the aggregate implementation before retirement. You may be affected if any dashboard, workbook, alert, automation, or monitoring workflow:
+
+- Uses kube_pod_status_phase or kube_pod_status_ready and filters on the pod name dimension.
+- Splits or groups results by the pod name dimension.
+
+Recommended action:
+
+- If you use aggregate pod counts, no action is required.
+- If you use the pod name dimension, update dashboards, alerts, workbooks, and automation before September 30, 2027. For pod-level monitoring and troubleshooting, we recommend using Azure Monitor Managed Prometheus and Kubernetes-native pod metrics.
+
+Help and support If you have questions, get answers from community experts in Microsoft Q&amp;A.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=570232" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;Azure Arc-enabled Kubernetes&quot;]" data-period="upcoming" data-date="2027-10-09" data-end-date="2027-10-09">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=570313" target="_blank" rel="noopener">Retirement: Azure Key Vault Secrets Provider Extension for Azure Arc enabled Kubernetes clusters</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://az-icons.com/images/arc-kubernetes/icon.svg" alt="" loading="lazy" width="24" height="24" />Azure Arc-enabled Kubernetes</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> October 9, 2027</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-10-09</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">The Azure Key Vault Secrets Provider Extension for Azure Arc-enabled Kubernetes will be retired on October 9, 2027.
+
+Customers currently using the extension should plan to migrate to the Azure Key Vault Secret Store Extension before the retirement date. The Azure Key Vault Secret Store Extension provides equivalent functionality for accessing and synchronizing secrets from Azure Key Vault for workloads running on Azure Arc-enabled Kubernetes clusters. In addition, the Azure Key Vault Secret Store Extension includes enhancements such as support for offline access to secrets and authentication...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">The Azure Key Vault Secrets Provider Extension for Azure Arc-enabled Kubernetes will be retired on October 9, 2027.
+
+Customers currently using the extension should plan to migrate to the Azure Key Vault Secret Store Extension before the retirement date. The Azure Key Vault Secret Store Extension provides equivalent functionality for accessing and synchronizing secrets from Azure Key Vault for workloads running on Azure Arc-enabled Kubernetes clusters. In addition, the Azure Key Vault Secret Store Extension includes enhancements such as support for offline access to secrets and authentication using workload identity federation, enabling applications to access Azure Key Vault without storing long-lived credentials on the cluster.
+
+After retirement, the Azure Key Vault Secrets Provider Extension will no longer receive new features, bug fixes, security updates, or technical support.
+
+Migration guidance is available to help customers transition their workloads and configurations to the Azure Key Vault Secret Store Extension ahead of retirement.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=570313" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;Azure Container Registry&quot;]" data-period="upcoming" data-date="2028-03-31" data-end-date="2028-03-31">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=485241" target="_blank" rel="noopener">Retirement: Docker Content Trust on March 31, 2028 – Replaced by the Notary Project and Azure Key Vault</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/container-registry.svg" alt="" loading="lazy" width="24" height="24" />Azure Container Registry</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> March 31, 2028</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-03-26</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Azure Container Registry (ACR) implements Docker Content Trust (DCT), allowing image publishers to sign their images and image consumers to verify that the images they pull are signed. With advancements in technology, Docker Content Trust no longer meets the requirements of modern supply chain security for containers. As a result, Docker Content Trust will be deprecated and no longer available in ACR after March 31, 2028. If you currently use Docker Content Trust, you should transition to the Notary Project ecosystem, including their open-source supply chain tool, Notation.
+
+How does this...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Azure Container Registry (ACR) implements Docker Content Trust (DCT), allowing image publishers to sign their images and image consumers to verify that the images they pull are signed. With advancements in technology, Docker Content Trust no longer meets the requirements of modern supply chain security for containers. As a result, Docker Content Trust will be deprecated and no longer available in ACR after March 31, 2028. If you currently use Docker Content Trust, you should transition to the Notary Project ecosystem, including their open-source supply chain tool, Notation.
+
+How does this affect me?
+
+- Starting September 30, 2025, customers will no longer be able to enable Docker Content Trust on Azure Container Registry.
+- Data stored in Azure Container Registry for signing and verifying signatures with Docker Content Trust will be permanently deleted on March 31, 2028.
+- Docker Content Trust function will be completely removed from Azure Container Registry on March 31, 2028.
+
+Required Action
+
+Start your transition to Notary Project today and enhance the security and trust of your container ecosystem. Use the following articles to get started.
+
+Signing:
+
+- Use AKV with self-signed certificates
+- Use AKV with CA-issued certificates
+- Sign in ADO pipelines
+- Sign in GitHub workflows
+
+Verification:
+
+- Verify in ADO pipelines
+- Verify in GitHub workflows
+- Verify on AKS</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=485241" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2028-03-31" data-end-date="2028-03-31">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=485172" target="_blank" rel="noopener">Retirement: Kubenet Networking for Azure Kubernetes Service to Be Retired on March 31, 2028</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> March 31, 2028</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-03-18</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-description">On March 31, 2028, kubenet networking for Azure Kubernetes Service (AKS) will be retired.
+
+To avoid service disruptions, you'll need to follow these instructions to upgrade to Azure Container Networking Interface (CNI) overlay before that date, when workloads running on kubenet for AKS will no longer be supported.
+
+Azure CNI overlay provides the same IP address overlay architecture as kubenet, plus new capabilities for increased scalability. We encourage you to migrate to Azure CNI overlay prior to the retirement date to take advantage of the added benefits.</div></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=485172" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="upcoming" data-date="2028-09-30" data-end-date="2028-09-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=500268" target="_blank" rel="noopener">Retirement: Azure Network Policy Manager (NPM) for Linux nodes on AKS to Be Retired by September 30, 2028</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Upcoming retirement</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-upcoming"><strong>Retirement:</strong> September 30, 2028</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-10-01</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">On September 30, 2028, we’ll end support for Azure Network Policy Manager (NPM) on Linux nodes in AKS. To avoid disruptions, migrate AKS clusters running Linux nodes from NPM to Cilium Network Policy by that date.
+
+Transitioning to Cilium Network Policy for AKS clusters using Azure CNI powered by Cilium provides significant improvements, including:
+
+- Robust support for Kubernetes-native policies.
+
+- Powerful extended features such as Layer 7 policy, and Fully Qualified Domain Name filtering.
+
+- eBPF-based architecture for packet processing, offering better performance, scalability and...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">On September 30, 2028, we’ll end support for Azure Network Policy Manager (NPM) on Linux nodes in AKS. To avoid disruptions, migrate AKS clusters running Linux nodes from NPM to Cilium Network Policy by that date.
+
+Transitioning to Cilium Network Policy for AKS clusters using Azure CNI powered by Cilium provides significant improvements, including:
+
+- Robust support for Kubernetes-native policies.
+
+- Powerful extended features such as Layer 7 policy, and Fully Qualified Domain Name filtering.
+
+- eBPF-based architecture for packet processing, offering better performance, scalability and security.
+
+To view your impacted resources, go to the Azure Resource Graph and click Run query.
+
+Help and support
+
+If you have questions, get answers from community experts in Microsoft Q&amp;A. If you have a support plan and need technical help, please submit a support request.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=500268" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-10-01" data-end-date="2026-10-31">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=499906" target="_blank" rel="noopener">Retirement: Windows Server 2022 on Azure Kubernetes Service enabled by Azure Arc</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> October 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-11-14</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-description">Announcing the retirement of Windows Server 2022 on Azure Kubernetes Service enabled by Azure Arc in October 2026.</div></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=499906" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-09-30" data-end-date="2026-09-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=500273" target="_blank" rel="noopener">Retirement: Azure Network Policy Manager (NPM) for Windows nodes on AKS to Be Retired by September 30, 2026</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> September 30, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-10-07</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">On September 30, 2026, we’ll end support for Azure Network Policy Manager (NPM) on Windows nodes in AKS. To ensure your setup continues to receive support, security updates, and deployment compatibility, please explore alternative options, such as using Network Security Groups (NSGs) on the node level or open-source tools like Project Calico by that date.
+
+The existing experience that Azure Network Policy Manager for windows nodes offers will no longer be supported starting September 30, 2026.
+
+To view your impacted resources, go to this Azure Resource Graph query and click Run query.
+
+Help...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">On September 30, 2026, we’ll end support for Azure Network Policy Manager (NPM) on Windows nodes in AKS. To ensure your setup continues to receive support, security updates, and deployment compatibility, please explore alternative options, such as using Network Security Groups (NSGs) on the node level or open-source tools like Project Calico by that date.
+
+The existing experience that Azure Network Policy Manager for windows nodes offers will no longer be supported starting September 30, 2026.
+
+To view your impacted resources, go to this Azure Resource Graph query and click Run query.
+
+Help and support
+
+If you have questions, get answers from community experts in Microsoft Q&amp;A. If you have a support plan and need technical help, please submit a support request.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=500273" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-06-08" data-end-date="2026-06-08">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=557929" target="_blank" rel="noopener">Retirement: Flatcar Container Linux for AKS (preview) </a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> June 8, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-03-16</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Azure Kubernetes Service support for Flatcar Container Linux for AKS (preview) will be retired on June 8, 2026, transition to a supported alternative by that date.
+
+From now to June 7, 2026, you can continue to use Flatcar Container Linux for AKS (preview) without disruption. Starting on June 8, 2026, AKS will no longer support Flatcar Container Linux for AKS (preview). You will no longer be able to create new node pools. AKS will not produce new node images and will no longer provide security patches for existing node pools. AKS will remove Flatcar Container Linux for AKS (preview) node...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Azure Kubernetes Service support for Flatcar Container Linux for AKS (preview) will be retired on June 8, 2026, transition to a supported alternative by that date.
+
+From now to June 7, 2026, you can continue to use Flatcar Container Linux for AKS (preview) without disruption. Starting on June 8, 2026, AKS will no longer support Flatcar Container Linux for AKS (preview). You will no longer be able to create new node pools. AKS will not produce new node images and will no longer provide security patches for existing node pools. AKS will remove Flatcar Container Linux for AKS (preview) node images and existing code on September 8, 2026, meaning that scaling and remediation operations will fail.
+
+Required Action:
+
+- Use Ubuntu if you're looking for a portable, general purpose OS with cross-cloud support.
+- Use Azure Linux if you're looking for a general purpose OS that is Microsoft-created and optimized for Azure.
+
+Learn more.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=557929" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-05-15" data-end-date="2026-05-15">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=557224" target="_blank" rel="noopener">Retirement: Windows Server Annual Channel (preview) </a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> May 15, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2026-02-23</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Windows Server Annual Channel (Preview) on AKS will be retired on May 15, 2026, please transition to Long Term Servicing Channel (LTSC) by that date. We encourage you to transition to Long Term Servicing Channel (LTSC) prior to the retirement date to experience the benefits of LTSC including longer support cycles and increased stability.
+
+From now to May 15, 2026 you can continue to use Windows Server Annual Channel (Preview) without disruption. On May 15, 2026, AKS will no longer produce new Windows Server Annual Channel node images or provide security patches. You will not be able to create...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Windows Server Annual Channel (Preview) on AKS will be retired on May 15, 2026, please transition to Long Term Servicing Channel (LTSC) by that date. We encourage you to transition to Long Term Servicing Channel (LTSC) prior to the retirement date to experience the benefits of LTSC including longer support cycles and increased stability.
+
+From now to May 15, 2026 you can continue to use Windows Server Annual Channel (Preview) without disruption. On May 15, 2026, AKS will no longer produce new Windows Server Annual Channel node images or provide security patches. You will not be able to create new node pools with Windows Server Annual Channel. On May 15, 2027, AKS will remove all existing Windows Annual Channel node images, which will cause scaling and remediation (reimage and redeploy) operations to fail.
+
+Required Action: Customers must migrate their Windows Server Annual Channel node pools to Long Term Servicing Channel (LTSC) by following the migration guide.
+
+Learn more:
+
+- Questions for community experts? Get answers in Microsoft Q&amp;A or AKS GitHub issue.
+- Have a support plan and need technical help? Create a support request.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=557224" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-03-16" data-end-date="2026-03-16">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=500294" target="_blank" rel="noopener">Retirement: Azure Kubernetes Service on VMware will be retired on March 16, 2026 - Replace with Azure Kubernetes Service on Azure Local </a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> March 16, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-09-16</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Azure Kubernetes Service on VMware (preview) will be retired on March 16, 2026. Please transition to a supported Azure Kubernetes Service on Azure Local by that date if needed.
+
+We encourage you to transition to Azure Kubernetes Service on Azure Local before March 16, 2026, to benefit from its enhanced capabilities.
+
+After March 16, 2026, you will no longer be able to deploy or receive support for Azure Kubernetes Service on VMware.
+
+More information
+
+If you have additional questions, please contact us through the AKS enabled by Azure Arc GitHub repository.
+
+Learn more about service...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Azure Kubernetes Service on VMware (preview) will be retired on March 16, 2026. Please transition to a supported Azure Kubernetes Service on Azure Local by that date if needed.
+
+We encourage you to transition to Azure Kubernetes Service on Azure Local before March 16, 2026, to benefit from its enhanced capabilities.
+
+After March 16, 2026, you will no longer be able to deploy or receive support for Azure Kubernetes Service on VMware.
+
+More information
+
+If you have additional questions, please contact us through the AKS enabled by Azure Arc GitHub repository.
+
+Learn more about service retirements that may impact your resources in the Azure Retirement Workbook. Please note that retirements may not be visible in the workbook for up to two weeks after being announced.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=500294" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-03-02" data-end-date="2026-03-02">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=502044" target="_blank" rel="noopener">Retirement: Confidential Containers preview on AKS is Closing Down</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> March 2, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-10-16</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-description">The public preview of Confidential Containers on AKS will be shutting down.
+
+This feature has been available in preview since 2023, and as part of our commitment to delivering secure and reliable services, we are streamlining our confidential computing offerings to focus on supported and production-ready solutions. What this means for you:
+
+- Existing node pools using KataCcIsolation will continue to operate until March 2, 2026.
+
+- After March 2, 2026, Confidential Container functionality will no longer be supported, and new node pools using this runtime cannot be created.
+
+Please refer to the Confidential Containers preview page for more details, or raise an issue in the AKS GitHub.</div></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=502044" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2026-03-01" data-end-date="2026-03-01">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=aks-will-stop-support-for-windows-server-2019-on-march-1-2026" target="_blank" rel="noopener">AKS will stop support for Windows Server 2019 on March 1 2026</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> March 1, 2026</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2023-03-24</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-description">Kubernetes workloads will no longer be supported with Windows Server 2019 when Kubernetes version 1.32 reaches End of Life (EOL) on March 1, 2026.
+
+Windows Server 2019 will not be available in Kubernetes 1.33 and higher.
+
+Follow the detailed steps in our documentation to transition to Windows Server 2022.</div></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=aks-will-stop-support-for-windows-server-2019-on-march-1-2026" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div>
+<div class="aks-retirement-card" data-products="[&quot;AKS&quot;]" data-period="recent" data-date="2025-11-30" data-end-date="2025-11-30">
+  <h2 class="aks-doc-title"><a href="https://azure.microsoft.com/updates?id=500645" target="_blank" rel="noopener">Retirement: Azure Linux 2.0 on AKS </a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products"><span class="aks-retirement-product"><img class="aks-doc-icon" src="https://learn.microsoft.com/en-gb/azure/media/index/kubernetes-services.svg" alt="" loading="lazy" width="24" height="24" />AKS</span></div>
+    <span class="aks-retirement-status">Retired</span>
+  </div>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-expired"><strong>Retirement:</strong> November 30, 2025</span>
+    <span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: 2025-09-15</span>
+  </div>
+  <div class="aks-doc-summary"><div class="aks-retirement-excerpt aks-retirement-description">Azure Linux 2.0 on AKS will be retired on November 30, 2025, please transition to Azure Linux 3.0 by that date.
+
+Azure Linux 2.0 has been replaced by the newer supported version Azure Linux 3.0. We encourage you to transition to Azure Linux 3.0 prior to the retirement date to experience the capabilities of Azure Linux 3.0 including kernel updates and security improvements.
+
+From now to November 30, 2025, you can continue to use Azure Linux 2.0 without disruption. On November 30, 2025, Azure Linux 2.0 will no longer be supported on AKS; AKS will no longer create new node pools, produce new node...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">Azure Linux 2.0 on AKS will be retired on November 30, 2025, please transition to Azure Linux 3.0 by that date.
+
+Azure Linux 2.0 has been replaced by the newer supported version Azure Linux 3.0. We encourage you to transition to Azure Linux 3.0 prior to the retirement date to experience the capabilities of Azure Linux 3.0 including kernel updates and security improvements.
+
+From now to November 30, 2025, you can continue to use Azure Linux 2.0 without disruption. On November 30, 2025, Azure Linux 2.0 will no longer be supported on AKS; AKS will no longer create new node pools, produce new node images, or provide security updates for Azure Linux 2.0 after that date.
+
+On March 31, 2026, Azure Linux 2.0 node images will be removed. This will cause scaling operations to fail.
+
+Customers can transition to Azure Linux 3.0 by taking one of the following actions:
+
+- If you’re currently using Azure Linux 2.0 on AKS, please follow our instructions to upgrade your Kubernetes version to 1.32+.
+- Alternately, starting Kubernetes version 1.28+ you can perform an in-place node pool update from --os-sku AzureLinux to --os-sku AzureLinux3, enabling you to migrate existing node pools from Azure Linux 2.0 to 3.0 while remaining on the same k8s version. Your node pool will automatically reimage to the equivalent Azure Linux 3.0 node image. See documentation here.
+
+To avoid service disruptions, please follow our instructions to migrate to Azure Linux 3.0 by November 30, 2025.</div>
+</details></div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="https://azure.microsoft.com/updates?id=500645" target="_blank" rel="noopener">View Microsoft notice</a></div>
+</div></div>
+<p class="aks-retirement-empty" hidden>No retirement notices match these filters.</p><style>
+#aks-tab-retirements {
+  --cp-retirement-accent: #ffea00;
+  --cp-retirement-danger-bg: #451a1a; --cp-retirement-danger-text: #fca5a5; --cp-retirement-danger-border: #f87171;
+  --cp-retirement-warning-bg: #422006; --cp-retirement-warning-text: #fde047; --cp-retirement-warning-border: #ffea00;
+  --cp-retirement-date-bg: #3b0764; --cp-retirement-date-text: #ffea00; --cp-retirement-date-border: #9f62eb;
+  --cp-retirement-notice-bg: #27272a; --cp-retirement-notice-text: #d8b4fe; --cp-retirement-notice-border: #9f62eb;
+}
+#aks-tab-retirements .aks-retirement-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 20px 0 12px; }
+#aks-tab-retirements .aks-retirement-filters label { display: flex; flex: 1 1 240px; flex-direction: column; gap: 6px; min-width: 0; font-size: 14px; font-weight: 600; }
+#aks-tab-retirements .aks-retirement-filters select, #aks-tab-retirements .aks-retirement-filters input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 8px; border: 1px solid currentColor; border-radius: 6px; background: var(--cp-surface, Canvas); color: var(--cp-text, CanvasText); font: inherit; }
+#aks-tab-retirements .aks-retirement-card { border: 1px solid currentColor; border-radius: 8px; padding: 24px; margin: 16px 0; min-width: 0; }
+#aks-tab-retirements .aks-doc-title { margin: 0 0 16px; font-size: 24px; line-height: 1.35; overflow-wrap: anywhere; }
+#aks-tab-retirements .aks-retirement-meta { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 16px; }
+#aks-tab-retirements .aks-retirement-products { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
+#aks-tab-retirements .aks-retirement-product { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+#aks-tab-retirements .aks-doc-icon { width: 24px; height: 24px; flex-shrink: 0; object-fit: contain; }
+#aks-tab-retirements .aks-retirement-status { margin-left: auto; text-align: right; font-size: 14px; font-weight: 700; }
+#aks-tab-retirements .aks-retirement-card:has(.aks-retirement-expired, .aks-retirement-urgent) .aks-retirement-status { color: var(--cp-retirement-danger-border); }
+#aks-tab-retirements .aks-retirement-card:has(.aks-retirement-approaching) .aks-retirement-status { color: var(--cp-retirement-warning-text); }
+#aks-tab-retirements .aks-retirement-pill { display: inline-block; padding: 5px 10px; border: 1px solid var(--cp-retirement-date-border); border-radius: 999px; background: var(--cp-retirement-date-bg); color: var(--cp-retirement-date-text); font-size: 13px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+#aks-tab-retirements .aks-retirement-expired, #aks-tab-retirements .aks-retirement-urgent { background: var(--cp-retirement-danger-bg); color: var(--cp-retirement-danger-text); border-color: var(--cp-retirement-danger-border); }
+#aks-tab-retirements .aks-retirement-approaching { background: var(--cp-retirement-warning-bg); color: var(--cp-retirement-warning-text); border-color: var(--cp-retirement-warning-border); }
+#aks-tab-retirements .aks-retirement-notice-date, #aks-tab-retirements .aks-retirement-undated { background: var(--cp-retirement-notice-bg); color: var(--cp-retirement-notice-text); border-color: var(--cp-retirement-notice-border); }
+#aks-tab-retirements .aks-retirement-description { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.6; margin-bottom: 20px; }
+#aks-tab-retirements .aks-retirement-details > summary { cursor: pointer; color: var(--cp-retirement-accent); font-weight: 600; margin-bottom: 12px; }
+#aks-tab-retirements .aks-retirement-details .aks-retirement-read-less, #aks-tab-retirements .aks-retirement-details[open] .aks-retirement-read-more { display: none; }
+#aks-tab-retirements .aks-retirement-details[open] .aks-retirement-read-less { display: inline; }
+#aks-tab-retirements .aks-doc-summary:has(> .aks-retirement-details[open]) > .aks-retirement-excerpt { display: none; }
+#aks-tab-retirements .aks-retirement-details > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+#aks-tab-retirements .aks-doc-buttons { display: flex; flex-wrap: wrap; }
+#aks-tab-retirements .aks-doc-link { white-space: normal; overflow-wrap: anywhere; }
+#aks-tab-retirements [hidden] { display: none !important; }
+@media (max-width: 600px) { #aks-tab-retirements .aks-retirement-card { padding: 16px; } }
+</style>
+<script>
+(() => {
+  function initializeRetirements() {
+    const root = document.getElementById('aks-tab-retirements');
+    if (!root || root.dataset.retirementReady) return;
+    const list = root.querySelector('.aks-retirement-list');
+    if (!list) return;
+    root.dataset.retirementReady = 'true';
+    const cards = Array.from(list.querySelectorAll('.aks-retirement-card'));
+    const control = name => root.querySelector('[data-retirement-filter="' + name + '"]');
+    const today = new Date(list.dataset.today + 'T00:00:00Z');
+    function applyFilters() {
+      const product = control('product').value;
+      const period = control('period').value;
+      const search = control('search').value.trim().toLocaleLowerCase();
+      const limit = new Date(today);
+      if (period === '90days') limit.setUTCDate(limit.getUTCDate() + 90);
+      else limit.setUTCFullYear(limit.getUTCFullYear() + 1);
+      let count = 0;
+      const sorted = cards.slice().sort((left, right) => {
+        const order = control('sort').value;
+        if (order === 'priority') return cards.indexOf(left) - cards.indexOf(right);
+        if (!left.dataset.date || !right.dataset.date) return Number(!left.dataset.date) - Number(!right.dataset.date);
+        return left.dataset.date.localeCompare(right.dataset.date) * (order === 'descending' ? -1 : 1);
+      });
+      sorted.forEach(card => {
+        const start = card.dataset.date && new Date(card.dataset.date + 'T00:00:00Z');
+        const end = card.dataset.endDate && new Date(card.dataset.endDate + 'T00:00:00Z');
+        const dateMatch = period === 'all' || card.dataset.period === period ||
+          ((period === '90days' || period === '365days') && end && end >= today && start <= limit);
+        card.hidden = !((!product || JSON.parse(card.dataset.products).includes(product)) && dateMatch && card.textContent.toLocaleLowerCase().includes(search));
+        if (!card.hidden) count++;
+        list.append(card);
+      });
+      root.querySelector('.aks-retirement-count').textContent = count + ' of ' + cards.length + ' notices';
+      root.querySelector('.aks-retirement-empty').hidden = count !== 0;
+    }
+    root.querySelectorAll('[data-retirement-filter]').forEach(element => element.addEventListener('input', applyFilters));
+    applyFilters();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeRetirements, { once: true });
+  else initializeRetirements();
+})();
+</script></div></div></div>
+<script>
+document.querySelectorAll('.aks-tab-link').forEach(link => link.addEventListener('click', event => {
+  event.preventDefault();
+  document.querySelectorAll('.aks-tab-link,.aks-tab-panel').forEach(element => element.classList.remove('active'));
+  link.classList.add('active');
+  document.querySelector(link.getAttribute('href')).classList.add('active');
+}));
+</script></body></html>

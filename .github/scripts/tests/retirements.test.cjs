@@ -9,6 +9,77 @@ const { test } = require('node:test');
 
 const scriptPath = path.resolve(__dirname, '../retirements.ps1').replace(/'/g, "''");
 
+test('renders source details and product icons within a rolling retirement window', () => {
+  const generatorPath = path.resolve(__dirname, '../generate-aks-updates.ps1').replace(/'/g, "''");
+  const cachePath = path.join(os.tmpdir(), `aks-retirement-render-${process.pid}.json`);
+  const items = [
+    ['old', '2019-12-09', null],
+    ['outside', '2025-11-10', null],
+    ['boundary', '2025-11-11', null],
+    ['recent', '2026-10-10', null],
+    ['today', '2026-11-11', null],
+    ['urgent', '2026-12-11', null],
+    ['approaching', '2026-12-12', null],
+    ['future', '2028-03-31', null],
+    ['old-month', null, 'October 2025'],
+    ['boundary-month', null, 'November 2025'],
+    ['future-month', null, 'March 2027'],
+    ['unknown', null, null],
+    ['invalid', 'bad-date', null],
+  ].map(([title, retirementDate, retirementMonth]) => ({
+    title, retirementDate, retirementMonth, products: ['AKS', 'Azure Container Registry'],
+    url: 'https://azure.microsoft.com/updates?id=test',
+    description: 'Source description <script>unsafe</script>\n\n \u00a0\n\nRequired action\n- Migrate node pools.\n\nUbuntu\n20.04 node\npools.' + (title === 'future' ? '\nAdditional source details.'.repeat(40) : ''),
+    sourceUpdated: '2026-09-11T18:08:28Z',
+  }));
+  fs.writeFileSync(cachePath, JSON.stringify({ items }));
+  try {
+    const command = `
+      $ErrorActionPreference = 'Stop'
+      $tokens = $null; $errors = $null
+      $ast = [System.Management.Automation.Language.Parser]::ParseFile('${generatorPath}', [ref]$tokens, [ref]$errors)
+      if ($errors.Count) { throw ($errors | Out-String) }
+      foreach ($name in @('Escape-Html', 'Get-ProductIconMeta', 'Get-AksRetirementsHtml')) {
+        $definition = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq $name }, $true)
+        Invoke-Expression $definition.Extent.Text
+      }
+      $RetirementsCachePath = '${cachePath.replace(/'/g, "''")}'
+      Get-AksRetirementsHtml -Now ([DateTime]'2026-11-11')
+    `;
+    const result = spawnSync('pwsh', ['-NoProfile', '-Command', command], { encoding: 'utf8', timeout: 30000 });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const html = result.stdout;
+    for (const title of ['old', 'outside', 'old-month']) assert.ok(!html.includes(`>${title}</a>`), title);
+    for (const title of ['boundary', 'recent', 'today', 'future', 'boundary-month', 'future-month', 'unknown', 'invalid']) assert.ok(html.includes(`>${title}</a>`), title);
+    assert.ok(html.indexOf('>today</a>') < html.indexOf('>future</a>'));
+    assert.ok(html.indexOf('>future</a>') < html.indexOf('>recent</a>'));
+    assert.ok(html.indexOf('>recent</a>') < html.indexOf('>boundary</a>'));
+    assert.match(html, /kubernetes-services\.svg/);
+    assert.match(html, /container-registry\.svg/);
+    assert.match(html, /Source description &lt;script&gt;unsafe&lt;\/script&gt;/);
+    assert.match(html, /Required action\n- Migrate node pools/);
+    assert.match(html, /Ubuntu 20\.04 node pools\./);
+    assert.doesNotMatch(html, /unsafe&lt;\/script&gt;\n{3,}/);
+    assert.match(html, /class="aks-retirement-products"><span class="aks-retirement-product"/);
+    assert.match(html, /\.aks-retirement-status \{ margin-left: auto; text-align: right;/);
+    assert.match(html, /summary \{ cursor: pointer; color: var\(--cp-retirement-accent\)/);
+    assert.doesNotMatch(html, /<script>unsafe/);
+    assert.equal((html.match(/<details class="aks-retirement-details">/g) || []).length, 1);
+    assert.match(html, /Read more/);
+    assert.match(html, /Read less/);
+    assert.match(html, /aks-retirement-date aks-retirement-urgent"><strong>Retirement:<\/strong> December 11, 2026/);
+    assert.match(html, /aks-retirement-date aks-retirement-approaching"><strong>Retirement:<\/strong> December 12, 2026/);
+    assert.match(html, /aks-retirement-date aks-retirement-expired/);
+    assert.match(html, /:has\(\.aks-retirement-expired, \.aks-retirement-urgent\) \.aks-retirement-status \{ color: var\(--cp-retirement-danger-border\)/);
+    assert.match(html, /aks-retirement-pill aks-retirement-notice-date/);
+    assert.match(html, /Notice updated: 2026-09-11/);
+    for (const filter of ['product', 'period', 'sort', 'search']) assert.ok(html.includes(`data-retirement-filter="${filter}"`));
+    assert.match(html, /data-period="undated"/);
+  } finally {
+    fs.rmSync(cachePath, { force: true });
+  }
+});
+
 test('normalizes full notices and matches AKS products when API metadata is empty', () => {
   const command = `
     $ErrorActionPreference = 'Stop'
