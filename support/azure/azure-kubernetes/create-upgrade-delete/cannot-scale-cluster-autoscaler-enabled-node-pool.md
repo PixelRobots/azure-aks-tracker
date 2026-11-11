@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Cluster autoscaler fails to scale with cannot scale cluster autoscaler enabled node pool error - Azure | Microsoft Learn
+title: Cluster autoscaler fails to scale with cannot scale cluster autoscaler enabled node pool error in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/cannot-scale-cluster-autoscaler-enabled-node-pool
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -13,10 +13,11 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to troubleshoot the cannot scale cluster autoscaler enabled node pool error when your autoscaler isn't scaling up or down.
-ms.date: 2026-07-08T00:00:00.0000000Z
-ms.reviewer: aritraghosh, chiragpa
+ms.date: 2026-11-10T00:00:00.0000000Z
+ms.reviewer: aritraghosh, chiragpa, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool), innovation-engine
+ai-usage: ai-assisted
 locale: en-us
 document_id: ac270989-3249-eb40-9f07-b7a963bee8c7
 document_version_independent_id: ac270989-3249-eb40-9f07-b7a963bee8c7
@@ -44,7 +45,7 @@ spProducts:
 platformId: 4b7b02c7-3f6c-5468-60c9-9d6a6eb3bd9e
 ---
 
-# Cluster autoscaler fails to scale with cannot scale cluster autoscaler enabled node pool error - Azure | Microsoft Learn
+# Cluster autoscaler fails to scale with cannot scale cluster autoscaler enabled node pool error in AKS - Azure | Microsoft Learn
 
 ## Summary
 
@@ -52,7 +53,7 @@ This article provides solutions for the "cannot scale cluster autoscaler enabled
 
 ## Symptoms
 
-You see an error message that looks like the following message:
+You see an error message that looks like the following message.
 
 > 
 > `kubectl get nodes` outputs "No resources found" All pods state is `Pending` Scale operations fail with "Cannot scale cluster autoscaler enabled node pool" error
@@ -63,7 +64,9 @@ Azure Kubernetes Service (AKS) uses virtual machine scale sets-based agent pools
 
 ### Check that the cluster virtual machine scale set exists
 
-1. Sign in to [Azure portal](https://portal.azure.com).
+Follow these steps:
+
+1. Sign in to the [Azure portal](https://portal.azure.com).
 2. Find the node resource group by searching the following names:
 
     - The default name `MC_{AksResourceGroupName}_{YourAksClusterName}_{AksResourceLocation}`.
@@ -84,7 +87,7 @@ Modifying any resource under the node resource group in the AKS cluster is an un
 
 ### Reconcile node pool
 
-If you accidentally delete the cluster virtual machine scale set, reconcile the node pool by using `az aks nodepool update`:
+If you accidentally delete the cluster virtual machine scale set, reconcile the node pool by using `az aks nodepool update`.
 
 ```shell
 # Update Node Pool Configuration
@@ -102,7 +105,7 @@ You receive scaling errors if you modify or delete Azure-created tags and other 
 
 ### Reconcile node resource group tags
 
-Use the Azure CLI to make sure that the node resource group has the correct tags for AKS name and the AKS group name:
+Use Azure CLI to make sure that the node resource group has the correct tags for AKS name and the AKS group name.
 
 ```shell
 # Add or update tags for AKS name and AKS group name
@@ -120,7 +123,7 @@ Deleting the cluster node resource group causes problems when provisioning the i
 
 ### Solution: Update the cluster to the goal state without changing the configuration
 
-To resolve this problem, run the following command to recover the deleted virtual machine scale set or any tags (missing or modified):
+To resolve this problem, run the following command to recover the deleted virtual machine scale set or any tags (missing or modified).
 
 Note
 
@@ -135,13 +138,15 @@ export AKS_CLUSTER_NAME="MyAksCluster$RANDOM_SUFFIX"
 az aks update --resource-group $AKS_RG_NAME --name $AKS_CLUSTER_NAME --no-wait
 ```
 
-## Cause 4: Unsupported virtual machine scale set (VMSS) configuration
+## Cause 4: Unsupported virtual machine scale set configuration
 
-The VMSS autoscaling configuration was changed from **Manual scale** to **Custom autoscale**. AKS inherently manages the VMSS instance count so the setting should remain on **Manual scale**. Multiple autoscalers operating on the same node pool can lead to failures and unexpected behavior. The VMSS autoscaler is **not supported** for use with AKS cluster node pools.
+The virtual machine scale set autoscaling configuration was changed from **Manual scale** to **Custom autoscale**. AKS inherently manages the virtual machine scale set instance count so the setting should remain on **Manual scale**. Multiple autoscalers operating on the same node pool can lead to failures and unexpected behavior. The virtual machine scale set autoscaler is **not supported** for use with AKS cluster node pools.
 
-### Resolution
+### Solution
 
-1. In the Azure portal, find the affected VMSS under the node resource group of the AKS cluster.
+Follow these steps to set the virtual machine scale set back to manual scale:
+
+1. In the Azure portal, find the affected virtual machine scale set under the node resource group of the AKS cluster.
 2. Select **Scaling** from the left navigation pane.
 3. Set **Scaling** to **Manual scale**.
 4. Select **Save**.

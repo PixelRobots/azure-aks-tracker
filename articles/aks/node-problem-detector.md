@@ -22,7 +22,7 @@ ms.service: azure-kubernetes-service
 description: Learn about how AKS uses Node Problem Detector to expose issues with the node.
 ms.topic: concept-article
 ms.subservice: aks-monitoring
-ms.date: 2023-05-31T00:00:00.0000000Z
+ms.date: 2026-11-09T00:00:00.0000000Z
 author: schaffererin
 ms.author: schaffererin
 ai-usage: ai-assisted
@@ -70,17 +70,20 @@ Node conditions indicate a permanent problem that makes the node unavailable. AK
 | CustomPluginMonitor | FrequentContainerdRestart | FrequentContainerdRestart | General purpose |
 | CustomPluginMonitor | FrequentDockerRestart | FrequentDockerRestart | General purpose |
 | CustomPluginMonitor | GPUMissing | Observed GPU count does not match expected GPU count | GPU only |
-| CustomPluginMonitor | NVLinkStatusInactive | NVLinkStatusInactive | GPU only |
-| CustomPluginMonitor | XIDErrors | XID errors present in kernel log | GPU only |
+| CustomPluginMonitor | NVLinkDown | NVLink connections are inactive | GPU only |
+| CustomPluginMonitor | XIDError | XID errors present in kernel log | GPU only |
 | CustomPluginMonitor | IBLinkFlapping | Intermittent InfiniBand device connectivity | GPU only |
 | CustomPluginMonitor | GPUClockThrottling | Problematic GPU clock throttling detected | GPU only |
+| CustomPluginMonitor | GPUECCError | GPU ECC errors, row-remapping issues, or page-retirement issues detected | GPU only |
 | CustomPluginMonitor | UnhealthyNvidiaDevicePlugin | NVIDIA device plugin service is not active | GPU only (managed GPU) |
+| CustomPluginMonitor | UnhealthyNvidiaDCGMServices | NVIDIA DCGM or DCGM exporter service is not active | GPU only (managed GPU) |
+| CustomPluginMonitor | NVIDIAGRIDStatusInvalid | NVIDIA GRID driver license is invalid | GPU only |
 | SystemLogMonitor | KernelDeadlock | DockerHung | General purpose |
 | SystemLogMonitor | ReadonlyFilesystem | FilesystemIsReadOnly | General purpose |
 
 Note
 
-The `GPU only` node conditions apply to all GPU node pools that use AKS-managed GPU drivers (node pools not created with `--gpu-driver none`). The `GPU only (managed GPU)` conditions apply only to node pools with the [fully managed GPU experience](aks-managed-gpu-nodes) enabled. GPU health monitoring is supported on standard GPU and [MIG-enabled GPU node pools](gpu-multi-instance).
+The `GPU only` node conditions apply to GPU node pools that use AKS-managed GPU drivers (node pools not created with `--gpu-driver none`). Individual checks depend on GPU capabilities and configuration. The `GPU only (managed GPU)` conditions apply only to node pools with the [fully managed GPU experience](aks-managed-gpu-nodes) enabled. The NVIDIA device plugin check doesn't run on node pools that use Dynamic Resource Allocation (DRA) for GPUs. GPU health monitoring is supported on standard GPU and [MIG-enabled GPU node pools](gpu-multi-instance). For check-specific requirements, see [GPU health monitoring](gpu-health-monitoring).
 
 ## Events
 

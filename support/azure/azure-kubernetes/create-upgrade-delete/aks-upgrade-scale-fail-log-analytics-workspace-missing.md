@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Unable to get log analytics workspace info - Azure | Microsoft Learn
+title: Troubleshoot Unable to get log analytics workspace info error in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/aks-upgrade-scale-fail-log-analytics-workspace-missing
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Provides solutions to an error that occurs when you upgrade or scale a Microsoft Azure Kubernetes Service cluster.
-ms.date: 2024-09-11T00:00:00.0000000Z
-ms.reviewer: chiragpa, cssakscic, v-weizhu
+description: Learn how to resolve the "Unable to get log analytics workspace info" error when you start, upgrade, or scale an Azure Kubernetes Service (AKS) cluster.
+ms.date: 2026-11-10T00:00:00.0000000Z
+ms.reviewer: chiragpa, cssakscic, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 019ac753-b964-6ee6-74f3-f5dae7779415
 document_version_independent_id: 019ac753-b964-6ee6-74f3-f5dae7779415
@@ -44,15 +45,15 @@ spProducts:
 platformId: 11e85dbe-337d-c203-2da7-cbfa317ace5f
 ---
 
-# Unable to get log analytics workspace info - Azure | Microsoft Learn
+# Troubleshoot Unable to get log analytics workspace info error in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article provides solutions to an "Unable to get log analytics workspace info" error that occurs when you upgrade or scale a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article helps you resolve the "Unable to get log analytics workspace info" error that occurs when you start, upgrade, or scale an Azure Kubernetes Service (AKS) cluster. It explains how to recover the deleted Log Analytics workspace or disable monitoring so that your cluster operations succeed.
 
 ## Symptoms
 
-When you start, upgrade, or scale an AKS cluster, you may see one of the following errors:
+When you start, upgrade, or scale an AKS cluster, you might see one of the following errors.
 
 > 
 > Failed to save container service '&lt;container service name&gt;'. Error: Unable to get log analytics workspace info. Resource ID: /subscriptions/&lt;WorkspaceSubscription&gt;/resourcegroups/defaultresourcegroup-weu/providers/microsoft.operationalinsights/workspaces/defaultworkspace-&lt;WorkspaceID&gt;-weu. Detail: operationalinsights.WorkspacesClient#GetSharedKeys: Failure responding to request: StatusCode=404 -- Original Error: autorest/azure: Service returned an error. Status=404 Code='ResourceGroupNotFound' Message='Resource group 'defaultresourcegroup-weu' could not be found.'
@@ -66,19 +67,21 @@ This issue occurs if you delete the Log Analytics workspace or the resource grou
 
 To resolve this issue, use one of the following solutions.
 
-## Solution 1: Recover the Log Analytics workspace
+## Solution 1: Recover the deleted Log Analytics workspace
 
-If it has been less than 14 days (the default soft-delete period) since the workspace was deleted, recover the workspace.
+If it's been less than 14 days (the default soft-delete period) since you deleted the workspace, recover the workspace.
 
 Note
 
-- If it hasn't been 14 days, the workspace can't be recreated with the same name. Therefore, the recovery must be done because the AKS control plane finds the workspace based on the resource URI.
-- If your workspace was deleted as part of a resource group delete operation, you must first re-create the resource group with the same name.
-- To perform the workspace recovery, you must have the Contributor permissions to the subscription and resource group where the workspace is located, and the following information is also required:
+- If it's been 14 days, you can't recreate the workspace with the same name. Therefore, you must recover the workspace because the AKS control plane finds the workspace based on the resource URI.
+- If you deleted your workspace as part of a resource group delete operation, you must first re-create the resource group with the same name.
+- To perform the workspace recovery, you must have the Contributor permissions to the subscription and resource group where the workspace is located. You also need the following information:
     - Subscription ID
     - Resource Group name
     - Workspace name
     - Region
+
+Follow these steps:
 
 1. Get the workspace resource ID by running the Azure CLI command `az aks show -g <clusterRG> -n <clusterName>`.
 
@@ -99,11 +102,11 @@ Note
 2. Re-create the workspace with the workspace resource ID by running the PowerShell cmdlet [New-AzOperationalInsightsWorkspace](/en-us/powershell/module/az.operationalinsights/New-AzOperationalInsightsWorkspace).
 3. Run the upgrade or scale operation again.
 
-## Solution 2: Disable monitoring on the AKS cluster
+## Solution 2: Disable the monitoring add-on on the AKS cluster
 
-If it has been more than 14 days since the workspace was deleted, disable monitoring on the AKS cluster and then run the upgrade or scale operation again.
+If it's been more than 14 days since you deleted the workspace, disable monitoring on the AKS cluster and then run the upgrade or scale operation again.
 
-To disable monitoring on the AKS cluster, run the following command:
+To disable monitoring on the AKS cluster, run the following command.
 
 ```azurecli
 az aks disable-addons -a monitoring -g <clusterRG> -n <clusterName>

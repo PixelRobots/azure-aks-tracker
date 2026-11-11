@@ -10,12 +10,14 @@ feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f7
 manager: dcscontentpm
 audience: itpro
 author: kaushika-msft
-ms.author: wangamanda
+ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot AKS Automatic cluster errors when you create or switch clusters, and use the fixes in this guide to resolve issues quickly.
-ms.date: 2026-06-15T00:00:00.0000000Z
+description: Learn how to troubleshoot AKS Automatic cluster errors that occur when you create or switch clusters. Follow the solutions in this guide to fix them.
+ms.date: 2026-11-09T00:00:00.0000000Z
+ms.reviewer: wangamanda, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 37fb480b-6cc8-8334-e64a-d972d276bc20
 document_version_independent_id: 37fb480b-6cc8-8334-e64a-d972d276bc20
@@ -45,13 +47,13 @@ platformId: 1b1982ae-594e-aa1f-70d8-91ca78840ce9
 
 ## Summary
 
-This article provides guidance for resolving errors that occur when you create or switch to an Azure Kubernetes Service (AKS) Automatic cluster.
+This article helps you troubleshoot errors that occur when you create or switch to an Azure Kubernetes Service (AKS) Automatic cluster. Use the symptoms, causes, and solutions to resolve each error quickly.
 
 ## Error 1: Automatic SKU is not supported in this region
 
 ### Symptoms
 
-When you try to create an AKS Automatic cluster, you receive the following error message:
+When you try to create an AKS Automatic cluster, you receive the following error message.
 
 > 
 > Automatic SKU is not supported in this region.
@@ -68,7 +70,7 @@ Create the clusters in [GA regions](/en-us/azure/aks/automatic/aks-automatic-man
 
 ### Symptoms
 
-When you remove the `CriticalAddonsOnlyNoSchedule` taint from the system node pool of an AKS Automatic cluster, you receive the following error message:
+When you remove the `CriticalAddonsOnlyNoSchedule` taint from the system node pool of an AKS Automatic cluster, you receive the following error message.
 
 > 
 > Managed cluster `Automatic` SKU should set taint `CriticalAddonsOnlyNoSchedule` for the system node pool.

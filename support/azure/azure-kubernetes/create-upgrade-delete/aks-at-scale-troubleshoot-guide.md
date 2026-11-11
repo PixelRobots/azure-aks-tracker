@@ -13,8 +13,8 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Troubleshoot common issues when you run or scale large AKS clusters, including quota, subnet, SNAT, and upgrade errors. Read the FAQ to resolve them.
-ms.date: 2026-10-26T00:00:00.0000000Z
-ms.reviewer: paahluwalia, mariochaves, v-leedennis, v-weizhu
+ms.date: 2026-11-09T00:00:00.0000000Z
+ms.reviewer: paahluwalia, mariochaves, v-leedennis, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 keywords: 
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)

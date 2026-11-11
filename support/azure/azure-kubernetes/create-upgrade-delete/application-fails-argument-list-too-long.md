@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Argument list too long application failures - Azure | Microsoft Learn
+title: Troubleshoot application failures caused by argument list too long error message in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/application-fails-argument-list-too-long
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,13 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Troubleshoot an argument list too long error message that causes an application to fail in Azure Kubernetes Service (AKS).
-ms.date: 2024-10-23T00:00:00.0000000Z
+description: Troubleshoot the "argument list too long" error that causes application failures in Azure Kubernetes Service (AKS). Learn how to fix the cause and restore your app.
+ms.date: 2026-11-10T00:00:00.0000000Z
 ms.reviewer: chiragpa, nickoman, v-leedennis
 ms.service: azure-kubernetes-service
 keywords: 
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 8c4a8c36-bb46-e64b-7147-e387e33cbfdf
 document_version_independent_id: 8c4a8c36-bb46-e64b-7147-e387e33cbfdf
@@ -43,22 +44,22 @@ spProducts:
 platformId: 8207c8dd-557c-cae1-f788-9dbe467f7b30
 ---
 
-# Argument list too long application failures - Azure | Microsoft Learn
+# Troubleshoot application failures caused by argument list too long error message in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses troubleshooting strategies for resolving application failures that are caused by the "argument list too long" error message in Microsoft Azure Kubernetes Service (AKS).
+This article helps you troubleshoot the "argument list too long" error message that causes application failures in Azure Kubernetes Service (AKS). Learn how to identify the cause and apply a solution so that your application runs successfully.
 
 ## Symptoms
 
-Your application fails when the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) tries to run the executable, and you receive an error message that resembles the following output:
+Your application fails when the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) tries to run the executable, and you receive an error message that resembles the following output.
 
 > 
 > standard\_init\_linux.go:228: exec user process caused: argument list too long
 
 ## Cause 1: The argument list provided to the executable is too long
 
-The arguments that are provided to the application's executable are too long to be processed.
+The arguments that you provide to the application's executable are too long to process.
 
 ### Solution: Shorten the argument list
 
@@ -66,11 +67,11 @@ Eliminate any redundant or unnecessary arguments that you specify for the execut
 
 ## Cause 2: The set of environment variables provided to the executable is too large
 
-If too many services are deployed in one namespace, the environment variable list can become too large, and the kubelet will produce the error message when it tries to run the executable. The error occurs because the kubelet adds environment variables that record the host and port for each active service, so that [services can use this information to find other active services](https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/#accessing-the-service).
+If you deploy too many services in one namespace, the environment variable list can become too large. The kubelet produces the error message when it tries to run the executable. The error occurs because the kubelet adds environment variables that record the host and port for each active service, so that [services can use this information to find other active services](https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/#accessing-the-service).
 
-### Solution 1: Reduce the number of services that are active
+### Solution 1: Reduce the number of active services
 
-You can reduce the total number of active services, so that the kubelet adds a smaller number of overall environment variables.
+Reduce the total number of active services, so that the kubelet adds a smaller number of environment variables.
 
 ### Solution 2: Reconfigure the kubelet so that it doesn't add environment variables for the service host and port
 
@@ -78,7 +79,7 @@ Within the [PodSpec core API](https://kubernetes.io/docs/reference/generated/kub
 
 Warning
 
-If your service relies on these environment variables to find other services, this field change will cause the service to fail. To avoid this scenario, rely on DNS for service discovery instead of environment variables, by using [CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/coredns/).
+If your service relies on these environment variables to find other services, this field change causes the service to fail. To avoid this scenario, rely on DNS for service discovery instead of environment variables, by using [CoreDNS](https://kubernetes.io/docs/tasks/administer-cluster/coredns/).
 
 **Third-party information disclaimer**
 
