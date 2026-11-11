@@ -53,18 +53,7 @@ This article helps you troubleshoot [Istio CNI](/en-us/azure/aks/istio-cni) issu
 
 ## Prerequisites
 
-- [Azure CLI](/en-us/cli/azure/install-azure-cli)
-- The `aks-preview` Azure CLI extension version 19.0.0b5 or later:
-
-    ```azurecli
-    az extension add --name aks-preview
-    ```
-
-    If you already have the `aks-preview` extension installed, update it to the latest version:
-
-    ```azurecli
-    az extension update --name aks-preview
-    ```
+- Install the Azure CLI version 2.86.0 or later. You can run `az --version` to verify the version. To install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
 - The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) CLI, or a similar tool to connect to the cluster
 
     Alternatively, you can install kubectl using Azure CLI by using the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
@@ -76,7 +65,7 @@ This article helps you troubleshoot [Istio CNI](/en-us/azure/aks/istio-cni) issu
 - Make sure that Istio CNI is enabled in your cluster:
 
     ```azurecli
-    az aks show --resource-group <resource-group-name> --name <cluster-name> --query "serviceMeshProfile.istio.components.proxyRedirectioMechanism" -o table
+    az aks show --resource-group <resource-group-name> --name <cluster-name> --query "serviceMeshProfile.istio.components.proxyRedirectionMechanism" -o table
     ```
 
     The command output should be `CNIChaining`. If the add-on isn't enabled, refer to [this guide to Istio CNI](/en-us/azure/aks/istio-cni).
@@ -114,7 +103,7 @@ Look for error messages that are related to the following items:
 Verify that the CNI DaemonSet can be scheduled on all nodes:
 
 ```bash
-kubectl describe daemonset istio-cni-node -n aks-istio-system
+kubectl describe daemonset azure-service-mesh-istio-cni-addon-node -n aks-istio-system
 kubectl get nodes -o wide
 kubectl describe nodes
 ```
