@@ -4595,6 +4595,8 @@ dialog.aks-diff-dialog[open] { display: flex; flex-direction: column; gap: 16px;
 } else { '' }
 
 function Get-AksRetirementsHtml {
+  param([DateTime]$Now = [DateTime]::UtcNow)
+
   if (-not (Test-Path -LiteralPath $RetirementsCachePath)) {
     return '<p class="aks-rel-empty">Retirement notices will appear here after the first refresh.</p>'
   }
@@ -4612,11 +4614,45 @@ function Get-AksRetirementsHtml {
     return '<p class="aks-rel-empty">No matching Azure product retirements found.</p>'
   }
 
-  $sortDate = @{ Expression = { if ($_.retirementDate) { [string]$_.retirementDate } else { '9999-12-31' } } }
-  $sortedItems = @($items | Sort-Object -Property @($sortDate, 'title'))
+  $today = $Now.Date
+  $cutoff = $today.AddMonths(-12)
+  $visibleItems = @(
+    foreach ($item in $items) {
+      $startDate = $null
+      $endDate = $null
+      try {
+        if ($item.retirementDate) {
+          $startDate = [DateTime]::ParseExact([string]$item.retirementDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+          $endDate = $startDate
+        } elseif ($item.retirementMonth) {
+          $startDate = [DateTime]::ParseExact([string]$item.retirementMonth, [string[]]@('MMMM yyyy', 'MMM yyyy'), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None)
+          $endDate = $startDate.AddMonths(1).AddDays(-1)
+        }
+      } catch { $startDate = $null; $endDate = $null }
+      if ($endDate -and $endDate -lt $cutoff) { continue }
+      $period = if (-not $endDate) { 'undated' } elseif ($endDate -lt $today) { 'recent' } else { 'upcoming' }
+      [pscustomobject]@{ Item = $item; Start = $startDate; End = $endDate; Period = $period }
+    }
+  )
+  $sortedItems = @($visibleItems | Sort-Object @{ Expression = { switch ($_.Period) { 'upcoming' { 0 } 'recent' { 1 } default { 2 } } } }, @{ Expression = { if ($_.Period -eq 'recent') { -$_.End.Ticks } elseif ($_.Start) { $_.Start.Ticks } else { [long]::MaxValue } } }, { $_.Item.title })
   $cards = [System.Collections.Generic.List[string]]::new()
+  $productOptions = @(
+    $visibleItems | ForEach-Object { $_.Item.products } | Sort-Object -Unique | ForEach-Object {
+      '<option value="{0}">{0}</option>' -f (Escape-Html ([string]$_))
+    }
+  ) -join ''
+  $productPaths = @{
+    'AKS' = 'articles/aks/overview.md'
+    'AKS Application Network' = 'articles/aks/application-network/overview.md'
+    'Azure Arc-enabled Kubernetes' = 'articles/azure-arc/kubernetes/overview.md'
+    'Kubernetes Fleet Manager' = 'articles/kubernetes-fleet/overview.md'
+    'Azure Linux' = 'articles/azure-linux/overview.md'
+    'Azure Container Registry' = 'articles/container-registry/overview.md'
+    'Application Gateway for Containers' = 'articles/application-gateway/for-containers/overview.md'
+  }
 
-  foreach ($item in $sortedItems) {
+  foreach ($entry in $sortedItems) {
+    $item = $entry.Item
     $title = Escape-Html ([string]$item.title)
     $url = Escape-Html ([string]$item.url)
     $displayDate = if ($item.retirementDate) {
@@ -4625,39 +4661,161 @@ function Get-AksRetirementsHtml {
     } elseif ($item.retirementMonth) { [string]$item.retirementMonth } else { 'Date not specified' }
     $productBadges = @(
       foreach ($product in @($item.products)) {
-        '<span class="aks-rel-badge">{0}</span>' -f (Escape-Html ([string]$product))
+        $icon = Get-ProductIconMeta -FilePath $productPaths[[string]$product] -RepoName ''
+        '<span class="aks-retirement-product"><img class="aks-doc-icon" src="{0}" alt="" loading="lazy" width="24" height="24" />{1}</span>' -f (Escape-Html $icon.url), (Escape-Html ([string]$product))
       }
     ) -join ' '
-    $description = (Escape-Html ([string]$item.description)) -replace '\r?\n', '<br>'
-    $modifiedSource = if ($item.sourceUpdated) { [string]$item.sourceUpdated } else { [string]$item.modified }
+    $descriptionText = [string]$item.description
+    if ([string]::IsNullOrWhiteSpace($descriptionText)) { $descriptionText = 'Refer to the Microsoft Azure Updates notice for details and recommended action.' }
+    $descriptionText = $descriptionText -replace '\r\n?', "`n"
+    $descriptionText = $descriptionText -replace '[^\S\n]+', ' '
+    $descriptionText = $descriptionText -replace ' *\n *', "`n"
+    $descriptionText = $descriptionText -replace '\n{3,}', "`n`n"
+    $descriptionText = ($descriptionText -replace '(?<!\n)\n(?!\n|[-*] |\d+[.)] )', ' ').Trim()
+    $description = Escape-Html $descriptionText
+    $descriptionHtml = '<div class="aks-retirement-description">{0}</div>' -f $description
+    if ($descriptionText.Length -gt 700) {
+      $excerptEnd = $descriptionText.LastIndexOf(' ', 600)
+      if ($excerptEnd -lt 300) { $excerptEnd = 600 }
+      $excerpt = Escape-Html ($descriptionText.Substring(0, $excerptEnd).TrimEnd())
+      $descriptionHtml = @"
+<div class="aks-retirement-excerpt aks-retirement-description">$excerpt...</div>
+<details class="aks-retirement-details">
+  <summary><span class="aks-retirement-read-more">Read more</span><span class="aks-retirement-read-less">Read less</span></summary>
+  <div class="aks-retirement-description">$description</div>
+</details>
+"@
+    }
+    $status = switch ($entry.Period) { 'upcoming' { 'Upcoming retirement' } 'recent' { 'Retired in the past 12 months' } default { 'Date not specified' } }
+    $urgency = if (-not $entry.End) { 'undated' }
+      elseif ($entry.End -lt $today) { 'expired' }
+      elseif (($entry.End - $today).Days -le 30) { 'urgent' }
+      elseif (($entry.End - $today).Days -le 90) { 'approaching' }
+      else { 'upcoming' }
+    $urgencyLabel = switch ($urgency) { 'expired' { 'Retired' } 'urgent' { 'Due within 30 days' } 'approaching' { 'Due within 90 days' } default { $status } }
+    $productsJson = Escape-Html (ConvertTo-Json -InputObject @($item.products) -Compress)
+    $dateKey = if ($entry.Start) { $entry.Start.ToString('yyyy-MM-dd') } else { '' }
+    $endKey = if ($entry.End) { $entry.End.ToString('yyyy-MM-dd') } else { '' }
+    $modifiedSource = if ($item.sourceUpdated) { $item.sourceUpdated } else { $item.modified }
     $modified = if ($modifiedSource) {
-      try { [DateTimeOffset]::Parse($modifiedSource, [Globalization.CultureInfo]::InvariantCulture).ToUniversalTime().ToString('yyyy-MM-dd') }
+      try {
+        if ($modifiedSource -is [DateTime]) { $modifiedSource.ToUniversalTime().ToString('yyyy-MM-dd') }
+        else { [DateTimeOffset]::Parse([string]$modifiedSource, [Globalization.CultureInfo]::InvariantCulture).ToUniversalTime().ToString('yyyy-MM-dd') }
+      }
       catch { $modifiedSource }
     } else { '' }
-    $modifiedHtml = if ($modified) { '<span class="aks-rel-date">Notice updated: {0}</span>' -f (Escape-Html $modified) } else { '' }
+    $modifiedHtml = if ($modified) { '<span class="aks-retirement-pill aks-retirement-notice-date">Notice updated: {0}</span>' -f (Escape-Html $modified) } else { '' }
 
     $card = @"
-<div class="aks-rel-card aks-retirement-card">
-  <div class="aks-rel-head">
-    <div class="aks-rel-title">
-      <h2>$title</h2>$productBadges
-    </div>
-    <a class="aks-rel-link" href="$url" target="_blank" rel="noopener">View notice</a>
+<div class="aks-retirement-card" data-products="$productsJson" data-period="$($entry.Period)" data-date="$dateKey" data-end-date="$endKey">
+  <h2 class="aks-doc-title"><a href="$url" target="_blank" rel="noopener">$title</a></h2>
+  <div class="aks-doc-header aks-retirement-meta">
+    <div class="aks-retirement-products">$productBadges</div>
+    <span class="aks-retirement-status">$urgencyLabel</span>
   </div>
-  <div class="aks-rel-meta">
-    <span class="aks-rel-date"><strong>RETIREMENT</strong> $([System.Net.WebUtility]::HtmlEncode($displayDate))</span>
+  <div class="aks-retirement-meta">
+    <span class="aks-retirement-pill aks-retirement-date aks-retirement-$urgency"><strong>Retirement:</strong> $([System.Net.WebUtility]::HtmlEncode($displayDate))</span>
     $modifiedHtml
   </div>
-  <details class="aks-retirement-details">
-    <summary>Full notice and recommended action</summary>
-    <div class="aks-rel-summary aks-retirement-description">$description</div>
-  </details>
+  <div class="aks-doc-summary">$descriptionHtml</div>
+  <div class="aks-doc-buttons"><a class="aks-doc-link" href="$url" target="_blank" rel="noopener">View Microsoft notice</a></div>
 </div>
 "@
     $cards.Add($card.Trim())
   }
 
-  return ($cards -join "`n")
+  $controls = @"
+<div class="aks-retirement-filters">
+  <label>Product<select data-retirement-filter="product"><option value="">All products</option>$productOptions</select></label>
+  <label>Retirement date<select data-retirement-filter="period"><option value="all">Upcoming and past 12 months</option><option value="upcoming">Upcoming</option><option value="90days">Next 90 days</option><option value="365days">Next 12 months</option><option value="recent">Past 12 months</option><option value="undated">Date not specified</option></select></label>
+  <label>Sort by<select data-retirement-filter="sort"><option value="priority">Upcoming first</option><option value="ascending">Retirement date: oldest first</option><option value="descending">Retirement date: newest first</option></select></label>
+  <label>Search<input type="search" data-retirement-filter="search" placeholder="Search notices" /></label>
+</div>
+<p class="aks-retirement-count" role="status" aria-live="polite">$($cards.Count) notices</p>
+<div class="aks-docs-list aks-retirement-list" data-today="$($today.ToString('yyyy-MM-dd'))">$($cards -join "`n")</div>
+<p class="aks-retirement-empty" hidden>No retirement notices match these filters.</p>
+"@
+  return $controls + @'
+<style>
+#aks-tab-retirements {
+  --cp-retirement-accent: #ffea00;
+  --cp-retirement-danger-bg: #451a1a; --cp-retirement-danger-text: #fca5a5; --cp-retirement-danger-border: #f87171;
+  --cp-retirement-warning-bg: #422006; --cp-retirement-warning-text: #fde047; --cp-retirement-warning-border: #ffea00;
+  --cp-retirement-date-bg: #3b0764; --cp-retirement-date-text: #ffea00; --cp-retirement-date-border: #9f62eb;
+  --cp-retirement-notice-bg: #27272a; --cp-retirement-notice-text: #d8b4fe; --cp-retirement-notice-border: #9f62eb;
+}
+#aks-tab-retirements .aks-retirement-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 20px 0 12px; }
+#aks-tab-retirements .aks-retirement-filters label { display: flex; flex: 1 1 240px; flex-direction: column; gap: 6px; min-width: 0; font-size: 14px; font-weight: 600; }
+#aks-tab-retirements .aks-retirement-filters select, #aks-tab-retirements .aks-retirement-filters input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 8px; border: 1px solid currentColor; border-radius: 6px; background: var(--cp-surface, Canvas); color: var(--cp-text, CanvasText); font: inherit; }
+#aks-tab-retirements .aks-retirement-card { border: 1px solid currentColor; border-radius: 8px; padding: 24px; margin: 16px 0; min-width: 0; }
+#aks-tab-retirements .aks-doc-title { margin: 0 0 16px; font-size: 24px; line-height: 1.35; overflow-wrap: anywhere; }
+#aks-tab-retirements .aks-retirement-meta { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 16px; }
+#aks-tab-retirements .aks-retirement-products { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
+#aks-tab-retirements .aks-retirement-product { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+#aks-tab-retirements .aks-doc-icon { width: 24px; height: 24px; flex-shrink: 0; object-fit: contain; }
+#aks-tab-retirements .aks-retirement-status { margin-left: auto; text-align: right; font-size: 14px; font-weight: 700; }
+#aks-tab-retirements .aks-retirement-card:has(.aks-retirement-expired, .aks-retirement-urgent) .aks-retirement-status { color: var(--cp-retirement-danger-border); }
+#aks-tab-retirements .aks-retirement-card:has(.aks-retirement-approaching) .aks-retirement-status { color: var(--cp-retirement-warning-text); }
+#aks-tab-retirements .aks-retirement-pill { display: inline-block; padding: 5px 10px; border: 1px solid var(--cp-retirement-date-border); border-radius: 999px; background: var(--cp-retirement-date-bg); color: var(--cp-retirement-date-text); font-size: 13px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+#aks-tab-retirements .aks-retirement-expired, #aks-tab-retirements .aks-retirement-urgent { background: var(--cp-retirement-danger-bg); color: var(--cp-retirement-danger-text); border-color: var(--cp-retirement-danger-border); }
+#aks-tab-retirements .aks-retirement-approaching { background: var(--cp-retirement-warning-bg); color: var(--cp-retirement-warning-text); border-color: var(--cp-retirement-warning-border); }
+#aks-tab-retirements .aks-retirement-notice-date, #aks-tab-retirements .aks-retirement-undated { background: var(--cp-retirement-notice-bg); color: var(--cp-retirement-notice-text); border-color: var(--cp-retirement-notice-border); }
+#aks-tab-retirements .aks-retirement-description { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.6; margin-bottom: 20px; }
+#aks-tab-retirements .aks-retirement-details > summary { cursor: pointer; color: var(--cp-retirement-accent); font-weight: 600; margin-bottom: 12px; }
+#aks-tab-retirements .aks-retirement-details .aks-retirement-read-less, #aks-tab-retirements .aks-retirement-details[open] .aks-retirement-read-more { display: none; }
+#aks-tab-retirements .aks-retirement-details[open] .aks-retirement-read-less { display: inline; }
+#aks-tab-retirements .aks-doc-summary:has(> .aks-retirement-details[open]) > .aks-retirement-excerpt { display: none; }
+#aks-tab-retirements .aks-retirement-details > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+#aks-tab-retirements .aks-doc-buttons { display: flex; flex-wrap: wrap; }
+#aks-tab-retirements .aks-doc-link { white-space: normal; overflow-wrap: anywhere; }
+#aks-tab-retirements [hidden] { display: none !important; }
+@media (max-width: 600px) { #aks-tab-retirements .aks-retirement-card { padding: 16px; } }
+</style>
+<script>
+(() => {
+  function initializeRetirements() {
+    const root = document.getElementById('aks-tab-retirements');
+    if (!root || root.dataset.retirementReady) return;
+    const list = root.querySelector('.aks-retirement-list');
+    if (!list) return;
+    root.dataset.retirementReady = 'true';
+    const cards = Array.from(list.querySelectorAll('.aks-retirement-card'));
+    const control = name => root.querySelector('[data-retirement-filter="' + name + '"]');
+    const today = new Date(list.dataset.today + 'T00:00:00Z');
+    function applyFilters() {
+      const product = control('product').value;
+      const period = control('period').value;
+      const search = control('search').value.trim().toLocaleLowerCase();
+      const limit = new Date(today);
+      if (period === '90days') limit.setUTCDate(limit.getUTCDate() + 90);
+      else limit.setUTCFullYear(limit.getUTCFullYear() + 1);
+      let count = 0;
+      const sorted = cards.slice().sort((left, right) => {
+        const order = control('sort').value;
+        if (order === 'priority') return cards.indexOf(left) - cards.indexOf(right);
+        if (!left.dataset.date || !right.dataset.date) return Number(!left.dataset.date) - Number(!right.dataset.date);
+        return left.dataset.date.localeCompare(right.dataset.date) * (order === 'descending' ? -1 : 1);
+      });
+      sorted.forEach(card => {
+        const start = card.dataset.date && new Date(card.dataset.date + 'T00:00:00Z');
+        const end = card.dataset.endDate && new Date(card.dataset.endDate + 'T00:00:00Z');
+        const dateMatch = period === 'all' || card.dataset.period === period ||
+          ((period === '90days' || period === '365days') && end && end >= today && start <= limit);
+        card.hidden = !((!product || JSON.parse(card.dataset.products).includes(product)) && dateMatch && card.textContent.toLocaleLowerCase().includes(search));
+        if (!card.hidden) count++;
+        list.append(card);
+      });
+      root.querySelector('.aks-retirement-count').textContent = count + ' of ' + cards.length + ' notices';
+      root.querySelector('.aks-retirement-empty').hidden = count !== 0;
+    }
+    root.querySelectorAll('[data-retirement-filter]').forEach(element => element.addEventListener('input', applyFilters));
+    applyFilters();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeRetirements, { once: true });
+  else initializeRetirements();
+})();
+</script>
+'@
 }
 
 $retirementsHtml = Get-AksRetirementsHtml
@@ -4713,8 +4871,8 @@ $snapshotDiffStyles
 
     <div class="aks-tab-panel" id="aks-tab-retirements">
       <h2>AKS and Azure Product Retirements</h2>
-      <p>Retirement notices for products tracked by this page. Dates and actions come from Microsoft Azure Updates.</p>
-      <div class="aks-docs-list">
+      <p>Upcoming retirements and retirements from the past 12 months, plus notices without a confirmed date. Dates and recommended actions come from Microsoft Azure Updates.</p>
+      <div class="aks-retirements">
         $retirementsHtml
       </div>
     </div>

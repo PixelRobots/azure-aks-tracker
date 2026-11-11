@@ -28,6 +28,8 @@ This project fetches updates from multiple Microsoft repos, filters out noise wi
 
 * **Azure product retirements**
   Reads all pages of the public Microsoft Release Communications collection filtered to Azure updates tagged `Retirements`, then normalizes notices to the tracked AKS and cloud-native product scope. A normalized archive is committed to the main branch so historical notices remain available beyond the rolling RSS window.
+  The Retirements tab shows upcoming retirement dates and the past 12 calendar months, with undated notices retained separately. Upcoming deadlines are sorted nearest-first, followed by recent retirements newest-first, based on retirement dates rather than notification dates. Cards display product icons, the full source description and recommended actions without AI summarization. Product, retirement-period, text-search, and retirement-date sort controls can be combined. Month-only deadlines are kept through the end of their stated month.
+  Retirement-date pills use dark surfaces with red for expired deadlines or those within 30 days, amber for deadlines within 90 days, and brand purple/yellow for later deadlines. Notice-update dates have a separate charcoal/purple pill. Source whitespace and wrapped lines are normalized while preserving paragraphs and list items. Descriptions longer than 700 characters show an excerpt with a yellow native Read more / Read less disclosure for the full source notice.
 
 * **Publishes to WordPress**
   Updates a single WordPress Page every 6 hours via REST API.
