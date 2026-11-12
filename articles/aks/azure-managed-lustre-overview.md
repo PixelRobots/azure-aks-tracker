@@ -22,11 +22,12 @@ ms.service: azure-kubernetes-service
 description: Learn how to use an Azure Managed Lustre storage system with your Kubernetes containers in Azure Kubernetes Service (AKS).
 ms.topic: overview
 ms.subservice: aks-storage
-ms.date: 2026-10-30T00:00:00.0000000Z
+ms.date: 2026-11-10T00:00:00.0000000Z
 author: pauljewellmsft
 ms.author: akashdubey
 ms.reviewer: brianl
 ms.custom: sfi-image-nochange
+ai-usage: ai-assisted
 locale: en-us
 document_id: 363bf9d1-0be4-96ca-5e95-ac30883282b7
 document_version_independent_id: 5032d477-ab2c-6102-6145-c9cdc066f74f
@@ -74,24 +75,31 @@ This section provides compatibility, networking, and provisioning reference info
 
 The Azure Lustre CSI Driver for Kubernetes is compatible with [AKS](/en-us/azure/aks/). Other Kubernetes installations aren't currently supported.
 
-Version 0.6.0 requires Kubernetes 1.29 or later because the node plugin uses a native sidecar container.
+Version 0.7.0 requires Kubernetes 1.29 or later because the node plugin uses a native sidecar container, as in version 0.6.0.
 
 Important
 
-Version 0.6.0 provides images for Ubuntu 22.04 (`Ubuntu2204`), Ubuntu 24.04 (`Ubuntu2404`), and Azure Linux 3 (`AzureLinux3`) node pools. The Jammy DaemonSet also targets Ubuntu 20.04 (`Ubuntu2004`) Confidential VM node pools as a deprecated compatibility path. Windows node pools aren't supported.
+Version 0.7.0 provides images for Ubuntu 22.04 (`Ubuntu2204`), Ubuntu 24.04 (`Ubuntu2404`), and Azure Linux 3 (`AzureLinux3`) node pools. The Jammy DaemonSet also targets Ubuntu 20.04 (`Ubuntu2004`) Confidential VM node pools as a deprecated compatibility path. Windows node pools aren't supported.
 
 The Azure Lustre CSI Driver for Kubernetes is compatible with [Azure Managed Lustre](/en-us/azure/azure-managed-lustre). Other Lustre installations aren't currently supported.
 
 ### Azure Lustre CSI Driver versions
 
-The following table describes upstream CSI driver releases, including v0.6.0. It isn't a catalog of managed-extension versions and doesn't mean the AKS enable command pins version 0.6.0. Use the AKS installation guide to inspect the installed extension version, and confirm the corresponding driver release before applying version-specific requirements.
+The following table describes upstream CSI driver releases, including v0.7.0. It isn't a catalog of managed-extension versions and doesn't mean the AKS enable command pins version 0.7.0. Use the AKS installation guide to inspect the installed extension version, and confirm the corresponding driver release before applying version-specific requirements.
 
-Version 0.6.0 uses separate node images for Ubuntu 22.04 (Jammy), Ubuntu 24.04 (Noble), and Azure Linux 3. Kubernetes schedules the appropriate driver pod by using the `kubernetes.azure.com/os-sku-effective` node label. Jammy and Azure Linux 3 node images support amd64; Noble supports amd64 and arm64.
+Helm chart `0.7.0` deploys driver image family `v0.7.0`. Chart and driver versions are independent; check the [released chart mapping](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/main/charts/README.md#released-chart-versions) when selecting another version.
+
+Release v0.7.0 refreshes the driver images with updated CA trust bundles, Go 1.26.10, dependency updates, and updated CSI sidecars. It also adds volume-aware uninstall protection and provisioning improvements. See the [v0.7.0 release notes](https://github.com/kubernetes-sigs/azurelustre-csi-driver/releases/tag/v0.7.0). Before changing an existing installation, see Upgrade the CSI driver.
+
+Version 0.7.0 uses separate node images for Ubuntu 22.04 (Jammy), Ubuntu 24.04 (Noble), and Azure Linux 3. Kubernetes schedules the appropriate driver pod by using the `kubernetes.azure.com/os-sku-effective` node label. Jammy and Azure Linux 3 node images support amd64; Noble supports amd64 and arm64.
 
 The controller uses the Noble image, which supports amd64 and arm64.
 
 | Driver version | Image | AKS node OS SKU | Supported k8s version | Lustre client version | Dynamic Provisioning |
 | --- | --- | --- | --- | --- | --- |
+| v0.7.0 (Jammy) | mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.7.0-jammy | `Ubuntu2204`; `Ubuntu2004` Confidential VM node pools | 1.29+ | 2.15.8 | ✅ |
+| v0.7.0 (Noble) | mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.7.0-noble | `Ubuntu2404` | 1.29+ | 2.17.0 | ✅ |
+| v0.7.0 (Azure Linux 3) | mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.7.0-azurelinux3 | `AzureLinux3` | 1.29+ | 2.17.0 | ✅ |
 | v0.6.0 (Jammy) | mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.6.0-jammy | `Ubuntu2204`; `Ubuntu2004` Confidential VM node pools | 1.29+ | 2.15.8 | ✅ |
 | v0.6.0 (Noble) | mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.6.0-noble | `Ubuntu2404` | 1.29+ | 2.17.0 | ✅ |
 | v0.6.0 (Azure Linux 3) | mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.6.0-azurelinux3 | `AzureLinux3` | 1.29+ | 2.17.0 | ✅ |
@@ -113,7 +121,7 @@ For a complete list of all driver releases and their changelog, see the [Azure L
 
 Note
 
-Version 0.6.0 requires AKS node pools that report the `kubernetes.azure.com/os-sku-effective` label, in addition to the Kubernetes version requirement shown in the table.
+Version 0.7.0 requires AKS node pools that report the `kubernetes.azure.com/os-sku-effective` label, in addition to the Kubernetes version requirement shown in the table.
 
 ## Prerequisites
 
@@ -126,7 +134,7 @@ Version 0.6.0 requires AKS node pools that report the `kubernetes.azure.com/os-s
 - **Network connectivity** between your AKS cluster and Azure Managed Lustre virtual network. See [Plan network architecture for AKS with Azure Managed Lustre](azure-managed-lustre-network-planning) for configuration options.
 - Sufficient subnet IP addresses and the inbound and outbound access described in [Azure Managed Lustre network prerequisites](/en-us/azure/azure-managed-lustre/amlfs-prerequisites#network-prerequisites). New private subnets need an explicit outbound connection, such as a NAT gateway.
 - Network access required for the extension and its driver images and client packages. AKS nodes need access to MCR, `packages.microsoft.com`, and their node image's OS package repositories.
-- Appropriate nodes for the controller deployment, plus eligible nodes for your Lustre workloads. For nodes with custom taints that restrict pod scheduling, see the [node pool guidance](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.6.0/docs/install-csi-driver.md#node-pool-taints-and-tolerations).
+- Appropriate nodes for the controller deployment, plus eligible nodes for your Lustre workloads. For nodes with custom taints that restrict pod scheduling, see the [node pool guidance](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.7.0/docs/install-csi-driver.md#node-pool-taints-and-tolerations).
 
 ## Provisioning methods
 
@@ -158,28 +166,31 @@ Install the driver once for either provisioning method. Follow [Install the Azur
 
 ## Upgrade the CSI driver
 
-Follow [Upgrade the CSI driver](azure-managed-lustre-uninstall#upgrade-the-csi-driver) for Helm or script installations. For the preview AKS CLI option, see [Upgrade an AKS CLI installation (preview)](azure-managed-lustre-upgrade-uninstall-cli-preview#upgrade-an-aks-cli-installation-preview). Re-enabling a successfully installed extension doesn't upgrade or reinstall it.
+For an existing Helm installation or managed extension, contact Microsoft Support for an update plan for your installed version and installation method. Don't uninstall the driver or delete volumes just to install v0.7.0.
+
+For older script installations, see [Replace a legacy script installation](azure-managed-lustre-uninstall#replace-a-legacy-script-installation). For the preview AKS CLI option, see [Upgrade an AKS CLI installation (preview)](azure-managed-lustre-upgrade-uninstall-cli-preview#upgrade-an-aks-cli-installation-preview).
 
 ## Uninstall the driver
 
-Use the [uninstall procedure matching your installation method](azure-managed-lustre-uninstall#choose-the-matching-uninstall-method). Stop workloads and let volumes unmount before removing the driver. Keep volume and data cleanup separate from driver removal, and follow the additional volume-cleanup requirements for the preview AKS CLI option.
+Use the [uninstall procedure matching your installation method](azure-managed-lustre-uninstall#choose-the-matching-uninstall-method). Stop workloads, wait for unmounts and provisioning to finish, and complete the volume-retention or deletion checks while the driver is still running. Removing a dynamically provisioned claim with a `Delete` reclaim policy can delete its backing file system and data.
 
 ## Troubleshooting
 
-To troubleshoot issues with the Azure Lustre CSI Driver, see the [v0.6.0 CSI driver troubleshooting guide](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.6.0/docs/csi-debug.md) in the GitHub repository.
+For diagnostics, see the [v0.7.0 CSI driver troubleshooting guide](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.7.0/docs/csi-debug.md) in the GitHub repository. Before following any upgrade or installer-rerun examples, read Upgrade the CSI driver.
 
 Common issues include:
 
 - **Network connectivity problems** - verify virtual network peering or subnet configuration between AKS and Azure Managed Lustre.
 - **Incorrect configuration** - verify the MGS IP address in your storage class.
 - **Pod scheduling issues** - verify that the node's effective OS SKU is `Ubuntu2204`, `Ubuntu2404`, `AzureLinux3`, or `Ubuntu2004` for a Confidential VM node pool. Check node architecture and taints too.
-- **No v0.6.0 node pod on an AKS node** - verify that the `kubernetes.azure.com/os-sku-effective` label is present and matched by the Jammy, Noble, or Azure Linux 3 DaemonSet.
+- **No v0.7.0 node pod on an AKS node** - verify that the `kubernetes.azure.com/os-sku-effective` label is present and matched by the Jammy, Noble, or Azure Linux 3 DaemonSet.
 - **A DaemonSet has zero desired pods** - this condition is expected if no eligible nodes match that flavor. Confirm that every intended workload node has a CSI node pod.
 - **Upgrade rollout timeout** - inspect the DaemonSet status, affected pod events, and both `lustre-loader` and `azurelustre` container logs before retrying.
 - **Unexpected driver or client version** - capture the installed extension and driver versions before requesting support. Don't change the extension-managed chart or images directly.
 - **Resource ownership conflicts** - identify any existing Helm, script, or differently named extension installation. Don't install a second driver or remove live storage resources as a recovery shortcut.
 - **Image pull or Lustre client installation failures** - verify node egress to `mcr.microsoft.com` and `packages.microsoft.com`.
 - **Permission issues during dynamic provisioning** - check the identity that the CSI controller uses against the [dynamic provisioning permission requirements](azure-managed-lustre-dynamic-provisioning-reference#permissions).
+- **Uninstall blocked by the volume guard** - inspect the guard's diagnostics and complete the [safe uninstall checks](azure-managed-lustre-uninstall#uninstall-the-driver). Unmounting alone doesn't clear a remaining PV.
 
 For provisioning-specific issues, see [Dynamic provisioning troubleshooting](azure-managed-lustre-dynamic-provisioning-reference#troubleshooting) or [Static provisioning troubleshooting](azure-managed-lustre-static-provisioning#troubleshooting).
 
@@ -195,4 +206,4 @@ The installation method determines the driver's namespace and how it manages res
 
 Namespace placement alone doesn't establish image authenticity or define the supported policy configuration. Follow the guidance in [AKS Image Integrity](image-integrity). Don't change extension-managed images or add policy exclusions solely to make installation succeed.
 
-Identify the deployed images before using version-specific verification commands. The [v0.6.0 image-verification reference](azure-managed-lustre-image-security) doesn't establish the version of a managed extension or verify all of its component images.
+Identify the deployed images before using version-specific verification commands. The [v0.7.0 image-verification reference](azure-managed-lustre-image-security) doesn't establish the version of a managed extension or verify all of its component images.

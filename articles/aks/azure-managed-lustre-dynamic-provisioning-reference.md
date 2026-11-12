@@ -22,11 +22,12 @@ ms.service: azure-kubernetes-service
 description: Review identity permissions and file system settings for dynamic provisioning, and find the Azure Managed Lustre walkthrough for AKS.
 ms.topic: reference
 ms.subservice: aks-storage
-ms.date: 2026-10-30T00:00:00.0000000Z
+ms.date: 2026-11-10T00:00:00.0000000Z
 author: pauljewellmsft
 ms.author: akashdubey
 ms.reviewer: brianl
 ms.custom: sfi-image-nochange
+ai-usage: ai-assisted
 locale: en-us
 document_id: 90fb8fbe-afa9-268a-dea7-931577754d99
 document_version_independent_id: 144735f5-bf94-23e3-04e7-323d16014992
@@ -42,12 +43,12 @@ item_type: Content
 source_path: articles/aks/azure-managed-lustre-dynamic-provisioning-reference.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
-- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/ae365aa9-5e19-49e1-95cb-6d0af6f19080
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68cb9039-df60-49b0-8ef8-89ad96497f63
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/ae365aa9-5e19-49e1-95cb-6d0af6f19080
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/06cefb7d-f6d5-4371-a867-a6339677d3ad
 - https://authoring-docs-microsoft.poolparty.biz/devrel/725b6df3-93e8-472d-834e-e7e0d2953d35
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/06cefb7d-f6d5-4371-a867-a6339677d3ad
 platformId: da648430-1d22-94fe-ae18-1e4f83f82fc1
 ---
 
@@ -70,7 +71,18 @@ Important
 
 Before dynamically creating file systems, grant permissions to the identity used by the installed CSI controller, not the user running the Azure CLI. Confirm that identity before assigning access.
 
-The controller identity requires permissions to read and join the existing subnet, validate Azure Managed Lustre subnet requirements, and read, create, update, and delete file systems. See the [v0.6.0 permission requirements](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.6.0/docs/driver-parameters.md#permissions-for-kubelet-identity).
+For driver v0.7.0, grant the controller identity these required permissions:
+
+| Action | Assignment scope |
+| --- | --- |
+| `Microsoft.StorageCache/amlFilesystems/read` | File system resource group. |
+| `Microsoft.StorageCache/amlFilesystems/write` | File system resource group. |
+| `Microsoft.StorageCache/amlFilesystems/delete` | File system resource group. |
+| `Microsoft.Network/virtualNetworks/subnets/join/action` | File system subnet or its containing virtual network. |
+
+Optional permissions enable early SKU and subnet-capacity checks: `Microsoft.StorageCache/skus/read` and `Microsoft.StorageCache/getRequiredAmlFSSubnetsSize/*` at subscription scope, and `Microsoft.Network/virtualNetworks/usages/read` at virtual network scope. Missing these optional permissions doesn't prevent provisioning; Azure still validates the creation request. Subscription-wide Reader isn't required for the v0.7.0 provisioning path.
+
+If you assign user-managed identities to the file system, also grant Managed Identity Operator on those identities or the corresponding `Microsoft.ManagedIdentity/userAssignedIdentities/assign/action` permission. See the [v0.7.0 permission requirements](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.7.0/docs/driver-parameters.md#permissions-for-kubelet-identity).
 
 For Helm installations, use the [identity configuration in the installation guide](azure-managed-lustre-install#install-with-helm). If you chose the preview AKS CLI option, use only the identity configuration supported by your installed extension; don't apply Helm settings to it.
 
@@ -104,7 +116,7 @@ Use the complete storage class in [Create a storage class](azure-managed-lustre-
 
 Set the resource group and network values explicitly, as the AKS example does, rather than relying on defaults that might select the AKS infrastructure resource group or subnet. The driver creates the file system, not these prerequisite resources.
 
-For reference, the upstream v0.6.0 driver uses these defaults when optional settings are omitted:
+For reference, the upstream v0.7.0 driver uses these defaults when optional settings are omitted:
 
 | Optional setting | Default |
 | --- | --- |
@@ -114,7 +126,9 @@ For reference, the upstream v0.6.0 driver uses these defaults when optional sett
 | `vnet-name` | AKS virtual network. |
 | `subnet-name` | AKS subnet. Specify a separate Lustre subnet instead of relying on this default. |
 
-Choose the file system configuration, region, zone, and capacity together. See [File system configuration](/en-us/azure/azure-managed-lustre/create-file-system-portal#basics-tab) and [capacity increments](/en-us/azure/azure-managed-lustre/create-file-system-portal#throughput-configurations). For the underlying driver parameters, see the [v0.6.0 reference](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.6.0/docs/driver-parameters.md).
+Choose the file system configuration, region, zone, and capacity together. See [File system configuration](/en-us/azure/azure-managed-lustre/create-file-system-portal#basics-tab) and [capacity increments](/en-us/azure/azure-managed-lustre/create-file-system-portal#throughput-configurations). For the underlying driver parameters, see the [v0.7.0 reference](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.7.0/docs/driver-parameters.md).
+
+For `sub-dir`, use a directory path inside the Lustre file system, not a path through a symlink. Writable mounts can create missing directories; read-only mounts require the directory to exist. Driver v0.7.0 rejects paths that escape the file system root and new provisioning requests containing `#` in the subdirectory. See [Subdirectory creation](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.7.0/docs/driver-parameters.md#subdirectory-creation).
 
 Creating claims provisions billable Azure resources. Consider namespace-level storage-class quotas when testing to avoid unintentionally creating multiple file systems.
 
@@ -170,7 +184,7 @@ kubectl delete resourcequota azurelustre-dynamic-quota
 
 ## Troubleshooting
 
-To troubleshoot issues with the Azure Lustre CSI Driver, see the [v0.6.0 CSI driver troubleshooting guide](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.6.0/docs/csi-debug.md) in the GitHub repository.
+To troubleshoot issues with the Azure Lustre CSI Driver, see the [v0.7.0 CSI driver troubleshooting guide](https://github.com/kubernetes-sigs/azurelustre-csi-driver/blob/v0.7.0/docs/csi-debug.md) in the GitHub repository.
 
 For common driver installation, node scheduling, and upgrade issues, see [CSI driver troubleshooting](azure-managed-lustre-overview#troubleshooting).
 

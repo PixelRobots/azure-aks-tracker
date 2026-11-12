@@ -22,7 +22,7 @@ ms.service: azure-kubernetes-service
 description: Learn how to verify the integrity and origin of Azure Lustre CSI Driver container images using Notation CLI and AKS Image Integrity.
 ms.topic: how-to
 ms.subservice: aks-storage
-ms.date: 2026-10-30T00:00:00.0000000Z
+ms.date: 2026-11-10T00:00:00.0000000Z
 author: pauljewellmsft
 ms.author: akashdubey
 ms.reviewer: brianl
@@ -57,7 +57,7 @@ Azure Lustre CSI Driver signs its container images so you can verify the integri
 
 ## Understanding image security in Kubernetes system components
 
-The version-pinned examples in the following section verify upstream v0.6.0 images that Helm and script installations use. For the alternative AKS CLI option in preview, see [Image security on AKS](azure-managed-lustre-overview#image-security). These examples don't establish the extension version or verify all of its component images.
+The version-pinned examples in the following section verify upstream v0.7.0 images that Helm and script installations use. For the alternative AKS CLI option in preview, see [Image security on AKS](azure-managed-lustre-overview#image-security). These examples don't establish the extension version or verify all of its component images.
 
 ## Pre-deployment image verification
 
@@ -123,13 +123,13 @@ Before you deploy the Azure Lustre CSI Driver, verify the digital signatures and
     export NOTATION_EXPERIMENTAL=1
     
     # Verify the Jammy image used by Jammy node pods
-    notation verify --allow-referrers-api mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.6.0-jammy
+    notation verify --allow-referrers-api mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.7.0-jammy
     
     # Verify the Noble image used by the controller and Noble node pods
-    notation verify --allow-referrers-api mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.6.0-noble
+    notation verify --allow-referrers-api mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.7.0-noble
     
     # Verify the Azure Linux 3 image used by Azure Linux 3 node pods
-    notation verify --allow-referrers-api mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.6.0-azurelinux3
+    notation verify --allow-referrers-api mcr.microsoft.com/oss/v2/kubernetes-csi/azurelustre-csi:v0.7.0-azurelinux3
     ```
 
     The output of a successful verification looks like the following example:

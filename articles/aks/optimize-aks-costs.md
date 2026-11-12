@@ -24,7 +24,7 @@ author: schaffererin
 ms.author: schaffererin
 ms.custom: aks-cost
 ms.topic: how-to
-ms.date: 2026-06-24T00:00:00.0000000Z
+ms.date: 2026-10-16T00:00:00.0000000Z
 locale: en-us
 document_id: 05e49204-fdfc-831b-a8e3-c43420306fb1
 document_version_independent_id: f24b1bed-4a3a-aa1b-7c4e-e13c36057b2b
@@ -187,7 +187,7 @@ For more information, see [Multi-Process Service (MPS)](https://docs.nvidia.com/
 
 ![Screenshot of a visual chart example showing multi-instance GPUs (MIGs).](media/optimize-aks-costs/gpu-migs.png)
 
-For more information, see [GPU Operator with MIG](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-mig.html) and [Create a multi-instance GPU node pool in Azure Kubernetes Service (AKS)](gpu-multi-instance).
+For more information, see [Multi-instance GPU overview in Azure Kubernetes Service (AKS)](multi-instance-gpu-overview) and [GPU Operator with MIG](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-operator-mig.html).
 
 ## Multitenancy
 

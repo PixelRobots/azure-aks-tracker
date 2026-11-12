@@ -23,7 +23,7 @@ description: Learn how to provision a fully managed GPU node pool on your new or
 ms.topic: how-to
 ms.custom: devx-track-azurecli
 ms.subservice: aks-developer
-ms.date: 2026-11-02T00:00:00.0000000Z
+ms.date: 2026-11-10T00:00:00.0000000Z
 author: sdesai345
 ms.author: sachidesai
 ai-usage: ai-assisted
@@ -279,7 +279,7 @@ For GPU SKUs that support Multi-Instance GPU (such as A100 and H100), configure 
 
 The `migStrategy` field is immutable after the node pool is created.
 
-For background on MIG partitioning, supported VM sizes, and GPU instance profiles, see [Create a multi-instance GPU node pool in AKS](gpu-multi-instance) and [NVIDIA Multi-Instance GPU](https://docs.nvidia.com/datacenter/tesla/mig-user-guide/).
+For background on MIG partitioning, supported VM sizes, and GPU instance profiles, see [Multi-instance GPU (MIG) overview](multi-instance-gpu-overview).
 
 # [Single strategy](#tab/mig-single)
 ```azurecli
