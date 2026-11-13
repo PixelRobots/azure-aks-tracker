@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Troubleshoot Pod snapshot cluster extension errors in Azure Kubernetes Service. Resolve snapshot capture, restore, storage, and cleanup failures now.
+description: Troubleshoot Pod snapshot cluster extension errors in AKS. Learn how to resolve snapshot capture, restore, storage, and cleanup failures today.
 ms.reviewer: wangamanda
-ms.date: 2026-11-11T00:00:00.0000000Z
+ms.date: 2026-11-12T00:00:00.0000000Z
 ms.service: azure-kubernetes-service
 ms.custom: sap:Extensions, Policies and Add-Ons
 ai-usage: ai-assisted
@@ -35,12 +35,12 @@ monikers: []
 item_type: Content
 source_path: support/azure/azure-kubernetes/extensions/troubleshoot-pod-snapshot-cluster-extension.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: da368aac-b506-5c25-1eb4-97ddeda6f983
 ---
@@ -49,7 +49,7 @@ platformId: da368aac-b506-5c25-1eb4-97ddeda6f983
 
 ## Summary
 
-This article helps you troubleshoot the Pod snapshot cluster extension (`Microsoft.PodSnapshot`) on Azure Kubernetes Service (AKS). It covers extension installation, component availability, policy and storage readiness, snapshot capture, restore authorization, runtime compatibility, and deletion.
+This article helps you troubleshoot Pod snapshot cluster extension errors (`Microsoft.PodSnapshot`) in Azure Kubernetes Service (AKS) so you can quickly resolve failures. It covers extension installation, component availability, policy and storage readiness, snapshot capture, restore authorization, runtime compatibility, and deletion.
 
 Important
 
@@ -220,14 +220,14 @@ Possible causes include an incorrect account or container, a managed identity co
 
 For an installation that uses Azure Blob Storage:
 
-1. Confirm the account and container in the referenced `PodSnapshotStorageConfig`.
+1. Confirm the account and container in the referenced `PodSnapshotStorageConfig`. The account must match the broker's configured `broker.storageAccount`; the broker rejects a mismatch even when Azure permissions are correct. For restore or deletion, check the snapshot's recorded `status.storageStatus.azureBlob` location. Changing the storage configuration doesn't move existing snapshots.
 2. Inspect the identity associated with the broker's service account:
 
     ```bash
     kubectl get serviceaccount pod-snapshot-broker \
       --namespace "$EXTENSION_NAMESPACE" --output yaml
     ```
-3. Verify that the configured identity has the **Storage Blob Data Contributor** role at the intended storage account or container scope. Check its workload identity configuration, including the tenant and federated identity subject for the actual release namespace. For background, see [Microsoft Entra Workload ID on AKS](/en-us/azure/aks/workload-identity-overview) and [Assign an Azure role for access to blob data](/en-us/azure/storage/blobs/assign-azure-role-data-access).
+3. Verify that the configured identity has the **Storage Blob Data Contributor** role at storage account scope. If that role is scoped only to the container, also grant **Storage Blob Delegator** at account scope: the broker needs an account-level user-delegation key. Check its workload identity configuration, including the tenant and federated identity subject for the actual release namespace. For background, see [Microsoft Entra Workload ID on AKS](/en-us/azure/aks/workload-identity-overview) and [Assign an Azure role for access to blob data](/en-us/azure/storage/blobs/assign-azure-role-data-access).
 4. Inspect the broker and node-worker logs for the failure interval:
 
     ```bash
@@ -268,7 +268,7 @@ The policy isn't ready, no eligible source pod is available, the workload contai
     kubectl get podsnapshotpolicies,podsnapshotmanualtriggers,podsnapshots \
       --namespace "$WORKLOAD_NAMESPACE" --output wide
     ```
-2. Inspect the affected trigger, snapshot, source pod, and events:
+2. Inspect the affected trigger, snapshot, source pod, and events. Also inspect the corresponding `Snapshot`node operation:
 
     ```bash
     TRIGGER_NAME="<trigger-name>"
@@ -298,7 +298,7 @@ The policy isn't ready, no eligible source pod is available, the workload contai
 4. For a scheduled capture, also inspect the policy's `Scheduled` condition and `status.active`. Each schedule occurrence captures one representative ready pod, not every matching replica.
 5. Verify completion. A successful manual trigger has `Triggered=True` with reason `Complete`. A usable snapshot has `Checkpoint=True`, `StorageReplicated=True`, and `Ready=True`, and capture emits an `AKSPodSnapshotted` event.
 
-If `postCheckpoint: stop` is configured, also inspect the snapshot's `PostCheckpointStop` condition and the `AKSPodStoppedAfterCheckpoint` event. `Ready=True` alone doesn't prove that source-pod deletion has finished. `PostCheckpointStopPending` means source-stop protection is still pending.
+If you configure `postCheckpoint: stop`, also inspect the snapshot's `PostCheckpointStop` condition and the `AKSPodStoppedAfterCheckpoint` event. `Ready=True` alone doesn't prove that source-pod deletion is finished. `PostCheckpointStopPending` means source-stop protection is still pending.
 
 Don't delete triggers or retry an uncertain capture merely to force progress. A readiness-probe warning while the source workload is temporarily frozen doesn't, by itself, establish capture failure. The Pod snapshot cluster extension doesn't make external services or volume contents transactionally consistent with captured memory; validate your application's storage recovery and reconnection behavior.
 
@@ -324,7 +324,8 @@ The caller lacks the custom `restore` permission, the selected snapshot isn't us
     kubectl get podsnapshot "$SNAPSHOT_NAME" \
       --namespace "$WORKLOAD_NAMESPACE" --output yaml
     ```
-2. Check the identity that creates the pod. For a direct request, check your current identity:
+2. If admission reports `dry-run is not supported for Azure Blob restore staging`, check whether your deployment tool uses a server-side dry run. Azure Blob restores reject these requests, including `kubectl diff`, even with asynchronous staging enabled. Use a normal create or apply only when you're ready to perform the restore.
+3. Check the identity that creates the pod. For a direct request, check your current identity:
 
     ```bash
     kubectl auth can-i restore \
@@ -347,7 +348,7 @@ The caller lacks the custom `restore` permission, the selected snapshot isn't us
     An impersonation permission error doesn't establish whether restore access is granted. If restore authorization is missing, ask your cluster administrator to grant the required access at the appropriate scope. The extension provides the `pod-snapshot-restorer` ClusterRole but doesn't create a restore binding by default. Don't grant `cluster-admin` as a workaround.
 
     Authorizing a shared controller delegates restore capability to workloads that can cause it to create restore pods. Review workload write permissions and snapshot isolation before granting access.
-3. Verify the restore opt-in label and, for explicit selection, the snapshot annotation in the pod manifest:
+4. Verify the restore opt-in label and, for explicit selection, the snapshot annotation in the pod manifest:
 
     ```yaml
     metadata:
@@ -358,9 +359,9 @@ The caller lacks the custom `restore` permission, the selected snapshot isn't us
     ```
 
     This example is a manifest fragment. For a Sandbox, restore intent belongs in `spec.podTemplate.metadata`, not the Sandbox's top-level metadata.
-4. Compare the authored container template with the snapshot's source workload. For implicit Kata restore, container names, images, commands, arguments, restart policy, and completed init-container identity and order must match exactly. Resource requests and limits aren't part of snapshot selection, but must be sufficient to run the restored workload. Don't add native sidecars or ephemeral containers.
-5. For asynchronous Kata restore, don't preassign `spec.nodeName`. Allow the extension to select a compatible node. If the error reports no compatible node, use the Kata placement checks.
-6. For a controller-created Sandbox pod, also follow the [Agent Sandbox restore checks](troubleshoot-agent-sandbox-cluster-extension#error-10-a-sandbox-restore-is-denied-doesnt-progress-or-uses-the-wrong-snapshot). Verify the controller's restore permission and the selected same-namespace snapshot. Suspend the Sandbox and wait for its old backing pod to be deleted before changing restore selection.
+5. Compare the authored container template with the snapshot's source workload. For implicit Kata restore, container names, images, commands, and arguments must match exactly. Completed init containers must also match in identity, order, and restart policy. Resource requests and limits aren't part of snapshot selection, but must be sufficient to run the restored workload. Don't add native sidecars or ephemeral containers.
+6. For asynchronous Kata restore, don't preassign `spec.nodeName`. Allow the extension to select a compatible node. If the error reports no compatible node, use the Kata placement checks.
+7. For a controller-created Sandbox pod, also follow the [Agent Sandbox restore checks](troubleshoot-agent-sandbox-cluster-extension#error-10-a-sandbox-restore-is-denied-doesnt-progress-or-uses-the-wrong-snapshot). Verify the controller's restore permission and the selected same-namespace snapshot. Suspend the Sandbox and wait for its old backing pod to be deleted before changing restore selection.
 
 Don't bypass an admission denial by changing webhooks, disabling admission policies, or adding runtime-private annotations.
 
@@ -424,7 +425,7 @@ For asynchronous Azure Blob restore, the system must download and verify the sna
     ```
 2. If preparation is progressing without warnings, wait for it to finish. The Pod snapshot cluster extension removes the gate after preparation succeeds.
 3. If warnings indicate a storage or archive failure, follow Snapshot storage access fails. Check whether the selected node and its node-worker pod are ready.
-4. If preparation remains blocked, collect the pod events and the manager, node-worker, and broker logs for the same time interval.
+4. If preparation remains blocked, inspect the corresponding `PrepareRestore`node operation. Collect the pod events and the manager, node-worker, and broker logs for the same time interval.
 
 Don't remove the gate manually or repeatedly delete and recreate the pod to bypass preparation. A failed preparation doesn't cause the Pod snapshot cluster extension to start the workload from scratch.
 
@@ -438,7 +439,7 @@ Don't remove the gate manually or repeatedly delete and recreate the pod to bypa
 
 ### Cause
 
-Pod readiness isn't proof that the workload resumed from a snapshot. The Pod snapshot cluster extension must confirm the restore with a supported runtime backend.
+Pod readiness isn't proof that the expected application state was restored. For Kata, the Pod snapshot cluster extension uses a `ConfirmRestore` node operation to check the destination runtime.
 
 ### Solution
 
@@ -462,7 +463,7 @@ Pod readiness isn't proof that the workload resumed from a snapshot. The Pod sna
     ```
 
     Correlate this timestamp with the specific restore attempt. A timestamp from another restore doesn't confirm this pod's result.
-3. If a failure event reports an unconfirmed or unsupported backend, treat the restore as failed even if the pod is running. Preserve the pod and snapshot details, events, node image version, RuntimeClass, and relevant extension logs for Azure support.
+3. If a failure event reports an unconfirmed or unsupported backend, treat the restore as failed even if the pod is running. Inspect the `ConfirmRestore`node operation for Kata. Preserve the pod and snapshot details, events, node image version, RuntimeClass, and relevant extension logs for Azure support.
 4. Verify that restore events include `AKSPodRestored` and check application-level state continuity. Pod readiness or a snapshot access timestamp alone doesn't prove that the expected in-memory state was restored.
 
 For supported Kata runtimes, the workload resumes from the prepared snapshot or fails to start; it doesn't silently start from scratch. Don't modify managed `containerd` settings to force confirmation.
@@ -528,7 +529,7 @@ Deletion also waits for coordinated storage cleanup. An unavailable execution co
 2. Allow active capture, restore, and pending source-stop work to complete. Check the `PostCheckpointStop` condition if applicable.
 3. Verify that the manager and the execution components required by your installation are healthy. For Azure Blob cleanup, also verify storage access.
 4. For a stuck snapshot, record its deletion timestamp, finalizers, conditions, and relevant pod events. If it has an active restore consumer, let staging and restore observation finish before expecting cleanup to complete. For a restored Sandbox that's no longer needed, delete it through your normal workload management process and wait for its backing pod to be removed.
-5. If cleanup doesn't progress, collect the affected resources and logs for Azure support.
+5. If cleanup doesn't progress, inspect the `DeleteSnapshot`node operations and collect the affected resources and logs for Azure support.
 6. Verify that the snapshot object is deleted after cleanup completes. Before extension removal, inventory snapshots in every namespace you manage. An all-namespace inventory requires cluster-wide read permission:
 
     ```bash
@@ -539,6 +540,29 @@ Don't remove finalizers, edit resource status, or manually delete storage artifa
 
 Before planned removal of the Pod snapshot cluster extension, plan snapshot retention and intentionally delete snapshots you no longer need while the extension is healthy. Wait for their deletion to complete before uninstalling. If the extension has already been removed and snapshots remain terminating, contact Azure support for help restoring reconciliation through the same AKS extension management path. Don't create a separate Helm installation. Verify removal through the Azure extension resource; retained CRDs don't establish that cleanup succeeded or failed.
 
+## Inspect node operations
+
+Capture, staging, confirmation, and cleanup run as `PodSnapshotNodeOperation` objects. List them across namespaces if you have cluster-wide read permission:
+
+```bash
+kubectl get podsnapshotnodeoperations.internal.podsnapshot.aks.azure.com \
+  --all-namespaces
+```
+
+For namespace-scoped checks, replace `--all-namespaces` with `--namespace "$WORKLOAD_NAMESPACE"` for capture, staging, and confirmation, or `--namespace "$EXTENSION_NAMESPACE"` for deletion.
+
+Inspect the relevant operation in the namespace returned above:
+
+```bash
+OPERATION_NAMESPACE="<operation-namespace>"
+OPERATION_NAME="<operation-name>"
+
+kubectl get podsnapshotnodeoperation.internal.podsnapshot.aks.azure.com \
+  "$OPERATION_NAME" --namespace "$OPERATION_NAMESPACE" --output yaml
+```
+
+Match `spec.snapshotRef` to the snapshot's namespace, name, and UID. Check `spec.action`, `spec.nodeName`, `spec.deadline`, `status.phase`, `status.workerID`, `status.reason`, and `status.message`. The actions are `Snapshot`, `PrepareRestore`, `ConfirmRestore`, and `DeleteSnapshot`. A running operation or uploaded artifact alone doesn't establish completion. Don't edit or delete node operations to force progress.
+
 ## Collect diagnostics and contact support
 
 If the issue persists, [create an Azure support request](/en-us/azure/azure-portal/supportability/how-to-create-azure-support-request).
@@ -548,7 +572,7 @@ Provide the smallest relevant, sanitized evidence set:
 - The cluster resource ID, region, installed extension name and version, release namespace, and failure time range in UTC.
 - Filtered extension status, error messages, and operation or correlation IDs.
 - Component deployment, DaemonSet, and pod status, deployed image references, restart counts, and relevant events.
-- The affected policy, storage configuration, trigger, and snapshot, including names, namespaces, generations, conditions, and owner references.
+- The affected policy, storage configuration, trigger, snapshot, and node operations, including names, namespaces, generations, conditions, and owner references.
 - Source and restore pod names, UIDs, RuntimeClasses, node names, and UTC timestamps.
 - The exact admission error and the identity that creates the restore pod.
 - For Kata, the source and destination VM SKUs, node image versions, and container runtime versions.

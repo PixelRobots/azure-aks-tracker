@@ -14,7 +14,7 @@ ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to troubleshoot Agent Sandbox extension errors in AKS, including installation, controller, warm pool, claim, and restore failures. Resolve issues now.
 ms.reviewer: wangamanda
-ms.date: 2026-11-11T00:00:00.0000000Z
+ms.date: 2026-11-12T00:00:00.0000000Z
 ms.service: azure-kubernetes-service
 ms.custom: sap:Extensions, Policies and Add-Ons
 ai-usage: ai-assisted
@@ -47,7 +47,7 @@ platformId: 47e3728b-090b-3cf7-0115-6cfda5972c69
 
 ## Summary
 
-This article helps you troubleshoot Agent Sandbox cluster extension errors (`Microsoft.AgentSandbox`) on Azure Kubernetes Service (AKS) so you can restore healthy sandbox workloads. It covers extension installation, controller availability, Sandbox APIs, workload readiness, suspension and resumption, warm pools, claims, optional integration with the Pod snapshot cluster extension, and deletion.
+This article helps you troubleshoot Agent Sandbox cluster extension errors (`Microsoft.AgentSandbox`) in Azure Kubernetes Service (AKS) and restore healthy sandbox workloads. It covers installation, controller, API, readiness, suspend and resume, warm pool, claim, restore, and deletion issues.
 
 Important
 
@@ -441,7 +441,7 @@ The referenced warm pool might be missing, have no ready unclaimed members, or c
 
 The Pod snapshot cluster extension is a separate, optional extension. Ordinary Sandbox creation, suspension, templates, pools, and claims don't require it.
 
-When restore is enabled, snapshot readiness, namespace, selection, and restore permissions must all be valid. The manager component of the Pod snapshot cluster extension discovers the Sandbox API at startup, so installation order can affect integration. Existing restore selection can't be changed while the backing pod exists.
+When restore is enabled, snapshot readiness, namespace, selection, and restore permissions must all be valid. The manager component of the Pod snapshot cluster extension detects the Sandbox API even if Agent Sandbox is installed later; a restart isn't required. Existing restore selection can't be changed while the backing pod exists.
 
 ### Solution
 
@@ -456,7 +456,7 @@ When restore is enabled, snapshot readiness, namespace, selection, and restore p
       --since=30m
     ```
 
-    If logs persistently report `SandboxRestoreReconciler disabled` after Agent Sandbox was installed, the manager component of the Pod snapshot cluster extension might have started before the Sandbox API was available. Use the supported Pod snapshot cluster extension management process, or contact support, to reconcile the manager. Don't patch its managed deployment.
+    Look for `SandboxRestoreReconciler enabled` in the manager logs. If the Sandbox API wasn't available at startup, the manager retries discovery every ten seconds. If discovery errors persist after the CRD is established, collect the logs and contact support. Don't patch its managed deployment.
 3. Verify restore intent in the Sandbox's `spec.podTemplate`. For explicit selection, use a ready snapshot in the same namespace:
 
     ```yaml
