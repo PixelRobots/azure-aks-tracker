@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot the K8SAPIServerConnFailVMExtensionError error code (51) - Azure | Microsoft Learn
+title: Troubleshoot K8SAPIServerConnFailVMExtensionError error code (51) in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/error-code-k8sapiserverconnfailvmextensionerror
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot the K8SAPIServerConnFailVMExtensionError (51) when AKS nodes can't connect to the API server. Follow the steps to fix it.
-ms.date: 2026-10-30T00:00:00.0000000Z
-ms.reviewer: rissing, chiragpa, erbookbi, v-leedennis, jovieir, mariusbutuc, andbar
+description: Learn how to troubleshoot the K8SAPIServerConnFailVMExtensionError (51) when AKS nodes cant connect to the API server. Follow the steps to fix it.
+ms.date: 2026-11-13T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, erbookbi, v-leedennis, jovieir, mariusbutuc, andbar, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
 ai-usage: ai-assisted
@@ -43,11 +43,11 @@ spProducts:
 platformId: 863d9828-a1e6-86f1-884c-7a5fb226969c
 ---
 
-# Troubleshoot the K8SAPIServerConnFailVMExtensionError error code (51) - Azure | Microsoft Learn
+# Troubleshoot K8SAPIServerConnFailVMExtensionError error code (51) in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article describes how to identify and resolve the `K8SAPIServerConnFailVMExtensionError` error (also known as error code `ERR_K8S_API_SERVER_CONN_FAIL`, error number 51). This error might occur when you create, start, scale, or upgrade a Microsoft Azure Kubernetes Service (AKS) cluster or node pool.
+This article helps you troubleshoot the `K8SAPIServerConnFailVMExtensionError` error code (also known as `ERR_K8S_API_SERVER_CONN_FAIL`, error number 51) so that you can successfully create, start, scale, or upgrade an Azure Kubernetes Service (AKS) cluster or node pool.
 
 When AKS provisions a Linux node, the node bootstrap script (delivered through the `vmssCSE` Custom Script Extension) checks whether the node can reach the cluster's Kubernetes API server on TCP port 443 before it starts the kubelet. If the node can resolve the API server address but can't establish a connection to it, the script exits with code 51, the node isn't registered in the cluster, and the operation fails.
 

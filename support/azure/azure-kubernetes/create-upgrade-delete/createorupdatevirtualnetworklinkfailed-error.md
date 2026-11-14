@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: CreateOrUpdateVirtualNetworkLinkFailed error code - Azure | Microsoft Learn
+title: CreateOrUpdateVirtualNetworkLinkFailed error code in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/createorupdatevirtualnetworklinkfailed-error
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Provides a solution to the CreateOrUpdateVirtualNetworkLinkFailed error that occurs when you try to update or upgrade an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2024-03-13T00:00:00.0000000Z
-ms.reviewer: axelg, chiragpa, jpalma, v-weizhu
+description: Fix the CreateOrUpdateVirtualNetworkLinkFailed error when you update or upgrade an Azure Kubernetes Service (AKS) cluster. Follow these steps to resolve it.
+ms.date: 2026-11-11T00:00:00.0000000Z
+ms.reviewer: axelg, chiragpa, jpalma, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: a1892e7f-faa5-dd70-93a6-cec219a1ff9f
 document_version_independent_id: a1892e7f-faa5-dd70-93a6-cec219a1ff9f
@@ -44,19 +45,19 @@ spProducts:
 platformId: 8b86a4f9-f4f5-fd8c-d523-ecfda6d5fe54
 ---
 
-# CreateOrUpdateVirtualNetworkLinkFailed error code - Azure | Microsoft Learn
+# CreateOrUpdateVirtualNetworkLinkFailed error code in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article provides a solution to the "CreateOrUpdateVirtualNetworkLinkFailed" error code that occurs when you try to update or upgrade a Microsoft Azure Kubernetes Service (AKS) cluster.
+The "CreateOrUpdateVirtualNetworkLinkFailed" error occurs when you update or upgrade an Azure Kubernetes Service (AKS) cluster after linking a private DNS zone with a duplicate name. This article explains the cause and shows how to resolve the error so your cluster operation succeeds.
 
 ## Prerequisites
 
-[Azure CLI](/en-us/cli/azure/install-azure-cli)
+Ensure you have [Azure CLI](/en-us/cli/azure/install-azure-cli) installed and configured.
 
 ## Symptoms
 
-An AKS cluster update or upgrade operation fails and returns the following error message:
+An AKS cluster update or upgrade operation fails and returns the following error message.
 
 > 
 > **Code: CreateOrUpdateVirtualNetworkLinkFailed** - SubCode: BadRequest
@@ -69,19 +70,19 @@ An AKS cluster update or upgrade operation fails and returns the following error
 
 ## Cause
 
-This error happens in this scenario:
+This error happens in this scenario for the following reasons:
 
 - You disassociate the original private Domain Name System (DNS) zone of the AKS cluster.
 - You link a private DNS zone that has the same name as the original zone but is located in a different resource group or subscription.
 
-That's why you see the same private DNS zone name "&lt;GUID&gt;.privatelink.&lt;region&gt;.azmk8s.io" in the error message. The first is the new zone in the new resource group or subscription, while the second is the original zone created with the AKS cluster.
+You see the same private DNS zone name "&lt;GUID&gt;.privatelink.&lt;region&gt;.azmk8s.io" in the error message. The first is the new zone in the new resource group or subscription, while the second is the original zone created with the AKS cluster.
 
 ## Solution
 
 To resolve this issue, follow these steps:
 
 1. Remove the link between the AKS cluster's virtual network (VNET) and the private DNS zone created in the wrong resource group or subscription.
-2. Update the cluster by running the following command:
+2. Update the cluster by running the following command.
 
     ```azurecli
     az aks update  -n <myAKSCluster> -g <myResourceGroup>

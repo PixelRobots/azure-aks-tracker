@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot Throttled Error Code (429) - Azure | Microsoft Learn
+title: Troubleshoot Throttled (Status 429) error code in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/error-code-aksrequeststhrottled
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,9 +12,10 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Introduces how to resolve the Throttled error (status 429) when you try to create and deploy an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2025-03-05T00:00:00.0000000Z
-ms.reviewer: jovieir, chiragpa, v-weizhu
+description: Learn how to resolve the Throttled error (status 429) when you create or deploy an Azure Kubernetes Service (AKS) cluster. Follow the steps to fix it.
+ms.date: 2026-11-11T00:00:00.0000000Z
+ai-usage: ai-assisted
+ms.reviewer: jovieir, chiragpa, v-weizhu, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
 locale: en-us
@@ -42,15 +43,15 @@ spProducts:
 platformId: ffef5e94-a9d4-ae28-1cff-b6d83f856916
 ---
 
-# Troubleshoot Throttled Error Code (429) - Azure | Microsoft Learn
+# Troubleshoot Throttled (Status 429) error code in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to identify and resolve the `Throttled` error (status 429) that occurs when you try to create and deploy a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article helps you identify and resolve the "Throttled (Status 429)" error that occurs when you create or deploy an Azure Kubernetes Service (AKS) cluster, so that your cluster operations can complete successfully.
 
 ## Symptoms
 
-When you try to create an AKS cluster, you receive the following "The PutManagedClusterHandler.PUT request limit has been exceeded" error message that shows a "SubCode" value of **Throttled** and a "Status" value of **429**:
+When you try to create an AKS cluster, you receive the following "The PutManagedClusterHandler.PUT request limit has been exceeded" error message that shows a **SubCode** value of **Throttled** and a **Status** value of **429**.
 
 > 
 > Category: ClientError;
@@ -61,9 +62,11 @@ When you try to create an AKS cluster, you receive the following "The PutManaged
 > 
 > **Code="Throttled"**
 > 
-> Message="&gt; The PutManagedClusterHandler.PUT request limit has been exceeded for SubID='*&lt;subscription-id-guid&gt;*', please retry again in X seconds. For more information, please visit aka.ms/aks/throttling"; Request throttling can occur on various Azure components, so the error message might be different depending on the type of resource where this issue occurs.
+> Message="&gt; The PutManagedClusterHandler.PUT request limit has been exceeded for SubID='*&lt;subscription-id-guid&gt;*', please retry again in X seconds. For more information, please visit aka.ms/aks/throttling";
 
-Resource provider throttling is independent of ARM throttling and is tailored to the operations of a specific resource provider. In this scenario, AKS resource provider throttling is specific to the AKS resource provider and applies only to operations related to AKS resources.
+Request throttling can occur on various Azure components, so the error message might be different depending on the type of resource where this issue occurs.
+
+Resource provider throttling is independent of Azure Resource Manager (ARM) throttling and is tailored to the operations of a specific resource provider. In this scenario, AKS resource provider throttling is specific to the AKS resource provider and applies only to operations related to AKS resources.
 
 ## Cause
 
@@ -80,6 +83,6 @@ To resolve this issue, examine and modify your access pattern of the throttled s
 | Users attempt to modify the same AKS cluster multiple times consecutively. | Space out operations. Ensure successful completion before initiating another one. |
 | Users attempt to add, modify, or delete one or more agentPools on the same AKS cluster. | Space out operations. Ensure successful completion before initiating another one. |
 
-## More information
+## References
 
-[General troubleshooting of AKS cluster creation issues](troubleshoot-aks-cluster-creation-issues)
+- [General troubleshooting of AKS cluster creation issues](troubleshoot-aks-cluster-creation-issues)
