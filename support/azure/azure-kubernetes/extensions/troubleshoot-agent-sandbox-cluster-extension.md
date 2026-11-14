@@ -14,7 +14,7 @@ ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to troubleshoot Agent Sandbox extension errors in AKS, including installation, controller, warm pool, claim, and restore failures. Resolve issues now.
 ms.reviewer: wangamanda
-ms.date: 2026-11-12T00:00:00.0000000Z
+ms.date: 2026-11-13T00:00:00.0000000Z
 ms.service: azure-kubernetes-service
 ms.custom: sap:Extensions, Policies and Add-Ons
 ai-usage: ai-assisted
@@ -441,6 +441,8 @@ The referenced warm pool might be missing, have no ready unclaimed members, or c
 
 The Pod snapshot cluster extension is a separate, optional extension. Ordinary Sandbox creation, suspension, templates, pools, and claims don't require it.
 
+When you use the Agent Sandbox cluster extension and Pod snapshot cluster extension together, you can suspend and resume the same Sandbox. This preview doesn't support restoring a single snapshot to multiple independent Sandboxes, including those in a snapshot-backed warm pool.
+
 When restore is enabled, snapshot readiness, namespace, selection, and restore permissions must all be valid. The manager component of the Pod snapshot cluster extension detects the Sandbox API even if Agent Sandbox is installed later; a restart isn't required. Existing restore selection can't be changed while the backing pod exists.
 
 ### Solution
@@ -496,11 +498,11 @@ When restore is enabled, snapshot readiness, namespace, selection, and restore p
     The Agent Sandbox controller is shared across namespaces. Authorizing it delegates restore capability to workloads that can cause it to create restore pods. Review Sandbox write permissions and snapshot isolation before granting access. Propagating the `podsnapshot.aks.azure.com` label domain doesn't grant restore permission.
 6. To change or reselect a snapshot safely, use your normal manifest management process to perform these steps in order:
 
-    1. Remove the restore opt-in label from the Sandbox pod template.
-    2. Set `spec.operatingMode` to `Suspended`.
-    3. Wait for the old backing pod to be deleted.
-    4. Change the pod template or explicit snapshot reference.
-    5. Restore the opt-in label.
+    1. Set `spec.operatingMode` to `Suspended` without changing the existing restore label or annotation.
+    2. Wait for `Suspended=True` and for the backing pod to be deleted.
+    3. To clear an implicit selection, remove the restore opt-in label and wait for the Pod snapshot cluster extension to remove `restore-from`.
+    4. While still suspended, update the pod template. Set `restore=true` and an explicit `restore-from`, or omit `restore-from` for implicit selection.
+    5. Wait for the Pod snapshot cluster extension to select the intended snapshot before resuming.
     6. Set `spec.operatingMode` to `Running`.
 
     Don't set generated snapshot provenance or runtime restore annotations manually.
