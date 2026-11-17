@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn how to add a node pool with Confidential Virtual Machines (CVMs) to an existing Azure Kubernetes Service (AKS) cluster to securely handle sensitive container workloads without requiring code changes.
 ms.topic: how-to
-ms.date: 2026-09-17T00:00:00.0000000Z
+ms.date: 2026-10-20T00:00:00.0000000Z
 author: allyford
 ms.author: allyford
 ms.subservice: aks-security
@@ -42,16 +42,18 @@ item_type: Content
 source_path: articles/aks/use-cvm.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/2ed91286-6cf7-4b83-810d-75d0ee3b09dd
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/6735bd7e-4f7b-457d-b58c-29e6f0198677
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: b48bd332-a839-4a49-e349-0afa5a9e7bbb
 ---
 
 # Use Confidential Virtual Machines (CVMs) in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
 
-[Confidential Virtual Machines (CVMs)](/en-us/azure/confidential-computing/confidential-vm-overview) offer strong security and confidentiality for tenants. CVMs offer VM based Hardware Trusted Execution Environment (TEE) that leverage SEV-SNP security features to deny the hypervisor and other host management code access to VM memory and state, providing defense in depth protections against operator access. These features enable node pools with CVMs to target the migration of highly sensitive container workloads to AKS without any code refactoring while benefiting from the features of AKS. For example, you may require CVMs if you have the following:
+[Confidential Virtual Machines (CVMs)](/en-us/azure/confidential-computing/confidential-vm-overview) offer strong security and confidentiality for tenants. CVMs offer VM-based hardware Trusted Execution Environments (TEEs) that leverage AMD SEV-SNP and Intel TDX security features to deny the hypervisor and other host management code access to VM memory and state, providing defense in depth protections against operator access. These features enable node pools with CVMs to target the migration of highly sensitive container workloads to AKS without any code refactoring while benefiting from the features of AKS. For example, you might require CVMs if you have the following:
 
 - Workloads that handle security-critical data and sensitive customer data.
 - Services that are required to meet various compliance requirements, especially for government contracts. Without a scalable solution for securing data, this could potentially lead to the loss of accreditation and contracts.
@@ -60,13 +62,9 @@ In this article, you learn how to create AKS node pools using Confidential VM si
 
 [![Screenshot of architecture diagram showing Confidential Virtual Machines in AKS.](media/use-cvm/confidential-virtual-machines.png)](media/use-cvm/confidential-virtual-machines.png#lightbox)
 
-Important
-
-Starting on **December 10, 2026**, Azure Kubernetes Service (AKS) no longer supports Azure Linux with OS Guard for AKS (preview). At that point, AKS no longer produces new Azure Linux with OS Guard node images or provides security patches, and you can no longer create new node pools with Azure Linux with OS Guard. On **March 10, 2027**, AKS removes all existing Azure Linux with OS Guard node images, which causes scaling and remediation (reimage and redeploy) operations to fail. To avoid disruption, migrate to [Azure Container Linux (ACL)](azure-container-linux-overview). For more information about this retirement, see the [Retirement GitHub issue](https://github.com/Azure/AKS/issues/5950) and the [Azure Updates retirement announcement](https://azure.microsoft.com/updates/?id=571257). To stay informed about announcements and updates, follow the [AKS release notes](https://github.com/Azure/AKS/releases).
-
 ## AKS supported confidential VM sizes
 
-Azure offers a choice of [Trusted Execution Environment (TEE)](/en-us/azure/confidential-computing/trusted-execution-environment) options from both AMD and Intel. These TEEs allow you to create Confidential VM environments with excellent price-to-performance ratios, all without requiring any code changes. Intel TDX-based Confidential VMs aren't currently supported on AKS.
+Azure offers a choice of [Trusted Execution Environment (TEE)](/en-us/azure/confidential-computing/trusted-execution-environment) options from both AMD and Intel. AKS supports both AMD SEV-SNP and Intel TDX Confidential VM platforms. These TEEs allow you to create Confidential VM environments with excellent price-to-performance ratios, all without requiring any code changes.
 
 For more information, see [CVM VM sizes](/en-us/azure/confidential-computing/virtual-machine-options).
 
@@ -76,6 +74,7 @@ CVMs offer the following security enhancements as compared to other virtual mach
 
 - Robust hardware-based isolation between virtual machines, hypervisor, and host management code.
 - Customizable attestation policies to ensure the host's compliance before deployment.
+- Cloud-based Confidential OS disk encryption before first boot. This feature protects critical OS disk partitions and binds disk encryption keys to the VM's vTPM so protected disk content is accessible only to that VM. On AKS, this behavior is enabled by default for Ubuntu 26.04 CVM node pools.
 - VM encryption keys that the platform or the customer (optionally) owns and manages.
 - Secure key release with cryptographic binding between the platform's successful attestation and the VM's encryption keys.
 - Dedicated virtual Trusted Platform Module (TPM) instance for attestation and protection of keys and secrets in the virtual machine.
@@ -96,6 +95,7 @@ This table includes the supported OS versions:
 | Linux | `Ubuntu` | Supported | Ubuntu 20.04 is default for Kubernetes version 1.24-1.34. Ubuntu 24.04 is the default for Kubernetes version 1.35-1.38. |
 | Linux | `Ubuntu2204` | Not supported | AKS doesn't support CVM for Ubuntu 22.04. |
 | Linux | `Ubuntu2404` | Supported | CVM is supported on `Ubuntu2404` in Kubernetes 1.32-1.38. |
+| Linux | `Ubuntu2604` | Supported (preview) | CVM is supported on `Ubuntu2604` for supported AKS Kubernetes versions (1.36 and later). Ubuntu 26.04 CVM node pools are required for Intel TDX VM sizes and default-on OS disk encryption behavior. |
 | Linux | `AzureLinux` | Supported on Azure Linux 3.0 | Azure Linux 3 is default when enabling CVM for Kubernetes version 1.28-1.38. |
 | Linux | `AzureContainerLinux` | Supported | CVM is supported on `AzureContainerLinux` starting Kubernetes version 1.34+. |
 | Linux | `flatcar` | Not supported | [Flatcar Container Linux for AKS](flatcar-container-linux-for-aks) doesn't support CVM. |
@@ -108,7 +108,9 @@ When you use `Ubuntu` or `AzureLinux` as the `osSKU`, if the default OS version 
 
 The following limitations apply when adding a node pool with CVM to AKS:
 
-- You can't use FIPS, ARM64, Pod sandboxing, Confidential containers, or node auto-provisioning (NAP) with CVM node pools.
+- CVM is enabled when you select a supported Confidential VM size during node pool creation. CVM follows VM size capabilities and can't be independently toggled on or off.
+- Ubuntu and Azure Linux CVM node pools can't use FIPS, ARM64, Trusted Launch, Pod sandboxing, Confidential containers, or node auto-provisioning (NAP).
+- Ubuntu 26.04 CVM node pools have OS disk encryption enabled by default, and you can't disable it while staying on Ubuntu 26.04 CVM.
 - You can't use CVMs with Windows node pools.
 - Trusted Launch can only be used with CVM node pools with Azure Container Linux (ACL).
 
@@ -118,6 +120,10 @@ Before you begin, make sure you have the following:
 
 - An existing AKS cluster.
 - CVM sizes must be available for your subscription in the region where the cluster is created. You must have sufficient quota to create a node pool with a CVM size.
+
+Note
+
+Ubuntu 26.04 support is in preview and has additional requirements. The minimum AKS Kubernetes version is `1.36`, and the minimum preview Azure CLI version is `21.0.0b14` or later. You also need preview feature registration (`Ubuntu2604Preview`) and preview CLI/extension setup. For the full requirement list and steps, see [Migrate to Ubuntu 26.04 (preview)](upgrade-os-version#migrate-to-ubuntu-2604-preview).
 
 ## Add a node pool with a CVM to your AKS cluster
 
@@ -129,22 +135,10 @@ az aks nodepool add \
     --cluster-name myAKSCluster \
     --name cvmnodepool \
     --node-count 3 \
-    --node-vm-size Standard_DC4as_v5 
+    --node-vm-size Standard_DC4as_v5
 ```
 
-If you don't specify the `osSKU` or `osType`, AKS defaults to `--os-type Linux` and `--os-sku Ubuntu`.
-
-To create a CVM node pool that uses Azure Linux, set `--os-sku AzureLinux`.
-
-```azurecli
-az aks nodepool add \
-    --resource-group myResourceGroup \
-    --cluster-name myAKSCluster \
-    --name cvmnodepool \
-    --node-count 3 \
-    --node-vm-size Standard_DC4as_v5 \
-    --os-sku AzureLinux
-```
+If you want to target a specific OS image, add `--os-sku` to the command and set it to one of the supported OS options.
 
 ## Verify the node pool uses CVMs
 
@@ -173,7 +167,7 @@ az aks nodepool add \
         --query 'nodeImageVersion'
     ```
 
-    The following example output shows the node pool uses an Ubuntu 20.04 CVM image. The OS generation and image version depend on the Kubernetes version and OS SKU of the node pool.
+    The following example output shows the node pool uses a CVM image. The OS generation and image version depend on the Kubernetes version and OS SKU of the node pool.
 
     ```output
     "AKSUbuntu-2404gen2CVMcontainerd-202608.06.1"

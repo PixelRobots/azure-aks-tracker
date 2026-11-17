@@ -18,7 +18,7 @@ adobe-target: true
 learn_banner_products:
 - azure
 description: This article provides a conceptual overview of member cluster labels and how they are used in Azure Kubernetes Fleet Manager.
-ms.date: 2026-10-06T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
@@ -40,8 +40,10 @@ item_type: Content
 source_path: articles/kubernetes-fleet/concepts-member-cluster-labels.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/63959238-cb90-4871-a33d-4a5519097e47
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/78d87f42-5582-4a6b-90be-7db2f12b34e6
 platformId: 608e9d0f-e838-fac8-fdbb-3ac1af30bde3
 ---
 
@@ -91,7 +93,7 @@ A label selector matches clusters by their label keys and values. For example, a
 
 Use labels for the following management tasks:
 
-- **Update orchestration:** Select clusters for stages and groups in an update strategy. Label-based grouping for updates is in preview. For more information, see [Group clusters using member labels](concepts-update-orchestration#group-clusters-using-member-labels-preview).
+- **Update orchestration:** Select clusters for stages and groups in an update strategy. For more information, see [Group clusters using member labels](concepts-update-orchestration#group-clusters-by-using-member-labels).
 - **Cross-cluster network membership:** Set member labels to control whether a cluster is a member of a cross-cluster network. For more information, see [Configure and use cross-cluster networking](howto-configure-use-cross-cluster-networking).
 - **Resource placement:** Select the member clusters that receive Kubernetes resources. For more information, see [Resource placement](concepts-resource-placement).
 - **Staged resource rollouts:** Select clusters for each rollout stage for a resource placement. For more information, see [Resource placement rollout strategies](concepts-rollout-strategy).

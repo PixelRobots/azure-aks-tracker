@@ -20,7 +20,7 @@ learn_banner_products:
 - azure
 description: Learn how to configure automated upgrades of Kubernetes and node images across multiple clusters by using Azure Kubernetes Fleet Manager.
 ms.topic: how-to
-ms.date: 2026-08-25T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.reviewer: schaffererin
@@ -42,12 +42,12 @@ monikers: []
 item_type: Content
 source_path: articles/kubernetes-fleet/update-automation.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
 platformId: ab45f65e-5fc7-8c99-2b13-4d844c2fbaa3
 ---
@@ -749,12 +749,8 @@ Update to a defined target Kubernetes minor version. Fleet Manager Auto-upgrade 
 
     [![Screenshot of the Azure Kubernetes Fleet Manager Azure portal pane for creating auto-upgrade profile using the Target Kubernetes minor version channel.](media/auto-upgrade/create-auto-upgrade-profile-kubernetes-minor.png)](media/auto-upgrade/create-auto-upgrade-profile-kubernetes-minor.png#lightbox)
 
-# [Security patch (preview)](#tab/node-security-patch)
+# [Security patch](#tab/node-security-patch)
 Update Linux nodes with just security fixes, by using either live patching or a prepatched node image.
-
-Important
-
-Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
 
 1. In the Azure portal, navigate to your Azure Kubernetes Fleet Manager resource.
 2. From the service menu, under **Settings**, select **Multicluster update** &gt; **Auto-upgrade profiles** &gt; **+ Create**.
@@ -765,7 +761,7 @@ Azure Kubernetes Fleet Manager preview features are available on a self-service,
         - **Status**: Select **Enabled** or **Disabled**. Disabled auto-upgrade profiles don't trigger when new versions are released.
         - **Update sequence**: Select **Stages** or **One by one**.
     - Under **Auto-upgrade triggers**:
-        - **Channel**: Select **Security patch (preview)**.
+        - **Channel**: Select **Security patch**.
 4. Select **Create** to create the auto-upgrade profile.
 
     [![Screenshot of the Azure Kubernetes Fleet Manager Azure portal pane for creating auto-upgrade profile using the Node image channel.](media/auto-upgrade/create-auto-upgrade-profile-security-patch.png)](media/auto-upgrade/create-auto-upgrade-profile-security-patch.png#lightbox)

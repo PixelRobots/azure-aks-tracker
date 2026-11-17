@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot the ERR_VHD_FILE_NOT_FOUND error code - Azure | Microsoft Learn
+title: Troubleshoot the ERR_VHD_FILE_NOT_FOUND error code in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/error-code-vhdfilenotfound
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -13,11 +13,11 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to troubleshoot the ERR_VHD_FILE_NOT_FOUND error (65) when you try to create and deploy an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2025-02-13T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: axelg, chiragpa, lilypan, v-leedennis
+ms.date: 2026-11-16T00:00:00.0000000Z
+ms.reviewer: axelg, chiragpa, lilypan, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 7299bd8b-fdcd-b3f7-5c91-858c29ceb345
 document_version_independent_id: 7299bd8b-fdcd-b3f7-5c91-858c29ceb345
@@ -43,15 +43,15 @@ spProducts:
 platformId: 4f15209b-11b2-7bb0-2687-22ed4c436d06
 ---
 
-# Troubleshoot the ERR_VHD_FILE_NOT_FOUND error code - Azure | Microsoft Learn
+# Troubleshoot the ERR_VHD_FILE_NOT_FOUND error code in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to identify and resolve the `ERR_VHD_FILE_NOT_FOUND` error code (error code number 65) that occurs when you try to create and deploy a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article discusses how to identify and resolve the `ERR_VHD_FILE_NOT_FOUND` error code (error code number 65) that occurs when you try to create and deploy an Azure Kubernetes Service (AKS) cluster.
 
 ## Symptoms
 
-When you try to create an AKS cluster, you receive the following error message:
+When you try to create an AKS cluster, you receive the following error message.
 
 > 
 > VMExtensionProvisioningError: VM has reported a failure when processing extension 'vmssCSE'.
@@ -60,7 +60,7 @@ When you try to create an AKS cluster, you receive the following error message:
 
 ## Cause
 
-Under rare circumstances, the 65 exit code for the Azure Virtual Machine Scale Set custom script extension (`vmssCSE`) might happen instead of the following error codes:
+Under rare circumstances, the 65 exit code for the Azure Virtual Machine Scale Set custom script extension (`vmssCSE`) might happen instead of the following error codes.
 
 | Error code name | Error code number |
 | --- | --- |
@@ -72,9 +72,9 @@ This error occurs if a connectivity issue exists between your AKS cluster and th
 
 ## Solution
 
-Review [outbound network and FQDN rules for Azure Kubernetes Service (AKS) clusters](/en-us/azure/aks/outbound-rules-control-egress) and make sure that all API services FQDN are allowed.
+Review [outbound network and FQDN rules for Azure Kubernetes Service (AKS) clusters](/en-us/azure/aks/outbound-rules-control-egress) and ensure that you allow all API services' fully qualified domain names (FQDNs).
 
-For detailed troubleshooting steps, refer to the troubleshooting guides in the following articles:
+For detailed troubleshooting steps, refer to the following articles:
 
 - [Troubleshoot the OutboundConnFailVMExtensionError error code (50)](error-code-outboundconnfailvmextensionerror)
 - [Troubleshoot the K8SAPIServerConnFailVMExtensionError error code (51)](error-code-k8sapiserverconnfailvmextensionerror)

@@ -18,7 +18,7 @@ adobe-target: true
 learn_banner_products:
 - azure
 description: This article provides a conceptual overview of Azure Kubernetes Fleet Manager multi-cluster networking.
-ms.date: 2026-05-14T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager

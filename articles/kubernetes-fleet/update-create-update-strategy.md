@@ -20,7 +20,7 @@ learn_banner_products:
 - azure
 description: See how you can define staged update strategies that can be reused across multiple update runs and auto-upgrade profiles in Azure Kubernetes Fleet Manager.
 ms.topic: how-to
-ms.date: 2026-06-15T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
@@ -41,11 +41,13 @@ monikers: []
 item_type: Content
 source_path: articles/kubernetes-fleet/update-create-update-strategy.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 platformId: 02751246-66e0-72a1-f82a-9a6d8836c3bc
 ---
 
@@ -110,13 +112,9 @@ There are two ways to select which clusters are included in each stage and group
 - **Member labels (recommended)**: Assign labels to each fleet member and use `memberSelector` to select members by those labels. Each member can have multiple labels.
 - **Update groups**: Assign an update group to each fleet member, then define groups in your strategy that match those group names. Each member can only belong to one group.
 
-## Create an update strategy using member selectors (preview)
+## Create an update strategy using member selectors
 
-Use member labels to select clusters in your update strategies. They provide more flexibility. For conceptual details, see [Group clusters using member labels](concepts-update-orchestration#group-clusters-using-member-labels-preview).
-
-Important
-
-Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
+Use member labels to select clusters in your update strategies. They provide more flexibility. For conceptual details, see [Group clusters using member labels](concepts-update-orchestration#group-clusters-by-using-member-labels).
 
 ### Apply labels on member clusters
 
@@ -148,10 +146,6 @@ az fleet member update \
 ### Create an update strategy
 
 An update strategy consists of one or more stages, where a stage can contain one or more update groups.
-
-Note
-
-An Azure portal experience will be available prior to general availability of this capability.
 
 1. Create a JSON file to define the stages and groups for the update run. Stages run sequentially in the order they appear in the JSON file. Groups run in parallel within each stage. The following example file (*example-labels-strategy.json*) defines a strategy with two stages using `memberSelector` to select clusters by their labels and includes optional `maxConcurrency` settings:
 
@@ -190,17 +184,16 @@ An Azure portal experience will be available prior to general availability of th
     }
     ```
 
-Note
+    Note
 
-The `maxConcurrency` field is optional and controls how many clusters can upgrade concurrently at the stage or group level. Use a larger value to upgrade clusters faster across your fleet, or a smaller value for a more controlled rollout that limits the blast radius if issues arise.
+    The `maxConcurrency` field is optional and controls how many clusters can upgrade concurrently at the stage or group level. Use a larger value to upgrade clusters faster across your fleet, or a smaller value for a more controlled rollout that limits the impact if issues arise.
 
-When a stage uses `memberSelector` without groups (like `staging`), all matching members form a single implicit group and the stage's `maxConcurrency` controls concurrency directly. When groups are defined (like `production`), the stage-level `maxConcurrency` acts as an overall ceiling across all groups.
+    When a stage uses `memberSelector` without groups (like `staging`), all matching members form a single implicit group and the stage's `maxConcurrency` controls concurrency directly. When you define groups (like `production`), the stage-level `maxConcurrency` acts as an overall ceiling across all groups.
 
-In this example, the `staging` stage sets `maxConcurrency` to `"1"`, so staging clusters upgrade one at a time. The `production` stage allows up to `"4"` clusters concurrently, with the `frontend` and `backend` groups each limited to `"3"`.
+    In this example, the `staging` stage sets `maxConcurrency` to `"1"`, so staging clusters upgrade one at a time. The `production` stage allows up to `"4"` clusters concurrently, with the `frontend` and `backend` groups each limited to `"3"`.
 
-Values can be a fixed integer (for example, `"3"`) or a percentage (for example, `"50%"`). If omitted, the system applies default values. For details on how these values are resolved and their upper limits, see [Maximum concurrency (preview)](concepts-update-orchestration#maximum-concurrency-preview).
-
-1. Create a new update strategy using the [`az fleet updatestrategy create`](/en-us/cli/azure/fleet/updatestrategy#az-fleet-updatestrategy-create) command with the `--stages` flag set to the name of your JSON file.
+    Values can be a fixed integer (for example, `"3"`) or a percentage (for example, `"50%"`). If omitted, the system applies default values. For details on how the system resolves these values and their upper limits, see [Maximum concurrency](concepts-update-orchestration#maximum-concurrency).
+2. Create a new update strategy by using the [`az fleet updatestrategy create`](/en-us/cli/azure/fleet/updatestrategy#az-fleet-updatestrategy-create) command with the `--stages` flag set to the name of your JSON file.
 
     ```azurecli
     az fleet updatestrategy create \
@@ -358,7 +351,7 @@ For this scenario, we create stages and groups to match the details used for the
 
     In this example, `stage-1` sets `maxConcurrency` to `"7"`, which allows up to `"7"` clusters in this stage to upgrade concurrently. Within `stage-1`, `group-1` limits concurrency to `"3"` clusters, which means up to `"3"` in this group can upgrade concurrently. `group-2` allows up to `"50%"` of its clusters to upgrade concurrently (for example, if the group contains 4 clusters, up to 2 can upgrade at the same time).
 
-    Values can be a fixed integer (for example, `"3"`) or a percentage (for example, `"100%"`). If omitted, the system applies default values. For details on how these values are resolved and their upper limits, see [Maximum concurrency (preview)](concepts-update-orchestration#maximum-concurrency-preview).
+    Values can be a fixed integer (for example, `"3"`) or a percentage (for example, `"100%"`). If omitted, the system applies default values. For details on how these values are resolved and their upper limits, see [Maximum concurrency](concepts-update-orchestration#maximum-concurrency).
 
     **`maxAllowedFailures`**
 

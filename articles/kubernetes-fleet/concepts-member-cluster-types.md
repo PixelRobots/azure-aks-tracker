@@ -18,7 +18,7 @@ adobe-target: true
 learn_banner_products:
 - azure
 description: This article provides a conceptual overview of the different types of member clusters supported in Azure Kubernetes Fleet Manager.
-ms.date: 2026-09-24T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 author: Ealianis
 ms.author: sehobbs
 ms.service: azure-kubernetes-fleet-manager
@@ -47,6 +47,8 @@ platformId: c83e2fcd-d07b-ff91-2e89-ba009f45fef5
 
 # Azure Kubernetes Fleet Manager member cluster types | Microsoft Learn
 
+**Applies to:** ✔️ Fleet Manager ✔️ Fleet Manager with hub cluster
+
 Azure Kubernetes Fleet Manager supports two types of member clusters:
 
 - [Azure Kubernetes Service (AKS) clusters](/en-us/azure/aks/).
@@ -57,7 +59,7 @@ The following table outlines which Azure Kubernetes Fleet Manager capabilities a
 | Capability | AKS cluster | Arc-enabled Kubernetes cluster |
 | --- | --- | --- |
 | Kubernetes and node image updates | ✅ GA | ❌ Unsupported |
-| Cross-cluster networking | ✅ Preview | ❌ Unsupported |
+| Cross-cluster networking | ✅ GA | ❌ Unsupported |
 | Workload placement | ✅ GA | ✅ GA |
 | DNS load balancing | ✅ GA | ❌ Unsupported |
 | Managed Namespaces | ✅ GA | ❌ Unsupported |

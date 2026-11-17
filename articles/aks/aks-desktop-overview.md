@@ -24,8 +24,9 @@ ms.subservice: aks-developer
 ms.reviewer: schaffererin
 author: danielsollondon
 ms.topic: overview
-ms.date: 2026-04-16T00:00:00.0000000Z
+ms.date: 2026-11-05T00:00:00.0000000Z
 ms.author: danis
+ai-usage: ai-assisted
 locale: en-us
 document_id: d74337ac-f904-90a0-fc20-e27eb5d22fde
 document_version_independent_id: 7a78da08-616f-8d2c-7153-5132154cafe3
@@ -67,6 +68,13 @@ You can also download and install it from the [AKS desktop GitHub repository](ht
 Note
 
 AKS desktop supports the following operating systems (OS): Windows (x64), Linux (x64 and arm64), and macOS (x64 and arm64).
+
+## Check your installed version
+
+1. From the menu bar at the top of the AKS desktop window, select **Help**.
+2. Scroll through the menu, and then select **About**.
+3. Note the installed AKS desktop version.
+4. To install a newer version, see [AKS desktop releases](https://github.com/Azure/aks-desktop/releases).
 
 ## What is AKS desktop?
 
@@ -128,3 +136,7 @@ Yes. Once you deploy your application, you can view it using other Kubernetes to
 ### Does AKS desktop support Standard AKS clusters?
 
 AKS desktop supports Standard AKS clusters that meet specific requirements. For more information, see [AKS Standard clusters for AKS desktop](aks-desktop-install-cluster-setup#aks-standard-clusters).
+
+### Does AKS desktop support AKS on bare metal clusters?
+
+Yes. AKS desktop supports connecting to AKS on bare metal clusters in preview. For version requirements and registration steps, see [Connect to and manage AKS on bare metal clusters with AKS desktop (preview)](aks-desktop-bare-metal).

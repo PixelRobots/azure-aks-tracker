@@ -14,6 +14,7 @@ recommendation_types:
 - Certification
 uhfHeaderId: azure
 ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
 adobe-target: true
 manager: kumud
 learn_banner_products:
@@ -23,9 +24,10 @@ description: Learn how to deploy Pod sandboxing on an Azure Kubernetes Service (
 ms.topic: how-to
 ms.subservice: aks-security
 ms.custom: devx-track-azurecli, build-2023
-ms.date: 2026-10-02T00:00:00.0000000Z
-author: schaffererin
-ms.author: schaffererin
+zone_pivot_groups: pod-sandboxing-runtime-class
+ms.date: 2026-10-23T00:00:00.0000000Z
+author: allyford
+ms.author: allyford
 ai-usage: ai-assisted
 locale: en-us
 document_id: 4d02652c-0561-5da7-df0b-e4bea13a97b8
@@ -56,38 +58,95 @@ Pod sandboxing on AKS uses Kata Containers to run each sandboxed pod in a lightw
 
 In this article, you deploy Pod sandboxing on a new or existing Azure Linux AKS cluster, deploy an application with the Kata runtime, and optionally verify kernel isolation.
 
-## Prerequisites
+Deploying Pod sandboxing by using Kata Containers is similar to the standard `runc` workflow to deploy containers. Clusters with Pod sandboxing enabled come with a specific runtime class that you can reference in a pod manifest, [`runtimeClassName: kata-vm-isolation` (GA)](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation#deploy-an-application-with-the-kata-runtime) or [`runtimeClassName: kata-vm-isolation-v2` (preview)](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview). For more information about runtime class defaults and customization, see [Considerations for Pod sandboxing](considerations-pod-sandboxing).
 
-- The Azure CLI version 2.80.0 or later. Run `az --version` to find the version of your Azure CLI, and run `az upgrade` to upgrade. For more details, see the steps at [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
-- AKS supports Pod sandboxing on Kubernetes version 1.27.0 and higher.
-- To manage a Kubernetes cluster, use the Kubernetes command-line client [`kubectl`](https://kubernetes.io/docs/reference/kubectl/). Azure Cloud Shell comes with `kubectl`. You can install `kubectl` locally using the [`az aks install-cli`](/en-us/cli/azure/aks#az-aks-install-cli) command.
+::: zone pivot="kata-vm-isolation"
 
 ## Limitations
 
-The following constraints apply to Pod sandboxing:
+The following constraints apply to Pod sandboxing with `kata-vm-isolation`:
 
 - Kata containers might not reach the IOPS performance limits that traditional containers can reach on Azure Files and high-performance local SSD.
 - [Microsoft Defender for Containers](/en-us/azure/defender-for-cloud/defender-for-containers-introduction) doesn't support assessing Kata runtime pods.
-- [Kata](https://github.com/kata-containers/kata-containers/blob/main/docs/Limitations.md#host-network) host-network access isn't supported. You can't directly access the host networking configuration from within the VM.
-- CPU and memory allocation with Pod sandboxing differs from `runc`. Each Kata pod runs in a pod VM whose fixed memory size is based on the pod memory limit, or defaults to 512Mi if you don't specify a limit. CPU limits determine the pod VM's vCPU allocation, and fractional limits are rounded up to a whole vCPU for that allocation. For more information, see [Pod sandboxing considerations](considerations-pod-sandboxing).
-- Pod sandboxing is supported only on Azure Linux. Ubuntu and Windows aren't supported. For more information, see [Azure Linux container host for AKS](cluster-configuration#azure-linux-container-host-for-aks).
-- You can't enable [Federal Information Processing Standard (FIPS)](enable-fips-nodes) or [Trusted Launch](use-trusted-launch) on a node pool that uses Pod sandboxing. For more information, see [Pod sandboxing considerations](considerations-pod-sandboxing).
+- [Kata host-network access](https://github.com/kata-containers/kata-containers/blob/main/docs/Limitations.md#host-network) isn't supported. You can't directly access host networking configuration from within the pod VM.
+- CPU and memory allocation differs from `runc`. Each Kata pod runs in a pod VM whose size comes from pod limits:
+- Pod sandboxing is supported only on Azure Linux. Ubuntu, Windows, and Azure Container Linux aren't supported. For more information, see [Azure Linux container host for AKS](use-azure-linux).
+- You can't enable [Federal Information Processing Standard (FIPS)](enable-fips-nodes) or [Trusted Launch](use-trusted-launch) on a node pool that uses Pod sandboxing.
 - Arm64 architecture isn't supported on a node pool that uses Pod sandboxing.
 
-## How it works
+## Prerequisites
 
-Pod sandboxing on AKS builds on top of the open-source [Kata Containers](https://katacontainers.io/) project. Kata Containers running on the Azure Linux container host for AKS provides VM-based isolation and a separate kernel for each pod. Pod sandboxing allows you to allocate resources for each pod and doesn't share them with other Kata Containers or namespace containers running on the same host.
+- The Azure CLI version 2.80.0 or later. Run `az --version` to find the version of your Azure CLI, and run `az upgrade` to upgrade. For more details, see the steps at [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
+- To manage a Kubernetes cluster, use the Kubernetes command-line client [`kubectl`](https://kubernetes.io/docs/reference/kubectl/). Azure Cloud Shell comes with `kubectl`. You can install `kubectl` locally using the [`az aks install-cli`](/en-us/cli/azure/aks#az-aks-install-cli) command.
 
-The solution architecture is based on the following main components:
+::: zone-end
 
-- The [Azure Linux container host for AKS](use-azure-linux)
-- Microsoft Hyper-V Hypervisor
-- Open-source [Cloud-Hypervisor](https://www.cloudhypervisor.org) Virtual Machine Monitor (VMM)
-- Integration with [Kata Containers](https://katacontainers.io) for the runtime
+::: zone pivot="kata-vm-isolation-v2-preview"
 
-Deploying Pod sandboxing by using Kata Containers is similar to the standard `containerd` workflow to deploy containers. Clusters with Pod sandboxing enabled come with a specific runtime class that you can reference in a pod manifest (`runtimeClassName: kata-vm-isolation`). For more information about runtime class defaults and customization, see [Considerations for Pod sandboxing](considerations-pod-sandboxing).
+## Limitations
 
-To use this feature with a pod, the only difference is to add the **runtimeClassName**, `kata-vm-isolation` to the pod spec. When a pod uses the `kata-vm-isolation` runtimeClass, the hypervisor spins up a lightweight virtual machine with its own kernel, for the workload to operate in.
+The following constraints apply to Pod sandboxing with `kata-vm-isolation-v2`:
+
+- `kata-vm-isolation-v2` is in preview. You must register the `KataVMIsolationV2Preview` feature flag and use Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
+- Kata containers might not reach the IOPS performance limits that traditional containers can reach on Azure Files and high-performance local SSD.
+- [Microsoft Defender for Containers](/en-us/azure/defender-for-cloud/defender-for-containers-introduction) doesn't support assessing Kata runtime pods.
+- [Kata host-network access](https://github.com/kata-containers/kata-containers/blob/main/docs/Limitations.md#host-network) isn't supported. You can't directly access host networking configuration from within the pod VM.
+- Runtime-class migration is an explicit workload change. Don't assume behavior is identical to `kata-vm-isolation` across all workload and storage patterns.
+- For `emptyDir` volumes, explicitly set `medium: Memory` and `sizeLimit` in the pod spec. For more information, see [Pod sandboxing considerations](considerations-pod-sandboxing).
+- CPU and memory sizing behavior can differ from `kata-vm-isolation` and `kata-vm-isolation-v2` when you initialize the template VM with the DaemonSet in Create sandboxed pods from a paused, preinitialized template VM (`kata-vm-isolation-v2` preview). After the template is initialized, each v2 pod receives a 2 GiB, 2 vCPU guest regardless of pod limits. For memory sizing and overhead details, see RuntimeClass memory overhead.
+- Pod sandboxing is supported only on Azure Linux. Ubuntu, Windows, and Azure Container Linux aren't supported. For more information, see [Azure Linux container host for AKS](use-azure-linux).
+- You can't enable [Federal Information Processing Standard (FIPS)](enable-fips-nodes) or [Trusted Launch](use-trusted-launch) on a node pool that uses Pod sandboxing.
+- Arm64 architecture isn't supported on a node pool that uses Pod sandboxing.
+
+## Use kata-vm-isolation-v2 (preview)
+
+Important
+
+AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+
+- [AKS support policies](/en-us/azure/aks/support-policies)
+- [Azure support FAQ](/en-us/azure/aks/faq)
+
+The `kata-vm-isolation-v2` runtime class is available in preview. For its benefits and a comparison with v1, see [Runtime class v2 improvements](considerations-pod-sandboxing#runtime-class-v2-improvements). For memory sizing and overhead details, see [RuntimeClass memory overhead](considerations-pod-sandboxing#runtimeclass-memory-overhead).
+
+Important
+
+The node pool still uses `--workload-runtime KataVmIsolation` for both runtime classes. The v1/v2 choice is made in each workload manifest through `runtimeClassName`.
+
+### Prerequisites for `kata-vm-isolation-v2`
+
+Before you use `kata-vm-isolation-v2`, confirm all of the following prerequisites:
+
+- The Azure CLI version 2.80.0 or later.
+- `kubectl` is installed and configured for your cluster.
+- The `KataVMIsolationV2Preview` feature is registered in your subscription.
+- The cluster runs Kubernetes version 1.34.0 or later.
+- The target Pod sandboxing node pool uses Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
+- `kata-vm-isolation-v2` supports v6 and v7 VM SKUs in these families: Dasv6, Dadsv6, Dalsv6, Daldsv6, Easv6, Eadsv6, Falsv6, Fasv6, and Famsv6.
+
+### Register the `KataVMIsolationV2Preview` feature flag
+
+1. Register the `KataVMIsolationV2Preview` feature flag by using the [`az feature register`](/en-us/cli/azure/feature#az-feature-register) command.
+
+    ```azurecli
+    az feature register \
+      --namespace "Microsoft.ContainerService" \
+      --name "KataVMIsolationV2Preview"
+    ```
+2. Verify the registration status by using the [`az feature show`](/en-us/cli/azure/feature#az-feature-show) command.
+
+    ```azurecli
+    az feature show \
+      --namespace "Microsoft.ContainerService" \
+      --name "KataVMIsolationV2Preview"
+    ```
+3. When the status shows *Registered*, refresh the registration of the *Microsoft.ContainerService* resource provider by using the [`az provider register`](/en-us/cli/azure/provider#az-provider-register) command.
+
+    ```azurecli
+    az provider register --namespace "Microsoft.ContainerService"
+    ```
+
+::: zone-end
 
 ## Create a cluster with Pod sandboxing
 
@@ -95,12 +154,27 @@ Perform the following steps to deploy an Azure Linux AKS cluster using the Azure
 
 1. Create an AKS cluster by running the [`az aks create`](/en-us/cli/azure/aks#az-aks-create) command with the following parameters:
 
+::: zone pivot="kata-vm-isolation"
+
     | Parameter | Required value | Notes |
     | --- | --- | --- |
     | `--workload-runtime` | `KataVmIsolation` | Enables Pod sandboxing on the node pool. |
     | `--os-sku` | `AzureLinux` | Pod sandboxing supports only the Azure Linux OS SKU. |
-    | `--node-vm-size` | A generation 2 VM size that supports nested virtualization | For example, use a [Dsv3-series](/en-us/azure/virtual-machines/dv3-dsv3-series#dsv3-series) VM size. |
+    | `--node-vm-size` | A generation 2 VM size that supports nested virtualization | For example, use `Standard_D4ads_v6`. |
     | `--node-count` | `3` | Creates three nodes for this example. Adjust the value for your workload. |
+
+::: zone-end
+
+::: zone pivot="kata-vm-isolation-v2-preview"
+
+    | Parameter | Required value | Notes |
+    | --- | --- | --- |
+    | `--workload-runtime` | `KataVmIsolation` | Enables Pod sandboxing on the node pool. |
+    | `--os-sku` | `AzureLinux` | Pod sandboxing supports only the Azure Linux OS SKU. |
+    | `--node-vm-size` | A generation 2 VM size that supports nested virtualization | For example, use `Standard_D4ads_v6`. |
+    | `--node-count` | `3` | Creates three nodes for this example. Adjust the value for your workload. |
+
+::: zone-end
 
     The following example creates a cluster named *myAKSCluster* with three nodes in *myResourceGroup*:
 
@@ -110,7 +184,7 @@ Perform the following steps to deploy an Azure Linux AKS cluster using the Azure
         --resource-group myResourceGroup \
         --os-sku AzureLinux \
         --workload-runtime KataVmIsolation \
-        --node-vm-size Standard_D4s_v3 \
+        --node-vm-size Standard_D4ads_v6 \
         --node-count 3 \
         --generate-ssh-keys
     ```
@@ -127,11 +201,6 @@ Perform the following steps to deploy an Azure Linux AKS cluster using the Azure
 
 ## Enable Pod sandboxing on an existing cluster
 
-To use this feature with an existing AKS cluster, the following requirements must be met:
-
-- The cluster runs Kubernetes version 1.27.0 or higher.
-- Use the following command to enable Pod sandboxing by creating a node pool to host it.
-
 1. Add a node pool to your AKS cluster by using the [`az aks nodepool add`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-add) command with the following parameters:
 
     | Parameter | Required value | Notes |
@@ -141,20 +210,15 @@ To use this feature with an existing AKS cluster, the following requirements mus
     | `--name` | A unique node pool name | For example, use `nodepool2`. |
     | `--workload-runtime` | `KataVmIsolation` | Enables Pod sandboxing on the node pool. |
     | `--os-sku` | `AzureLinux` | Pod sandboxing supports only the Azure Linux OS SKU. |
-    | `--node-vm-size` | A generation 2 VM size that supports nested virtualization | For example, use a [Dsv3-series](/en-us/azure/virtual-machines/dv3-dsv3-series#dsv3-series) VM size. |
+    | `--node-vm-size` | A generation 2 VM size that supports nested virtualization | For example, use `Standard_D4ads_v6`. |
     | `--node-count` | `1` | Creates one node for this example. Adjust the value for your workload. |
 
     The following example adds a node pool to *myAKSCluster* with one node in *nodepool2* in the *myResourceGroup*:
 
     ```azurecli
-    az aks nodepool add --cluster-name myAKSCluster --resource-group myResourceGroup --name nodepool2 --os-sku AzureLinux --workload-runtime KataVmIsolation --node-vm-size Standard_D4s_v3 --node-count 1
+    az aks nodepool add --cluster-name myAKSCluster --resource-group myResourceGroup --name nodepool2 --os-sku AzureLinux --workload-runtime KataVmIsolation --node-vm-size Standard_D4ads_v6 --node-count 1
     ```
-2. Run the [`az aks update`](/en-us/cli/azure/aks#az-aks-update) command to reconcile the cluster configuration so the cluster recognizes the new node pool with the `KataVmIsolation` workload runtime.
-
-    ```azurecli
-    az aks update --name myAKSCluster --resource-group myResourceGroup
-    ```
-3. Verify that the cluster update completed successfully and that the Pod sandboxing node pool uses the expected workload runtime, OS SKU, and VM size.
+2. Verify that the node pool was added successfully and that the Pod sandboxing node pool uses the expected workload runtime, OS SKU, and VM size.
 
     ```azurecli
     az aks show \
@@ -162,20 +226,24 @@ To use this feature with an existing AKS cluster, the following requirements mus
         --resource-group myResourceGroup \
         --query provisioningState \
         --output tsv
-    
+    ```
+
+    ```azurecli
     az aks nodepool show \
         --cluster-name myAKSCluster \
         --resource-group myResourceGroup \
         --name nodepool2 \
-        --query "{workloadRuntime:workloadRuntime, osSKU:osSKU, vmSize:vmSize}" \
+        --query "{workloadRuntime:workloadRuntime, osSku:osSku, vmSize:vmSize}" \
         --output table
     ```
 
     The cluster provisioning state should be `Succeeded`. The node pool output should show `KataVmIsolation`, `AzureLinux`, and the VM size you selected.
 
+::: zone pivot="kata-vm-isolation"
+
 ## Deploy applications using Pod sandboxing
 
-By using Pod sandboxing, you can deploy a mix of standard pods that don't use the Kata runtime alongside Kata pods that use the runtime. A Kata pod specifies `runtimeClassName: kata-vm-isolation` in its pod specification.
+By using Pod sandboxing, you can deploy a mix of standard pods that don't use the Kata runtime alongside Kata pods that use the runtime.
 
 The runtime class selects the Kata runtime, but you should also define scheduling constraints when you need workloads to run on a specific Pod sandboxing node pool. For example, use the built-in AKS node pool label in a `nodeSelector`. Replace `nodepool2` with the name of your Pod sandboxing node pool.
 
@@ -192,7 +260,7 @@ For stronger separation, you can taint the Pod sandboxing node pool and add a ma
 
 To deploy a pod with the Kata runtime on your AKS cluster, perform the following steps.
 
-1. Create a file named *kata-app.yaml* to describe your kata pod, and then paste the following manifest.
+1. Create a file named *kata-app.yaml* to describe your Kata pod, and then paste the following manifest.
 
     ```yaml
     kind: Pod
@@ -206,8 +274,6 @@ To deploy a pod with the Kata runtime on your AKS cluster, perform the following
         image: mcr.microsoft.com/aks/fundamental/base-ubuntu:v0.0.11
         command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
     ```
-
-    The pod spec value for `runtimeClassName` is `kata-vm-isolation`.
 2. Deploy the Kubernetes pod by running the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command and specify your *kata-app.yaml* file:
 
     ```bash
@@ -220,35 +286,243 @@ To deploy a pod with the Kata runtime on your AKS cluster, perform the following
     pod/isolated-pod created
     ```
 
-## Verify kernel isolation (optional)
+::: zone-end
+
+::: zone pivot="kata-vm-isolation-v2-preview"
+
+## Deploy applications using Pod sandboxing
+
+Use the following steps to run a new workload with `runtimeClassName: kata-vm-isolation-v2`. For an existing v1 workload, follow the migration instructions instead.
+
+### Deploy an application with the Kata runtime (`kata-vm-isolation-v2`)
+
+1. Confirm your target Pod sandboxing node pool is eligible (Kubernetes 1.34.0 or later and Azure Linux node image version `202610.30.1` or later).
+2. Verify the runtime class and node label by using the steps in Verify the runtime class and node label.
+3. Create a file named `kata-v2-app.yaml` with the following manifest.
+
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: isolated-pod-v2
+    spec:
+      runtimeClassName: kata-vm-isolation-v2
+      containers:
+      - name: kata
+        image: mcr.microsoft.com/aks/fundamental/base-ubuntu:v0.0.11
+        command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
+    ```
+4. Deploy the pod and verify that it uses the preview runtime class:
+
+    ```bash
+    kubectl apply -f kata-v2-app.yaml
+    kubectl wait --for=condition=Ready pod/isolated-pod-v2 --timeout=120s
+    kubectl get pod isolated-pod-v2 -o jsonpath='{.spec.runtimeClassName}'
+    ```
+
+    The last command should return `kata-vm-isolation-v2`.
+
+Important
+
+If you created a new cluster with a node pool that supports `--workload-runtime KataVmIsolation` , the runtimeclass should appear automatically. However, if you added a new node pool to an existing cluster, the reconciler might take a couple of minutes to update the cluster and add the `kata-vm-isolation-v2` runtimeclass.
+
+### Create sandboxed pods from a paused, preinitialized template VM (`kata-vm-isolation-v2` preview)
+
+`kata-vm-isolation-v2` creates new sandboxed pods by cloning from a paused, preinitialized template VM instead of cold-booting each pod VM.
+
+Before you use this path, confirm the following limitations and requirements:
+
+- The workload uses `runtimeClassName: kata-vm-isolation-v2`.
+- The target node pool runs Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
+- You initialize the template VM on each eligible node.
+- In the current preview, the template path can use a fixed 2-GiB memory and 2-vCPU guest VM size after template initialization. Keep pod requests and limits aligned, and validate scheduling behavior for your workload.
+
+Important
+
+The init container runs kata-ctl factory init as root on the node, review with your security team before deploying.
+
+To initialize the template VM on each node, you can use a DaemonSet such as the following:
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kata-v2-factory-init
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kata-v2-factory-init
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kata-v2-factory-init
+    spec:
+      automountServiceAccountToken: false
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: linux
+        kubernetes.azure.com/kata-vm-isolation-v2: "true"
+      initContainers:
+        - name: factory-init
+          image: mcr.microsoft.com/azurelinux/base/core:3.0
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              tdnf install -y util-linux
+              exec /usr/bin/nsenter "$@"
+            - kata-v2-factory-bootstrap
+            - --target=1
+            - --mount
+            - --uts
+            - --ipc
+            - --net
+            - --pid
+            - --root=/proc/1/root
+            - --wd=/
+            - --
+            - /bin/bash
+            - -ec
+            - |
+              config=$1
+              template=$2
+              lock=$3
+              test -r "$config"
+              command -v kata-ctl >/dev/null
+              exec 9>"$lock"
+              flock --exclusive 9
+              if test -f "$template/memory" &&
+                 test -f "$template/state.json" &&
+                 test -f "$template/config.json"; then
+                printf 'Factory template already exists at %s\n' "$template"
+                exit 0
+              fi
+              if mountpoint -q "$template" ||
+                 { test -d "$template" && test -n "$(ls -A "$template")"; }; then
+                printf 'Incomplete factory at %s; inspect and clean up manually before retrying.\n' "$template" >&2
+                exit 1
+              fi
+              kata-ctl --config "$config" factory init
+            - kata-v2-factory-init
+            - /usr/share/defaults/kata-containers/configuration-clh-azure-runtime-rs-v2.toml
+            - /run/vc/vm/template
+            - /run/kata-v2-factory-init.lock
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      containers:
+        - name: initialized
+          image: registry.k8s.io/pause:3.10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 1m
+              memory: 4Mi
+            limits:
+              memory: 16Mi
+```
+
+## Migrate workloads between runtime classes
+
+Before you migrate, review the [runtime-class migration considerations](considerations-pod-sandboxing#runtime-class-migration-guidance-v1-to-v2-preview) and v2 limitations. Use these steps to migrate an existing workload from `kata-vm-isolation` (v1) to `kata-vm-isolation-v2` (preview):
+
+1. Complete the v2 preview prerequisites and feature registration. If your existing node pool isn't using a supported VM size and node image, and if you created it before feature registration, you might need to recreate it.
+2. Verify that the runtime class exists by running `kubectl get runtimeclass kata-vm-isolation-v2`.
+3. Change [`runtimeClassName: kata-vm-isolation`](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation#deploy-an-application-with-the-kata-runtime) to `runtimeClassName: kata-vm-isolation-v2` in your workload manifest. For a Deployment or another controller-managed workload, update the pod template.
+4. Apply the updated controller manifest so the controller creates replacement pods. For a standalone Pod, delete the existing pod and recreate it from the updated manifest; you can't change `runtimeClassName` on an existing pod. Plan for any workload disruption before replacing pods.
+5. Verify that the replacement pods are ready and that their `spec.runtimeClassName` is `kata-vm-isolation-v2`. Validate storage and mount behavior, startup latency, and resource usage in a preproduction environment before broad rollout. For memory-backed `emptyDir` volumes, follow the [v2 volume guidance](considerations-pod-sandboxing#emptydir-guidance-for-kata-vm-isolation-v2).
+6. If you find compatibility issues, roll back by restoring [`runtimeClassName: kata-vm-isolation`](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation#deploy-an-application-with-the-kata-runtime) in the manifest and replacing the pods through the same process.
+
+::: zone-end
+
+## Troubleshooting
+
+::: zone pivot="kata-vm-isolation-v2-preview"
+
+### Verify the runtime class and node label
+
+1. Verify the v2 runtime class exists:
+
+    ```bash
+    kubectl get runtimeclass kata-vm-isolation-v2
+    ```
+
+    If the runtime class is missing, recheck feature registration, run `az aks update`, wait for reconciliation to complete, and run the command again.
+2. Verify that nodes in the target Pod sandboxing pool carry the Kata runtime label. Replace `nodepool2` with your node pool name:
+
+    ```bash
+    kubectl get nodes \
+      -l kubernetes.azure.com/agentpool=nodepool2 \
+      -o 'custom-columns=NAME:.metadata.name,KATA_V2:.metadata.labels.kubernetes.azure.com/kata-vm-isolation-v2'
+    ```
+
+    If the label is missing, ensure the node pool meets the v2 prerequisites (supported VM SKU, required Kubernetes version, and Azure Linux node image version `202610.30.1` or later). Then upgrade the node image (`az aks nodepool upgrade --node-image-only`) and recheck. If the label is still missing, recreate the node pool with the required prerequisites.
+
+### Check which runtime class your workloads use (optional)
+
+If you're unsure which runtime class is used in your pods, you can check by listing the runtime class selected by each pod across all namespaces:
+
+```bash
+kubectl get pods --all-namespaces \
+  -o 'custom-columns=NAMESPACE:.metadata.namespace,POD:.metadata.name,RUNTIMECLASS:.spec.runtimeClassName'
+```
+
+In the `RUNTIMECLASS` column, `kata-vm-isolation` identifies v1 pods, and `kata-vm-isolation-v2` identifies v2 preview pods. A value of `<none>` means the pod doesn't specify `runtimeClassName` and uses the node's default runtime. Listing available `RuntimeClass` resources alone doesn't show which runtime class your workloads select.
+
+::: zone-end
+
+### Reconcile cluster configuration after adding a Pod sandboxing node pool (optional)
+
+In most cases, `az aks nodepool add` is sufficient and no extra reconcile step is required. If the runtime class or node labels don't appear as expected after adding a Pod sandboxing node pool, run [`az aks update`](/en-us/cli/azure/aks#az-aks-update) and then recheck.
+
+```azurecli
+az aks update --name myAKSCluster --resource-group myResourceGroup
+```
+
+### Verify kernel isolation (optional)
+
+This section uses the `isolated-pod` Kata pod ([`runtimeClassName: kata-vm-isolation`](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation#deploy-an-application-with-the-kata-runtime)) that you created in Deploy an application with the Kata runtime. If you didn't deploy that pod, deploy it now.
 
 1. To compare the kernels of Kata and non-Kata pods, create a file named *normal-app.yaml*. The following manifest defines a standard pod without the Kata runtime:
 
-```yaml
-kind: Pod
-apiVersion: v1
-metadata:
-  name: normal-pod
-spec:
-  containers:
-  - name: non-kata
-    image: mcr.microsoft.com/aks/fundamental/base-ubuntu:v0.0.11
-    command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
-```
-
-1. Deploy the standard pod by using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
+    ```yaml
+    kind: Pod
+    apiVersion: v1
+    metadata:
+      name: normal-pod
+    spec:
+      containers:
+      - name: non-kata
+        image: mcr.microsoft.com/aks/fundamental/base-ubuntu:v0.0.11
+        command: ["/bin/sh", "-ec", "while :; do echo '.'; sleep 5 ; done"]
+    ```
+2. Deploy the standard pod by using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
 
     ```bash
     kubectl apply -f normal-app.yaml
     ```
-2. To access a container inside the AKS cluster, start a shell session by running the [`kubectl exec`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#exec) command. In this example, you're accessing the container inside *isolated-pod*.
+3. To access a container inside the AKS cluster, start a shell session by running the [`kubectl exec`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#exec) command. In this example, you're accessing the container inside *isolated-pod*.
 
     ```bash
     kubectl exec -it isolated-pod -- /bin/sh
     ```
 
     Kubectl connects to your cluster, runs `/bin/sh` inside the first container within `isolated-pod`, and forwards your terminal's input and output streams to the container's process. You can also start a shell session to the container hosting the non-Kata pod to see the differences.
-3. After starting a shell session to the container from *isolated-pod*, run commands to verify that the *kata* container is running in a pod sandbox. It has a different kernel version compared to the non-Kata container outside the sandbox.
+4. After starting a shell session to the container from *isolated-pod*, run commands to verify that the *kata* container is running in a pod sandbox. It has a different kernel version compared to the non-Kata container outside the sandbox.
 
     To see the kernel version run the following command:
 
@@ -262,7 +536,7 @@ spec:
     [user]/# uname -r
     6.6.96.mshv1
     ```
-4. Start a shell session to the container from *normal-pod* to verify the kernel output:
+5. Start a shell session to the container from *normal-pod* to verify the kernel output:
 
     ```bash
     kubectl exec -it normal-pod -- /bin/bash
@@ -282,7 +556,7 @@ spec:
 
 ## Clean up resources
 
-1. When you finish evaluating this feature, clean up resources you no longer need to avoid Azure charges. If you deployed a new cluster as part of your evaluation or testing, run the following [`az aks delete`](/en-us/cli/azure/aks#az-aks-delete) command to delete the AKS cluster.
+1. When you finish evaluating this feature, clean up resources you no longer need to avoid Azure charges. If you deployed a new cluster as part of your evaluation, run the following [`az aks delete`](/en-us/cli/azure/aks#az-aks-delete) command to delete the AKS cluster.
 
     ```azurecli
     az aks delete --resource-group myResourceGroup --name myAKSCluster

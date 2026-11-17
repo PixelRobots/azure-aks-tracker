@@ -19,7 +19,7 @@ learn_banner_products:
 - azure
 services: kubernetes-fleet
 ms.service: azure-kubernetes-fleet-manager
-ms.date: 2026-06-15T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 ms.topic: overview
 author: sjwaight
 ms.author: simonwaight
@@ -40,8 +40,10 @@ item_type: Content
 source_path: articles/kubernetes-fleet/overview.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: dc2be365-9c28-fdc1-d5c7-168db2c1e0ed
 ---
 
@@ -60,5 +62,6 @@ Fleet Manager supports the following scenarios:
 - Automatically trigger version upgrades when new Kubernetes or node image versions are published by defining one or more [auto-upgrade profile](concepts-update-orchestration#auto-upgrade-profiles-overview).
 - Deploy a hub cluster to enable intelligent placing of Kubernetes resources across member clusters based on cluster labels and properties using Fleet Manager [cluster resource placement](concepts-resource-placement) and [namespace-scoped resource placement](concepts-namespace-scoped-resource-propagation).
 - Stage Kubernetes resources from Git repositories to Fleet Manager's hub cluster using [Automated Deployments](concepts-automated-deployments) (preview).
+- Simplify creating globally available services by configuring [cross-cluster networking](concepts-cross-cluster-networking) for your member clusters.
 - Load balance incoming public traffic across service endpoints on multiple AKS clusters using [DNS-based load balancing](concepts-dns-load-balancing) (preview).
-- Simplify creating globally available services by configuring [cross-cluster networking](concepts-cross-cluster-networking) for your member clusters (preview).
+- Configure workload identity once for multiple member clusters using [identity binding profiles](concepts-fleet-identity-binding) (preview).

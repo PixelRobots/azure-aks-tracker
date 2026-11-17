@@ -21,7 +21,7 @@ ms.reviewer: davidsmatlak
 ms.author: davidsmatlak
 ms.service: azure-arc
 ms.subservice: azure-arc-kubernetes
-ms.date: 2026-10-14T00:00:00.0000000Z
+ms.date: 2026-11-05T00:00:00.0000000Z
 ms.topic: how-to
 description: See a list of extensions that are currently available for Azure Arc-enabled Kubernetes clusters. View Flux extension release notes.
 ms.custom:
@@ -358,6 +358,19 @@ For more information, see [Container insights for Azure Arc-enabled Kubernetes c
 [Dapr](https://dapr.io/) is a portable, event-driven runtime that simplifies building resilient, stateless, and stateful applications that run in the cloud and edge and embrace the diversity of languages and developer frameworks. The Dapr extension eliminates the overhead of downloading Dapr tooling and manually installing and managing the runtime on your clusters.
 
 For more information, see [Dapr extension for AKS and Azure Arc-enabled Kubernetes](/en-us/azure/aks/dapr).
+
+## DocumentDB with Azure Arc (preview)
+
+- **Tested distributions**: See the [DocumentDB platform compatibility results](/en-us/azure/documentdb/arc/overview#platform-compatibility) for tested Kubernetes distributions, versions, and validation scope.
+- **Extension type**: `microsoft.documentdb.operator`
+
+The DocumentDB extension installs the Kubernetes operator for open-source DocumentDB on your Azure Arc-enabled Kubernetes cluster. DocumentDB provides a MongoDB API-compatible database that runs on your infrastructure. You manage database workloads through Kubernetes custom resources and operate the infrastructure and database, rather than consume the fully managed Azure DocumentDB service.
+
+Use the `preview` release train to evaluate the extension. For more information, see [DocumentDB with Azure Arc](/en-us/azure/documentdb/arc/overview) and [Quickstart: Evaluate DocumentDB with Azure Arc on Kind](/en-us/azure/documentdb/arc/quickstart-kind).
+
+Important
+
+Microsoft provides no support for this DocumentDB capability during preview. Don't use it for production workloads. This restriction doesn't change the support terms for the underlying Azure Arc or infrastructure services.
 
 ## Flux (GitOps)
 

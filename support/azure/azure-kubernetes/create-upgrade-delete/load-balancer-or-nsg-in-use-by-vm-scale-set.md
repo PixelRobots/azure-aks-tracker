@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot the LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code - Azure | Microsoft Learn
+title: Troubleshoot LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/load-balancer-or-nsg-in-use-by-vm-scale-set
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot the LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error when you try to delete an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2024-11-21T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: rissing, chiragpa, edneto, jaewonpark, v-leedennis
+description: Troubleshoot the LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error when deleting an AKS cluster. Follow these steps to resolve it.
+ms.date: 2026-11-16T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, edneto, jaewonpark, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 405b16e9-495d-c82c-342a-cdb5de28b9c3
 document_version_independent_id: 405b16e9-495d-c82c-342a-cdb5de28b9c3
@@ -45,15 +45,15 @@ spProducts:
 platformId: 72275e1c-665c-ffff-156b-b4c90e9955d9
 ---
 
-# Troubleshoot the LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code - Azure | Microsoft Learn
+# Troubleshoot LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to identify and resolve the `LoadBalancerInUseByVirtualMachineScaleSet` or `NetworkSecurityGroupInUseByVirtualMachineScaleSet` error that occurs when you try to delete a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article helps you resolve the `LoadBalancerInUseByVirtualMachineScaleSet` or `NetworkSecurityGroupInUseByVirtualMachineScaleSet` error that occurs when you delete an Azure Kubernetes Service (AKS) cluster, so that you can complete the deletion successfully.
 
 ## Symptoms
 
-When you try to delete an AKS cluster, you receive the following error message for `LoadBalancerInUseByVirtualMachineScaleSet`:
+When you try to delete an AKS cluster, you receive the following error message for `LoadBalancerInUseByVirtualMachineScaleSet`.
 
 > 
 > internalErrorCode: "LoadBalancerInUseByVirtualMachineScaleSet"
@@ -66,7 +66,7 @@ When you try to delete an AKS cluster, you receive the following error message f
 > 
 > }
 
-Or, you receive the following error message for `NetworkSecurityGroupInUseByVirtualMachineScaleSet`:
+Or, you receive the following error message for `NetworkSecurityGroupInUseByVirtualMachineScaleSet`.
 
 > 
 > internalErrorCode: "NetworkSecurityGroupInUseByVirtualMachineScaleSet"
@@ -88,4 +88,4 @@ You tried to delete an AKS cluster while the virtual machine scale set was still
 To fix this issue, use one of the following methods:
 
 - Remove all public IP addresses that are associated with Azure Load Balancer. For more information, see [View, modify settings for, or delete a public IP address](/en-us/azure/virtual-network/ip-services/virtual-network-public-ip-address#view-modify-settings-for-or-delete-a-public-ip-address).
-- Dissociate the NSG that's used by the subnet. For more information, see [Associate or dissociate a network security group](/en-us/azure/virtual-network/virtual-network-network-interface#associate-or-dissociate-a-network-security-group).
+- Dissociate the NSG that the subnet uses. For more information, see [Associate or dissociate a network security group](/en-us/azure/virtual-network/virtual-network-network-interface#associate-or-dissociate-a-network-security-group).

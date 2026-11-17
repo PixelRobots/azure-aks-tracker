@@ -18,7 +18,7 @@ adobe-target: true
 learn_banner_products:
 - azure
 description: This article provides a conceptual overview of Azure Kubernetes Fleet Manager and member clusters.
-ms.date: 2026-04-01T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
@@ -44,6 +44,8 @@ platformId: 2f4e3575-96e3-3bf9-9774-e1ac3af6180c
 ---
 
 # Azure Kubernetes Fleet Manager fleets and member clusters | Microsoft Learn
+
+**Applies to:** ✔️ Fleet Manager ✔️ Fleet Manager with hub cluster
 
 This article provides a conceptual overview of fleets and member clusters in Azure Kubernetes Fleet Manager.
 

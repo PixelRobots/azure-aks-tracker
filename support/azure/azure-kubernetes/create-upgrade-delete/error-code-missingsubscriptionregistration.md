@@ -12,12 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Describes how to troubleshoot the MissingSubscriptionRegistration error when you try to create and deploy an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2026-07-21T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: rissing, chiragpa, erbookbi, v-leedennis, addobres
+description: Learn how to troubleshoot the MissingSubscriptionRegistration error when you create and deploy an Azure Kubernetes Service (AKS) cluster, and register the provider.
+ms.date: 2026-11-13T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, erbookbi, v-leedennis, addobres, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: b883d33d-b2fb-8eb8-f21a-09ea8ef5d710
 document_version_independent_id: b883d33d-b2fb-8eb8-f21a-09ea8ef5d710
@@ -47,11 +47,11 @@ platformId: a0de8225-6fd7-cd22-3925-a30c1c1edfae
 
 ## Summary
 
-This article discusses how to identify and resolve the `MissingSubscriptionRegistration` error that occurs when you try to create and deploy a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article explains how to identify and resolve the `MissingSubscriptionRegistration` error that occurs when you try to create and deploy an Azure Kubernetes Service (AKS) cluster.
 
 ## Symptoms
 
-When you try to deploy an AKS cluster, you receive the following error message:
+When you try to deploy an AKS cluster, you receive the following error message.
 
 > 
 > Code="MissingSubscriptionRegistration"
@@ -72,14 +72,14 @@ When you try to deploy an AKS cluster, you receive the following error message:
 
 You receive this error message for one of the following reasons:
 
-- The required resource provider isn't registered for your subscription.
-- The API version isn't supported for the resource type.
-- The location isn't supported for the resource type.
+- You didn't register the required resource provider for your subscription.
+- You used an API version that isn't supported for the resource type.
+- You selected a location that isn't supported for the resource type.
 
 ## Solution
 
-To resolve this issue, follow the instructions in the "Solution" section of [Resolve errors for resource provider registration](/en-us/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-portal#solution). Replace the existing namespace with the namespace that's shown in the error message. In the example in the "Symptoms" section, the namespace is `Microsoft.OperationsManagement`.
+To resolve this issue, follow the instructions in [Resolve errors for resource provider registration](/en-us/azure/azure-resource-manager/troubleshooting/error-register-resource-provider?tabs=azure-portal#solution). Replace the existing namespace with the namespace that's shown in the error message. In the example in the Symptoms section, the namespace is `Microsoft.OperationsManagement`.
 
-## More information
+## References
 
 - [General troubleshooting of AKS cluster creation issues](troubleshoot-aks-cluster-creation-issues)

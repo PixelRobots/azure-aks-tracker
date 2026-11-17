@@ -20,7 +20,7 @@ learn_banner_products:
 - azure
 description: Learn how to use Azure Kubernetes Fleet Manager to set up multi-cluster networking for highly available global services and service discovery.
 ms.topic: how-to
-ms.date: 2026-07-20T00:00:00.0000000Z
+ms.date: 2026-11-03T00:00:00.0000000Z
 author: sjwaight
 ms.author: simonwaight
 ms.service: azure-kubernetes-fleet-manager
@@ -42,9 +42,11 @@ source_path: articles/kubernetes-fleet/howto-configure-use-cross-cluster-network
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/20ed8455-bc18-4537-87a4-83784e7b2a39
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
 platformId: 832a8026-6391-2d27-c426-99477f69c383
 ---
 
@@ -60,19 +62,20 @@ Platform engineers label member clusters that should participate in a single cro
 
 This article provides instructions on how to configure a cross-cluster networking profile, add member clusters and how to expose global services.
 
-Important
-
-Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
-
 ## Prerequisites and limitations
 
 - A cross-cluster network can have up to 255 member clusters.
 - Fleet Manager member clusters can only participate in a single cross-cluster network at any time.
-- Clusters must run Kubernetes v1.32 or later and have Advanced Container Networking Services (ACNS) with Cilium enabled.
-- Clusters must be connected to a [single flat network](../aks/concepts-network-cni-overview#flat-networks) (virtual network or multiple peered networks).
-- Overlay networking with tunnels isn't currently supported.
-- Self-managed Cilium multi-cluster can't be deployed at the same time.
-- ACNS sets the Cilium version and enabled features which are read-only and can't be modified by users.
+- Clusters must have [Advanced Container Networking Services (ACNS)](../aks/use-advanced-container-networking-services?pivots=cilium) with Cilium enabled.
+- Clusters must be connected to the same virtual network or peered virtual networks.
+- To use cross-cluster networking with pod subnets, clusters must run Kubernetes v1.32 or above.
+- To use cross-cluster networking with overlay networking, clusters must run Kubernetes v1.36 or above.
+- Azure CNI overlay cross-cluster networks can't expose global services via external load balancers due to overlay network routing limitations.
+- A single cross-cluster network can host only clusters using either pod subnet or overlay networking. You can't currently mix network types.
+- Pod-to-pod communication on clusters using overlay networking requires the `clustermesh.cilium.io/global` annotation to be set on the Namespaces of those pods and that pod CIDRs in each member cluster don't overlap.
+- When using overlay networking, a NodePort service won't work when its backend is in another cluster.
+- You can't deploy self-managed Cilium multicluster at the same time.
+- ACNS sets the Cilium version and enabled features. You can't currently directly modify these settings.
 
 ## Before you begin
 
@@ -675,7 +678,3 @@ az aks update --resource-group ${CLUSTER_RESOURCE_GROUP} --name ${MEMBER_CLUSTER
 ```
 
 Once the cluster is updated with the role assignment, run `az fleet clustermeshprofile apply` again.
-
-Note
-
-During preview, the status of a cross-cluster network profile might continue to show as `Failed` even when member clusters show as `Connected`.

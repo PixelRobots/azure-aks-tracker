@@ -21,11 +21,11 @@ learn_banner_products:
 - azure
 ms.service: azure-kubernetes-service
 description: Learn how to enable Federal Information Processing Standard (FIPS) for Azure Kubernetes Service (AKS) node pools.
-author: schaffererin
-ms.author: schaffererin
+author: allyford
+ms.author: allyford
 ms.topic: how-to
 ms.subservice: aks-security
-ms.date: 2026-10-13T00:00:00.0000000Z
+ms.date: 2026-10-28T00:00:00.0000000Z
 ms.custom: template-how-to, linux-related-content
 ai-usage: ai-assisted
 zone_pivot_groups: azure-cli-arm-bicep-terraform-portal
@@ -115,7 +115,7 @@ Starting on **November 30, 2025**, Azure Kubernetes Service (AKS) no longer supp
 FIPS-enabled node pools have the following limitations:
 
 - FIPS-enabled node pools require Kubernetes version 1.19 and greater. FIPS-enabled ACL node pools require AKS version 1.34 or later.
-- Trusted Launch with FIPS supports Ubuntu 22.04 and Azure Container Linux (ACL) on Generation 2 VM sizes. ACL requires Trusted Launch with Secure Boot and vTPM.
+- Trusted Launch with FIPS supports Ubuntu 22.04, Azure Container Linux (ACL), and Windows Server 2025 on Generation 2 VM sizes. ACL requires Trusted Launch with Secure Boot and vTPM. Windows Server 2025 enables FIPS by default.
 - To update the underlying packages or modules used for FIPS, you must use [Node image upgrade](node-image-upgrade).
 - Container images on the FIPS nodes aren't assessed for FIPS compliance.
 - Mounting of a CIFS share fails because FIPS disables some authentication modules. To work around this issue, see [Errors when mounting a file share on a FIPS-enabled node pool](/en-us/troubleshoot/azure/azure-kubernetes/fail-to-mount-azure-file-share#fipsnodepool).
@@ -134,13 +134,13 @@ You can create FIPS-enabled node pools on all supported OS types (Linux and Wind
 
 The following table includes the supported OS versions for FIPS-enabled node pools:
 
-| OS type | OS SKU | FIPS compliance | Default |
-| --- | --- | --- | --- |
-| Linux | Ubuntu | Supported for Ubuntu 20.04 and Ubuntu 22.04 | Disabled by default |
-| Linux | Azure Linux | Supported for Azure Linux 3.0 | Disabled by default |
-| Linux | Azure Container Linux | Supported for Azure Container Linux on AKS version 1.34 and later | Disabled by default |
-| Windows | Windows Server 2022 | Supported | Enabled by default |
-| Windows | Windows Server 2025 | Supported | Enabled by default and can't be disabled |
+| OS type | OS SKU | FIPS compliance | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| Linux | Ubuntu | Supported for Ubuntu 20.04 and Ubuntu 22.04 | Disabled by default | If the default Ubuntu version doesn't support FIPS, AKS uses the latest FIPS-supported Ubuntu version. Trusted Launch with FIPS is supported only with Ubuntu 22.04 on Generation 2 VM sizes. |
+| Linux | Azure Linux | Supported for Azure Linux 3.0 and later | Disabled by default | FIPS-enabled node pools with [Arm64 VMs](use-arm64-vms) are supported only with Azure Linux 3.0 and later. |
+| Linux | Azure Container Linux | Supported on AKS version 1.34 and later | Disabled by default | Trusted Launch with FIPS requires Secure Boot and vTPM on Generation 2 VM sizes. |
+| Windows | Windows Server 2022 | Supported | Enabled by default | FIPS is enabled by default, even if enable FIPS doesn't show 'true'. FIPS can't be disabled. |
+| Windows | Windows Server 2025 | Supported | Enabled by default and can't be disabled | FIPS enablement is required to create a Windows Server 2025 node pool. FIPS can't be disabled. |
 
 When requesting FIPS-enabled Ubuntu, if the default Ubuntu version doesn't support FIPS, AKS defaults to the most recent FIPS-supported version of Ubuntu. For example, Ubuntu 24.04 is default for Linux node pools. Since Ubuntu 24.04 doesn't currently support FIPS, AKS defaults to Ubuntu 22.04 for Linux FIPS-enabled node pools.
 
@@ -740,7 +740,7 @@ For more information about Trusted Launch requirements and behavior, see [Truste
     Trusted Launch nodes return the following output:
 
     - Node image version containing both `"TL"` and `"FIPS"`.
-    - `"Security-type"` is `"Trusted Launch"`.
+    - The `kubernetes.azure.com/security-type` label is `TrustedLaunch`.
 
     ```bash
     kubectl get nodes
@@ -793,7 +793,7 @@ Adding a Linux node pool with both FIPS and Trusted Launch currently **isn't sup
     Trusted Launch nodes have the following output:
 
     - Node image version containing both `"TL"` and `"FIPS"`.
-    - `"Security-type"` is `"Trusted Launch"`.
+    - The `kubernetes.azure.com/security-type` label is `TrustedLaunch`.
 
     ```bash
     kubectl get nodes
@@ -841,7 +841,7 @@ Adding a Linux node pool with both FIPS and Trusted Launch currently **isn't sup
     Trusted Launch nodes have the following output:
 
     - Node image version containing both `"TL"` and `"FIPS"`.
-    - `"Security-type"` is `"Trusted Launch"`.
+    - The `kubernetes.azure.com/security-type` label is `TrustedLaunch`.
 
     ```bash
     kubectl get nodes
@@ -861,6 +861,8 @@ To add a Linux node pool with FIPS and Trusted Launch enabled, use the Azure CLI
 ## Add a FIPS-enabled Windows node pool
 
 In this section, we add a Windows node pool to an existing AKS cluster. **Windows Server 2022 and later node pools enable FIPS by default even if `enableFips` doesn't show `True`**. **Windows Server 2025 and later node pools don't support disabling FIPS**.
+
+Windows Server 2025 FIPS-enabled node pools can also use Trusted Launch on Generation 2 VM sizes. To add a Trusted Launch-enabled Windows Server 2025 node pool, see [Trusted Launch for Azure Kubernetes Service (AKS)](use-trusted-launch).
 
 ::: zone pivot="azure-cli"
 
@@ -1383,6 +1385,39 @@ Add a node pool and replace the message of the day using the [`az aks nodepool a
 
 ```azurecli
 az aks nodepool add --name mynodepool1 --cluster-name myAKSCluster --resource-group myResourceGroup --message-of-the-day ./newMOTD.txt
+```
+
+::: zone-end
+
+## Clean up resources
+
+Remove test workloads before deleting their node pool. Don't delete node pools that host workloads you need to keep.
+
+::: zone pivot="azure-cli,arm,bicep,azure-portal"
+
+If you added a test node pool to an existing cluster, delete only that test node pool by using the [`az aks nodepool delete`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-delete) command. Replace `<node-pool-name>` with the name of the test node pool you created, such as `fipsnp` or `fipstlnp`.
+
+```azurecli
+az aks nodepool delete \
+    --resource-group myResourceGroup \
+    --cluster-name myAKSCluster \
+    --name <node-pool-name>
+```
+
+If you created a cluster and resource group solely for this article, delete the test resource group by using the [`az group delete`](/en-us/cli/azure/group#az-group-delete) command. **This command deletes every resource in the resource group. Don't run it against a shared or pre-existing resource group.**
+
+```azurecli
+az group delete --name myResourceGroup --yes --no-wait
+```
+
+::: zone-end
+
+::: zone pivot="terraform"
+
+If you used a dedicated Terraform configuration and state for this article, run `terraform destroy` from that configuration's directory. Review the planned deletions before confirming. **This command deletes all resources managed by that state. Don't run it against shared or production state.**
+
+```console
+terraform destroy
 ```
 
 ::: zone-end

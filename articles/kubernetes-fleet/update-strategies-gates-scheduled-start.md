@@ -19,7 +19,7 @@ learn_banner_products:
 - azure
 description: Learn how to schedule the day and time a group or stage starts updating in Azure Kubernetes Fleet Manager update strategies.
 ms.topic: how-to
-ms.date: 2026-07-17T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 author: JunyuQian
 ms.author: junyuqian
 ms.service: azure-kubernetes-fleet-manager
@@ -50,15 +50,13 @@ platformId: 6e2cdeb8-5b8c-13c0-9726-d3f68a334632
 
 # Use scheduled start gates in Azure Kubernetes Fleet Manager Update Run Strategies | Microsoft Learn
 
+**Applies to:** ✔️ Fleet Manager ✔️ Fleet Manager with hub cluster
+
 Platform administrators often need to ensure that cluster updates only start at specific days and times. For example, choose times when teams are available to monitor or when user traffic is at its lowest.
 
 Fleet Manager provides scheduled start gates that platform administrators can use to delay the progression of an update run until a specified day and time. For example, you can place a scheduled start gate before the production stage of an update strategy. This gate ensures that production clusters don't begin updating until the scheduled time, even if earlier stages complete ahead of schedule.
 
 This article covers how to define scheduled start gates in update strategies, and how they complete during update run execution.
-
-Important
-
-Azure Kubernetes Fleet Manager preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. Azure Kubernetes Fleet Manager previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use.
 
 ## Prerequisites
 

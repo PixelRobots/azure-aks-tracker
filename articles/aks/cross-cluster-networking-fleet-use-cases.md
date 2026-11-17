@@ -24,7 +24,7 @@ author: Khushbu-Parekh
 ms.author: kparekh
 ms.subservice: aks-networking
 ms.topic: concept-article
-ms.date: 2026-04-26T00:00:00.0000000Z
+ms.date: 2026-10-19T00:00:00.0000000Z
 locale: en-us
 document_id: 0fe74456-3a7b-0bd5-0ca7-4c9d4bbe9b01
 document_version_independent_id: 9015f230-ef8d-67a9-50f8-a32a6e415e76
@@ -49,7 +49,7 @@ platformId: cba828c1-8205-75eb-598d-bf90f0d2224b
 
 # Cross-cluster networking use cases with Azure Kubernetes Fleet Manager - Azure Kubernetes Service | Microsoft Learn
 
-Cross-cluster networking for Azure Kubernetes Fleet Manager (Fleet) is a managed offering built on [Cilium Cluster Mesh](https://cilium.io/use-cases/cluster-mesh/) that allows you to establish direct pod-to-pod communication across multiple Azure Kubernetes Service (AKS) clusters. By creating a cross-cluster network, you can enable seamless east-west connectivity without the need for gateways, while also gaining multi-cluster observability and consistent security enforcement.
+Azure Kubernetes Fleet Manager cross-cluster networking is a managed offering built on [Cilium Cluster Mesh](https://cilium.io/use-cases/cluster-mesh/) that you use to establish direct pod-to-pod communication across multiple Azure Kubernetes Service (AKS) clusters. By creating a cross-cluster network, you can enable seamless east-west connectivity without the need for gateways, while also gaining multi-cluster observability and consistent security enforcement.
 
 ## Architecture and capabilities
 
@@ -127,4 +127,4 @@ Cilium manages this discovery by watching for services with the `io.cilium/globa
 - A single cross-cluster network supports up to 255 member clusters.
 - Self-managed Cilium multi-cluster configurations aren't supported alongside Fleet-managed cross-cluster networking.
 - Cilium CLI commands that modify the mesh, such as `cilium clustermesh connect` or `cilium upgrade`, are unsupported because Fleet manages these operations.
-- Cross-cluster networking is restricted to clusters within the same reachable flat routing domain. It doesn't support mesh connectivity across nonpeered virtual networks.
+- Cross-cluster networking is restricted to clusters within the same reachable flat routing domain. It doesn't support mesh connectivity across non-peered virtual networks.

@@ -331,6 +331,8 @@ The following example shows how to use the Azure RBAC permission model to grant 
 
 Identity bindings allow mapping multiple AKS clusters to the same UAMI while still using a single FIC. To scale identity bindings across multiple clusters, you can repeat the steps from Create an identity binding through verify access to key vault from sample application for each extra cluster you want to map to the same UAMI (creating a new identity binding per cluster).
 
+If your clusters are joined to an [Azure Kubernetes Fleet Manager](../kubernetes-fleet/overview) fleet, you can define the identity binding once and apply it to multiple member clusters. For more information, see [multi-cluster identity binding profiles](../kubernetes-fleet/concepts-fleet-identity-binding).
+
 ## Clean up resources
 
 If you no longer need the resources you created in this article, you can clean them up to avoid incurring future costs.
