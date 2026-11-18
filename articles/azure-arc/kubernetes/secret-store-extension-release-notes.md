@@ -22,7 +22,7 @@ ms.author: davidsmatlak
 ms.service: azure-arc
 ms.subservice: azure-arc-kubernetes
 description: The release notes identify important updates and improvements in the Azure Key Vault Secret Store extension.
-ms.date: 2026-10-29T00:00:00.0000000Z
+ms.date: 2026-11-17T00:00:00.0000000Z
 ms.topic: release-notes
 ai-usage: ai-assisted
 locale: en-us
@@ -50,6 +50,12 @@ platformId: 4fa662eb-f4f3-b01a-fc19-537bce9a1d15
 # What's new for AKV Secret Store extension - Azure Arc | Microsoft Learn
 
 Updates and improvements to the Azure Key Vault Secret Store extension are listed here.
+
+## November 2026
+
+### 1.7.1
+
+- Update internal dependencies to address vulnerabilities and security advisories.
 
 ## October 2026
 
@@ -123,6 +129,10 @@ Updates and improvements to the Azure Key Vault Secret Store extension are liste
     - Bumped `go.opentelemetry.io/otel/sdk` to v1.43.0 to address security advisories.
     - Bumped `google.golang.org/grpc` to v1.79.3 to address security advisories.
 
+### 1.3.2
+
+- Includes the 1.4.1 security updates for the 1.3 release line.
+
 ## March 2026
 
 ### 1.4.0
@@ -135,6 +145,11 @@ Updates and improvements to the Azure Key Vault Secret Store extension are liste
     - Updated AKV CSI Provider container image to v1.7.2-5.
     - Bumped `sigs.k8s.io/secrets-store-csi-driver` to v1.5.6, `helm.sh/helm/v3` to v3.20.0, `golang.org/x/crypto` to v0.48.0, and `google.golang.org/protobuf` to v1.36.11.
 
+### 1.3.1
+
+- Includes the Kubernetes version support fix from 1.4.0 for the 1.3 release line.
+- Update internal dependencies to address vulnerabilities and security advisories.
+
 ### 1.3.0
 
 - Added ownership checks to prevent AKVSync resources from overwriting existing SecretSync or SecretProviderClass resources.
@@ -143,11 +158,19 @@ Updates and improvements to the Azure Key Vault Secret Store extension are liste
     - Bumped kubectl container image to v1.35.0-2 to address CVEs in base image.
     - Bump AKV CSI Provider container image revision to v1.7.2-4 to address CVEs in base image.
 
+### 1.2.4
+
+- Includes the 1.3.0 security updates for the 1.2 release line.
+
 ## February 2026
 
 ### 1.2.2
 
 - HTTP proxy certificates provided via the --proxy-cert flag during cluster Arc enablement are now correctly handled.
+
+### 1.1.7
+
+- Includes the proxy certificate fix from 1.2.2 for the 1.1 release line.
 
 ## January 2026
 
@@ -176,6 +199,12 @@ Updates and improvements to the Azure Key Vault Secret Store extension are liste
 
     - Update Go to 1.25.1.
     - Updated kubectl container image to v1.33.5-3.
+
+## October 2025
+
+### 1.0.3
+
+- Update internal dependencies to address vulnerabilities and security advisories.
 
 ## August 2025
 
