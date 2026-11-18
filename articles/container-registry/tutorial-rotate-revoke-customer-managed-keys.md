@@ -23,7 +23,7 @@ ms.author: kumud
 ms.service: azure-container-registry
 description: Learn how to rotate, update, and revoke a customer-managed key on Azure Container Registry to ensure secure and continuous access to your registry data.
 ms.topic: tutorial
-ms.date: 2026-10-09T00:00:00.0000000Z
+ms.date: 2026-10-30T00:00:00.0000000Z
 ai-usage: ai-assisted
 ms.custom: subject-rbac-steps, devx-track-azurecli
 locale: en-us
@@ -141,13 +141,14 @@ For example, to configure a new key:
 
 1. In the portal, go to your registry.
 2. Under **Settings**, select **Encryption** &gt; **Change key**.
+3. For **Identity**, select a managed identity that has access to the new key.
+4. In **Encryption**, choose one of the following options:
 
-    ![Screenshot of encryption key options in the Azure portal.](media/container-registry-customer-managed-keys/rotate-key.png)
-3. In **Encryption**, choose one of the following options:
-
-    - Choose **Select from Key Vault**, and then select an existing key vault or Managed HSM and a key. Select **Create new** to create a key vault and key. The key that you select is unversioned and enables automatic key rotation.
+    - Choose **Select from Key Vault**, and then open the key picker under **Encryption key**. Select the subscription, set **Key store type** to **Key vault** or **Managed HSM**, and select the key store and key. Select **Select** to confirm. The key that you select is unversioned and enables automatic key rotation.
     - Select **Enter key URI**, and provide a Key Vault or Managed HSM key identifier directly. You can provide either a versioned key URI (for a key that you must rotate manually) or an unversioned key URI (which enables automatic key rotation).
-4. Complete the key selection, and then select **Save**.
+
+    ![Screenshot of the Encryption settings with a new Managed HSM key selected and ready to save.](media/container-registry-customer-managed-keys/rotate-key.png)
+5. Select **Save** to apply the new key and identity settings.
 
 ## Revoke a customer-managed key
 

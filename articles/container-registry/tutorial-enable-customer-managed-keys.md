@@ -23,11 +23,10 @@ ms.author: kumud
 ms.service: azure-container-registry
 description: In this tutorial, learn how to encrypt your Premium registry with a customer-managed key stored in Azure Key Vault or Azure Key Vault Managed HSM.
 ms.topic: tutorial
-ms.date: 2026-10-09T00:00:00.0000000Z
+ms.date: 2026-10-30T00:00:00.0000000Z
 ai-usage: ai-assisted
 ms.custom:
 - devx-track-azurecli
-- sfi-image-nochange
 locale: en-us
 document_id: 6cc5c832-f1d6-7da2-ca78-7782276403b7
 document_version_independent_id: ad7c1b22-d95b-f4c3-deaa-9d719f217bc1
@@ -44,9 +43,11 @@ source_path: articles/container-registry/tutorial-enable-customer-managed-keys.m
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f488294d-f483-456e-94e3-755f933b811b
 - https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/cb49e66a-8528-497d-adaa-eade2d009d1b
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/02662057-0b9b-40f4-a3c7-537125b6d283
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
+- https://authoring-docs-microsoft.poolparty.biz/devrel/472c9d15-157b-443c-afa2-e209c8fecf58
 platformId: 6850ec53-ebc6-332c-f0c1-126fcfa9ef0c
 ---
 
@@ -212,6 +213,18 @@ keyID=$(echo $keyID | sed -e "s/\/[^/]*$//")
 
 You must provision and activate a Managed HSM before you can create keys or assign data-plane roles. Follow [Quickstart: Provision and activate a Managed HSM by using the Azure CLI](/en-us/azure/key-vault/managed-hsm/quick-create-cli), and then return to this article.
 
+Azure Container Registry requires purge protection for the Managed HSM. Soft-delete is always enabled for Managed HSM, but you must also enable purge protection:
+
+```azurecli
+az keyvault update-hsm \
+  --hsm-name <managed-hsm-name> \
+  --enable-purge-protection true
+```
+
+Important
+
+You can't disable purge protection after you enable it. A deleted Managed HSM continues to incur charges until it's purged after the retention period. For more information, see [Managed HSM soft-delete and purge protection](/en-us/azure/key-vault/managed-hsm/soft-delete-overview).
+
 If the Managed HSM firewall is enabled, configure trusted services or other network access before you create the registry. For more information, see [Network security for Managed HSM](/en-us/azure/key-vault/managed-hsm/network-security).
 
 The user who creates the encryption key needs a Managed HSM role that permits key creation, such as **Managed HSM Crypto User**. For more information, see [Managed HSM data-plane role management](/en-us/azure/key-vault/managed-hsm/role-management).
@@ -334,11 +347,12 @@ The other option is to assign the `Key Vault Crypto Service Encryption User` RBA
 ### Create and configure a Managed HSM
 
 1. Follow [Quickstart: Provision and activate a Managed HSM by using the Azure portal](/en-us/azure/key-vault/managed-hsm/quick-create-portal).
-2. Ensure that the user who creates the encryption key has a Managed HSM role that permits key creation, such as **Managed HSM Crypto User**.
-3. Under **Settings**, select **Keys**, and then create or import an RSA-HSM key that supports the `wrapKey` and `unwrapKey` operations.
-4. Under **Settings**, select **Local RBAC**.
-5. Add the **Managed HSM Crypto Service Encryption User** role assignment for the user-assigned identity. For the least privilege, assign the role at the scope of the encryption key. For more information, see [Managed HSM data-plane role management](/en-us/azure/key-vault/managed-hsm/role-management).
-6. If the Managed HSM firewall is enabled, configure trusted services or other network access. For more information, see [Network security for Managed HSM](/en-us/azure/key-vault/managed-hsm/network-security).
+2. Ensure that purge protection is enabled on the Managed HSM. Azure Container Registry requires purge protection in addition to the always-enabled soft-delete feature. You can't disable purge protection after enabling it, and a deleted Managed HSM continues to incur charges during its retention period. For more information, see [Managed HSM soft-delete and purge protection](/en-us/azure/key-vault/managed-hsm/soft-delete-overview).
+3. Ensure that the user who creates the encryption key has a Managed HSM role that permits key creation, such as **Managed HSM Crypto User**.
+4. Under **Settings**, select **Keys**, and then create or import an RSA-HSM key that supports the `wrapKey` and `unwrapKey` operations.
+5. Under **Settings**, select **Local RBAC**.
+6. Add the **Managed HSM Crypto Service Encryption User** role assignment for the user-assigned identity. For the least privilege, assign the role at the scope of the encryption key. For more information, see [Managed HSM data-plane role management](/en-us/azure/key-vault/managed-hsm/role-management).
+7. If the Managed HSM firewall is enabled, configure trusted services or other network access. For more information, see [Network security for Managed HSM](/en-us/azure/key-vault/managed-hsm/network-security).
 
 Important
 
@@ -357,19 +371,21 @@ Create a key in the key vault and use it to encrypt the registry. Follow these s
 ### Create a container registry
 
 1. Select **Create a resource** &gt; **Containers** &gt; **Container Registry**.
-2. On the **Basics** tab, select or create a resource group, and then enter a registry name. In **SKU**, select **Premium**.
+2. On the **Basics** tab, select or create a resource group, and then enter a registry name. In **Pricing plan**, select **Premium**.
 3. On the **Encryption** tab, for **Customer-managed key**, select **Enabled**.
-4. For **Identity**, select the managed identity that you created.
+4. Select the subscription that contains your managed identity. For **Identity**, select the managed identity that you created.
 5. For **Encryption**, choose one of the following options:
 
-    - Choose **Select from Key Vault**, and then select an existing key vault or Managed HSM and a key. Select **Create new** to create a key vault and key. The key that you select is unversioned and enables automatic key rotation.
+    - Choose **Select from Key Vault**, and then open the key picker under **Encryption key**. Select the subscription, set **Key store type** to **Key vault** or **Managed HSM**, and select the key store and key. Select **Select** to confirm. The key that you select is unversioned and enables automatic key rotation.
     - Select **Enter key URI**, and provide the identifier of an existing Key Vault or Managed HSM key. You can provide either a versioned key URI (for a key that you must rotate manually) or an unversioned key URI (which enables automatic key rotation).
 
     If a Managed HSM firewall prevents the portal from listing keys, allow your client IP address or select **Enter key URI**. Allowing trusted services enables Azure Container Registry to reach the Managed HSM, but it doesn't allow a client outside the configured network boundary to use the key picker.
+
+    ![Screenshot of the key picker with Managed HSM selected as the key store type and an HSM and key selected.](media/container-registry-customer-managed-keys/select-managed-hsm-key.png)
 6. Select **Review + create**.
 7. Select **Create** to deploy the registry instance.
 
-![Screenshot that shows options for creating an encrypted registry in the Azure portal.](media/container-registry-customer-managed-keys/create-encrypted-registry.png)
+![Screenshot of the Encryption tab with customer-managed keys enabled, a managed identity selected, and a Managed HSM key configured.](media/container-registry-customer-managed-keys/create-encrypted-registry.png)
 
 ### Show the encryption status
 
@@ -385,6 +401,8 @@ Before you deploy the template, create the user-assigned identity and configure 
 - For Managed HSM, assign the identity the **Managed HSM Crypto Service Encryption User** local RBAC role at the key scope.
 
 The template declares the existing identity so that the registry can depend on it. Deploy the template to the same resource group as the identity.
+
+The key store must have purge protection enabled. For Managed HSM setup, see Create and configure a Managed HSM.
 
 1. Copy the following content of a Resource Manager template to a new file and save it as *CMKtemplate.json*:
 
