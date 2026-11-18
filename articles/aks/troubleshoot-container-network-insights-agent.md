@@ -22,7 +22,7 @@ ms.service: azure-kubernetes-service
 description: Troubleshoot common issues you might encounter when deploying, configuring, or using Container Network Insights Agent on Azure Kubernetes Service (AKS).
 author: shaifaligargmsft
 ms.author: shaifaligarg
-ms.date: 2026-03-05T00:00:00.0000000Z
+ms.date: 2026-11-13T00:00:00.0000000Z
 ms.topic: troubleshooting
 locale: en-us
 document_id: 54f4e6ef-2eb6-bb60-b8fc-a8ff54e38708
@@ -39,17 +39,26 @@ monikers: []
 item_type: Content
 source_path: articles/aks/troubleshoot-container-network-insights-agent.md
 cmProducts:
-- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/8a6e4dad-7050-4ce7-83f9-eb4123577a54
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/8a6e4dad-7050-4ce7-83f9-eb4123577a54
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
-- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/0a5fc323-00ce-4c20-9095-41948f54c83f
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/0a5fc323-00ce-4c20-9095-41948f54c83f
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: 6877113d-5940-d43b-e6ea-8799531550ed
 ---
 
 # Troubleshoot Container Network Insights Agent on AKS - Azure Kubernetes Service | Microsoft Learn
+
+Important
+
+Container Network Insights Agent is deprecated and won't be available after November 2026. Plan to stop using the agent before then.
+
+The agent is a public preview feature. It doesn't have a service-level agreement (SLA) and isn't recommended for production workloads. Preview features receive best-effort support. For more information, see:
+
+- [AKS support policies](support-policies#preview-features-or-feature-flags)
+- [AKS FAQ](faq)
 
 This article covers common issues you might encounter when deploying, setting up, or using Container Network Insights Agent on AKS. Each section follows a **Symptom → Cause → Resolution** format.
 

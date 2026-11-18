@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn about support, testing, and rollback for OS versions available on Azure Kubernetes Service (AKS).
 ms.topic: overview
-ms.date: 2026-08-06T00:00:00.0000000Z
+ms.date: 2026-11-12T00:00:00.0000000Z
 author: allyford
 ms.author: allyford
 ai-usage: ai-assisted
@@ -157,7 +157,7 @@ Keep the following information in mind when migrating to `--os-sku Ubuntu2604`:
 - Register the `Ubuntu2604Preview` feature flag before you create or update a node pool to Ubuntu 26.04.
 - Ubuntu 26.04 requires a VM size that supports Generation 2 VMs.
 - Ubuntu 26.04 uses minimal node images for AMD64 and Arm64.
-- [FIPS](enable-fips-nodes), [Confidential VM](use-cvm), and [Trusted Launch](use-trusted-launch) aren't supported.
+- [FIPS](enable-fips-nodes) isn't supported.
 - You need the preview Azure CLI version 21.0.0b14 or later installed and configured. To find your CLI version, run `az --version`. To install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
 
 #### Install the `aks-preview` Azure CLI extension

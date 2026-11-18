@@ -24,7 +24,7 @@ author: allyford
 ms.author: allyford
 ms.custom: devx-track-azurecli
 ms.topic: how-to
-ms.date: 2026-08-05T00:00:00.0000000Z
+ms.date: 2026-11-12T00:00:00.0000000Z
 ms.subservice: aks-nodes
 locale: en-us
 document_id: 7860af15-751c-b6b4-4159-bec0876ed807
@@ -68,9 +68,7 @@ This article describes how to enable and disable the Artifact Streaming feature 
 
 ## Limitations
 
-- Only images with Linux AMD64 architecture are supported.
-- Windows-based container images and ARM64 images aren't supported.
-- Only the AMD64 architecture is supported for multi-architecture images.
+- Windows node pools aren't supported.
 - Ubuntu based node pools in AKS must use Ubuntu version 20.04 or higher.
 - Only Premium SKU ACR registries are supported.
 - CMK (Customer-Managed Keys) registries aren't supported.

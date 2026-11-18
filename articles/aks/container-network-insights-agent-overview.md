@@ -22,7 +22,7 @@ ms.service: azure-kubernetes-service
 description: Learn about Container Network Insights Agent, an AI-powered diagnostic assistant that helps you troubleshoot networking issues in Azure Kubernetes Service (AKS) clusters.
 author: shaifaligargmsft
 ms.author: shaifaligarg
-ms.date: 2026-02-18T00:00:00.0000000Z
+ms.date: 2026-11-13T00:00:00.0000000Z
 ms.topic: overview
 locale: en-us
 document_id: 0894551f-a6d2-0c13-4e30-818aa4676b1f
@@ -45,6 +45,15 @@ platformId: 4588a3b3-a65f-43d1-8124-3dcd70cc4472
 ---
 
 # Container Network Insights Agent for AKS overview (Public Preview) - Azure Kubernetes Service | Microsoft Learn
+
+Important
+
+Container Network Insights Agent is being deprecated and won't be available after the end of November 2026. Plan to stop using the agent before then.
+
+The agent is a public preview feature. It doesn't have a service-level agreement (SLA) and isn't recommended for production workloads. Preview features receive best-effort support. For more information, see:
+
+- [AKS support policies](support-policies#preview-features-or-feature-flags)
+- [AKS FAQ](faq)
 
 Container Network Insights Agent is an AI-powered diagnostic assistant that helps you identify and resolve networking issues in your Azure Kubernetes Service (AKS) clusters. Describe a problem in natural language, such as DNS failures, packet drops, unreachable services, or blocked traffic. The agent collects evidence from your cluster and returns a structured report with root cause analysis and remediation guidance.
 

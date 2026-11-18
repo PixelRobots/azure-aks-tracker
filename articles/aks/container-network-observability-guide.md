@@ -24,7 +24,7 @@ author: shaifaligargmsft
 ms.author: shaifaligarg
 ms.subservice: aks-networking
 ms.topic: concept-article
-ms.date: 2026-04-30T00:00:00.0000000Z
+ms.date: 2026-11-13T00:00:00.0000000Z
 ai-usage: ai-assisted
 locale: en-us
 document_id: 3570c50f-5174-bfe8-bfb9-440bb1d71d32
@@ -76,7 +76,7 @@ ACNS gives you three signals. Each answers a different question.
 | **Container network logs (on-demand)***(Cilium only)* | *What is happening right now?* | Live debugging during an active incident | Hubble CLI, Hubble UI |
 | **Metrics filtering***(Cilium only)* | *Which signals do I actually need?* | Scoping collection to critical workloads, cost control | `ContainerNetworkMetric` CRD |
 | **Log filters and aggregation***(Cilium only)* | *Which flows do I actually need?* | Scoping log capture to critical traffic, cost control | `ContainerNetworkLog` CRD |
-| **[Container Network Insights Agent](container-network-insights-agent-overview)***(Preview)* | *Where do I even start?* | AI-driven RCA across metrics, Hubble flows, Cilium policies, CoreDNS, and host-level NIC/kernel counters | In-cluster web app, accessed through the browser |
+| **[Container Network Insights Agent](container-network-insights-agent-overview)***(Preview, being deprecated by end of November 2026)* | *Where do I even start?* | AI-driven RCA across metrics, Hubble flows, Cilium policies, CoreDNS, and host-level NIC/kernel counters | In-cluster web app, accessed through the browser |
 
 Note
 
@@ -94,9 +94,9 @@ Use this loop for any network incident:
 4. **Validate the fix.** Re-check the same metric panel and rerun the same KQL query. The anomaly should be gone.
 5. **Tune collection.** If you over-collected during the incident, narrow your `ContainerNetworkLog` CRD or apply a `ContainerNetworkMetric` filter so you only capture what you need going forward.
 
-Tip
+Important
 
-Prefer to describe the problem instead of clicking through dashboards? [Container Network Insights Agent](container-network-insights-agent-overview) (Preview) automates steps 1–3 by classifying your issue, collecting evidence through `kubectl`, Cilium, Hubble, CoreDNS, and host-level network statistics, and returning a structured RCA with remediation commands. It complements this guide rather than replacing it — the agent gives you a fast first pass; the playbooks here let you validate or go deeper. The agent is read-only; you still apply the fix yourself.
+[Container Network Insights Agent](container-network-insights-agent-overview) is a public preview feature that's being deprecated and won't be available after the end of November 2026. It doesn't have a service-level agreement (SLA) and isn't recommended for production workloads. For more information, see [AKS support policies](support-policies#preview-features-or-feature-flags) and the [AKS FAQ](faq). Use the metrics, logs, and playbooks in this guide as your long-term troubleshooting path.
 
 Note
 
@@ -587,7 +587,7 @@ While Advanced Container Networking Services (ACNS) is a paid offering that prov
 
 ### AI-driven diagnostics
 
-- **Container Network Insights Agent (Preview):**[Overview](container-network-insights-agent-overview) and [Set up the agent](how-to-configure-container-network-insights-agent)
+- **Container Network Insights Agent (Preview, being deprecated by end of November 2026):**[Overview](container-network-insights-agent-overview) and [Set up the agent](how-to-configure-container-network-insights-agent)
 - **AKS MCP server:**[AKS Model Context Protocol server](aks-model-context-protocol-server)
 
 ### Container Network Security (Cilium)

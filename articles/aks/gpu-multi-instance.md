@@ -21,10 +21,11 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn how to create a multi-instance GPU node pool in Azure Kubernetes Service (AKS).
 ms.topic: how-to
-ms.date: 2026-11-10T00:00:00.0000000Z
+ms.date: 2026-11-12T00:00:00.0000000Z
 ms.author: sachidesai
 author: sdesai345
 ms.subservice: aks-nodes
+ai-usage: ai-assisted
 locale: en-us
 document_id: bac5a50b-9892-19b5-ffe8-e1f1f8ab50ce
 document_version_independent_id: 5ec41d1a-14bc-af33-69ae-a0984de965b8
@@ -296,6 +297,27 @@ The `--gpu-instance-profile` feature remains available for configuration of your
 | **Profile list with a managed plugin** | `--enable-managed-gpu=true --gpu-mig-strategy Single --gpu-mig-profiles <profile>`. Supply exactly one profile. | AKS configures the managed NVIDIA device plugin plugin for `Single`; no manual configuration is required. | `gpuProfile.nvidia.migStrategy` and `gpuProfile.nvidia.migProfiles` explicitly describe the configuration. |
 
 All three single-strategy paths expose partitions as `nvidia.com/gpu` when configured on an NVIDIA GPU node pool. The resource name alone doesn't identify the partition size or whether AKS manages the plugin.
+
+Important
+
+[NVIDIA Container Toolkit 1.20.1](https://github.com/NVIDIA/nvidia-container-toolkit/releases/tag/v1.20.1) and later won't start a container that sets `NVIDIA_MIG_CONFIG_DEVICES` or `NVIDIA_MIG_MONITOR_DEVICES` unless the container has the `SYS_ADMIN` capability. Self-managed device plugin and GPU feature discovery containers usually set one of these variables when they run with a MIG strategy. Without the capability, they fail with this error:
+
+```output
+invalid MIG capability request: cannot set NVIDIA_MIG_CONFIG_DEVICES or NVIDIA_MIG_MONITOR_DEVICES in a non-privileged container
+```
+
+The NVIDIA device plugin Helm chart adds `SYS_ADMIN` for you, unless you override `securityContext` in your values. If you override it, or you deploy your own manifest, add the capability yourself. Kubernetes doesn't allow `allowPrivilegeEscalation: false` on a container that has `SYS_ADMIN`, so remove that setting or set it to `true`. You don't need `privileged: true`:
+
+```yaml
+securityContext:
+  allowPrivilegeEscalation: true
+  capabilities:
+    add: ["SYS_ADMIN"]
+```
+
+For more information, see [Configure a security context for a pod or container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
+
+If AKS manages the device plugin for you, there's nothing to change. The managed plugin runs as a systemd service on the node, so this check doesn't apply to it.
 
 ### Validate the MIG profiles configuration
 

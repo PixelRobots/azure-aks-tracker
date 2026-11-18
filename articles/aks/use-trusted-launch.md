@@ -24,7 +24,7 @@ description: Learn how Trusted Launch protects the Azure Kubernetes Cluster (AKS
 ms.topic: how-to
 ms.custom: devx-track-azurecli
 ms.subservice: aks-security
-ms.date: 2026-10-28T00:00:00.0000000Z
+ms.date: 2026-11-17T00:00:00.0000000Z
 ai-usage: ai-assisted
 author: allyford
 ms.author: allyford
@@ -46,11 +46,11 @@ source_path: articles/aks/use-trusted-launch.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/4e834929-0ce1-4c1d-9c81-fcb14721edfb
+- https://authoring-docs-microsoft.poolparty.biz/devrel/bcbcbad5-4208-4783-8035-8481272c98b8
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/75670257-a3f0-4627-9981-8046f99219e6
+- https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 platformId: 52ac43ef-f87c-4a1f-1e49-89a468b68374
 ---
 
@@ -105,7 +105,18 @@ Trusted Launch is composed of several, coordinated infrastructure technologies t
 - To enable Secure Boot on GPU node pools using the Ubuntu operating system, you need to skip installing the GPU driver (`--gpu-driver None`). For more information, see [Skip GPU driver installation](gpu-cluster#skip-gpu-driver-installation) and [Use NVIDIA GPUs on Azure Kubernetes Service (AKS)](use-nvidia-gpu). This limitation doesn't apply for running GPU workloads with Azure Linux or Azure Container Linux operating systems.
 - Ephemeral OS disks can be created with Trusted Launch and all regions are supported. However, not all virtual machines sizes are supported. For more information, see [Trusted Launch ephemeral OS sizes](/en-us/azure/virtual-machines/ephemeral-os-disks#trusted-launch-for-ephemeral-os-disks).
 - [Flatcar Container Linux for AKS](flatcar-container-linux-for-aks) doesn't support Trusted Launch on AKS.
-- Trusted Launch isn't supported through the AzureRM (`azurerm`) Terraform provider. To deploy Trusted Launch node pools, use the Azure CLI, ARM template, or Bicep instructions in this article.
+- Trusted Launch with Terraform requires AzureRM (`azurerm`) provider version 5.14.0 or later.
+
+## Supported OS versions
+
+The following table includes the supported OS versions for Trusted Launch-enabled node pools:
+
+| OS type | OS SKU | Trusted Launch support | Default | Constraints |
+| --- | --- | --- | --- | --- |
+| Linux | Ubuntu | Supported | Disabled by default | Requires [Azure Generation 2 VMs](/en-us/azure/virtual-machines/generation-2). You can't combine Trusted Launch with [Arm64](use-arm64-vms), [Pod Sandboxing](use-pod-sandboxing), or [Confidential VM](use-cvm) in the same node pool. Trusted Launch and [FIPS](enable-fips-nodes) together are supported only with Ubuntu 22.04. |
+| Linux | Azure Linux | Supported | Disabled by default | Requires [Azure Generation 2 VMs](/en-us/azure/virtual-machines/generation-2). You can't combine Trusted Launch with [Arm64](use-arm64-vms), [Pod Sandboxing](use-pod-sandboxing), or [Confidential VM](use-cvm) in the same node pool. |
+| Linux | Azure Container Linux | Supported | Required | ACL requires Trusted Launch with Secure Boot and vTPM and always uses [Azure Generation 2 VMs](/en-us/azure/virtual-machines/generation-2). |
+| Windows | Windows Server 2025 | Supported (preview) | Opt-in preview | Requires [Azure Generation 2 VMs](/en-us/azure/virtual-machines/generation-2), Kubernetes version 1.32 or later, and registration of the `WindowsTrustedLaunchPreview` feature flag. |
 
 ## Supported OS versions
 
@@ -200,13 +211,47 @@ When creating a cluster, enabling vTPM or Secure Boot automatically sets up your
 
 ::: zone pivot="terraform"
 
-The AzureRM (`azurerm`) Terraform provider doesn't support Trusted Launch because it doesn't expose Trusted Launch node pool settings. To create an AKS cluster with Trusted Launch enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+1. Create a Terraform configuration with Trusted Launch settings by using the [`azurerm_kubernetes_cluster`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster) resource. Before creating the configuration, review the following parameters in the `default_node_pool.security` block:
+
+    - `secure_boot_enabled`: Enables Secure Boot to authenticate an image signed by a trusted publisher.
+    - `vtpm_enabled`: Enables vTPM and performs attestation by measuring the entire boot chain of your VM.
+
+    The following example creates a cluster named *myAKSCluster* with one node in *myResourceGroup*, and enables Secure Boot and vTPM on the default node pool:
+
+    ```terraform
+    resource "azurerm_kubernetes_cluster" "example" {
+      name                = "myAKSCluster"
+      location            = azurerm_resource_group.example.location
+      resource_group_name = azurerm_resource_group.example.name
+      dns_prefix          = "myakscluster"
+    
+      default_node_pool {
+        name       = "nodepool1"
+        node_count = 1
+        vm_size    = "Standard_D2s_v3"
+    
+        security {
+          secure_boot_enabled = true
+          vtpm_enabled        = true
+        }
+      }
+    
+      node_provisioning_profile {
+        mode = "Manual"
+      }
+    
+      identity {
+        type = "SystemAssigned"
+      }
+    }
+    ```
+2. Apply your Terraform configuration by using the `terraform init`, `terraform plan`, and `terraform apply` commands. For detailed instructions, see [Deploy an AKS cluster using Terraform](/en-us/azure/aks/learn/quick-kubernetes-deploy-terraform).
 
 ::: zone-end
 
 ::: zone pivot="azure-portal"
 
-The Azure portal **doesn't support** creating an AKS cluster with Trusted Launch enabled. To create an AKS cluster with Trusted Launch enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+The Azure portal **doesn't support** creating an AKS cluster with Trusted Launch enabled. To create an AKS cluster with Trusted Launch enabled, use the Azure CLI, ARM template, Bicep, or Terraform instructions in this article.
 
 ::: zone-end
 
@@ -294,13 +339,44 @@ When you create a node pool, enabling vTPM or Secure Boot automatically sets up 
 
 ::: zone pivot="terraform"
 
-The AzureRM (`azurerm`) Terraform provider doesn't support Trusted Launch because it doesn't expose Trusted Launch node pool settings. To add a Linux node pool with Trusted Launch enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+1. Create a Terraform configuration with Trusted Launch settings by using the [`azurerm_kubernetes_cluster_node_pool`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) resource. Before creating the configuration, review the following parameters in the `security` block:
+
+    - `secure_boot_enabled`: Enables Secure Boot to authenticate an image signed by a trusted publisher.
+    - `vtpm_enabled`: Enables vTPM and performs attestation by measuring the entire boot chain of your VM.
+
+    The following example adds a node pool named *mynodepool* with three nodes, and enables vTPM and Secure Boot:
+
+    ```terraform
+    resource "azurerm_kubernetes_cluster_node_pool" "example" {
+      name                  = "mynodepool"
+      kubernetes_cluster_id = azurerm_kubernetes_cluster.example.id
+      vm_size               = "Standard_D2s_v3"
+      node_count            = 3
+    
+      security {
+        secure_boot_enabled = true
+        vtpm_enabled        = true
+      }
+    }
+    ```
+2. Apply your Terraform configuration by using the `terraform plan` and `terraform apply` commands.
+3. Check that your node pool uses a Trusted Launch image.
+
+    Trusted Launch nodes have the following output:
+
+    - Node image version containing `"TL"`, such as `"AKSUbuntu-2204-gen2TLcontainerd"`.
+    - `"Security-type"` is `"Trusted Launch"`.
+
+    ```bash
+    kubectl get nodes
+    kubectl describe node {node-name} | grep -e node-image-version -e security-type
+    ```
 
 ::: zone-end
 
 ::: zone pivot="azure-portal"
 
-The Azure portal **doesn't support** adding a Linux node pool with Trusted Launch enabled. To add a Linux node pool with Trusted Launch enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+The Azure portal **doesn't support** adding a Linux node pool with Trusted Launch enabled. To add a Linux node pool with Trusted Launch enabled, use the Azure CLI, ARM template, Bicep, or Terraform instructions in this article.
 
 ::: zone-end
 
@@ -477,7 +553,7 @@ Use an existing cluster configured for Windows node pools, including a Windows p
 
 ::: zone pivot="terraform"
 
-The AzureRM (`azurerm`) Terraform provider doesn't support Trusted Launch because it doesn't expose Trusted Launch node pool settings. To add a Windows node pool with Trusted Launch enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+This article doesn't include Terraform instructions for Windows Server node pools with Trusted Launch (preview). To add a Windows node pool with Trusted Launch enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
 
 ::: zone-end
 
@@ -587,13 +663,52 @@ For FIPS-specific operations, such as disabling FIPS on an existing node pool, s
 
 ::: zone pivot="terraform"
 
-The AzureRM (`azurerm`) Terraform provider doesn't support Trusted Launch because it doesn't expose Trusted Launch node pool settings. To add a node pool with Trusted Launch and FIPS enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+1. Create a Terraform configuration with Trusted Launch and FIPS settings by using the [`azurerm_kubernetes_cluster_node_pool`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster_node_pool) resource. Before creating the configuration, review the following parameters:
+
+    - `secure_boot_enabled`: Enables Secure Boot to authenticate an image signed by a trusted publisher.
+    - `vtpm_enabled`: Enables vTPM and performs attestation by measuring the entire boot chain of your VM.
+    - `fips_enabled`: Enables the FIPS-compliant node image for the node pool.
+    - `os_sku`: Set to `Ubuntu2204` to create an Ubuntu 22.04 node pool.
+
+    The following example adds a node pool named *mynodepool* with three nodes, and enables vTPM, Secure Boot, and FIPS:
+
+    ```terraform
+    resource "azurerm_kubernetes_cluster_node_pool" "example" {
+      name                  = "mynodepool"
+      kubernetes_cluster_id = azurerm_kubernetes_cluster.example.id
+      vm_size               = "Standard_D2s_v3"
+      node_count            = 3
+      os_sku                = "Ubuntu2204"
+      fips_enabled          = true
+    
+      security {
+        secure_boot_enabled = true
+        vtpm_enabled        = true
+      }
+    }
+    ```
+
+    Note
+
+    The AzureRM Terraform provider doesn't support the `AzureContainerLinux` OS SKU. To add an ACL node pool with Trusted Launch and FIPS enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+2. Apply your Terraform configuration by using the `terraform plan` and `terraform apply` commands.
+3. Check that your node pool uses a Trusted Launch image.
+
+    Trusted Launch nodes have the following output:
+
+    - Node image version containing both `"TL"` and `"FIPS"`.
+    - `"Security-type"` is `"Trusted Launch"`.
+
+    ```bash
+    kubectl get nodes
+    kubectl describe node {node-name} | grep -e node-image-version -e security-type
+    ```
 
 ::: zone-end
 
 ::: zone pivot="azure-portal"
 
-The Azure portal **doesn't support** adding a node pool with Trusted Launch and FIPS enabled. To add a node pool with Trusted Launch and FIPS enabled, use the Azure CLI, ARM template, or Bicep instructions in this article.
+The Azure portal **doesn't support** adding a node pool with Trusted Launch and FIPS enabled. To add a node pool with Trusted Launch and FIPS enabled, use the Azure CLI, ARM template, Bicep, or Terraform instructions in this article.
 
 ::: zone-end
 
@@ -721,13 +836,41 @@ AKS reimages the node pool to a Trusted Launch image, which recreates the nodes 
 
 ::: zone pivot="terraform"
 
-The AzureRM (`azurerm`) Terraform provider doesn't support Trusted Launch because it doesn't expose Trusted Launch node pool settings. To enable vTPM or secure boot on an existing node pool, use the Azure CLI, ARM template, or Bicep instructions in this article.
+1. Update your Terraform configuration with Trusted Launch settings. Before updating the configuration, review the following parameters in the `security` block of your `azurerm_kubernetes_cluster_node_pool` resource, or the `default_node_pool.security` block of your `azurerm_kubernetes_cluster` resource:
+
+    - `secure_boot_enabled`: Enables Secure Boot to authenticate an image signed by a trusted publisher.
+    - `vtpm_enabled`: Enables vTPM and performs attestation by measuring the entire boot chain of your VM.
+
+    Set `vtpm_enabled`, `secure_boot_enabled`, or both. The following example enables both vTPM and Secure Boot on an existing node pool:
+
+    ```terraform
+    resource "azurerm_kubernetes_cluster_node_pool" "example" {
+      # ...
+    
+      security {
+        secure_boot_enabled = true
+        vtpm_enabled        = true
+      }
+    }
+    ```
+2. Apply your updated Terraform configuration by using the `terraform plan` and `terraform apply` commands. Terraform updates the node pool in place, and AKS reimages the nodes.
+3. After the update completes, verify that your node pool uses a Trusted Launch image.
+
+    Trusted Launch nodes have the following output:
+
+    - Node image version containing `"TL"`, such as `"AKSUbuntu-2204-gen2TLcontainerd"`.
+    - `"Security-type"` is `"Trusted Launch"`.
+
+    ```bash
+    kubectl get nodes
+    kubectl describe node {node-name} | grep -e node-image-version -e security-type
+    ```
 
 ::: zone-end
 
 ::: zone pivot="azure-portal"
 
-The Azure portal **doesn't support** enabling vTPM or secure boot on an existing node pool. To enable vTPM or secure boot on an existing node pool, use the Azure CLI, ARM template, or Bicep instructions in this article.
+The Azure portal **doesn't support** enabling vTPM or secure boot on an existing node pool. To enable vTPM or secure boot on an existing node pool, use the Azure CLI, ARM template, Bicep, or Terraform instructions in this article.
 
 ::: zone-end
 
@@ -865,13 +1008,43 @@ You can disable vTPM, secure boot, or both on an existing Linux node pool. If ei
 
 ::: zone pivot="terraform"
 
-The AzureRM (`azurerm`) Terraform provider doesn't support Trusted Launch because it doesn't expose Trusted Launch node pool settings. To disable vTPM or secure boot on an existing node pool, use the Azure CLI, ARM template, or Bicep instructions in this article.
+1. Update your Terraform configuration with Trusted Launch settings. Before updating the configuration, review the following parameters in the `security` block of your `azurerm_kubernetes_cluster_node_pool` resource, or the `default_node_pool.security` block of your `azurerm_kubernetes_cluster` resource:
+
+    - `secure_boot_enabled`: Set to `false` to disable Secure Boot.
+    - `vtpm_enabled`: Set to `false` to disable vTPM.
+
+    The following example disables both vTPM and Secure Boot. Removing the `security` block also disables both features.
+
+    ```terraform
+    resource "azurerm_kubernetes_cluster_node_pool" "example" {
+      # ...
+    
+      security {
+        secure_boot_enabled = false
+        vtpm_enabled        = false
+      }
+    }
+    ```
+2. Apply your updated Terraform configuration by using the `terraform plan` and `terraform apply` commands.
+3. After the update completes, verify that your node pool uses the expected image.
+
+    If either vTPM or secure boot remains enabled, Trusted Launch nodes have the following output:
+
+    - Node image version containing `"TL"`, such as `"AKSUbuntu-2204-gen2TLcontainerd"`.
+    - `"Security-type"` is `"Trusted Launch"`.
+
+    If you disable both vTPM and secure boot, the node image version shouldn't contain `"TL"`, and `"Security-type"` shouldn't be `"Trusted Launch"`.
+
+    ```bash
+    kubectl get nodes
+    kubectl describe node {node-name} | grep -e node-image-version -e security-type
+    ```
 
 ::: zone-end
 
 ::: zone pivot="azure-portal"
 
-The Azure portal **doesn't support** disabling vTPM or secure boot on an existing node pool. To disable vTPM or secure boot on an existing node pool, use the Azure CLI, ARM template, or Bicep instructions in this article.
+The Azure portal **doesn't support** disabling vTPM or secure boot on an existing node pool. To disable vTPM or secure boot on an existing node pool, use the Azure CLI, ARM template, Bicep, or Terraform instructions in this article.
 
 ::: zone-end
 

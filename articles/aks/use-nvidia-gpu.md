@@ -23,7 +23,7 @@ description: Learn how to use GPUs for high performance compute or graphics-inte
 ms.topic: how-to
 ms.custom: devx-track-azurecli
 ms.subservice: aks-developer
-ms.date: 2026-07-02T00:00:00.0000000Z
+ms.date: 2026-11-12T00:00:00.0000000Z
 author: schaffererin
 ms.author: schaffererin
 locale: en-us
@@ -247,6 +247,10 @@ You can set taints and VM sizes only during node pool creation, but you can upda
             hostPath:
               path: /var/lib/kubelet/device-plugins
     ```
+
+    Note
+
+    This manifest is meant for nodes that don't use multi-instance GPU (MIG). If you change it to use MIG by setting `NVIDIA_MIG_CONFIG_DEVICES` or `NVIDIA_MIG_MONITOR_DEVICES`, also add the `SYS_ADMIN` capability and remove `allowPrivilegeEscalation: false`, because Kubernetes doesn't allow the two together. Without the capability, the container won't start on nodes running [NVIDIA Container Toolkit 1.20.1](https://github.com/NVIDIA/nvidia-container-toolkit/releases/tag/v1.20.1) or later. For details, see [Compare ways to configure single strategy MIG](gpu-multi-instance#compare-ways-to-configure-single-strategy-mig).
 3. Create the DaemonSet and confirm the NVIDIA device plugin is created successfully using the [`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) command.
 
     ```bash

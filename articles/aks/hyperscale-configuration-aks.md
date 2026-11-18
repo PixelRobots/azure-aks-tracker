@@ -124,6 +124,7 @@ Consider hyperscale configuration for the following scenarios:
     - taiwannorth
     - uaenorth
     - centralus
+    - qatarcentral
 
 ## Prerequisites
 

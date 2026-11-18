@@ -25,7 +25,7 @@ ms.topic: how-to
 ms.subservice: aks-security
 ms.custom: devx-track-azurecli, build-2023
 zone_pivot_groups: pod-sandboxing-runtime-class
-ms.date: 2026-10-23T00:00:00.0000000Z
+ms.date: 2026-11-17T00:00:00.0000000Z
 author: allyford
 ms.author: allyford
 ai-usage: ai-assisted
@@ -97,6 +97,7 @@ The following constraints apply to Pod sandboxing with `kata-vm-isolation-v2`:
 - Pod sandboxing is supported only on Azure Linux. Ubuntu, Windows, and Azure Container Linux aren't supported. For more information, see [Azure Linux container host for AKS](use-azure-linux).
 - You can't enable [Federal Information Processing Standard (FIPS)](enable-fips-nodes) or [Trusted Launch](use-trusted-launch) on a node pool that uses Pod sandboxing.
 - Arm64 architecture isn't supported on a node pool that uses Pod sandboxing.
+- [Node auto-provisioning (NAP)](node-auto-provisioning) isn't supported with `kata-vm-isolation-v2`.
 
 ## Use kata-vm-isolation-v2 (preview)
 

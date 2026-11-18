@@ -14,6 +14,7 @@ recommendation_types:
 - Certification
 uhfHeaderId: azure
 ms.suite: office
+zone_pivot_group_filename: zone-pivots/azure-aks/zone-pivot-groups.json
 manager: kumud
 learn_banner_products:
 - azure
@@ -25,6 +26,7 @@ ms.author: asabbour
 ms.topic: how-to
 ms.date: 2026-10-13T00:00:00.0000000Z
 ms.custom: devx-track-azurecli
+zone_pivot_groups: azure-portal-azure-cli
 locale: en-us
 document_id: 1b26b134-63b2-603b-3106-5878cdd8f1c9
 document_version_independent_id: d3f59ae8-d188-8efd-5b76-2bd979951da8
@@ -42,17 +44,17 @@ source_path: articles/aks/ai-manager/manage-deployments.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 1a6024d2-dc7f-5447-516d-5958f04c49ae
 ---
 
 # Manage model deployments with AI Manager (preview) - Azure Kubernetes Service | Microsoft Learn
 
-Use the Azure CLI to inspect a model deployment, update its replica settings, or delete that deployment without deleting its namespace or AI Manager.
+Use the Azure CLI or the Azure portal to inspect a model deployment, update its replica settings, or delete that deployment without deleting its namespace or AI Manager.
 
 Important
 
@@ -60,6 +62,8 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 
 - [AKS support policies](/en-us/azure/aks/support-policies)
 - [Azure support FAQ](/en-us/azure/aks/faq)
+
+::: zone pivot="azure-cli"
 
 ## Before you begin
 
@@ -157,3 +161,38 @@ Use the variables that you set in Before you begin.
     ```
 
 This command targets the model deployment. It doesn't delete the namespace or AI Manager. To confirm the deletion, run the list command from Check a model deployment, which requires access to list deployments at the namespace or a parent scope. If your access is limited to the model deployment, ask an operator with namespace-level list access to perform this check. While the deletion is in progress, the state can show `Deleting`. When it finishes, the deployment no longer appears in the output.
+
+::: zone-end
+
+::: zone pivot="azure-portal"
+
+## Before you begin
+
+- An AI Manager with a namespace and model deployment.
+- The **Azure AIManager Contributor** role at the model deployment, namespace, or AI Manager scope. To learn more about roles and access, visit [Grant access to AI Manager](grant-access).
+
+## View model deployments
+
+Go to **AI/ML** &gt; **Deployments** to view your model deployments. When a model's provisioning status is `Succeeded`, you can verify its current endpoint or inference status by selecting **Check status**, as shown in the following image. For the full list of states, see [Provisioning states](reference#provisioning-states).
+
+[![A screenshot of the deployment tab in AI/ML in Kubernetes center.](../media/ai-manager/deployment-grid.png)](../media/ai-manager/deployment-grid.png#lightbox)
+
+Each deployment's **Overview** contains more information such as its endpoint, GPU size, associated nodes, and related events.
+
+[![A screenshot of a sample model overview.](../media/ai-manager/model-overview.png)](../media/ai-manager/model-overview.png#lightbox)
+
+## Change settings
+
+To change scaling settings on a model deployment, go to its **Overview** and select **Change** next to **Scaling method**. Select **Manual** or **Autoscale** and set the replica counts.
+
+[![A screenshot of scaling options for a model deployment.](../media/ai-manager/scaling.png)](../media/ai-manager/scaling.png#lightbox)
+
+## Delete a model deployment
+
+Go to **Overview** and select **Delete** in the toolbar. You need to confirm before the model deployment is deleted.
+
+Note
+
+Deleting a model deployment doesn't delete the underlying namespace or AI Manager. To delete the AI Manager or namespace, go to the resource and delete it there.
+
+::: zone-end
