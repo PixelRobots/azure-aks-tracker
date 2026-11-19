@@ -40,10 +40,8 @@ item_type: Content
 source_path: articles/azure-linux/azure-linux-vm-vmss-overview.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/96f6b0a2-2fd7-4de1-936d-89ad6e0eb7cc
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-- https://authoring-docs-microsoft.poolparty.biz/devrel/ef8b0a5a-ba0a-4ec0-8636-48246ccd954f
 platformId: f5f58e8a-3818-bd8c-8374-488640b991fd
 ---
 
@@ -61,12 +59,11 @@ For a single workload, deploy Azure Linux to an individual VM. To scale out auto
 
 ## Available images
 
-Azure Linux 4.0 images are published to Azure Marketplace under the `microsoftazurelinux` publisher. Use the URN that matches your architecture and VM generation:
+Azure Linux 4.0 images are published to Azure Marketplace under the `microsoftazurelinux` publisher. Azure Linux 4.0 only supports Generation 2 VMs. Use the URN that matches your architecture:
 
 | Architecture | Generation | URN |
 | --- | --- | --- |
 | x86\_64 | Gen2 | `microsoftazurelinux:azurelinux-4:4:latest` |
-| x86\_64 | Gen1 | Not available for Preview |
 | ARM64 | Gen2 | `microsoftazurelinux:azurelinux-4:4-arm64:latest` |
 
 You can browse these images in the Azure portal using the guidance in the [Launch an Azure Linux VM](create-vm-azure-linux-4-0) quickstart or query them programmatically using the following Azure CLI commands:

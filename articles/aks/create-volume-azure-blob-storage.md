@@ -42,11 +42,11 @@ source_path: articles/aks/create-volume-azure-blob-storage.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/ea957f26-244e-4bd1-9b19-105f0a0a73d6
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68cb9039-df60-49b0-8ef8-89ad96497f63
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/85dd85bb-c2e5-412e-96b2-f2765a3fe51c
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-- https://authoring-docs-microsoft.poolparty.biz/devrel/725b6df3-93e8-472d-834e-e7e0d2953d35
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 19c8a79d-aca5-89b4-3143-2651f6b3931f
 ---
 
@@ -501,7 +501,7 @@ The following table lists parameters you can use in the CSI volume source for a 
 | `volumeAttributes.AzureStorageAADEndpoint` | Specify the Microsoft Entra endpoint. |  | No |  |
 | --- | **The following parameters are only for blobfuse workload identity authentication** | --- | --- | --- |
 | `volumeAttributes.ClientID` | Specify the client ID of the managed identity used for workload identity authentication. | Managed identity client ID | No |  |
-| `volumeAttributes.mountWithWorkloadIdentityToken` | Mount BlobFuse with a workload identity token. This capability is in preview. Specify the value as a string. | `"true"`, `"false"` | No | `"false"` |
+| `volumeAttributes.mountWithWorkloadIdentityToken` | Mount BlobFuse with a workload identity token. Specify the value as a string. | `"true"`, `"false"` | No | `"false"` |
 | --- | **The following parameters are only for feature: blobfuse read account key or SAS token from key vault** | --- | --- | --- |
 | `volumeAttributes.keyVaultURL` | Specify Azure Key Vault DNS name. | {vault-name}.vault.azure.net | No |  |
 | `volumeAttributes.keyVaultSecretName` | Specify Azure Key Vault secret name. | Existing Azure Key Vault secret name. | No |  |
@@ -596,7 +596,7 @@ The following example demonstrates how to mount a Blob storage container as a pe
     ```
 
 # [Blobfuse](#tab/blobfuse)
-The following example uses an Azure access key or shared access signature (SAS) token stored in a Kubernetes secret to access the Blob storage container. The Azure Blob storage CSI driver also supports [managed identity and service principal authentication](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/deploy/example/pv-blobfuse-auth.yaml) and [workload identity authentication](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/docs/driver-parameters.md#static-provisioningbring-your-own-storage-container). Workload identity authentication is currently in preview. Use identity-based authentication instead of shared credentials where supported.
+The following example uses an Azure access key or shared access signature (SAS) token stored in a Kubernetes secret to access the Blob storage container. The Azure Blob storage CSI driver also supports [managed identity and service principal authentication](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/deploy/example/pv-blobfuse-auth.yaml) and [workload identity authentication](https://github.com/kubernetes-sigs/blob-csi-driver/blob/master/docs/driver-parameters.md#static-provisioningbring-your-own-storage-container). Use identity-based authentication instead of shared credentials where supported.
 
 1. Use the `kubectl create secret` command to create a secret that contains an account key or SAS token.
 
