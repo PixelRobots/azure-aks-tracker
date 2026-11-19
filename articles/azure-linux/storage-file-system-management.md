@@ -50,10 +50,6 @@ Azure Linux virtual machines (VMs) are commonly deployed with [ext4](https://www
 
 This article shows you how to identify the filesystem on your Azure Linux system, discover the filesystem packages that are available for installation, use the standard utilities for managing ext4 and other filesystems, and force a filesystem check on the next boot.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Prerequisites
 
 - An Azure Linux system that you can authenticate to with shell access.

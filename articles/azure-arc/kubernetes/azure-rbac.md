@@ -41,11 +41,13 @@ monikers: []
 item_type: Content
 source_path: articles/azure-arc/kubernetes/azure-rbac.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/8046779e-b7d2-4c26-a33a-778fd8bd444c
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/ce51d519-8846-4bc1-819c-a72fbd6651b2
 platformId: 87cb6abe-48db-3381-d1b0-c1adc92b14d5
 ---
 
@@ -251,7 +253,8 @@ The following built-in roles provide access to perform common tasks on Kubernete
 
 | Role | Description |
 | --- | --- |
-| [Azure Arc Kubernetes Viewer](/en-us/azure/role-based-access-control/built-in-roles#azure-arc-kubernetes-viewer) | Allows read-only access to see most objects in a namespace. This role doesn't allow viewing secrets, because `read` permission on secrets would enable access to `ServiceAccount` credentials in the namespace. These credentials would in turn allow API access through that `ServiceAccount` value (a form of privilege escalation). |
+| [Azure Arc Kubernetes Reader](/en-us/azure/role-based-access-control/built-in-roles#azure-arc-kubernetes-viewer) | Allows read-only access to see most objects in a namespace. This role doesn't allow viewing secrets, because `read` permission on secrets would enable access to `ServiceAccount` credentials in the namespace. These credentials would in turn allow API access through that `ServiceAccount` value (a form of privilege escalation). |
+| [Azure Arc Kubernetes Viewer](/en-us/azure/role-based-access-control/built-in-roles#azure-arc-kubernetes-viewer) | This role is currently on the path to deprecation, please use Azure Arc Kubernetes Reader instead. |
 | [Azure Arc Kubernetes Writer](/en-us/azure/role-based-access-control/built-in-roles#azure-arc-kubernetes-writer) | Allows read/write access to most objects in a namespace. This role doesn't allow viewing or modifying roles or role bindings. However, this role allows accessing secrets and running pods as any `ServiceAccount` value in the namespace, so it can be used to gain the API access levels of any `ServiceAccount` value in the namespace. |
 | [Azure Arc Kubernetes Admin](/en-us/azure/role-based-access-control/built-in-roles#azure-arc-kubernetes-admin) | Allows admin access. This role is often granted within a namespace through [the `RoleBinding` object](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding). If you use it in `RoleBinding`, it allows read/write access to most resources in a namespace, including the ability to create roles and role bindings within the namespace. However, this role doesn't allow write access to resource quota or to the namespace itself. |
 | [Azure Arc Kubernetes Cluster Admin](/en-us/azure/role-based-access-control/built-in-roles#azure-arc-kubernetes-cluster-admin) | Allows the ability to execute any action on any resource within the granted scope. When you use it in [`ClusterRoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding), it allows full control over every resource in the cluster and in all namespaces. When you use it in [`RoleBinding`](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding), it allows full control over every resource in the role binding's namespace, including the namespace itself. |
@@ -271,7 +274,7 @@ az role assignment create --role "Azure Arc Kubernetes Cluster Admin" --assignee
 To create a role assignment scoped to a specific namespace within the cluster, modify the scope:
 
 ```azurecli
-az role assignment create --role "Azure Arc Kubernetes Viewer" --assignee <AZURE-AD-ENTITY-ID> --scope $ARM_ID/namespaces/<namespace-name>
+az role assignment create --role "Azure Arc Kubernetes Reader" --assignee <AZURE-AD-ENTITY-ID> --scope $ARM_ID/namespaces/<namespace-name>
 ```
 
 ### Custom roles
@@ -502,11 +505,10 @@ Prerequisites
 
 Once access prerequisites are met, you can refresh the guard webhook certificate by performing the following steps:
 
-1. Refresh the guard webhook certificate by running the following command:
+1. Refresh the guard webhook certificate by running the following command: 
 
-```
-kubectl rollout restart deployment/guard -n azure-arc
-```
-
-1. For a Generic cluster where no reconciler is running on the apiserver specification, you should perform step 1a and then restart the kube-apiserver pod.
-2. For a Cluster created by using Cluster API, you should perform steps 1-3. After steps 1-3 are completed, you need to trigger a re-reconcile of the KubeadmControlPlane object to apply the new webhook configs to the workload cluster. Step #4 (edit the CR) may trigger a re-reconcile of the KubeadmControlPlane object.
+    ```
+    kubectl rollout restart deployment/guard -n azure-arc
+    ```
+2. For a Generic cluster where no reconciler is running on the apiserver specification, you should perform step 1a and then restart the kube-apiserver pod.
+3. For a Cluster created by using Cluster API, you should perform steps 1-3. After steps 1-3 are completed, you need to trigger a re-reconcile of the KubeadmControlPlane object to apply the new webhook configs to the workload cluster. Step #4 (edit the CR) may trigger a re-reconcile of the KubeadmControlPlane object.

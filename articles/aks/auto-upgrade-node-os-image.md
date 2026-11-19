@@ -25,7 +25,8 @@ ms.custom: build-2023, devx-track-azurecli, innovation-engine
 ms.author: kaarthis
 author: kaarthis
 ms.subservice: aks-upgrade
-ms.date: 2026-06-26T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
+ai-usage: ai-assisted
 locale: en-us
 document_id: c1f75d55-23c1-a5e0-03d4-29cf0b09045b
 document_version_independent_id: d20c9b2e-72b4-fa90-ccd1-ced4442112a8
@@ -53,7 +54,11 @@ platformId: 5bc52f73-5fe7-db55-4222-a47dc8b65d3a
 
 # Autoupgrade Node OS Images in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
 
-AKS provides multiple autoupgrade channels dedicated to timely node-level OS security updates. This channel is different from cluster-level Kubernetes version upgrades and supersedes it.
+Note
+
+To configure automatic Kubernetes version upgrades, see [Automatically upgrade an AKS cluster](auto-upgrade-cluster). Continue with this article to configure node image and OS security updates, which don't change your cluster's Kubernetes version.
+
+The cluster and node OS auto-upgrade settings complement each other. The legacy `node-image` cluster channel couples their configuration: selecting it also sets the node OS channel to `NodeImage`, which you can't change while the cluster channel remains `node-image`.
 
 Tip
 
@@ -101,8 +106,8 @@ The following upgrade channels are available for AKS Standard clusters. (AKS Aut
 | --- | --- | --- |
 | `None` | Your nodes don't have security updates applied automatically. This means you're solely responsible for your security updates. | N/A |
 | `Unmanaged` | The OS built-in patching infrastructure automatically applies OS updates. Newly allocated machines are initially unpatched. The OS's infrastructure patches them at some point. | Ubuntu and Azure Linux (CPU node pools) apply security patches through unattended upgrade/dnf-automatic roughly once per day around 06:00 UTC. Windows doesn't automatically apply security patches, so this option behaves equivalently to `None`. You need to manage the reboot process using a tool like [kured](node-updates-kured). [Azure Linux with OS Guard on AKS](use-azure-linux-os-guard) doesn't support `Unmanaged`. |
-| `SecurityPatch` | OS security patches, which are AKS-tested, fully managed, and applied with safe deployment practices. AKS regularly updates the node's virtual hard disk (VHD) with patches from the image maintainer labeled "security only." There might be disruptions when the security patches are applied to the nodes. However AKS is limiting disruptions by only reimaging your nodes only when necessary, such as for certain kernel security packages. When the patches are applied, the VHD is updated and existing machines are upgraded to that VHD, honoring maintenance windows and surge settings. If AKS decides that reimaging nodes isn't necessary, it patches nodes live without draining pods and performs no VHD update. This option incurs the extra cost of hosting the VHDs in your node resource group. If you use this channel, Linux [unattended upgrades](https://help.ubuntu.com/community/AutomaticSecurityUpdates) are disabled by default. | Azure Linux doesn't support this channel on GPU-enabled VMs. `SecurityPatch` works on kubernetes patch versions that are deprecated, so long as the minor Kubernetes version is still supported. [Flatcar Container Linux for AKS](flatcar-container-linux-for-aks) and [Azure Linux with OS Guard on AKS](use-azure-linux-os-guard) do not support `SecurityPatch`. |
-| `NodeImage` | AKS updates the nodes with a newly patched VHD containing security fixes and bug fixes on a weekly cadence. The update to the new VHD is disruptive, following maintenance windows and surge settings. No extra VHD cost is incurred when choosing this option. If you use this channel, Linux [unattended upgrades](https://help.ubuntu.com/community/AutomaticSecurityUpdates) are disabled by default. Node image upgrades are supported as long as cluster Kubernetes minor version is still in support. Node images are AKS-tested, fully managed, and applied with safe deployment practices. |  |
+| `SecurityPatch` | OS security patches, which are AKS-tested, fully managed, and applied with safe deployment practices. AKS regularly updates the node's virtual hard disk (VHD) with patches from the image maintainer labeled "security only." There might be disruptions when the security patches are applied to the nodes. However AKS is limiting disruptions by only reimaging your nodes only when necessary, such as for certain kernel security packages. When the patches are applied, the VHD is updated and existing machines are upgraded to that VHD, honoring maintenance windows and surge settings. If AKS decides that reimaging nodes isn't necessary, it patches nodes live without draining pods and performs no VHD update. This option incurs the extra cost of hosting the VHDs in your node resource group. If you use this channel, Linux [unattended upgrades](https://ubuntu.com/server/docs/how-to/software/automatic-updates/) are disabled by default. | Azure Linux doesn't support this channel on GPU-enabled VMs. `SecurityPatch` works on kubernetes patch versions that are deprecated, so long as the minor Kubernetes version is still supported. [Flatcar Container Linux for AKS](flatcar-container-linux-for-aks) and [Azure Linux with OS Guard on AKS](use-azure-linux-os-guard) do not support `SecurityPatch`. |
+| `NodeImage` | AKS updates the nodes with a newly patched VHD containing security fixes and bug fixes on a weekly cadence. The update to the new VHD is disruptive, following maintenance windows and surge settings. No extra VHD cost is incurred when choosing this option. If you use this channel, Linux [unattended upgrades](https://ubuntu.com/server/docs/how-to/software/automatic-updates/) are disabled by default. Node image upgrades are supported as long as cluster Kubernetes minor version is still in support. Node images are AKS-tested, fully managed, and applied with safe deployment practices. |  |
 
 ## What to choose - SecurityPatch Channel or NodeImage Channel?
 

@@ -21,11 +21,12 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn how to automatically upgrade an Azure Kubernetes Service (AKS) cluster to get the latest features and security updates. For AKS Automatic clusters, cluster upgrades are preconfigured using the stable channel. For AKS Standard clusters, select the upgrade channel that best meets your needs.
 ms.topic: how-to
-ms.author: schaffererin
-author: schaffererin
+ms.author: kaarthis
+author: kaarthis
 ms.subservice: aks-upgrade
-ms.date: 2026-06-26T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
 ms.custom: aks-upgrade, automation, innovation-engine
+ai-usage: ai-assisted
 locale: en-us
 document_id: 56afdd50-cc63-915e-d07c-83c74993afad
 document_version_independent_id: ed4520e2-6e15-a477-e90f-cc38e7ac8b85
@@ -42,10 +43,8 @@ item_type: Content
 source_path: articles/aks/auto-upgrade-cluster.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
-- https://authoring-docs-microsoft.poolparty.biz/devrel/bcbcbad5-4208-4783-8035-8481272c98b8
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-- https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 platformId: 0d1c5137-6401-bedc-b482-d0be70214e2f
 ---
 
@@ -57,9 +56,15 @@ Important
 
 Part of the AKS cluster lifecycle involves performing periodic upgrades to the latest Kubernetes version. It's important you apply the latest security releases or upgrade to get the latest features. Before you learn about automatic upgrades, make sure you understand the [AKS cluster upgrade fundamentals](upgrade-cluster).
 
+AKS provides separate channel settings for Kubernetes version upgrades and node OS updates. For Kubernetes version upgrades, `patch` applies the latest supported patch within your current minor version, `stable` targets the latest supported patch on minor version N-1, and `rapid` targets the latest supported minor version and patch. N is the latest supported minor version. These channel definitions aren't fixed rollout deadlines. The `none` channel disables channel-driven Kubernetes version upgrades.
+
+The [node OS upgrade channel](auto-upgrade-node-os-image) manages node image and OS security updates without changing Kubernetes versions. The legacy `node-image` cluster channel updates node images rather than Kubernetes versions. It also sets the node OS channel to `NodeImage`, which you can't change while the legacy channel remains selected. For node image auto-upgrades, use the node OS `NodeImage` channel instead of legacy `node-image`.
+
+For AKS Standard, choose settings that match your upgrade strategy. If you choose `patch`, plan minor-version upgrades separately to remain within your applicable support policy.
+
 Tip
 
-If you're using **AKS Automatic**, cluster upgrades are preconfigured to use the **stable** channel, automatically upgrading to the latest patch on minor version N-1 (where N is the latest supported version). No configuration is needed. For AKS Automatic clusters with specific maintenance requirements, you can set planned maintenance windows. To learn more, see [What is Azure Kubernetes Service (AKS) Automatic?](intro-aks-automatic) For AKS Standard clusters, continue reading to select the channel that best fits your requirements.
+If you're using **AKS Automatic**, the `stable` cluster auto-upgrade channel and the `NodeImage` node OS auto-upgrade channel are already configured. No configuration is needed to enable them. For AKS Automatic clusters with specific maintenance requirements, you can set planned maintenance windows. To learn more, see [What is Azure Kubernetes Service (AKS) Automatic?](intro-aks-automatic) For AKS Standard clusters, continue reading to select the channel that best fits your requirements.
 
 Note
 
@@ -98,7 +103,7 @@ NotAllAgentPoolOrchestratorVersionSpecifiedAndUnchanged: Using managed cluster a
 
 ### Node-image autoupgrade and unattended upgrades
 
-If using the `node-image` cluster autoupgrade channel, which is now legacy and should no longer be used, or the `NodeImage` node image autoupgrade channel, Linux [unattended upgrades](https://help.ubuntu.com/community/AutomaticSecurityUpdates) are disabled by default.
+If using the `node-image` cluster autoupgrade channel, which is now legacy and should no longer be used, or the `NodeImage` node image autoupgrade channel, Linux [unattended upgrades](https://ubuntu.com/server/docs/how-to/software/automatic-updates/) are disabled by default.
 
 ## Cluster autoupgrade channels
 
@@ -130,7 +135,7 @@ The following upgrade channels are available:
 | `patch` | Automatically upgrades the cluster to the latest supported patch version when it becomes available while keeping the minor version the same. | For example, if a cluster runs version *1.17.7*, and versions *1.17.9*, *1.18.4*, *1.18.6*, and *1.19.1* are available, the cluster upgrades to *1.17.9*. |
 | `stable` | Automatically upgrades the cluster to the latest supported patch release on minor version *N-1*, where *N* is the latest supported minor version. | For example, if a cluster runs version *1.17.7* and versions *1.17.9*, *1.18.4*, *1.18.6*, and *1.19.1* are available, the cluster upgrades to *1.18.6*. |
 | `rapid` | Automatically upgrades the cluster to the latest supported patch release on the latest supported minor version. | In cases where the cluster's Kubernetes version is an *N-2* minor version, where *N* is the latest supported minor version, the cluster first upgrades to the latest supported patch version on *N-1* minor version. For example, if a cluster runs version *1.17.7* and versions *1.17.9*, *1.18.4*, *1.18.6*, and *1.19.1* are available, the cluster first upgrades to *1.18.6*, then upgrades to *1.19.1*. |
-| `node-image`(legacy) | Automatically upgrades the node image to the latest version available. | Microsoft provides patches and new images for image nodes frequently (weekly), but your running nodes don't get the new images unless you do a node image upgrade. Turning on the node-image channel automatically updates your node images whenever a new version is available. If you use this channel, Linux [unattended upgrades] are disabled by default. Node image upgrades work on patch versions that are deprecated, so long as the minor Kubernetes version is still supported. This channel is no longer recommended and is planned for deprecation in future. For an option that can automatically upgrade node images, see the `NodeImage` channel in [node image autoupgrade](auto-upgrade-node-image). |
+| `node-image`(legacy) | Automatically upgrades the node image to the latest version available. | Microsoft provides patches and new images for image nodes frequently (weekly), but your running nodes don't get the new images unless you do a node image upgrade. Turning on the node-image channel automatically updates your node images whenever a new version is available. If you use this channel, Linux [unattended upgrades] are disabled by default. Node image upgrades work on patch versions that are deprecated, so long as the minor Kubernetes version is still supported. This channel is no longer recommended and is planned for deprecation in future. For an option that can automatically upgrade node images, see the `NodeImage` channel in [node image autoupgrade](auto-upgrade-node-os-image). |
 
 Note
 
@@ -240,7 +245,7 @@ Use the following best practices to help maximize your success when using autoup
 
 - To ensure your cluster is always in a supported version, such as within the N-2 rule, choose either the `stable` or `rapid` channels. (**Note**: AKS Automatic clusters use `stable` by default.)
 - If you want to get the latest patches as soon as possible, use the `patch` channel.
-- To automatically upgrade node images while using a different cluster upgrade channel, consider using the [node image autoupgrade](auto-upgrade-node-image)`NodeImage` channel.
+- To automatically upgrade node images while using a different cluster upgrade channel, consider using the [node image autoupgrade](auto-upgrade-node-os-image)`NodeImage` channel.
 - Follow [Operator best practices](operator-best-practices-scheduler).
 - Follow [PodDisruptionBudget (PDB) best practices](https://kubernetes.io/docs/tasks/run-application/configure-pdb/).
 - For upgrade troubleshooting information, see the [AKS troubleshooting documentation](/en-us/support/azure/azure-kubernetes/welcome-azure-kubernetes).

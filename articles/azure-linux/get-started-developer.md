@@ -50,10 +50,6 @@ platformId: cba50617-5aa6-209d-8027-b4d24e698cff
 
 This article covers common developer tasks on Azure Linux, from building and packaging software to customizing images for your environment.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Developer tasks
 
 | Task | Description |

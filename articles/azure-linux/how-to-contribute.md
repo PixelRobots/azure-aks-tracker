@@ -59,10 +59,6 @@ Azure Linux contributions are scoped to **Azure Linux on Azure scenarios only**.
 
 Contributions targeting bare metal, ISO images, on-premises, other clouds, or images built from scratch from the [Azure Linux sources on GitHub](https://github.com/microsoft/azurelinux) are out of scope.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Ways to contribute
 
 You can contribute to Azure Linux in several ways, depending on your interests and expertise:

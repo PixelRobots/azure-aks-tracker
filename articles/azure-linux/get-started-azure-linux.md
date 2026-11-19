@@ -47,10 +47,6 @@ platformId: 51368e16-45b1-ee57-e143-24c320800fb5
 
 This guide provides a set of quickstart tutorials to help you quickly deploy and start using Azure Linux in your environment.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Select your quickstart
 
 | Quickstart | Description | Time to complete |
@@ -58,4 +54,4 @@ Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and 
 | [Create an Azure Linux virtual machine (VM)](create-vm-azure-linux-4-0) | Deploy an Azure Linux 4.0 VM using the Azure portal and connect to it over SSH. Azure Linux VMs give you a Microsoft-supported, Azure-optimized Linux distribution for general-purpose workloads. [Learn more](azure-linux-vm-vmss-overview). | 10 minutes |
 | [Deploy an Azure Linux container host for Azure Kubernetes Service (AKS)](deploy-azure-linux-aks-cli) | Create an AKS cluster with Azure Linux as the container host using Azure CLI. The Azure Linux container host delivers fast boot times, strong security defaults, and end-to-end Microsoft ownership from kernel to CVE response. [Learn more](azure-linux-aks-overview). | 10 minutes |
 | [Deploy Azure Container Linux (ACL) for Azure Kubernetes Service (AKS)](quick-deploy-azure-container-linux-aks-cli) | Create an AKS cluster using ACL, an immutable, container-optimized operating system (OS) for AKS node pools with stronger security defaults and a read-only root filesystem. [Learn more](azure-container-linux-overview). | 10 minutes |
-| [Run Azure Linux on Windows Subsystem for Linux (WSL)](get-started-windows-subsystem-for-linux) | Install Azure Linux as a WSL distribution on Windows and start using it as a local development environment. [Learn more](windows-subsystem-for-linux-overview). | 10 minutes |
+| [Run Azure Linux on Windows Subsystem for Linux (WSL)](get-started-windows-subsystem-for-linux) | Install Azure Linux as a WSL distribution on Windows and start using it as a local development environment. Best-effort support. [Learn more](windows-subsystem-for-linux-overview). | 10 minutes |

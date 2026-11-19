@@ -38,11 +38,13 @@ monikers: []
 item_type: Content
 source_path: articles/azure-arc/kubernetes/kubernetes-resource-view.md
 cmProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/970f20f1-2f12-4aa9-9c95-c00fe1f5e722
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/432c4950-b799-4ed5-93d5-b9b2934edf7d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: 7b4a3087-04a9-c169-4878-2ff1f4c47fc3
 ---
 
@@ -55,10 +57,10 @@ The Azure portal includes a Kubernetes resource view for easy access to the Kube
 - An existing Kubernetes cluster [connected](quickstart-connect-cluster) to Azure as an Azure Arc-enabled Kubernetes resource.
 - An account that can authenticate to the cluster and access the resources in the portal:
 
-    - If using [Azure role-based access control (Azure RBAC)](azure-rbac), ensure that the Microsoft Entra account has a role that lets it authenticate to the cluster, such as [Azure Arc Kubernetes Viewer](/en-us/azure/role-based-access-control/built-in-roles):
+    - If using [Azure role-based access control (Azure RBAC)](azure-rbac), ensure that the Microsoft Entra account has a role that lets it authenticate to the cluster, such as [Azure Arc Kubernetes Reader](/en-us/azure/role-based-access-control/built-in-roles):
 
     ```azurecli
-    az role assignment create --role "Azure Arc Kubernetes Viewer" --assignee $AAD_ENTITY_OBJECT_ID --scope $ARM_ID_CLUSTER
+    az role assignment create --role "Azure Arc Kubernetes Reader" --assignee $AAD_ENTITY_OBJECT_ID --scope $ARM_ID_CLUSTER
     ```
 
     - If using [cluster connect with service account token authentication](cluster-connect#service-account-token-authentication-option), ensure that the account uses a Kubernetes cluster role that can authenticate to the cluster, such as `cluster-admin`:
@@ -67,7 +69,7 @@ The Azure portal includes a Kubernetes resource view for easy access to the Kube
     kubectl create clusterrolebinding demo-user-binding --clusterrole cluster-admin --user=$AAD_ENTITY_OBJECT_ID`
     ```
 
-    The same account must have an Azure role such as [Azure Arc Kubernetes Viewer](/en-us/azure/role-based-access-control/built-in-roles) in order to authenticate to the Azure portal and view Arc-enabled cluster resources.
+    The same account must have an Azure role such as [Azure Arc Kubernetes Reader](/en-us/azure/role-based-access-control/built-in-roles) in order to authenticate to the Azure portal and view Arc-enabled cluster resources.
 
 ## View Kubernetes resources
 

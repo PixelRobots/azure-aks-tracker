@@ -23,6 +23,7 @@ ms.author: schaffererin
 ms.service: microsoft-linux
 ms.topic: get-started
 ms.date: 2026-07-25T00:00:00.0000000Z
+ai-usage: ai-assisted
 locale: en-us
 document_id: 86d07e22-a6ef-72c3-3939-d7d1c95f30f7
 document_version_independent_id: fe5e5baa-2d1d-00f2-3c81-d3127e00d4a4
@@ -50,6 +51,8 @@ platformId: 1692c2ad-57c5-c2fe-1f6e-a16b9c0aa494
 This guide helps you install Azure Linux on Windows Subsystem for Linux (WSL) and start using it as a local Linux environment for development, testing, and troubleshooting without needing a virtual machine (VM) or an Azure subscription.
 
 Azure Linux on WSL uses the same command-line tools and behavior as Azure Linux running in Azure, so you can use it for day-to-day work and to reproduce issues locally.
+
+Azure Linux 4 on Windows Subsystem for Linux (WSL) receives best-effort support.
 
 ## Prerequisites
 

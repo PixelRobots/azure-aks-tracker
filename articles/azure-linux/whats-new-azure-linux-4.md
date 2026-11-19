@@ -48,10 +48,6 @@ platformId: bc5f10fb-27ab-3a33-b68b-716f079944be
 
 Azure Linux 4.0 is the next major release of Microsoft's Linux distribution for Azure. It brings a newer kernel (6.18 LTS), a new package manager (dnf5), and updated core libraries across the stack. For a deeper look at how the operating system (OS) is structured, see the [Architecture overview](architecture).
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Key components
 
 The following table lists the core component versions included in Azure Linux 4.0:

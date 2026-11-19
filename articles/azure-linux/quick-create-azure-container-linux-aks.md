@@ -40,9 +40,11 @@ source_path: articles/azure-linux/quick-create-azure-container-linux-aks.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
 platformId: a31f6bb7-bcbf-2e17-b8e6-a508701c5d02
 ---
 
@@ -56,10 +58,6 @@ In this quickstart, you learn how to:
 - Create an Azure resource group.
 - Deploy an AKS cluster that uses Azure Container Linux.
 - Connect to the cluster and verify the nodes.
-
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
 
 ## Prerequisites
 

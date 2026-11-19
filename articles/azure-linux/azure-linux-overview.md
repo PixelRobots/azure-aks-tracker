@@ -23,7 +23,7 @@ ms.author: schaffererin
 ms.service: microsoft-linux
 ms.custom: linux-related-content
 ms.topic: overview
-ms.date: 2026-04-27T00:00:00.0000000Z
+ms.date: 2026-10-30T00:00:00.0000000Z
 locale: en-us
 document_id: ecd05408-0dea-b561-47b1-d1ca25128e3f
 document_version_independent_id: c08c2af1-e138-8f73-143d-7b4ff3567130
@@ -50,10 +50,6 @@ platformId: 4c61b291-4cbf-63a8-1c37-84577dbaf9fb
 
 Azure Linux is a Microsoft-maintained, open-source Linux distribution built for Azure. It provides a lightweight, security-hardened operating system for virtual machines (VMs), containers, and Kubernetes clusters running on Azure infrastructure.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Why choose Azure Linux?
 
 Azure Linux is built on a robust open-source foundation from the [Fedora](https://fedoraproject.org/) ecosystem and enhanced with Azure-specific innovations. This gives you the familiarity of RPM package ecosystem, while adding Azure-native security, compliance, and operational capabilities.
@@ -62,7 +58,7 @@ The following table highlights the key features and benefits of Azure Linux:
 
 | Feature | Description |
 | --- | --- |
-| **Hardened security posture** | Hardened from the kernel up with kernel lockdown, dm-verity for verified boot, SELinux for mandatory access controls, and FIPS 140-3 cryptographic modules. |
+| **Hardened security posture** | Hardened defaults, including SELinux in enforcing mode and a CIS Level 1 Server benchmark configuration. FIPS 140-3 validation is in progress. |
 | **Minimal footprint** | Ships only the packages required for cloud workloads, resulting in a smaller attack surface, fewer CVEs, and faster boot times and lower memory consumption. |
 | **Azure-optimized kernel** | Purpose-built [kernel](whats-new-azure-linux-4) (6.18 LTS) with Hyper-V guest drivers, Azure-specific performance tuning, and security hardening validated across Azure environments like Virtual Machines (VM) / Virtual Machine Scale Sets and AKS. |
 | **Native Azure integration** | Ships with validated Azure agents, VM extensions, and developer tools including Microsoft Defender for Cloud, Azure Monitor, Azure CLI, and more. See the full list in [Supported Azure services](supported-azure-services). |
@@ -87,6 +83,7 @@ Azure Linux is open source, but Microsoft support and lifecycle commitments appl
 
 - Azure Linux VM / Virtual Machine Scale Sets, AKS container host, and container images are supported.
 - Bare metal, ISO images, on-premises, and other clouds aren't supported.
+- Azure Linux 4 on Windows Subsystem for Linux (WSL) receives best-effort support.
 - Customized images are supported only when built on top of a prebuilt Azure Linux image (for example, with [Image Customizer](customize-images)). Images built from scratch from the [Azure Linux sources on GitHub](https://github.com/microsoft/azurelinux) aren't covered.
 
 ## Azure Linux release notes

@@ -59,7 +59,7 @@ Microsoft is committed to meeting this support lifecycle and reserves the right 
 
 At the beginning of each month, Azure Linux releases a minor image version containing medium, high, and critical package updates from the previous month. This release also includes minor kernel updates and bug fixes.
 
-For more information on the Common Vulnerabilities and Exposures (CVE) service level agreement (SLA), see [CVE infrastructure](manage-cves).
+For more information on the Common Vulnerabilities and Exposures (CVE) service level agreement (SLA), see [CVE infrastructure](manage-common-vulnerabilities-exposures).
 
 ### Major releases
 

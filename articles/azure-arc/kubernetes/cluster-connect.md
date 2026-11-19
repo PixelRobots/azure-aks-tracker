@@ -40,12 +40,12 @@ item_type: Content
 source_path: articles/azure-arc/kubernetes/cluster-connect.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/b1cfdec6-b0c3-4209-818c-736879856e0e
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/1433a524-c01f-4b87-beab-670c040dea4f
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/2d0723c1-cf38-4c30-ab3d-5df787b33270
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/312f1f05-a431-4193-8a4d-e6245d5966de
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: cc1d42f9-8662-aede-78f7-88604cee9723
 ---
 
@@ -136,7 +136,7 @@ On the existing Arc-enabled cluster, create the ClusterRoleBinding with either M
     - If you use Azure RBAC for authorization checks on the cluster, you can create an applicable [Azure role assignment](azure-rbac#built-in-roles) mapped to the Microsoft Entra ID entity. For example:
 
         ```azurecli
-        az role assignment create --role "Azure Arc Kubernetes Viewer" --assignee $AAD_ENTITY_ID --scope $ARM_ID_CLUSTER
+        az role assignment create --role "Azure Arc Kubernetes Reader" --assignee $AAD_ENTITY_ID --scope $ARM_ID_CLUSTER
         az role assignment create --role "Azure Arc Enabled Kubernetes Cluster User Role" --assignee $AAD_ENTITY_ID --scope $ARM_ID_CLUSTER
         ```
 
@@ -168,7 +168,7 @@ On the existing Arc-enabled cluster, create the ClusterRoleBinding with either M
     - If you use [Azure RBAC for authorization checks](azure-rbac) on the cluster, you can create an applicable [Azure role assignment](azure-rbac#built-in-roles) mapped to the Microsoft Entra ID entity. For example:
 
         ```azurepowershell
-        az role assignment create --role "Azure Arc Kubernetes Viewer" --assignee $AAD_ENTITY_ID --scope $ARM_ID_CLUSTER
+        az role assignment create --role "Azure Arc Kubernetes Reader" --assignee $AAD_ENTITY_ID --scope $ARM_ID_CLUSTER
         az role assignment create --role "Azure Arc Enabled Kubernetes Cluster User Role" --assignee $AAD_ENTITY_ID --scope $ARM_ID_CLUSTER
         ```
 

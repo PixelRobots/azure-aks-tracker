@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Overview of Azure Linux Security | Microsoft Learn
+title: Azure Linux security overview | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/azure/azure-linux/security-overview
 breadcrumb_path: ../breadcrumb/azure-management/toc.json
 feedback_help_link_url: https://learn.microsoft.com/answers/tags/133/azure
@@ -17,13 +17,14 @@ ms.suite: office
 learn_banner_products:
 - azure
 manager: kumud
-description: Learn about the security features, protections, and compliance capabilities built into Azure Linux to help secure workloads running on Azure.
-author: kavyamsft
+description: Understand the Azure Linux security model, the split between Azure platform controls and guest operating system controls, and where to find each security task.
+author: pallakatos
 ms.author: schaffererin
 ms.service: microsoft-linux
 ms.custom: linux-related-content
 ms.topic: overview
-ms.date: 2026-04-26T00:00:00.0000000Z
+ai-usage: ai-assisted
+ms.date: 2026-10-30T00:00:00.0000000Z
 locale: en-us
 document_id: 1c03f42f-cd71-5d94-c6d5-a4aa58f6b385
 document_version_independent_id: 2c57c714-eb11-6fe8-718c-d1bb0dd5b2dd
@@ -44,60 +45,67 @@ spProducts:
 platformId: 4fd57810-2fd6-1667-2d6e-716d923d1022
 ---
 
-# Overview of Azure Linux Security | Microsoft Learn
+# Azure Linux security overview | Microsoft Learn
 
-Azure Linux is built with a secure-by-default baseline and layered protections across boot, runtime, and update workflows. This article covers the security model, key features, and recommendations for validating security settings on Azure Linux.
+Azure Linux 4 ships with Security-Enhanced Linux (SELinux) enforcing its targeted policy, and with SSH, kernel, and network hardening defaults applied. Azure network security groups (NSGs) filter inbound traffic by default; a host firewall is available when your workload needs one.
 
-Note
+These guides cover general-purpose Azure Linux 4 virtual machines (VMs). Azure Container Linux (ACL) for Azure Kubernetes Service (AKS) is covered in the [Azure Container Linux documentation](azure-container-linux-overview).
 
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
+## Default security configuration
 
-## Security model
+These defaults apply to the general-purpose Azure Linux 4 VM image. Provisioning and image customization can override them.
 
-The following table summarizes the core security principles that guide the design of Azure Linux and how they are implemented across the platform:
+| Protection | Default configuration | Guide |
+| --- | --- | --- |
+| Mandatory access control | SELinux runs in enforcing mode with the targeted policy. | [Configure SELinux security](security-enhanced-linux-security) |
+| Kernel and eBPF | Address space layout randomization is enabled, kernel log and pointer access are restricted, and unprivileged eBPF is disabled. | [Inspect kernel hardening](kernel-hardening) and [Use eBPF](extended-berkeley-packet-filter) |
+| Host network | No host firewall is installed. NSGs filter inbound traffic. IP forwarding, ICMP redirects, and source routing are disabled. | [Secure the host network](network-security) |
+| Interactive access | On key-based deployments, SSH password authentication is disabled. Direct root sign-in is denied. SSH uses hardened session limits and SHA-2 message authentication codes. | [Manage identity and access](identity-and-access) |
+| Guest disk encryption | The VM root isn't encrypted with Linux Unified Key Setup (LUKS). Guest-managed data-volume encryption requires configuration. Azure platform encryption is separate. | [Protect disks and data](disk-and-data-protection) |
+| Cryptography | `DEFAULT` sets cryptographic defaults for applications that consume the system policy. Application overrides can change them. | [Use system cryptographic libraries](system-crypto) |
+| Auditing and logs | `auditd` is enabled, but its default rule disables syscall and file-watch auditing. That coverage requires additional rules. The journal is persistent. | [Configure security logging and auditing](logging-and-auditing) |
+| Packages | DNF verifies package signatures. Repository metadata signature checking isn't enabled. | [Manage security updates](manage-common-vulnerabilities-exposures) |
 
-| Security principle | Implementation in Azure Linux |
-| --- | --- |
-| Secure by default | Minimal package set, key-only SSH authentication, firewalld enabled |
-| Defense in depth | SELinux mandatory access control, network hardening |
-| Least privilege | SELinux policies, kernel capability restrictions |
+## Security defaults reference
 
-## Core security features
+Use this reference to find where a default is set and how to check it on a running VM. Vendor files under `/usr/lib` and package-owned files can be replaced by updates. Put local changes in the override location that each guide describes.
 
-### Secure by default baseline
+The defaults and checks in this table were verified on a newly deployed VM from the general-purpose Azure Linux 4 image, before any configuration changes. Provisioning options, extensions, and configuration management can change the results on your VM.
 
-- **Hardened kernel**: With ASLR, stack canaries, and pointer restrictions.
-- **Minimal package set**: Only essential packages for core operating system (OS) functionality. No legacy protocols, development tools, or non-essential daemons in the base image.
-- **No external network connections by default**: firewalld denies all inbound traffic except SSH.
-- **Key-only SSH authentication**: Password authentication is disabled.
-- **Package integrity**: All packages and repository metadata are GPG-signed.
+| Setting | Default | Set in | Check |
+| --- | --- | --- | --- |
+| SELinux mode and policy | `enforcing`, `targeted` | `/etc/selinux/config` | `sestatus` |
+| Host firewall | Not installed. The `nftables` and `iptables-legacy` tools are installed, but no inbound filtering rules are loaded. | Not applicable | `rpm -q firewalld`, `sudo nft list ruleset`, and `sudo iptables -S` |
+| Root SSH sign-in | `PermitRootLogin no` and `DenyUsers root` | `/etc/ssh/sshd_config.d/50-permit-root-login.conf` and `30-azurelinux-cis.conf` | `sudo sshd -T`, then find `permitrootlogin` and `denyusers` |
+| SSH password authentication | `PasswordAuthentication no` on key-based deployments | `/etc/ssh/sshd_config.d/50-cloud-init.conf`, written at provisioning | `sudo sshd -T`, then find `passwordauthentication` |
+| SSH session limits | `MaxAuthTries 4`, `LoginGraceTime 60`, `MaxStartups 10:30:60`, `ClientAliveInterval 180` | `/etc/ssh/sshd_config.d/30-azurelinux-cis.conf` and `50-client-alive-interval.conf` | `sudo sshd -T` |
+| SSH algorithms | System cryptographic policy, with message authentication codes limited to SHA-2 | `/etc/ssh/sshd_config.d/40-azurelinux-crypto-policies.conf` and `30-azurelinux-cis.conf` | `sudo sshd -T`, then find `kexalgorithms`, `ciphers`, and `macs` |
+| SSH pre-authentication banner | `/etc/issue.net` | `/etc/ssh/sshd_config.d/30-azurelinux-cis.conf` | `cat /etc/issue.net` |
+| `sudo` session handling | Commands run in a pseudo-terminal and are logged to `/var/log/sudo.log` | `/etc/sudoers.d/10-azurelinux-cis` | `sudo cat /etc/sudoers.d/10-azurelinux-cis` |
+| Password hashing | `YESCRYPT` | `/etc/login.defs` | `grep ENCRYPT_METHOD /etc/login.defs` |
+| Kernel parameters | Full address space layout randomization, restricted kernel pointers and log, restricted `ptrace`, unprivileged eBPF disabled | `/usr/lib/sysctl.d/70-azurelinux-hardening.conf` and the kernel build | `sysctl kernel.randomize_va_space kernel.kptr_restrict kernel.yama.ptrace_scope kernel.unprivileged_bpf_disabled` |
+| Network parameters | Forwarding, redirects, source routing, and IPv6 router advertisements disabled; reverse path filtering, SYN cookies, and martian logging enabled | `/usr/lib/sysctl.d/70-azurelinux-hardening.conf` | `sysctl net.ipv4.ip_forward net.ipv4.conf.all.rp_filter net.ipv6.conf.all.accept_ra` |
+| Temporary file systems | `/tmp` and `/dev/shm` are `tmpfs` mounted `nosuid,nodev` | systemd mount units | `findmnt /tmp` and `findmnt /dev/shm` |
+| Cryptographic policy | `DEFAULT`, including hybrid post-quantum key exchange | `/etc/crypto-policies/config` | `update-crypto-policies --show` |
+| Audit daemon | Enabled; the default rule disables syscall auditing | `/etc/audit/rules.d/audit.rules` | `sudo auditctl -l` |
+| Journal | Persistent | `/var/log/journal` | `journalctl --disk-usage` |
+| Package signatures | `gpgcheck=1`, `repo_gpgcheck=0` | `/etc/yum.repos.d/*.repo` | `grep -h gpgcheck /etc/yum.repos.d/*.repo` |
 
-### Runtime protections
+For CIS Benchmark and Federal Information Processing Standards (FIPS) status, see the [Azure Linux compliance overview](compliance-overview).
 
-- **SELinux:** In Enforcing mode. Targeted policy with pre-labeled packages.
-- **eBPF hardening**: Unprivileged BPF disabled, interpreter disabled in favor of JIT.
+## Configure protection for your workload
 
-### Network security
+Workload configuration determines the required access, audit coverage, and application controls. Differences from image defaults can reflect provisioning or configuration management rather than an error.
 
-- **firewalld**: Enabled by default with nftables backend.
-- **Network sysctl hardening**: Strict reverse path filtering, ICMP redirects disabled, SYN cookies enabled.
-- **IPv6**: Enabled with hardening settings applied.
+- Allow only the network access and account privileges the workload needs.
+- Configure audit rules and retention for the required security events.
+- Confirm that application processes and cryptographic settings use the intended protections.
+- Apply updates and confirm that affected workloads run the updated code.
 
-### Identity and access
+Azure network security groups (NSGs), managed disk encryption, and Azure role assignments remain separate from guest configuration. Review both layers. For example, allowing a port in the guest doesn't override an NSG, and a managed identity grants access to Azure resources rather than an operating system sign-in.
 
-- **SSSD/realmd**: Available from the Azure Linux repositories for hybrid identity scenarios with Active Directory and LDAP.
+## Change security defaults deliberately
 
-### Cryptography
+Changes to security defaults require a documented workload requirement or approved baseline. Weaker settings can expose the workload; stricter settings can affect compatibility or performance.
 
-- **FIPS 140-3**: Validated cryptographic modules with a simple enablement mechanism.
-- **Post-quantum cryptography**: ML-KEM hybrid key exchange support.
-- **System crypto libraries**: Applications can use OS-level crypto.
-
-### Logging, auditing, and monitoring
-
-- **auditd**: enabled by default; rule profiles ship under /usr/share/audit-rules/ and can be activated by copying the profile you need into /etc/audit/rules.d/.
-- **journald**: Persistent storage with structured JSON output.
-
-### Vulnerability scanning integrations
-
-Azure Linux supports integration with common vulnerability scanning and security tooling. For a list of supported tools, see [Azure Linux partner solutions](ecosystem-support).
+Production rollout requires representative nonproduction testing and a rollback plan. See [Apply security baselines safely](compliance-overview#apply-security-baselines-safely) for approval and recovery requirements.

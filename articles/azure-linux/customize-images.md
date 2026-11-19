@@ -62,10 +62,6 @@ With Image Customizer, you can:
 
 Image Customizer also supports nested customization, so you can further customize an already-customized image. For teams that build multiple images, consider creating a shared custom base image first to reduce maintenance overhead.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Prerequisites
 
 - **Docker** installed on your host.

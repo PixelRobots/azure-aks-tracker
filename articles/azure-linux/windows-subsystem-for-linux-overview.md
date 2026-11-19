@@ -24,6 +24,7 @@ ms.service: microsoft-linux
 ms.custom: linux-related-content
 ms.topic: overview
 ms.date: 2026-07-25T00:00:00.0000000Z
+ai-usage: ai-assisted
 locale: en-us
 document_id: cde66dfd-8d37-8fc6-03a4-e9677a2cbbe1
 document_version_independent_id: f2fcf016-7418-53de-ad0d-eea5fb51c6fb
@@ -63,6 +64,10 @@ To install WSL for Azure Linux, see [Get started with Azure Linux 4.0 on Windows
 
 - x86\_64
 - arm64
+
+## Support
+
+Azure Linux 4 on Windows Subsystem for Linux (WSL) receives best-effort support.
 
 ## Release cadence
 

@@ -50,10 +50,6 @@ Azure Linux is built on the latest declared long-term support (LTS) Linux kernel
 
 This article shows you how to inspect the running kernel, work with kernel modules, and view or change kernel parameters at runtime on an Azure Linux system.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Prerequisites
 
 - An Azure Linux system that you can authenticate to with shell access.

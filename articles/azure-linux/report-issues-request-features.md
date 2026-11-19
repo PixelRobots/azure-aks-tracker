@@ -58,10 +58,6 @@ Azure Linux is open source, but Microsoft support and lifecycle commitments appl
 
 Issues outside this scope might be closed.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Before you file
 
 - **Search existing issues** to see if the problem has already been reported. If you find an existing issue that matches your scenario, add a thumbs up (👍) reaction and include any extra context in a comment. This helps us prioritize without creating duplicates.
@@ -73,7 +69,7 @@ Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and 
 | --- | --- |
 | Production issues or outages | If you're experiencing a technical issue affecting your Azure workload, [open an Azure support request](/en-us/azure/azure-portal/supportability/how-to-create-azure-support-request) through the Azure portal. GitHub issues aren't monitored for production support. |
 | Bug reports, documentation issues, feature requests | GitHub issues using the appropriate issue template in the [correct repository](how-to-contribute#choose-the-correct-repository-for-your-contribution). |
-| Security vulnerabilities | Follow the guidance under [Manage CVEs](manage-cves#report-a-security-issue). **Please don't report security vulnerabilities through public GitHub issues**. |
+| Security vulnerabilities | Follow the guidance under [Manage CVEs](manage-common-vulnerabilities-exposures#report-a-security-issue). **Please don't report security vulnerabilities through public GitHub issues**. |
 
 ## How to write a good bug report
 

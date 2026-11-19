@@ -57,10 +57,6 @@ Code contributions should target **Azure-supported scenarios**. Microsoft suppor
 
 Changes specific to bare metal, on-premises, other clouds, or images built from scratch from the [Azure Linux sources on GitHub](https://github.com/microsoft/azurelinux) belong upstream. Consider contributing to the upstream project or the [Fedora Linux Project](https://fedoraproject.org/) instead. For more information, see the [How to contribute to Azure Linux](how-to-contribute).
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Before you begin
 
 **All code contributions require an issue first**. Don't open a PR without a linked, maintainer-approved issue. PRs submitted without prior issue approval might be closed without review.

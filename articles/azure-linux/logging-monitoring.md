@@ -23,7 +23,7 @@ ms.author: schaffererin
 ms.service: microsoft-linux
 ms.custom: linux-related-content
 ms.topic: how-to
-ms.date: 2026-04-27T00:00:00.0000000Z
+ms.date: 2026-10-30T00:00:00.0000000Z
 locale: en-us
 document_id: 439a5537-eaa1-affc-1a22-eafa5e56d4cc
 document_version_independent_id: 894b7c5f-60bc-b887-f6ba-bf1fb328de00
@@ -51,10 +51,6 @@ platformId: bd1fa2b9-15f3-e6c3-cf8e-2652c2c43a8c
 Azure Linux is built on [`systemd`](https://systemd.io/) and uses the systemd journal as its primary logging system. Logs from the kernel, system services, and applications are collected and indexed by `journalctl`, which provides a unified, queryable view of system activity. Azure Linux ships with the standard set of Linux tools for monitoring filesystems, disks, memory, processes, services, and the network.
 
 This article shows you how to view system logs through the systemd journal, find traditional application log files, and use the standard utilities for monitoring system health and performance on an Azure Linux system.
-
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
 
 ## Prerequisites
 
@@ -187,3 +183,7 @@ Azure Linux includes extra tooling for auditing security-relevant events and man
 - `ausearch`: Queries audit log records that `auditd` produced.
 - `aureport`: Generates summary reports from audit log records.
 - `logrotate`: Rotates, compresses, and removes log files according to a configured retention policy.
+
+Note
+
+`auditd` runs by default, but the default audit rules suppress syscall auditing (`-a never,task`), so few events are recorded until you add your own rules. For guidance, see [Logging and auditing](logging-and-auditing).

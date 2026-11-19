@@ -53,10 +53,6 @@ Azure Linux supports two approaches. Select the option that best fits your workf
 - **`mock` + Image Customizer**: Build RPMs in isolated chroot environments using `mock`, then customize an Azure Linux base image with Image Customizer. Best for developers who have an established RPM build workflow and need to customize Azure Linux virtual machine (VMs) images as a separate step.
 - **azldev**: A single CLI tool that handles RPM builds and image customization as part of a unified, end-to-end workflow. Best for developers working within Azure Linux who want a streamlined experience from a single tool.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Prerequisites
 
 - An Azure Linux system (VM or container) or a Fedora/RHEL-based host.

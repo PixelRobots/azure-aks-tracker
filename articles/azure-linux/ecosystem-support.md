@@ -63,6 +63,7 @@ The following partners have validated their solutions on Azure Linux. A partner 
 | Advantech | DevOps | Validated ✅ |  |  |
 | Akuity | DevOps | Validated ✅ |  |  |
 | Anchore | DevOps, Security | Validated ✅ |  |  |
+| AquaSec | Security | Validated ✅ | Validated ✅ | Validated ✅ |
 | Buoyant | Networking, Observability, Security | Validated ✅ |  |  |
 | Catalogic | Storage, Migration | Validated ✅ |  |  |
 | Corent | Config Management | Validated ✅ |  |  |
@@ -75,21 +76,17 @@ The following partners have validated their solutions on Azure Linux. A partner 
 | Kubecost | DevOps, Observability | Validated ✅ |  |  |
 | NetApp | DevOps | Validated ✅ |  |  |
 | New Relic | Observability | Validated ✅ |  |  |
-| Palo Alto Networks | Security | Validated ✅ |  |  |
-| Qualys | Security | Validated ✅ |  |  |
+| Palo Alto Networks | Security | Validated ✅ |  | Validated ✅ |
+| Qualys | Security | Validated ✅ |  | Validated ✅ |
 | Solo.io | Networking, Observability, Security | Validated ✅ |  |  |
 | Sysdig | DevOps, Security, Config Management | Validated ✅ |  |  |
 | Tetrate | Networking, Security | Validated ✅ |  |  |
 | Tigera | Networking, Observability, Security | Validated ✅ |  |  |
 | TrendAI | Security | Validated ✅ |  |  |
-| Upwind | Security | Validated ✅ | Validated ✅ |  |
+| Upwind | Security | Validated ✅ | Validated ✅ | Validated ✅ |
 | Veeam | Storage | Validated ✅ |  |  |
 | VictoriaMetrics | DevOps, Observability, Storage, Monitoring | Validated ✅ |  |  |
 | Wiz | Security | Validated ✅ |  | Validated ✅ |
-
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
 
 ## DevOps
 
@@ -346,7 +343,7 @@ Observability provides deep insights into your systems, enabling rapid issue det
 
 Fully automated, AI-assisted observability across Azure environments Dynatrace is a single source of truth for your cloud platforms, allowing you to monitor the health of your entire Azure infrastructure.
 
-For more information, see [Dynatrace Solutions](https://www.dynatrace.com/technologies/azure-monitoring/) and [Dynatrace on Azure Marketplace](https://azuremarketplace.microsoft.com/marketplace/apps/dynatrace.dynatrace_portal_integration?tab=Overview).
+For more information, see [Dynatrace Solutions](https://www.dynatrace.com/technologies/azure-monitoring/) and [Azure Native Dynatrace Service overview](/en-us/azure/partner-solutions/dynatrace/overview).
 
 ### Elastic
 
@@ -379,6 +376,16 @@ For more information, see [New Relic Solutions](https://newrelic.com/solutions/p
 ## Security
 
 Ensure the integrity and confidentiality of applications and foster trust and compliance across your infrastructure.
+
+### AquaSec
+
+| Solution | Categories |
+| --- | --- |
+| AquaSec | Security |
+
+AquaSec provides cloud-native security solutions validated on Azure Linux Container Host, Azure Container Linux (ACL), and Azure Linux 4 Virtual Machines (VM) and Virtual Machine Scale Sets (VMSS).
+
+For more information, see [AquaSec](https://www.aquasec.com/).
 
 ### CrowdStrike
 

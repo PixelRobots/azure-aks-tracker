@@ -57,10 +57,6 @@ In this quickstart, you learn how to:
 - Create and deploy an Azure Linux Container Host cluster.
 - Configure `kubectl` to connect to your Azure Linux Container Host cluster.
 
-Note
-
-Azure Linux 4.0 is now in **preview** and is strictly limited to evaluation and testing purposes. It's not suitable for production use.
-
 ## Prerequisites
 
 - You need the latest version of Azure CLI. Run `az --version` to find the version. If you need to install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
