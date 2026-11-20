@@ -128,17 +128,17 @@ Make sure you understand which features your workloads need and choose a VM size
 
 ## What happens when a VM size retires?
 
-When a VM size or series reaches its retirement date, the VM is deallocated. VM deallocation causes your AKS node pools to break. To check the retirement status of a VM size, see [Retired Azure VM size series](/en-us/azure/virtual-machines/sizes/retirement/retired-sizes-list) or perform a search in [Azure Updates](https://azure.microsoft.com/updates). To check the VM size of your node pools, use the [`az aks nodepool list`][az-aks-nodepool-list] command and query for the `vmSize` property:
+When a VM size or series reaches its retirement date, the VM is deallocated. VM deallocation causes your AKS node pools to break. To check the retirement status of a VM size, see [Retired Azure VM size series](/en-us/azure/virtual-machines/sizes/retirement/retired-sizes-list) or perform a search in [Azure Updates](https://azure.microsoft.com/updates). To check the VM size of your node pools, use the [`az aks nodepool list`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-list) command and query for the `vmSize` property:
 
 ```azurecli
 az aks nodepool list --resource-group <your-resource-group> --cluster-name <your-cluster-name> --query "[].{Name:name, VMSize:vmSize}" --output table
 ```
 
-If you're using a VM size that's retiring/retired, we recommend migrating your node pools to a supported VM size to prevent any potential disruption to your service. Currently, AKS *doesn't support* transitioning to a new VM size within the same node pool.
+If you're using a VM size that's retiring or retired, migrate your node pools to a supported VM size to prevent any potential disruption to your service.
 
 ## Migrate node pools to a supported VM size
 
-Once you determine the appropriate node pools to take action on, you can [resize your node pools](resize-node-pool). During the resizing process, a new node pool is created and workloads are migrated to the new node pool.
+After you determine which node pools need attention, you can [resize your node pools](resize-node-pool). You can resize in place by using `az aks nodepool update --node-vm-size`, or create a new node pool when in-place resize doesn't support your scenario.
 
 For more information on migrating to a new VM size, see the following resources:
 

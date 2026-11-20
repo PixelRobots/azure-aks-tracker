@@ -19,9 +19,9 @@ manager: kumud
 learn_banner_products:
 - azure
 ms.service: azure-kubernetes-service
-description: Learn how to resize node pools for a cluster in Azure Kubernetes Service (AKS) by cordoning and draining.
+description: Learn how to resize Virtual Machine Scale Sets-based node pools in Azure Kubernetes Service (AKS) in place, or by creating a new node pool and cordoning and draining the existing nodes.
 ms.topic: how-to
-ms.date: 2025-08-28T00:00:00.0000000Z
+ms.date: 2026-10-28T00:00:00.0000000Z
 author: schaffererin
 ms.author: schaffererin
 ms.subservice: aks-nodes
@@ -48,33 +48,26 @@ platformId: bd2eaf52-7893-436a-7633-56a18cbc75f3
 
 # Resize Node Pools in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
 
-You might want to change the size of your virtual machines (VMs) to accommodate an increasing number of deployments or to run a larger workload. Resizing AKS instances directly isn't supported when using [Virtual Machine Scale Sets](/en-us/azure/virtual-machine-scale-sets/overview) in AKS, as outlined in the [support policies for AKS](support-policies#user-customization-of-agent-nodes):
+You might want to change the size of your virtual machines (VMs) to accommodate an increasing number of deployments or to run a larger workload. Always resize node pools through the AKS API. Don't resize the underlying [Virtual Machine Scale Sets](/en-us/azure/virtual-machine-scale-sets/overview) directly, as outlined in the [support policies for AKS](support-policies#user-customization-of-agent-nodes):
 
 > 
 > AKS agent nodes appear in the Azure portal as regular Azure IaaS resources. But these virtual machines are deployed into a custom Azure resource group (usually prefixed with MC\_\*). You can't make direct customizations to these nodes using the IaaS APIs or resources. Any custom changes that aren't done via the AKS API won't persist through an upgrade, scale, update, or reboot.
 
-In this article, you learn the recommended method to resize a node pool by creating a new node pool with the desired SKU size, cordoning and draining the existing nodes, and then removing the existing node pool.
-
 Important
 
-This method is specific to [Virtual Machine Scale Sets](/en-us/azure/virtual-machine-scale-sets/overview)-based AKS clusters. When using Virtual Machines-based node pools, you can easily update the VM sizes in an existing node pool using a single Azure CLI command and have multiple VM sizes in the same node pool. For more information, see the [Virtual Machines node pools documentation](virtual-machines-node-pools).
+This article applies to [Virtual Machine Scale Sets](/en-us/azure/virtual-machine-scale-sets/overview)-based node pools. When using Virtual Machines-based node pools, you can update the VM sizes in an existing node pool by using a single Azure CLI command and have multiple VM sizes in the same node pool. For more information, see the [Virtual Machines node pools documentation](virtual-machines-node-pools).
 
-## Resize a VMSS node pool in place (preview)
+## Choose a resize method
 
-Important
+We recommend that you resize the node pool in place with a single command. If in-place resize doesn't support your scenario, create a new node pool with the target VM size and move your workloads to it instead.
 
-AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
+## Option 1: Resize a node pool in place
 
-- [AKS support policies](/en-us/azure/aks/support-policies)
-- [Azure support FAQ](/en-us/azure/aks/faq)
-
-You can now resize the VM size (SKU) of an existing VMSS-based node pool in a single command using `az aks nodepool update --node-vm-size <new-size>`. When you trigger this update, the AKS resource provider performs a rolling upgrade by:
+When you change the VM size (SKU) of an existing node pool by using `az aks nodepool update --node-vm-size <new-size>`, AKS performs a rolling upgrade by:
 
 1. Surging new nodes with the target VM size.
 2. Cordoning and draining the old nodes.
 3. Deleting the old nodes.
-
-This avoids the manual create/cordon/drain/delete workflow described in the rest of this article.
 
 ### How the resize rollout works
 
@@ -84,12 +77,14 @@ The resize rollout uses the same rolling upgrade engine as a [node image upgrade
 - [**Node drain timeout** (`--drain-timeout`)](upgrade-aks-node-pools-rolling#customize-node-drain-timeout): How long AKS waits for pod eviction on each old node before forcefully deleting it. The default is 30 minutes. Combine this with appropriate [PodDisruptionBudgets](operator-best-practices-scheduler#limit-disruption-impact-by-using-pod-disruption-budgets-pdbs) so workloads can drain safely.
 - [**Node soak duration** (`--node-soak-duration`)](upgrade-aks-node-pools-rolling#customize-node-soak-time): How long AKS waits after a new node becomes Ready before moving on to the next batch. Useful for letting workloads stabilize on the new VM size before continuing the rollout.
 
-Because resize reuses the upgrade pipeline, the same prerequisites apply: ensure your subscription has enough target VM size replacement capacity and available subnet IPs for surge nodes, and that your PodDisruptionBudgets allow at least one replica to be evicted at a time, otherwise resize can be blocked during drain. For end-to-end recommendations, see [Best practices for AKS node pool upgrades](aks-production-upgrade-strategies).
-
 ### Prerequisites
 
-- AKS API version `2026-01-02-preview` or later.
-- The latest version of the [aks-preview Azure CLI extension](/en-us/cli/azure/azure-cli-extensions-list).
+- Azure CLI version 2.93.0 or later installed and configured. Run `az --version` to find the version. If you need to install or upgrade, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
+- AKS API version `2026-02-01` or later.
+- Because resize reuses the [max surge upgrade](upgrade-aks-node-pools-rolling#customize-node-surge)pipeline, the same prerequisites apply:
+    - Ensure your subscription has enough target VM size replacement capacity and available subnet IPs for surge nodes.
+    - Your [PodDisruptionBudgets](operator-best-practices-scheduler#limit-disruption-impact-by-using-pod-disruption-budgets-pdbs) allow at least one replica to be evicted at a time, otherwise resize can be blocked during drain.
+    - For end-to-end recommendations, see [Best practices for AKS node pool upgrades](aks-production-upgrade-strategies).
 
 ### Resize the node pool
 
@@ -102,18 +97,6 @@ az aks nodepool update \
     --name nodepool1 \
     --node-vm-size Standard_D4s_v3
 ```
-
-### Validation and unsupported combinations
-
-The AKS resource provider validates the resize request and blocks incompatible VM size changes. The following changes are **not supported** as part of an in-place VMSS resize:
-
-- Changing the **disk controller type** (for example, SCSI to NVMe).
-- Changing the **CPU architecture** (for example, x64 to ARM64).
-- Changing **confidential computing** support (for example, enabling or disabling SNP).
-- Changing the **hypervisor generation** (for example, V1 to V2).
-- Combining the resize with a **Kubernetes version upgrade** or a **node count change** in the same operation.
-
-If your target VM size requires any of the changes above, use the manual cordon-and-drain workflow described in the following sections instead.
 
 Note
 
@@ -130,7 +113,93 @@ az aks nodepool update \
 
 and optionally restore your original `--max-surge` and `--max-unavailable` values after the resize completes.
 
-## Create a new node pool with the desired SKU
+### Understand if in-place node pool resize is supported
+
+In-place resize **only supports specific scenarios**. It depends on your node pool configuration, your operating system, and whether the current and target VM sizes use the same disk controller type (SCSI or NVMe). AKS validates rejected requests before changing any nodes, so the node pool stays on its current VM size.
+
+The following changes are **not supported** as part of an in-place VMSS resize. Use Option 2: Resize by creating a new node pool:
+
+- Changing the **CPU architecture** (for example, x64 to ARM64).
+- Changing **confidential computing** support (for example, enabling or disabling SNP).
+- Changing **OS disk type** (for example, resizing a node pool that uses an [**ephemeral OS disk**](concepts-storage#ephemeral-os-disks) to a VM size that can't host the OS disk in the same placement).
+- Combining the resize with a **Kubernetes version upgrade** or a **node count change** in the same operation.
+
+#### Resize across disk controller types and hypervisor generations
+
+When the target VM size requires a different disk controller or hypervisor generation than the node pool currently uses, AKS updates the disk controller. If needed, AKS switches the node pool to the Gen2 version of its node image as part of the same rolling upgrade.
+
+Note
+
+Disk controller type migration is available only to the node pools described in Node pool eligibility for disk controller migration.
+
+The following table summarizes how AKS handles resizes that cross disk controller types or hypervisor generations:
+
+| Current node pool | Target VM size | Result |
+| --- | --- | --- |
+| Gen2 node image on a SCSI size (for example, `Standard_D4ds_v5`) | Gen2, NVMe-only size (for example, `Standard_D4s_v6`) | **Supported for eligible node pools.** New nodes use the NVMe disk controller. The node image doesn't change. Other node pools fail with `DiskControllerTypeIncompatible`. |
+| Gen1 node image on a size that supports both Gen1 and Gen2, with SCSI (for example, `Standard_D4ds_v5`) | Gen2, NVMe-only size (for example, `Standard_D4s_v6`) | **Supported for eligible node pools.** AKS switches the node pool to the Gen2 version of the same OS image (for example, `AKSUbuntu-2404gen2containerd`) and to the NVMe disk controller. Other node pools fail with `DiskControllerTypeIncompatible`. |
+| Gen1 node image on a Gen1-only size (for example, `Standard_D3_v2`) | Gen2, NVMe-only size (for example, `Standard_D4s_v6`) | **Not supported in a single step.** Use a two-step resize. |
+| Gen1 node image on a Gen1-only size | Size that supports both Gen1 and Gen2 | **Supported (standard resize).** The node pool keeps its Gen1 node image. |
+| SCSI size | Size that supports both SCSI and NVMe (for example, `Standard_E4bds_v5`) | **Supported (standard resize).** The node pool keeps the SCSI disk controller. |
+| NVMe size | SCSI-only size | **Not supported.** The request fails with `DiskControllerTypeIncompatible`. |
+| Gen2 node image | Gen1-only size | **Not supported.** The request fails with `HypervisorGenerationIncompatible`, or with `DiskControllerTypeIncompatible` if the current size is NVMe. |
+
+When AKS switches a node pool from Gen1 to Gen2, the node pool keeps its OS SKU, OS version, and Kubernetes version. Only the node image generation, firmware (BIOS to UEFI), and disk controller change.
+
+#### Node pool eligibility for disk controller migration
+
+Important
+
+The following requirements apply **only** to resizes that change the disk controller type. Node pools that don't meet them can still use standard resize between VM sizes that have the same disk controller type. To move these node pools to an NVMe-only size, create a new node pool instead.
+
+To resize from a SCSI size to an NVMe-only size, with or without a Gen1-to-Gen2 switch, the node pool must meet **all** of the following requirements:
+
+- **Operating system**: The node pool uses the standard Gen1 or Gen2 node image for Ubuntu 22.04, Ubuntu 24.04, or Azure Linux 3.0. Other OS SKUs and image variants aren't supported, including Windows, Azure Container Linux, Ubuntu 26.04, and FIPS-enabled, [Trusted Launch](use-trusted-launch), [confidential VM](use-cvm), Arm64, and Kata (pod sandboxing) node images.
+- **Node pool configuration**: The node pool and cluster must be in the `Running` state, and the node pool must **not**:
+
+    - Use [Spot VMs](spot-node-pool).
+    - Be associated with a [capacity reservation group](use-capacity-reservation-groups).
+    - Use the [blue-green upgrade strategy](blue-green-node-pool-upgrade).
+    - Be a [Static Egress Gateway node pool](configure-static-egress-gateway#create-a-gateway-node-pool).
+    - Be created from a [node pool snapshot](node-pool-snapshot).
+    - Be deployed to an [Azure Extended Zone](extended-zones).
+- **VM sizes**: Neither the current nor the target VM size can be a GPU-enabled or confidential computing size (for example, the `DC`, `EC`, or `NP` series).
+- **Request**: In addition to the restrictions that apply to every in-place resize, the request can't also change autoscaler settings, the node image version, availability zones, node labels, VM tags, NSG settings (allowedHostPorts, applicationSecurityGroups), or custom CA trust.
+
+#### Resize from a Gen1-only size to an NVMe-only size
+
+Important
+
+You can't resize a node pool directly from a Gen1-only size (for example, `Standard_D3_v2`) to a Gen2, NVMe-only size (for example, `Standard_D4s_v6`). Resize in two steps instead. The second step is a disk controller migration, so the node pool must meet the eligibility requirements.
+
+1. Resize the node pool to a SCSI size that supports both Gen1 and Gen2, such as `Standard_DS3_v2`. The node pool keeps its Gen1 node image. This step is a standard resize.
+
+    ```azurecli
+    az aks nodepool update \
+        --resource-group MyResourceGroup \
+        --cluster-name MyManagedCluster \
+        --name nodepool1 \
+        --node-vm-size Standard_DS3_v2
+    ```
+2. After the first resize finishes, resize the node pool to the NVMe-only size. AKS switches the node pool to the Gen2 node image and the NVMe disk controller.
+
+    ```azurecli
+    az aks nodepool update \
+        --resource-group MyResourceGroup \
+        --cluster-name MyManagedCluster \
+        --name nodepool1 \
+        --node-vm-size Standard_D4s_v6
+    ```
+
+Note
+
+Because the OS disk on NVMe-based VMs is exposed as an NVMe device (for example, `/dev/nvme0n1`) instead of a SCSI device (for example, `/dev/sda`), review any workloads, DaemonSets, or scripts that reference device paths directly before you resize.
+
+## Option 2: Resize by creating a new node pool
+
+Use this method when in-place resize doesn't support your scenario. You create a new node pool with the target VM size, move your workloads to it by cordoning and draining the existing nodes, and then delete the existing node pool.
+
+### Create a new node pool with the desired SKU
 
 Note
 
@@ -208,7 +277,7 @@ When resizing, make sure you consider all workload requirements, such as availab
 
 ---
 
-## Cordon the existing nodes
+### Cordon the existing nodes
 
 Cordoning marks specified nodes as unschedulable and prevents any more pods from being added to the nodes.
 
@@ -240,7 +309,7 @@ Cordoning marks specified nodes as unschedulable and prevents any more pods from
     node/aks-nodepool1-12345678-vmss000002 cordoned
     ```
 
-## Drain the existing nodes
+### Drain the existing nodes
 
 Important
 
@@ -263,7 +332,7 @@ When you drain nodes, the pods running on them are evicted and recreated on the 
     kubectl get pods -o wide -A
     ```
 
-### Troubleshoot pod eviction issues
+#### Troubleshoot pod eviction issues
 
 You might encounter the following error when draining nodes:
 
@@ -280,7 +349,7 @@ Consider draining nodes one by one for a smoother eviction experience and to avo
 - [Specify a disruption budget for your application](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
 - [Disruptions](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
 
-## Remove the existing node pool
+### Remove the existing node pool
 
 Important
 

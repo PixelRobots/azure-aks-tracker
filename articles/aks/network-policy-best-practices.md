@@ -22,10 +22,11 @@ ms.service: azure-kubernetes-service
 description: Learn how to plan network policies, service exposure, ingress security, and API server access for a production Azure Kubernetes Service (AKS) cluster.
 author: schaffererin
 ms.topic: best-practice
-ms.date: 2026-08-26T00:00:00.0000000Z
+ms.date: 2026-11-19T00:00:00.0000000Z
 ms.author: schaffererin
 ms.custom: aeo-round-2
 ms.subservice: aks-networking
+ai-usage: ai-assisted
 locale: en-us
 document_id: 57bea7a4-ba60-8211-6866-ce6bf024e78f
 document_version_independent_id: 90ab7cad-d653-d68a-f174-0a982c751443
@@ -56,6 +57,12 @@ platformId: a3e66ead-137e-9f28-c356-89bfeb2c5178
 Kubernetes, by default, operates as a flat network where all pods can communicate freely with each other. This unrestricted connectivity can be convenient for developers but poses significant security risks as applications scale. Imagine an organization deploying multiple microservices, each handling sensitive data, customer transactions, or backend operations. Without any restrictions, any compromised pod could access unauthorized data or disrupt services.
 
 Production network security requires controls for both workload communication and endpoint exposure. Use [Kubernetes network policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/) to restrict traffic between workloads, choose the least-exposed Kubernetes Service type that meets each application's requirements, and limit access to the Kubernetes API server.
+
+Important
+
+For new Linux deployments, use [Azure CNI powered by Cilium](azure-cni-powered-by-cilium) with its built-in network policy enforcement. For Windows workloads, use [Calico with Azure CNI](use-network-policies#create-an-aks-cluster-with-calico). Cilium supports Linux nodes only.
+
+Azure Network Policy Manager (NPM) is a legacy policy engine. NPM support for Windows nodes ended on September 30, 2026. Support for Linux nodes ends on September 30, 2028. [Migrate Linux clusters from NPM to Cilium](migrate-from-npm-to-cilium-network-policy) before the end-of-support date.
 
 ## Plan service and cluster exposure
 
@@ -680,7 +687,7 @@ For Linux nodes, Microsoft recommends transitioning from NPM to Cilium, which pr
 
 ### `NetworkPolicy` support for Windows nodes
 
-Azure CNI powered by Cilium supports Linux nodes only. For Windows workloads, AKS supports Calico, which is integrated into AKS to simplify deployment. You can enable it using the `--network-policy calico` flag when creating a cluster. NPM also supports Windows nodes until September 30, 2026, but new subscriptions can no longer register the feature flag required to enable it.
+Azure CNI powered by Cilium supports Linux nodes only. For Windows workloads, AKS supports Calico, which is integrated into AKS to simplify deployment. You can enable it using the `--network-policy calico` flag when creating a cluster. NPM support for Windows nodes ended on September 30, 2026.
 
 ### Calico open source: third-party solution
 

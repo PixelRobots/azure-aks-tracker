@@ -97,7 +97,7 @@ Windows Server 2025+ uses the Gen 2 node image by default, so you don't need to 
 ## Migrate an existing node pool to Gen 2
 
 # [Linux node pool](#tab/linux-node-pool)
-If you're using a VM size that only supports Gen 1, you can update your node pool to a VM size that supports Gen 2 using the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command. This update changes your node image from Gen 1 to Gen 2.
+If you're using a VM size that only supports Gen 1, you can update your node pool to a VM size that supports Gen 2 by running the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command.
 
 ```azurecli
 # Set environment variables
@@ -110,8 +110,14 @@ export VM_SIZE=<supported-generation-2-vm-size>
 az aks nodepool update --resource-group $RESOURCE_GROUP --cluster-name $CLUSTER_NAME --name $NODE_POOL_NAME --node-vm-size $VM_SIZE --os-type Linux
 ```
 
+Note
+
+Some VM sizes that support Gen 2 require a different disk controller. You can't resize a node pool directly from a Gen1-only size (for example, `Standard_D3_v2`) to a Gen2, NVMe-only size (for example, `Standard_D4s_v6`). Use [two-step resize](resize-node-pool#resize-from-a-gen1-only-size-to-an-nvme-only-size) or [create new node pool](resize-node-pool#option-2-resize-by-creating-a-new-node-pool) for the migration.
+
 # [Windows node pool](#tab/windows-node-pool)
-If you're Windows Server 2022 with the Gen 1 image, you can update your node pool to use Gen 2 by selecting a VM size that supports Gen 2 using the [`az aks nodepool update`](/en-us/cli/azure/aks/nodepool#az-aks-nodepool-update) command with the `--aks-custom-headers UseWindowsGen2VM=true` custom header:
+Windows Server 2022 node pools use the Gen 1 node image by default. To move a Windows node pool to Gen 2, use one of these options:
+
+- Upgrade the node pool to Windows Server 2025 in place. Windows Server 2025 uses the Gen 2 image on VM sizes that support Gen 2, and requires FIPS. You can also change the VM size in the same operation.
 
 ```azurecli
 # Set environment variables
@@ -121,8 +127,27 @@ export NODE_POOL_NAME=<node-pool-name>
 export VM_SIZE=<supported-generation-2-vm-size>
 
 # Update a Windows node pool to use a Gen 2 VM
-az aks nodepool update --resource-group $RESOURCE_GROUP --cluster-name $CLUSTER_NAME --name $NODE_POOL_NAME --node-vm-size $VM_SIZE --os-type Windows --os-sku Windows2022 --aks-custom-headers UseWindowsGen2VM=true
+az aks nodepool update --resource-group $RESOURCE_GROUP --cluster-name $CLUSTER_NAME --name $NODE_POOL_NAME \
+  --os-sku Windows2025 --enable-fips-image [--node-vm-size $VM_SIZE]
 ```
+
+- Create a new Windows Server 2022 node pool with Gen 2, and then [migrate your workload](resize-node-pool#option-2-resize-by-creating-a-new-node-pool):
+
+```azurecli
+# Set environment variables
+export RESOURCE_GROUP=<resource-group-name>
+export CLUSTER_NAME=<cluster-name>
+export NODE_POOL_NAME=<node-pool-name>
+export VM_SIZE=<supported-generation-2-vm-size>
+
+# Create a new Windows node pool to use a Gen 2 VM
+az aks nodepool add --resource-group $RESOURCE_GROUP --cluster-name $CLUSTER_NAME --name $NODE_POOL_NAME \
+  --os-type Windows --os-sku Windows2022 --node-vm-size $VM_SIZE --aks-custom-headers UseWindowsGen2VM=true
+```
+
+Note
+
+Some VM sizes that support Gen 2 require a different disk controller. In-place node pool updates can't move Windows node pools to NVMe-only VM sizes (for example, v6 or v7). To use those sizes, [create new node pool](resize-node-pool#option-2-resize-by-creating-a-new-node-pool) for the migration.
 
 ---
 
