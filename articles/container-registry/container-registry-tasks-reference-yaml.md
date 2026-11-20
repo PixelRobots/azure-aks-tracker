@@ -24,7 +24,7 @@ ms.service: azure-container-registry
 description: Guide to defining tasks in YAML for Azure Container Registry (ACR) Tasks, covering task properties, step types, and built-in variables.
 ms.topic: reference
 ms.custom: devx-track-azurecli
-ms.date: 2023-10-31T00:00:00.0000000Z
+ms.date: 2026-11-19T00:00:00.0000000Z
 locale: en-us
 document_id: 9ffd3716-7fee-caf7-c3a3-a76336b4d810
 document_version_independent_id: 5a0efbd7-0070-2724-7da4-4b6a8a9ad79c
@@ -748,11 +748,11 @@ Each of the following aliases points to a stable image in Microsoft Container Re
 
 | Alias | Image |
 | --- | --- |
-| `acr` | `mcr.microsoft.com/acr/acr-cli:0.14` |
-| `az` | `mcr.microsoft.com/acr/azure-cli:9fb281c` |
-| `bash` | `mcr.microsoft.com/acr/bash:9fb281c` |
-| `curl` | `mcr.microsoft.com/acr/curl:9fb281c` |
-| `cssc` | `mcr.microsoft.com/acr/cssc:9fb281c` |
+| `acr` | `mcr.microsoft.com/acr/acr-cli:0.21` |
+| `az` | `mcr.microsoft.com/acr/azure-cli:231103b` |
+| `bash` | `mcr.microsoft.com/acr/bash:231103b` |
+| `curl` | `mcr.microsoft.com/acr/curl:231103b` |
+| `cssc` | `mcr.microsoft.com/acr/cssc:231103b` |
 
 The following example task uses several aliases to [purge](container-registry-auto-purge) image tags older than 7 days in the repo `samples/hello-world` in the run registry:
 
