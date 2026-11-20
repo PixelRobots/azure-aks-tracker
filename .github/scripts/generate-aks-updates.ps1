@@ -197,7 +197,7 @@ $ReleasesSummaryCacheMaxEntries = 100
 $ReleasesSummaryCacheVersion = 'openai-responses-v1'
 # The CVE section is served as remote HTML by the WordPress plugin. Keep a guardrail,
 # but allow the intended 5-build VHD history to fit as CVE volume changes.
-$MaxCveSectionBytes = 10485760
+$MaxCveSectionBytes = 20971520
 
 $AIRefreshCacheDays = 0
 if (-not [string]::IsNullOrWhiteSpace($env:AI_REFRESH_CACHE_DAYS)) {
