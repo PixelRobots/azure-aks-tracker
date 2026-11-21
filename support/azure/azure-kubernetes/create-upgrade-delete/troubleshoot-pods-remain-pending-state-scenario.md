@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot Pods Remain in a Pending State Scenario - Azure | Microsoft Learn
+title: Troubleshoot pods that remain in Pending state in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/troubleshoot-pods-remain-pending-state-scenario
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,13 +12,13 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: This article helps you troubleshoot a scenario in which pods remain in a pending state.
-ms.date: 2026-01-12T00:00:00.0000000Z
-ms.editor: v-jsitser
-ms.reviewer: chiragpa, rorylen, v-ryanberg
+description: Pods stuck in the Pending state in AKS? Learn why the cluster autoscaler doesn't scale up and how to resolve resource, affinity, and taint issues.
+ms.date: 2026-11-20T00:00:00.0000000Z
+ms.reviewer: chiragpa, rorylen, kaushika
 ms.service: azure-kubernetes-service
 keywords: 
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: df9f54f8-dd1b-2c50-2486-228c42ba4d72
 document_version_independent_id: df9f54f8-dd1b-2c50-2486-228c42ba4d72
@@ -36,32 +36,34 @@ monikers: []
 item_type: Content
 source_path: support/azure/azure-kubernetes/create-upgrade-delete/troubleshoot-pods-remain-pending-state-scenario.md
 cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 platformId: e4f4a18f-d9ed-c3c9-debf-0fe62432b47f
 ---
 
-# Troubleshoot Pods Remain in a Pending State Scenario - Azure | Microsoft Learn
+# Troubleshoot pods that remain in Pending state in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article helps you troubleshoot a scenario in which pods remain in the **Pending** state.
+This article helps you troubleshoot a scenario in which pods remain in the **Pending** state in Azure Kubernetes Service (AKS).
 
 ## Symptoms
 
-You run `kubectl describe pod` for a pod, and the pod remains in the **Pending** state. When this issue occurs, the **Event** section displays **pod didn't trigger scale-up (it wouldn't fit if a new node is added)**. Additionally, the cluster-autoscaler doesn’t scale up the node count.
+You run `kubectl describe pod` for a pod, and the pod remains in the **Pending** state. When this issue occurs, the **Event** section displays **pod didn't trigger scale-up (it wouldn't fit if a new node is added)**. Additionally, the cluster-autoscaler doesn't scale up the node count.
 
 ## Cause
 
 These symptoms indicate one or more of the following situations:
 
-- Even if the cluster-autoscaler adds a node, the pod can’t be put onto the new node. This condition occurs because the pod's resource requests exceed the maximum resources that are available on the node.
+- Even if the cluster-autoscaler adds a node, the pod can't be put onto the new node. This condition occurs because the pod's resource requests exceed the maximum resources that are available on the node.
 - The node is missing a resource that the pod requires (such as a Graphics Processing Unit (GPU)).
-- The pod has affinity or topology constraints, and the new nodes don’t meet these requirements.
+- The pod has affinity or topology constraints, and the new nodes don't meet these requirements.
 
 ## Resolution
 
-Review the pod resource request configuration (for example CPU, memory, or GPU), and compare it with the node size. To make sure that pod placement can occur, you might have to adjust the node size or type, or adjust the resource request configuration for the pod.
+Review the pod resource request configuration (for example CPU, memory, or GPU), and compare it with the node size. To ensure that pod placement can occur, you might have to adjust the node size or type, or adjust the resource request configuration for the pod.
 
-If you rule out a resource constraint, make sure that affinity or taints aren't preventing scheduling.
+If you rule out a resource constraint, ensure that affinity or taints aren't preventing scheduling.

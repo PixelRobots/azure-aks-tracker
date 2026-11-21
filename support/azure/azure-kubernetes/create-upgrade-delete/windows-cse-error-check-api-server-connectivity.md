@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot the WINDOWS_CSE_ERROR_CHECK_API_SERVER_CONNECTIVITY error (5) - Azure | Microsoft Learn
+title: Troubleshoot the WINDOWS_CSE_ERROR_CHECK_API_SERVER_CONNECTIVITY error (5) in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/windows-cse-error-check-api-server-connectivity
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -14,9 +14,10 @@ ms.author: kaushika
 ms.topic: troubleshooting
 description: Introduces how to troubleshoot the WINDOWS_CSE_ERROR_CHECK_API_SERVER_CONNECTIVITY error (5) when you try to add Windows node pools in an AKS cluster.
 ms.date: 2025-04-14T00:00:00.0000000Z
-ms.reviewer: shtao, abelch, junjiezhang, v-weizhu, addobres
+ms.reviewer: shtao, abelch, junjiezhang, v-weizhu, addobres, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 405f3420-3b55-ef56-244b-bc91ec1633d2
 document_version_independent_id: 405f3420-3b55-ef56-244b-bc91ec1633d2
@@ -44,22 +45,22 @@ spProducts:
 platformId: 08e05428-b069-e167-8e5e-f8ef6f650abf
 ---
 
-# Troubleshoot the WINDOWS_CSE_ERROR_CHECK_API_SERVER_CONNECTIVITY error (5) - Azure | Microsoft Learn
+# Troubleshoot the WINDOWS_CSE_ERROR_CHECK_API_SERVER_CONNECTIVITY error (5) in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to identify and resolve the "WINDOWS\_CSE\_ERROR\_CHECK\_API\_SERVER\_CONNECTIVITY" error (5) that occurs when you try to add a Windows node pool in an Azure Kubernetes Service (AKS) cluster.
+This article describes how to identify and resolve the "WINDOWS\_CSE\_ERROR\_CHECK\_API\_SERVER\_CONNECTIVITY" error (5) that occurs when you try to add a Windows node pool in an Azure Kubernetes Service (AKS) cluster.
 
 ## Prerequisites
 
-One of the following tools is required:
+You need one of the following tools:
 
 - The PowerShell command-line shell for Windows nodes.
 - The [Netcat](https://linuxcommandlibrary.com/man/netcat) (`nc`) command-line tool for Linux nodes.
 
 ## Symptoms
 
-When you try to add a Windows node pool in an AKS cluster, you receive the following error message:
+When you try to add a Windows node pool in an AKS cluster, you receive the following error message.
 
 > 
 > Code="VMExtensionProvisioningError" Message="CSE Error: WINDOWS\_CSE\_ERROR\_CHECK\_API\_SERVER\_CONNECTIVITY." Exit Code: 5. Details: Unable to establish connection from agents to Kubernetes API server.
@@ -70,28 +71,30 @@ Your cluster nodes can't connect to the cluster API server pod.
 
 ## Troubleshooting steps
 
-1. Connect to the respective node by following the steps described in [Windows Server proxy connection for SSH](/en-us/azure/aks/node-access#windows-server-proxy-connection-for-ssh):
-2. Verify that your nodes can resolve the cluster's fully qualified domain name (FQDN):
+Follow these steps to troubleshoot the connectivity issue:
 
-    On existing Windows nodes, run the following command:
+1. Connect to the respective node by following the steps described in [Windows Server proxy connection for SSH](/en-us/azure/aks/node-access#windows-server-proxy-connection-for-ssh).
+2. Verify that your nodes can resolve the cluster's fully qualified domain name (FQDN).
+
+    On existing Windows nodes, run the following command.
 
     ```powershell
     Test-NetConnection -ComputerName <cluster-fqdn> -Port 443
     ```
 
-    Or, on existing Linux nodes, run the following command:
+    Or, on existing Linux nodes, run the following command.
 
     ```bash
     nc -vz <cluster-fqdn> 443
     ```
-3. If the command output shows `False` or `Timeout`, check your network configuration. For example, check whether you set "Deny" rules for the API server in network security groups (NSGs) of the virtual network.
-4. If you're using egress filtering through a firewall, make sure that traffic is allowed to your cluster FQDN.
-5. If you've authorized IP addresses that are enabled on your cluster, the firewall's outbound IP address can be blocked. In this scenario, you must add the outbound IP address of the firewall to the list of authorized IP ranges for the cluster. For more information, see [Secure access to the API server using authorized IP address ranges in AKS](/en-us/azure/aks/api-server-authorized-ip-ranges).
+3. If the command output shows `False` or `Timeout`, check your network configuration. For example, check whether you set **Deny** rules for the API server in network security groups (NSGs) of the virtual network.
+4. If you're using egress filtering through a firewall, ensure that the firewall allows traffic to your cluster FQDN.
+5. If you authorized IP addresses that are enabled on your cluster, the firewall's outbound IP address can be blocked. In this scenario, you must add the outbound IP address of the firewall to the list of authorized IP ranges for the cluster. For more information, see [Secure access to the API server using authorized IP address ranges in AKS](/en-us/azure/aks/api-server-authorized-ip-ranges).
 
 ## References
 
 - [General troubleshooting of AKS cluster creation issues](troubleshoot-aks-cluster-creation-issues)
-- [Exit codes in Windows CSE](https://github.com/Azure/AgentBaker/blob/master/parts/windows/windowscsehelper.ps1)
+- [Windows Error Codes](https://gist.github.com/miyu/4e587626d94c225d01c4)
 
 **Third-party information disclaimer**
 

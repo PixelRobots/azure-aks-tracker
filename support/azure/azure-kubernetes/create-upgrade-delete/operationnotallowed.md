@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Cluster pending operation (OperationNotAllowed) errors - Azure | Microsoft Learn
+title: Troubleshoot cluster pending operation (OperationNotAllowed) errors in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/operationnotallowed
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -9,15 +9,15 @@ uhfHeaderId: Azure
 feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
 manager: dcscontentpm
 audience: itpro
-author: axelgMS
-ms.author: axelg
+author: kaushika-msft
+ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn to resolve OperationNotAllowed errors that occur when you try to start, upgrade, or scale an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2024-02-23T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: chiragpa, jpalma, v-leedennis, v-weizhu
+description: Learn how to fix OperationNotAllowed errors when you start, upgrade, or scale an Azure Kubernetes Service (AKS) cluster. Follow these steps to resolve them.
+ms.date: 2026-11-18T00:00:00.0000000Z
+ms.reviewer: chiragpa, jpalma, v-leedennis, v-weizhu, axelg, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 6208f517-6437-119c-790d-e3c30486ccfe
 document_version_independent_id: 6208f517-6437-119c-790d-e3c30486ccfe
@@ -43,29 +43,29 @@ spProducts:
 platformId: 152b10a4-84cf-4dfe-a086-b431c1287bc1
 ---
 
-# Cluster pending operation (OperationNotAllowed) errors - Azure | Microsoft Learn
+# Troubleshoot cluster pending operation (OperationNotAllowed) errors in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to troubleshoot OperationNotAllowed errors that occur when you try to start, upgrade, or scale a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article helps you troubleshoot and resolve `OperationNotAllowed` errors that occur when you start, upgrade, or scale an Azure Kubernetes Service (AKS) cluster, so you can complete your cluster operations without being blocked by pending operations.
 
 ## Prerequisites
 
-- [Azure CLI](/en-us/cli/azure/install-azure-cli)
+Ensure you have the [Azure CLI](/en-us/cli/azure/install-azure-cli) installed.
 
 ## Symptoms
 
-You experience multiple symptoms that include one of the following error messages:
+You experience multiple symptoms that include one of the following `OperationNotAllowed` error messages.
 
 > 
 > Operation is not allowed: Another operation (&lt;operation-name&gt;) is in progress, please wait for it to finish before starting a new operation. See https://aka.ms/aks-pending-operation for more details
 
-Or, if it's an operation on an agent pool:
+Or, if it's an operation on an agent pool.
 
 > 
 > Operation is not allowed: Another agentpool operation (&lt;operation-name&gt;) is in progress, please wait for it to finish before starting a new operation. See https://aka.ms/aks-pending-operation for more details
 
-Or:
+Or, if it's an operation on a specific agent pool.
 
 > 
 > Managed Cluster operation is not allowed: Another operation (&lt;operation-name&gt;) is in progress on agent pool (&lt;agent-pool-name&gt;), please wait for it to finish before starting a new operation. See https://aka.ms/aks-pending-operation for more details
@@ -76,7 +76,7 @@ Some operations take time to run. Those operations block other operations if the
 
 ## Solution 1: Wait until the operation finishes
 
-In the following example, if you start a cluster from one client while the cluster is being updated from another client, the "OperationNotAllowed" error occurs.
+In the following example, if you start a cluster from one client while the cluster is being updated from another client, the `OperationNotAllowed` error occurs.
 
 ```azurecli
 az aks start  -n <myAKSCluster> -g <myResourceGroup>
@@ -86,13 +86,13 @@ Code: OperationNotAllowed
 Message: managed cluster is in Provisioning State(Starting) and Power State(Running), starting cannot be performed The previous operation started at '2024-02-21T13:33:55Z' and elapsed time is: '00:00:00' (RFC3339 format)
 ```
 
-To resolve such issue, you can wait until the blocking operation finishes, or try aborting the long running operation by using the [az aks operation-abort](/en-us/azure/aks/manage-abort-operations) command.
+To resolve this issue, wait until the blocking operation finishes, or try aborting the long running operation by using the [az aks operation-abort](/en-us/azure/aks/manage-abort-operations) command.
 
-## Solution 2: Ensure you don't perform two similar operations in a row
+## Solution 2: Avoid repeating the same operation on an AKS cluster
 
-If you execute an operation on a cluster that's already in the desired state, the "OperationNotAllowed" error occurs.
+If you execute an operation on a cluster that's already in the desired state, the `OperationNotAllowed` error occurs.
 
-For example, if a cluster is already stopped, executing another stop operation triggers this error:
+For example, if a cluster is already stopped, executing another stop operation triggers the `OperationNotAllowed` error.
 
 ```azurecli
 az aks stop -n <myAKSCluster> -g <myResourceGroup>
@@ -102,9 +102,9 @@ Code: OperationNotAllowed
 Message: managed cluster is not currently running, stopping cannot be performed; The stop operation started at '2024-02-13T15:01:15Z' and elapsed time is: '7 days and 01:16:37' (RFC3339 format)
 ```
 
-To resolve such issue, start the cluster before attempting to stop it again.
+To resolve this issue, start the cluster before attempting to stop it again.
 
-## Solution 3: Get the current cluster status before you try an operation
+## Solution 3: Check the AKS cluster provisioning state before an operation
 
 You can also determine the current status of the cluster before you try an operation. To help diagnose the issue, run the following [az aks show](/en-us/cli/azure/aks#az-aks-show) command to retrieve detailed status about the cluster.
 
@@ -122,9 +122,9 @@ Then, use the following table to take the appropriate action based on the comman
 
 ## Solution 4: Retry the operation
 
-There are scenarios where an operation fails because of a transient issue, and is left with an inconsistent state.
+An operation can fail because of a transient issue, and leave the resource in an inconsistent state.
 
-In the following example, a deletion was issued on the node pool &lt;agentpool&gt; but that deletion isn't completed yet. Once a deletion started, no other operation can be made on the resource. That's why the scale operation fails with the "OperationNotAllowed" error.
+In the following example, you delete the node pool &lt;agentpool&gt; but the deletion isn't complete. When you start a deletion, you can't perform any other operation on the resource. This restriction causes the scale operation to fail with the `OperationNotAllowed` error.
 
 ```output
 {
@@ -135,4 +135,4 @@ In the following example, a deletion was issued on the node pool &lt;agentpool&g
 }
 ```
 
-To resolve such issue, wait for the deletion to finish. If it's not finished after a few hours, retry that deletion later.
+To resolve this error, wait for the deletion to finish. If the deletion isn't finished after a few hours, retry the deletion later.

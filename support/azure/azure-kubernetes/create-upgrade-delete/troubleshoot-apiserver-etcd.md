@@ -12,11 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Diagnose and resolve AKS API server and etcd problems faster with practical steps for latency, timeouts, and throttling. Start troubleshooting now.
-ms.date: 2026-07-24T00:00:00.0000000Z
+description: Troubleshoot AKS API server and etcd problems such as latency, timeouts, and throttling. Follow practical diagnostic steps to fix them now.
+ms.date: 2026-11-19T00:00:00.0000000Z
 ms.service: azure-kubernetes-service
-ms.reviewer: kthakar1990, v-weizhu, axelg, josebl, aritraghosh, v-leedennis, v-liuamson, segule, shuyingqin
+ms.reviewer: kthakar1990, v-weizhu, axelg, josebl, aritraghosh, v-leedennis, v-liuamson, segule, shuyingqin, kaushika
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: cd75116e-9d37-46ba-349a-b01f93f6b693
 document_version_independent_id: cd75116e-9d37-46ba-349a-b01f93f6b693
@@ -46,11 +47,13 @@ platformId: 5fbd3e80-9581-fc41-9453-ac4714dec47d
 
 ## Summary
 
-This article helps you troubleshoot API server and etcd problems in large Azure Kubernetes Service (AKS) deployments.
+This article helps you troubleshoot API server and etcd problems in large Azure Kubernetes Service (AKS) deployments. Use it to diagnose high latency, timeouts, and throttling (HTTP 429) errors, and to apply the matching resolution.
 
 Microsoft tests the reliability and performance of the API server at a scale of 5,000 nodes and 200,000 pods. The cluster that contains the API server can automatically scale out and deliver [Kubernetes Service Level Objectives (SLOs)](https://github.com/kubernetes/community/blob/main/sig-scalability/slos/slos.md). If you experience high latencies or timeouts, the cause is likely a resource leak in etcd (the distributed key-value store that backs the API server), or an offending client that makes excessive API calls.
 
 ## Prerequisites
+
+Ensure you have the following prerequisites installed and configured:
 
 - The [Azure CLI](/en-us/cli/azure/install-azure-cli).
 - The Kubernetes [kubectl](https://kubernetes.io/docs/reference/kubectl/) tool. To install kubectl by using Azure CLI, run the [az aks install-cli](/en-us/cli/azure/aks#az-aks-install-cli) command.
@@ -60,9 +63,11 @@ Microsoft tests the reliability and performance of the API server at a scale of 
 
 ## Basic health checks
 
+Before troubleshooting API server and etcd problems, perform the following basic health checks:
+
 - Check resource health events
 
-    AKS provides resource health events for critical component downtime. Before you proceed, make sure that [Resource Health](/en-us/azure/service-health/resource-health-overview) doesn't report any critical events.
+    AKS provides resource health events for critical component downtime. Before you proceed, ensure that [Resource Health](/en-us/azure/service-health/resource-health-overview) doesn't report any critical events.
 
     [![Screenshot of an AKS resource health event indicating control plane status.](media/troubleshoot-apiserver-etcd/resource-health-event.png)](media/troubleshoot-apiserver-etcd/resource-health-event.png#lightbox)
 - Diagnose and solve problems
@@ -150,7 +155,7 @@ A custom webhook can also fail outside of bootstrap. If a webhook uses `failureP
 > 
 > Internal error occurred: failed calling webhook "&lt;name&gt;": failed to call webhook: Post "https://&lt;host&gt;/validate?timeout=&lt;n&gt;s": proxy error from localhost:9443 while dialing &lt;host&gt;, code 504: 504 Gateway Timeout
 
-Because controllers can't create objects, the impact spreads. For example, a Deployment's ReplicaSet reports `ReplicaFailure` with `FailedCreate` events that carry the same webhook error. To confirm, make sure kube-audit diagnostics logs are enabled and sent to a Log Analytics workspace (see Prerequisites), and then query the `AKSAudit` table for the failing operations:
+Because controllers can't create objects, the impact spreads. For example, a Deployment's ReplicaSet reports `ReplicaFailure` with `FailedCreate` events that carry the same webhook error. To confirm, ensure kube-audit diagnostics logs are enabled and sent to a Log Analytics workspace (see Prerequisites), and then query the `AKSAudit` table for the failing operations:
 
 # [Resource-specific](#tab/resource-specific)
 ```kusto
@@ -229,9 +234,9 @@ kubectl get flowschemas
 kubectl get prioritylevelconfigurations
 ```
 
-![Screenshot of the aks-managed-apiserver-guard FlowSchema configuration in an AKS cluster.](media/troubleshoot-apiserver-etcd/flow-schema.png)
+[![Screenshot of the aks-managed-apiserver-guard FlowSchema configuration in an AKS cluster.](media/troubleshoot-apiserver-etcd/flow-schema.png)](media/troubleshoot-apiserver-etcd/flow-schema.png#lightbox)
 
-![Screenshot of the aks-managed-apiserver-guard PriorityLevelConfiguration in an AKS cluster.](media/troubleshoot-apiserver-etcd/priority-level-configuration.png)
+[![Screenshot of the aks-managed-apiserver-guard PriorityLevelConfiguration in an AKS cluster.](media/troubleshoot-apiserver-etcd/priority-level-configuration.png)](media/troubleshoot-apiserver-etcd/priority-level-configuration.png#lightbox)
 
 - Check Kubernetes events.
 
@@ -239,7 +244,7 @@ kubectl get prioritylevelconfigurations
 kubectl get events -n kube-system aks-managed-apiserver-throttling-enabled
 ```
 
-When you observe HTTP 429 (“Too Many Requests”) errors, the API server is being throttled. This is often caused by one or more clients generating excessive API calls. Use kube-audit logs in Log Analytics to identify the top contributors.
+When you observe HTTP 429 ("Too Many Requests") errors, the API server is being throttled. This error often occurs when one or more clients generate excessive API calls. Use kube-audit logs in Log Analytics to identify the top contributors.
 
 ```kusto
 AzureDiagnostics
@@ -249,7 +254,7 @@ AzureDiagnostics
 | take 20
 ```
 
-This shows users, service accounts, controllers sending requests to API server and helps quickly spot “noisy” clients.
+This data shows users, service accounts, and controllers sending requests to the API server, so you can quickly spot "noisy" clients. and helps quickly spot "noisy" clients.
 
 If you wish to know which clients are actually being throttled and to focus directly on root cause of API server overload, you can use the query below:
 
@@ -265,13 +270,13 @@ Azure Diagnostics
 
 #### Step 1: Identify unoptimized clients
 
-- See Cause 5 to identify problematic clients and refine their LIST call patterns - especially those clients generating high-frequency or high-latency requests as they are the primary contributors to API server degradation. Refer to [best practices](/en-us/azure/aks/best-practices-performance-scale-large#kubernetes-client-best-practices) for further guidance on client optimization.
+- To identify problematic clients and refine their LIST call patterns, see Cause 5. Focus on clients that generate high-frequency or high-latency requests, as they primarily contribute to API server degradation. For more guidance on client optimization, refer to the [best practices](/en-us/azure/aks/best-practices-performance-scale-large#kubernetes-client-best-practices).
 
 #### Step 2: Mitigation
 
 - Scale down the cluster to reduce the load on the API server.
-- If Step 1 identifies a recently added controller, CRD, or DaemonSet as the primary driver of API server overload, remove the associated object from the cluster.
-- Use [Control Plane Metrics](/en-us/azure/aks/control-plane-metrics-monitor) to monitor the load on the API server. Refer to the [blog](https://techcommunity.microsoft.com/blog/appsonazureblog/azure-platform-metrics-for-aks-control-plane-monitoring/4385770) for more details.
+- If you identify a recently added controller, CRD, or DaemonSet as the primary driver of API server overload, remove the associated object from the cluster.
+- Use [Control Plane Metrics](/en-us/azure/aks/control-plane-metrics-monitor) to monitor the load on the API server. For more information, see the [blog](https://techcommunity.microsoft.com/blog/appsonazureblog/azure-platform-metrics-for-aks-control-plane-monitoring/4385770).
 - When you complete the preceding steps, delete aks-managed-apiserver-guard.
 
 ```bash
@@ -281,7 +286,7 @@ kubectl delete prioritylevelconfiguration aks-managed-apiserver-guard
 
 Warning
 
-Avoid scaling the cluster back to the originally intended scale point until client call patterns are optimized. Refer to **[best practices](/en-us/azure/aks/best-practices-performance-scale-large#kubernetes-client-best-practices)**. Premature scaling might cause the API server to crash again.
+Avoid scaling the cluster back to the originally intended scale point until you optimize client call patterns. Refer to the [best practices](/en-us/azure/aks/best-practices-performance-scale-large#kubernetes-client-best-practices). Premature scaling might cause the API server to crash again.
 
 - You can also [modify the aks-managed-apiserver-guard FlowSchema and PriorityLevelConfiguration](https://kubernetes.io/docs/concepts/cluster-administration/flow-control/#good-practice-apf-settings) by applying the label **aks-managed-skip-update-operation: true**. This label preserves the modified configurations and prevents AKS from reconciling them back to default values. This setting is relevant if you're applying a custom FlowSchema and PriorityLevelConfiguration tailored to your cluster's requirements as specified in solution 5b and don't want AKS to automatically manage client throttling.
 
@@ -331,7 +336,7 @@ Note
 
 Watch/informer clients are underrepresented here - a long-lived watch is one audit entry even though it streams many objects - so use the **API server resource intensive listing detector** (next section) to catch them. Top rows are often health-check agents (for example, `Envoy/HC`, `kube-probe`), which are normal.
 
-#### Step 2: Identify and analyse latency for a user agent
+#### Step 2: Identify and analyze latency for a user agent
 
 **Using Diagnose and Solve on Azure portal**
 

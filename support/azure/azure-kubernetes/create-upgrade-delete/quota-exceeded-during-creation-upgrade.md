@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: QuotaExceeded or InsufficientVCPUQuota error during creation or upgrade - Azure | Microsoft Learn
+title: Troubleshoot QuotaExceeded or InsufficientVCPUQuota error during creation or upgrade in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/quota-exceeded-during-creation-upgrade
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,13 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Resolves a QuotaExceeded or InsufficientVCPUQuota error during a creation or upgrade operation in an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2025-03-07T00:00:00.0000000Z
-ms.reviewer: chiragpa, nickoman, v-weizhu, mariusbutuc
+description: Fix the QuotaExceeded or InsufficientVCPUQuota error when you create or upgrade an Azure Kubernetes Service (AKS) cluster. Learn how to increase vCPU quotas.
+ms.date: 2026-11-18T00:00:00.0000000Z
+ms.reviewer: chiragpa, nickoman, v-weizhu, mariusbutuc, kaushika
 ms.service: azure-kubernetes-service
 keywords: 
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 192241bf-1193-f6e8-eb1f-f7a86d7cdccd
 document_version_independent_id: 192241bf-1193-f6e8-eb1f-f7a86d7cdccd
@@ -43,11 +44,11 @@ spProducts:
 platformId: 221d1905-e50d-8482-2f8f-e398974da8eb
 ---
 
-# QuotaExceeded or InsufficientVCPUQuota error during creation or upgrade - Azure | Microsoft Learn
+# Troubleshoot QuotaExceeded or InsufficientVCPUQuota error during creation or upgrade in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article provides a solution to a "QuotaExceeded" or "InsufficientVCPUQuota" error that occurs during an Azure Kubernetes Service (AKS) creation or upgrade operation.
+This article helps you resolve the "QuotaExceeded" or "InsufficientVCPUQuota" error that occurs when you create or upgrade an Azure Kubernetes Service (AKS) cluster, or scale a node pool. Learn how to increase vCPU quotas so that your operation succeeds.
 
 ## Symptoms
 

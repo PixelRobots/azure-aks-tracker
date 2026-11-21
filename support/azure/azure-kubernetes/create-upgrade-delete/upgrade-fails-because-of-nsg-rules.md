@@ -12,9 +12,9 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to troubleshoot an Azure Kubernetes Service (AKS) cluster or node pool upgrade that fails because network security group (NSG) rules block required outbound traffic.
-ms.date: 2026-10-16T00:00:00.0000000Z
-ms.reviewer: chiragpa, v-leedennis, andbar
+description: Learn how to fix an AKS cluster upgrade that fails because NSG rules block required outbound traffic. Identify the blocking rules and retry the upgrade.
+ms.date: 2026-11-20T00:00:00.0000000Z
+ms.reviewer: chiragpa, v-leedennis, andbar, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
 ai-usage: ai-generated
@@ -47,7 +47,7 @@ platformId: b3cf4a1c-44c8-4b5c-de59-c142f2aeeffa
 
 ## Summary
 
-This article explains how to fix an Azure Kubernetes Service (AKS) cluster or node pool upgrade that fails because network security group (NSG) rules block required outbound traffic.
+If an Azure Kubernetes Service (AKS) cluster upgrade fails, network security group (NSG) rules might block required outbound traffic. This article helps you identify the blocking rules, fix them, and retry the upgrade successfully.
 
 Unless you use a [network isolated cluster](/en-us/azure/aks/concepts-network-isolated), AKS nodes need [outbound connectivity](/en-us/azure/aks/outbound-rules-control-egress) to a set of [required endpoints and FQDNs](/en-us/azure/aks/outbound-rules-control-egress#required-outbound-network-rules-and-fqdns-for-aks-clusters). Nodes use this connectivity during provisioning, upgrades, and scaling. For example, a node must be able to:
 
@@ -138,7 +138,7 @@ To run the analysis:
 3. On the toolbar, select **Connectivity analysis**. If you don't see it, select the ellipsis (**...**).
 4. Select the source node pool, enter the destination endpoint (for example, `mcr.microsoft.com` or the API server FQDN), and then select **Run analysis**.
 
-[![Screenshot of Connectivity analysis (preview).](media/upgrade-fails-because-of-nsg-rules/connectivity-analysis-preview.png)](media/upgrade-fails-because-of-nsg-rules/connectivity-analysis-preview.png#lightbox)
+[![Screenshot of the Connectivity analysis page in the Azure portal for an AKS cluster node pool.](media/upgrade-fails-because-of-nsg-rules/connectivity-analysis-preview.png)](media/upgrade-fails-because-of-nsg-rules/connectivity-analysis-preview.png#lightbox)
 
 The result shows whether traffic is blocked, which resource and rule block it, and a diagram of the Azure network resources in the path.
 

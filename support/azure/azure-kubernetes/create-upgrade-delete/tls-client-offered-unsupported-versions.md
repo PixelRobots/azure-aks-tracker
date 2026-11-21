@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: TLS client offered only unsupported versions - Azure | Microsoft Learn
+title: Resolve tls client offered only unsupported versions error in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/create-upgrade-delete/tls-client-offered-unsupported-versions
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,13 +12,13 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Troubleshoot tls client offered only unsupported versions error messages from the client when connecting to the Azure Kubernetes Service (AKS) API server.
-ms.date: 2024-10-14T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: chiragpa, nickoman, v-leedennis
+description: Fix the "tls - client offered only unsupported versions" error when connecting to the AKS API server. Learn the cause and upgrade to TLS 1.2 to resolve it.
+ms.date: 2026-11-19T00:00:00.0000000Z
+ms.reviewer: chiragpa, nickoman, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 keywords: 
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 4ed58fcb-a061-388a-807c-8c03f6ef25b5
 document_version_independent_id: 4ed58fcb-a061-388a-807c-8c03f6ef25b5
@@ -44,15 +44,15 @@ spProducts:
 platformId: 2f0ef625-896a-949d-7e47-1be4778a5260
 ---
 
-# TLS client offered only unsupported versions - Azure | Microsoft Learn
+# Resolve tls client offered only unsupported versions error in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article provides a solution to a "tls: client offered only unsupported versions" error that occurs on the client computer or virtual machine when connecting to the Microsoft Azure Kubernetes Service (AKS) API server.
+This article helps you resolve the "tls: client offered only unsupported versions" error that occurs on a client computer or virtual machine when you connect to the Azure Kubernetes Service (AKS) API server. Upgrade your client to TLS 1.2 to restore the connection.
 
 ## Symptoms
 
-When you try to connect to the Microsoft Azure Kubernetes Service (AKS) API server, you receive the following error message from your client computer or virtual machine:
+When you try to connect to the AKS API server, you receive the following error message from your client computer or virtual machine.
 
 > 
 > tls: client offered only unsupported versions
