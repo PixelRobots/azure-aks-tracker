@@ -1,3 +1,5 @@
+https://learn.microsoft.com/en-us/azure/agent-grid/configure-agent-grid
+https://learn.microsoft.com/en-us/azure/agent-grid/overview
 https://learn.microsoft.com/en-us/azure/aks-hybrid-edge/aks-overview
 https://learn.microsoft.com/en-us/azure/aks-hybrid-edge/aks-platforms-compare
 https://learn.microsoft.com/en-us/azure/aks-hybrid-edge/bare-metal/aks-bare-metal-compare-azure-linux-ubuntu
