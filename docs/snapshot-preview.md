@@ -26,7 +26,11 @@ relying on colour alone. Long diffs have a keyboard-focusable scrolling region;
 long lines wrap on mobile. No JavaScript or plugin update is required.
 New articles instead explain that there is no earlier snapshot to compare.
 Weekly email digests remain summary-only, with the documentation link and no
-embedded diff.
+embedded diff. New weekly WordPress posts store their changes separately as post
+metadata; AKS CVE Tracker plugin version 0.5.21 or later displays them on the
+website. Install the plugin update before publishing a weekly post: the workflow
+checks the registered metadata field and verifies the stored changes. Existing
+posts do not gain historical changes.
 
 The collector's Git history and change evidence remain available in the
 `docs-snapshots` branch and diagnostic JSON, not as reader-facing buttons.

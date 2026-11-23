@@ -138,6 +138,7 @@ jobs:
             Set-Content -LiteralPath content.html        -Value $json.html                 -Encoding UTF8
             Set-Content -LiteralPath digest-docs.html    -Value $json.digest_docs_html     -Encoding UTF8
             Set-Content -LiteralPath digest-docs.title   -Value $json.digest_docs_title    -Encoding UTF8
+            Set-Content -LiteralPath digest-docs-changes.json -Value $json.digest_docs_changes_json -Encoding UTF8 -NoNewline
             Set-Content -LiteralPath wordpress-cve-section.html -Value $json.cve_section_html -Encoding UTF8
             Add-Content -Path $env:GITHUB_OUTPUT -Value "hash=$($json.hash)"
             Add-Content -Path $env:GITHUB_OUTPUT -Value "digest_docs_count=$($json.digest_docs_count)"
@@ -512,15 +513,37 @@ jobs:
             echo "docs: no content — skipping."
             exit 0
           fi
+          if [ ! -s "digest-docs-changes.json" ] || ! jq -e '.version == 1 and (.items | type == "array" and length > 0)' digest-docs-changes.json > /dev/null; then
+            echo "ERROR: Weekly documentation changes metadata is missing or invalid."
+            exit 1
+          fi
+
+          SCHEMA_RESPONSE=$(mktemp)
+          SCHEMA_CODE=$(curl -s -w "%{http_code}" -X OPTIONS "$WP_API" \
+            --http1.1 \
+            --connect-timeout "$WP_CONNECT_TIMEOUT_SECONDS" \
+            --max-time "$WP_VERIFY_MAX_TIME_SECONDS" \
+            -u "${{ secrets.WP_USER }}:${{ secrets.WP_APP_PASSWORD }}" \
+            -H "Accept: application/json" \
+            -H "User-Agent: $WP_USER_AGENT" \
+            -o "$SCHEMA_RESPONSE")
+          if [ "$SCHEMA_CODE" -lt 200 ] || [ "$SCHEMA_CODE" -ge 300 ] ||
+             ! jq -e '.schema.properties.meta.properties.aks_weekly_digest_changes.type == "string"' "$SCHEMA_RESPONSE" > /dev/null; then
+            echo "ERROR: WordPress does not expose weekly digest changes metadata (HTTP $SCHEMA_CODE). Update and activate the AKS CVE Tracker plugin before publishing."
+            rm -f "$SCHEMA_RESPONSE"
+            exit 1
+          fi
+          rm -f "$SCHEMA_RESPONSE"
 
           TITLE=$(cat "digest-docs.title")
           # Build payload — send raw HTML without block wrappers to avoid WordPress
           # block-parser errors that can cause 500 responses on large HTML content.
-          jq -n --rawfile content "digest-docs.html" --arg title "$TITLE" \
+          jq -n --rawfile content "digest-docs.html" --rawfile changes "digest-docs-changes.json" --arg title "$TITLE" \
             '{title: $title,
               status: "publish",
               categories: [261],
               content: $content,
+              meta: {aks_weekly_digest_changes: $changes},
               comment_status: "closed"}' \
             > "$RUNNER_TEMP/wp-docs.json"
 
@@ -534,6 +557,7 @@ jobs:
           echo "digest-docs.html size: $(wc -c < digest-docs.html) bytes"
           echo "wp-docs.json size: $(wc -c < "$RUNNER_TEMP/wp-docs.json") bytes"
           LOCAL_DIGEST_HASH=$(sha256sum digest-docs.html | cut -d' ' -f1)
+          LOCAL_CHANGES_HASH=$(sha256sum digest-docs-changes.json | cut -d' ' -f1)
 
           verify_created_post() {
             POST_ID=$(jq -r '.id // empty' "$WP_RESPONSE")
@@ -580,6 +604,7 @@ jobs:
             VERIFY_TYPE=$(jq -r '.type // empty' "$VERIFY_RESPONSE")
             VERIFY_LINK=$(jq -r '.link // empty' "$VERIFY_RESPONSE")
             VERIFY_RAW_HASH=$(jq -j '.content.raw // empty' "$VERIFY_RESPONSE" | sha256sum | cut -d' ' -f1)
+            VERIFY_CHANGES_HASH=$(jq -j '.meta.aks_weekly_digest_changes // empty' "$VERIFY_RESPONSE" | sha256sum | cut -d' ' -f1)
 
             echo "Verification GET succeeded (HTTP $VERIFY_CODE)"
             echo "WordPress post id: $POST_ID"
@@ -597,6 +622,12 @@ jobs:
               echo "ERROR: Verified WordPress post content does not match digest-docs.html."
               echo "Local digest hash: $LOCAL_DIGEST_HASH"
               echo "Remote raw hash:   $VERIFY_RAW_HASH"
+              rm -f "$VERIFY_RESPONSE"
+              rm -f "$VERIFY_HEADERS"
+              return 1
+            fi
+            if [ "$VERIFY_CHANGES_HASH" != "$LOCAL_CHANGES_HASH" ]; then
+              echo "ERROR: Verified WordPress post changes metadata does not match the generated metadata."
               rm -f "$VERIFY_RESPONSE"
               rm -f "$VERIFY_HEADERS"
               return 1

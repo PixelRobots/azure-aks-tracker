@@ -1112,6 +1112,17 @@ function Get-SnapshotChangesHtml($item) {
 "@
 }
 
+function Get-WeeklyDigestChange($item) {
+  return [pscustomobject]@{
+    url = [string]$item.canonical_url
+    status = [string]$item.status
+    title = [string]$item.pr_title
+    patch = if ($item.status -eq 'added') { '' } else { [string]$item.patch }
+    additions = [int]$item.additions
+    deletions = [int]$item.deletions
+  }
+}
+
 function Get-SessionKind($items, [string]$summary) {
   $hasAdded = ($items | Where-Object { $_.status -eq 'added' }).Count -gt 0
   $hasRemoved = ($items | Where-Object { $_.status -eq 'removed' }).Count -gt 0
@@ -4746,7 +4757,11 @@ function Get-AksRetirementsHtml {
 }
 #aks-tab-retirements .aks-retirement-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 20px 0 12px; }
 #aks-tab-retirements .aks-retirement-filters label { display: flex; flex: 1 1 240px; flex-direction: column; gap: 6px; min-width: 0; font-size: 14px; font-weight: 600; }
-#aks-tab-retirements .aks-retirement-filters select, #aks-tab-retirements .aks-retirement-filters input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 8px; border: 1px solid currentColor; border-radius: 6px; background: var(--cp-surface, Canvas); color: var(--cp-text, CanvasText); font: inherit; }
+#aks-tab-retirements .aks-retirement-filters select, #aks-tab-retirements .aks-retirement-filters input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 0 .85rem; border: 1px solid #2f3540; border-radius: 10px; background: #0f1115; color: #e5e7eb; color-scheme: dark; font: inherit; transition: border-color .2s, box-shadow .2s, background-color .2s; }
+#aks-tab-retirements .aks-retirement-filters select { -webkit-appearance: none; appearance: none; padding-right: 2.2rem; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23e5e7eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right .6rem center; }
+#aks-tab-retirements .aks-retirement-filters input::placeholder { color: #a1a1aa; opacity: 1; }
+#aks-tab-retirements .aks-retirement-filters select:hover, #aks-tab-retirements .aks-retirement-filters input:hover { border-color: #3b3f4a; }
+#aks-tab-retirements .aks-retirement-filters select:focus-visible, #aks-tab-retirements .aks-retirement-filters input:focus-visible { outline: none; border-color: var(--aks-accent, #ffea00); box-shadow: 0 0 0 3px rgba(250, 204, 21, .25); background-color: #121318; }
 #aks-tab-retirements .aks-retirement-card { border: 1px solid currentColor; border-radius: 8px; padding: 24px; margin: 16px 0; min-width: 0; }
 #aks-tab-retirements .aks-doc-title { margin: 0 0 16px; font-size: 24px; line-height: 1.35; overflow-wrap: anywhere; }
 #aks-tab-retirements .aks-retirement-meta { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -4925,6 +4940,7 @@ $digestCountBreakdown = ($digestRepoCounts.GetEnumerator() | Sort-Object Name | 
 }) -join ", "
 
 $digestItems = New-Object System.Collections.Generic.List[string]
+$digestChanges = New-Object System.Collections.Generic.List[object]
 foreach ($row in $sortedDocs) {
   $file = $row.file
   if (-not $filteredGroups.ContainsKey($file)) { continue }
@@ -4971,6 +4987,10 @@ foreach ($row in $sortedDocs) {
     default { "aks-pill-kind aks-pill-update" }
   }
   $kindPill = "<span class=""$kindClass"" style=""display: inline-block; padding: 4px 10px; margin-right: 6px; background-color: #3b0764; color: #f9fafb; border: 1px solid #2f3540; border-radius: 4px; font-size: 12px; font-weight: 500;"">$kindEmoji $(Escape-Html $kind)</span>"
+
+  if ($SnapshotMode) {
+    $digestChanges.Add((Get-WeeklyDigestChange $arr[0]))
+  }
 
   $li = @"
 <div style="margin: 20px 0; padding: 18px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px;">
@@ -5090,6 +5110,9 @@ $hash = ($sha256.ComputeHash($bytes) | ForEach-Object { $_.ToString("x2") }) -jo
   digest_docs_count    = @($sortedDocs).Count
   digest_docs_html     = $digestDocsHtml
   digest_docs_title    = $digestDocsTitle
+  digest_docs_changes_json = if ($SnapshotMode) {
+    [pscustomobject]@{ version = 1; items = @($digestChanges.ToArray()) } | ConvertTo-Json -Depth 6 -Compress
+  } else { '' }
   digest_releases_html = $digestReleasesHtml
   digest_releases_title = $digestReleasesTitle
   digest_cve_html      = $digestCveHtml

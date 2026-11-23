@@ -434,7 +434,7 @@ test('production change disclosure escapes Markdown, keeps the complete diff and
   const result = spawnSync('pwsh', ['-NoProfile', '-Command', `
     $ErrorActionPreference='Stop'
     $ast=[System.Management.Automation.Language.Parser]::ParseFile('${script}',[ref]$null,[ref]$null)
-    $ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -in @('Escape-Html','Get-SnapshotChangesHtml')},$true) |
+    $ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -in @('Escape-Html','Get-SnapshotChangesHtml','Get-WeeklyDigestChange')},$true) |
       ForEach-Object { Invoke-Expression $_.Extent.Text }
     $item=[pscustomobject]@{
       status='modified'; filename='test.md'; pr_title='Test "article" <script>'
@@ -442,12 +442,14 @@ test('production change disclosure escapes Markdown, keeps the complete diff and
       patch="--- before.md\`n+++ after.md\`n@@ -1 +1 @@\`n-Old text\`n+<script>alert(1)</script>\`n" + ((1..1000 | ForEach-Object { "+line $_" }) -join "\`n")
     }
     $modified=Get-SnapshotChangesHtml $item
+    $weeklyModified=Get-WeeklyDigestChange $item
     $item.status='added'
     $added=Get-SnapshotChangesHtml $item
+    $weeklyAdded=Get-WeeklyDigestChange $item
     $item.status='modified'; $item.patch=''
     $failed=$false
     try { Get-SnapshotChangesHtml $item } catch { $failed=$_.Exception.Message.Contains('without a patch') }
-    @{modified=$modified;added=$added;failed=$failed} | ConvertTo-Json -Compress
+    @{modified=$modified;added=$added;weeklyModified=$weeklyModified;weeklyAdded=$weeklyAdded;failed=$failed} | ConvertTo-Json -Depth 4 -Compress
   `], { encoding: 'utf8', timeout: 30000 });
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const data = JSON.parse(result.stdout);
@@ -464,6 +466,8 @@ test('production change disclosure escapes Markdown, keeps the complete diff and
   assert.match(data.added, /New article: no earlier snapshot to compare/);
   assert.doesNotMatch(data.added, /<details|<pre|<script>/);
   assert.equal(data.failed, true);
+  assert.match(data.weeklyModified.patch, /\+line 1000/);
+  assert.equal(data.weeklyAdded.patch, '');
 });
 
 test('production generator preserves layout, releases and CVEs and removes PR buttons in both docs surfaces', () => fixture(({ repo, build, commit }) => {
@@ -534,6 +538,17 @@ test('production generator preserves layout, releases and CVEs and removes PR bu
   }
   assert.equal(data.digest_docs_html.includes('aks-doc-changes'), false);
   assert.equal(data.digest_docs_html.includes('<details'), false);
+  const digestChanges = JSON.parse(data.digest_docs_changes_json);
+  assert.equal(digestChanges.version, 1);
+  assert.equal(digestChanges.items.length, 10);
+  for (const change of digestChanges.items) {
+    assert.ok(change.url.startsWith('https://learn.microsoft.com/'));
+    assert.equal(change.status, 'modified');
+    assert.match(change.patch, /^--- /);
+    assert.ok(change.additions + change.deletions > 0);
+    assert.ok(data.digest_docs_html.includes(change.url));
+    assert.ok(!data.digest_docs_html.includes(change.patch));
+  }
   assert.equal((data.digest_docs_html.match(/Detected:/g) || []).length, 10);
   assert.ok(data.html.includes('class="aks-tabs"'));
   assert.ok(data.html.includes('id="aks-tab-releases"'));
