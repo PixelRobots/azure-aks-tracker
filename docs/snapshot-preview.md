@@ -39,8 +39,7 @@ The collector's Git history and change evidence remain available in the
 
 Every full publishing run first calls the reusable snapshot collector. The
 collector commits its Markdown/state plus `.learn-mirror/health.json`, including
-the check timestamp, errors, unreached pages, article count, all ten product
-scopes and the Actions run URL.
+the check timestamp, errors, unreached pages, article count, all eleven product scopes and the Actions run URL.
 
 Production requires every page to be reached, with at most five fetch failures
 and no more than 1% of requests failing. Allowed failures retain prior snapshots
@@ -104,7 +103,7 @@ real snapshots, and generates two isolated artifact sets:
 | Artifact | Purpose |
 |---|---|
 | `snapshot-preview-live` | Actual changes after the qualified baseline |
-| `snapshot-preview-demo` | Clearly labelled synthetic changes across all ten products |
+| `snapshot-preview-demo` | Clearly labelled synthetic changes across all eleven products |
 
 Relevant development-branch pushes trigger it automatically. Manual branch
 dispatch is also supported using its registered workflow ID:

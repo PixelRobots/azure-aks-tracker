@@ -8,6 +8,7 @@
 # Repository configuration - easily extensible for more MS Docs sites
 $ArcHybridAksIconUrl = "https://az-icons.com/images/arc-kubernetes/icon.svg"
 $AksSupportIconUrl = "https://az-icons.com/images/azure-support-center-blue/icon.svg"
+$AzureAgentGridIconUrl = "https://raw.githubusercontent.com/PixelRobots/azure-aks-tracker/main/wordpress-plugin/aks-cve-tracker/assets/agent-grid.svg"
 
 $Repositories = @(
   @{
@@ -54,6 +55,15 @@ $Repositories = @(
     IconUrl = "https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png"
     IconAlt = "Application Gateway for Containers"
     DocsBaseUrl = "https://learn.microsoft.com/azure/application-gateway/for-containers/"
+  },
+  @{
+    Owner = "MicrosoftDocs"
+    Repo = "azure-docs"
+    PathFilter = "^articles/agent-grid/"  # Only Azure Agent Grid docs
+    DisplayName = "Azure Agent Grid"
+    IconUrl = $AzureAgentGridIconUrl
+    IconAlt = "Azure Agent Grid"
+    DocsBaseUrl = "https://learn.microsoft.com/azure/agent-grid/"
   },
   @{
     Owner = "MicrosoftDocs"
@@ -189,7 +199,7 @@ if ($SnapshotPreview) {
 }
 elseif ($SnapshotMode) { $DocsSummaryCachePath = 'snapshot-docs-summary-cache.json' }
 $DocsSummaryCacheMaxEntries = 2000
-$DocsSummaryCacheVersion = 'openai-responses-v1'
+$DocsSummaryCacheVersion = 'openai-responses-v2'
 $ReleasesSummaryCachePath = 'releases-summary-cache.json'
 if ($SnapshotPreview) { $ReleasesSummaryCachePath = Join-Path $env:DOCS_PREVIEW_OUTPUT_DIR 'releases-summary-cache.json' }
 $RetirementsCachePath = Join-Path $PSScriptRoot '../../retirements-cache.json'
@@ -868,6 +878,13 @@ function Get-ProductIconMeta([string]$FilePath, [string]$RepoName) {
       url   = 'https://courscape.com/wp-content/uploads/2024/01/agc-logo-1-1024x1024.png'
       alt   = 'Application Gateway for Containers'
       label = 'AGC'
+    }
+  }
+  elseif ($FilePath -match '^articles/agent-grid/') {
+    return @{
+      url   = $AzureAgentGridIconUrl
+      alt   = 'Azure Agent Grid'
+      label = 'Azure Agent Grid'
     }
   }
   
@@ -1876,6 +1893,12 @@ function Get-PerFileSummariesViaOpenAIResponses {
   try {
     $instructions = @"
 You are filtering Azure AKS documentation updates. Your job is to be INCLUSIVE and keep most changes.
+
+**PATCH DIRECTION IS CRITICAL:**
+- Lines beginning with `-` exist in the previous snapshot and were removed.
+- Lines beginning with `+` are present in the current snapshot and were added.
+- Never describe a removed line as if it were newly introduced, and never describe an added line as if it were removed.
+- If the patch removes a limitation or warning, summarize it as removal of that limitation or warning, not as a new statement that the limitation is true.
 
 **CRITICAL: Be very permissive. When in doubt, KEEP IT.**
 

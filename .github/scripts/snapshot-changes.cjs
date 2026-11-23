@@ -7,7 +7,7 @@ const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
 const { sources, pageUrl } = require('./seed-learn-mirror.cjs');
 
-const products = ['AKS', 'AKS Arc', 'Fleet', 'Application Network', 'ACR', 'Arc K8s', 'Azure Linux', 'AGC', 'AKS Support', 'AKS Automatic'];
+const products = ['AKS', 'AKS Arc', 'Fleet', 'Application Network', 'ACR', 'Arc K8s', 'Azure Linux', 'AGC', 'Azure Agent Grid', 'AKS Support', 'AKS Automatic'];
 const routes = sources.flatMap(source => source.routes.map(route => ({ source, route })));
 const config = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../learn-mirror.config.json'), 'utf8'));
 const scope = new RegExp(config.trackedPaths);
@@ -227,6 +227,7 @@ function createDemo(repo, now = new Date()) {
     'articles/kubernetes-fleet/overview.md', 'articles/application-network/overview.md',
     'articles/container-registry/container-registry-intro.md', 'articles/azure-arc/kubernetes/overview.md',
     'articles/azure-linux/azure-linux-overview.md', 'articles/application-gateway/for-containers/overview.md',
+    'articles/agent-grid/overview.md',
     'support/azure/azure-kubernetes/storage/troubleshoot-pvc.md',
     'articles/aks/automatic/quick-automatic-managed-network.md'
   ];

@@ -21,6 +21,8 @@ const cases = [
   ['articles/azure-arc/kubernetes/overview.md', 'azure/azure-arc/kubernetes/overview'],
   ['articles/azure-linux/azure-linux-overview.md', 'azure/azure-linux/azure-linux-overview'],
   ['articles/application-gateway/for-containers/overview.md', 'azure/application-gateway/for-containers/overview'],
+  ['articles/agent-grid/overview.md', 'azure/agent-grid/overview'],
+  ['articles/agent-grid/configure-agent-grid.md', 'azure/agent-grid/configure-agent-grid'],
   ['support/azure/azure-kubernetes/storage/test.md', 'troubleshoot/azure/azure-kubernetes/storage/test']
 ];
 
@@ -57,6 +59,7 @@ test('discovery excludes unrelated products, hosts and locales', () => {
   ]) assert.equal(include.test(url), false, url);
   assert.equal(tracked.test('articles/virtual-machines/overview.md'), false);
   assert.equal(tracked.test('articles/aks/toc.yml'), false);
+  assert.ok(include.test('https://learn.microsoft.com/en-us/azure/agent-grid/'));
 });
 
 test('seed mapping excludes includes and media, and maps index pages', () => {
@@ -69,6 +72,7 @@ test('seed mapping excludes includes and media, and maps index pages', () => {
   assert.ok(config.tocs.includes('https://learn.microsoft.com/en-us/azure/azure-linux/toc.json'));
   assert.equal(pageUrl('articles/application-network/overview.md', routes),
     'https://learn.microsoft.com/en-us/azure/application-network/overview');
+  assert.ok(config.tocs.includes('https://learn.microsoft.com/en-us/azure/agent-grid/toc.json'));
 });
 
 test('sitemap scope includes only current English Azure and troubleshooting shards', () => {

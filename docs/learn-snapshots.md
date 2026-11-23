@@ -33,7 +33,7 @@ not their exact publication time, author or original PR.
 |---|---|
 | `MicrosoftDocs/azure-aks-docs` | AKS, AKS Automatic, Kubernetes Fleet Manager, AKS Application Network, AKS Hybrid and Edge / AKS Arc |
 | `MicrosoftDocs/azure-management-docs` | Azure Container Registry, Azure Arc-enabled Kubernetes and Azure Linux |
-| `MicrosoftDocs/azure-docs` | Application Gateway for Containers |
+| `MicrosoftDocs/azure-docs` | Application Gateway for Containers and Azure Agent Grid |
 | `MicrosoftDocs/SupportArticles-docs` | The same nine AKS troubleshooting categories as the existing tracker |
 
 Public and private (`-pr`) repository names are accepted in Learn's source
@@ -44,8 +44,9 @@ collectors; they are not Learn documentation repositories.
 AKS Automatic is categorized separately for `articles/aks/automatic/` and
 `articles/aks/intro-aks-automatic.md`. Other AKS articles about automatic features
 stay under AKS, and all troubleshooting articles stay under AKS Support.
-Collection health requires all ten products, including AKS Automatic; run a fresh
-collection meeting the publication health requirements before publishing.
+Collection health requires all eleven products, including AKS Automatic and
+Azure Agent Grid; run a fresh collection meeting the publication health
+requirements before publishing.
 
 Discovery combines English Azure and troubleshooting sitemaps, eight tables of
 contents, the committed seed list and previously known pages. The AKS table of
@@ -73,7 +74,7 @@ the workflow makes one bounded
 errors are assessed against the publication limit below.
 
 Production requires a fresh collection that reached every page and covers all
-ten products. Up to **five failed pages, capped at 1% of requests**, are allowed:
+eleven products. Up to **five failed pages, capped at 1% of requests**, are allowed:
 successful updates can publish while failed pages retain their previous snapshots
 where available. A newly discovered page that fails has no snapshot until a
 successful fetch. Such a collection is marked `complete: false` and

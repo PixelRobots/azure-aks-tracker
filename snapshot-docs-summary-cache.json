@@ -813,9 +813,9 @@
     },
     {
       "cache_key": "ba8da45f5eda1d63871f2e50273cf23a118666bba20c31d41aa1d1e2c7d69b5d",
-      "cache_version": "openai-responses-v1",
+      "cache_version": "openai-responses-v2",
       "file": "articles/aks/create-node-pools.md",
-      "summary": "The documentation now clarifies that users cannot change the virtual machine (VM) size of a node pool after its creation. This update emphasizes the importance of selecting the appropriate VM size during the initial setup of node pools in Azure Kubernetes Service (AKS).",
+      "summary": "The documentation removed the previous limitation that users cannot change the virtual machine (VM) size of a node pool after it is created. The captured diff does not add a replacement statement or new VM-resizing procedure.",
       "category": "Compute",
       "score": 0.9,
       "cached_at": "2026-11-23T12:12:59.1785445+00:00"

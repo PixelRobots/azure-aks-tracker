@@ -25,7 +25,10 @@ const sources = [
   },
   {
     repo: 'MicrosoftDocs/azure-docs',
-    routes: [['articles/application-gateway/for-containers/', 'azure/application-gateway/for-containers/']]
+    routes: [
+      ['articles/application-gateway/for-containers/', 'azure/application-gateway/for-containers/'],
+      ['articles/agent-grid/', 'azure/agent-grid/']
+    ]
   },
   {
     repo: 'MicrosoftDocs/SupportArticles-docs',
