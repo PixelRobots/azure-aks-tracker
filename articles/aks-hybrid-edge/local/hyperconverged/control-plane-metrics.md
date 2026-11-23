@@ -45,7 +45,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
-platformId: aa32712e-75ad-8b5e-373c-3422a3421e4c
+platformId: 10321ce1-ba00-dbab-281f-d58495ea6eb0
 ---
 
 # Monitor control plane metrics | Microsoft Learn

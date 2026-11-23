@@ -36,7 +36,15 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/multi-rack/concepts-security-access-identity.md
-platformId: 6d848ea2-9ca9-82ed-1c74-3c5047bbec52
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/8046779e-b7d2-4c26-a33a-778fd8bd444c
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
+- https://authoring-docs-microsoft.poolparty.biz/devrel/ce51d519-8846-4bc1-819c-a72fbd6651b2
+platformId: 8668dfc8-e03b-699c-e96b-473c7db1c4d3
 ---
 
 # Access and identity options for Azure Kubernetes Service (AKS) on Azure Local for multi-rack deployments | Microsoft Learn

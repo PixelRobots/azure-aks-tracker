@@ -39,8 +39,12 @@ item_type: Content
 source_path: articles/kubernetes-fleet/use-managed-identity.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/8046779e-b7d2-4c26-a33a-778fd8bd444c
+- https://authoring-docs-microsoft.poolparty.biz/devrel/089c8ba6-d135-43ff-bfaf-b8197fb72fb9
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/ce51d519-8846-4bc1-819c-a72fbd6651b2
+- https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
 platformId: e907be87-02cb-2219-a624-3daf2ba4e6d8
 ---
 

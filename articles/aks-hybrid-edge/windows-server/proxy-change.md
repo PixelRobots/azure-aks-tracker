@@ -38,7 +38,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/proxy-change.md
-platformId: 15dd26af-047a-ef16-4b69-3698eedef332
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/fc3f72c2-fb6f-4cea-95ee-b444e52254ee
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
+platformId: f886fdfe-0c1e-d47f-9d11-11392b4f0881
 ---
 
 # Update noProxy settings, certificates in Azure Kubernetes Service | Microsoft Learn

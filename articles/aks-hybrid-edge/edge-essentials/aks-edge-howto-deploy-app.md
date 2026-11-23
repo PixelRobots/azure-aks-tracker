@@ -36,7 +36,15 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/edge-essentials/aks-edge-howto-deploy-app.md
-platformId: 6c1e7805-d375-76a1-9477-0ca676023691
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/5287f575-02f0-405f-92b7-800456526b0c
+- https://authoring-docs-microsoft.poolparty.biz/devrel/cb49e66a-8528-497d-adaa-eade2d009d1b
+- https://authoring-docs-microsoft.poolparty.biz/devrel/bcbcbad5-4208-4783-8035-8481272c98b8
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
+- https://authoring-docs-microsoft.poolparty.biz/devrel/472c9d15-157b-443c-afa2-e209c8fecf58
+- https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
+platformId: 7f375289-0b41-adb1-39ec-b8c3824e495f
 ---
 
 # Deploy an application | Microsoft Learn

@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Configure pod eviction for freeze events in Azure Kubernetes Service (AKS) (preview) - Azure Kubernetes Service | Microsoft Learn
+title: Configure pod eviction for freeze events in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/azure/aks/node-auto-drain-evict-on-freeze
 breadcrumb_path: /azure/breadcrumb/azure-aks/toc.json
 feedback_help_link_url: https://learn.microsoft.com/answers/tags/200/azure-kubernetes-service/
@@ -21,7 +21,7 @@ learn_banner_products:
 ms.service: azure-kubernetes-service
 description: Learn how to configure AKS node auto-drain to evict specific pods before freeze events occur on underlying virtual machines.
 ms.topic: how-to
-ms.date: 2026-03-30T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
 author: varora24
 ms.author: vaibhavarora
 ai-usage: ai-assisted
@@ -45,14 +45,7 @@ spProducts:
 platformId: e7347012-4dc4-abef-7fcd-1bc236491342
 ---
 
-# Configure pod eviction for freeze events in Azure Kubernetes Service (AKS) (preview) - Azure Kubernetes Service | Microsoft Learn
-
-Important
-
-AKS preview features are available on a self-service, opt-in basis. Previews are provided "as is" and "as available," and they're excluded from the service-level agreements and limited warranty. AKS previews are partially covered by customer support on a best-effort basis. As such, these features aren't meant for production use. For more information, see the following support articles:
-
-- [AKS support policies](/en-us/azure/aks/support-policies)
-- [Azure support FAQ](/en-us/azure/aks/faq)
+# Configure pod eviction for freeze events in Azure Kubernetes Service (AKS) - Azure Kubernetes Service | Microsoft Learn
 
 [Node auto-drain](node-auto-drain) helps protect your workloads from disruptions when [scheduled events](/en-us/azure/virtual-machines/linux/scheduled-events) occur on the underlying virtual machines (VMs) in your node pools. By default, freeze events don't trigger cordon and drain because they usually pause a node only briefly. If you have workloads that can't tolerate short disruptions, you can opt in to evict labeled pods before the freeze begins.
 

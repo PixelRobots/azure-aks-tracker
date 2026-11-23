@@ -37,7 +37,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/deploy-gpu-node-pool-22h2.md
-platformId: bf6b7527-40e5-9a13-84ae-f321868def6b
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/fc3f72c2-fb6f-4cea-95ee-b444e52254ee
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
+platformId: 2acef7d5-ec97-a504-4ce7-4f9d6c822878
 ---
 
 # Use GPUs for compute-intensive workloads in AKS on Windows Server | Microsoft Learn

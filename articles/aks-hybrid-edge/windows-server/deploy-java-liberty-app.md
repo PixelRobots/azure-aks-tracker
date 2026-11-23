@@ -45,7 +45,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/472c9d15-157b-443c-afa2-e209c8fecf58
-platformId: db492b28-b405-f0cc-95d8-efebad196e0c
+platformId: ff59b86d-1159-cee8-3ff6-4f82d5a29391
 ---
 
 # Deploy a Java app with Open Liberty or WebSphere Liberty on an Azure Kubernetes Service cluster in AKS on Windows Server | Microsoft Learn

@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
-platformId: 1d4b1e8e-8f90-8238-c650-4e70d374ebd6
+platformId: 015f339d-29f0-dc5d-0a50-7178577b8a80
 ---
 
 # AKS Hybrid and Edge network requirements | Microsoft Learn

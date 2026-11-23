@@ -40,11 +40,9 @@ item_type: Content
 source_path: articles/azure-arc/kubernetes/monitor-gitops-flux-2.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/07bb3e10-d135-43ff-bc8b-360497cb39fa
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/71313085-034b-42dc-8446-58627936c72c
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/32072957-9d5a-4e26-8db5-633ab8b422ea
 platformId: 6f5855d2-76de-cb0b-f9b0-e341f8b03b6f
 ---

@@ -42,7 +42,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 6ae7e055-e2d7-174a-01d8-d0889a4531fb
+platformId: 57f3bfea-9043-c5cf-095d-befc7233d388
 ---
 
 # Tested resource limits, VM sizes, and regions for AKS on Windows Server | Microsoft Learn

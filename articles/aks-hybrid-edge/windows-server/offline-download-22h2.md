@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-platformId: f68419ba-f899-4b74-1010-6e201bd7309f
+platformId: 9250c8ee-c3e6-05a3-a2ca-cc2a764b1493
 ---
 
 # Use offline download in AKS on Windows Server | Microsoft Learn

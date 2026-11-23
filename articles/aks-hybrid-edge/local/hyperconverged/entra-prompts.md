@@ -38,7 +38,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/hyperconverged/entra-prompts.md
-platformId: a7cd757b-1bea-40dc-8817-c08d52b90878
+cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/57eae307-c3a1-4cac-b645-1a899934bac8
+- https://authoring-docs-microsoft.poolparty.biz/devrel/5287f575-02f0-405f-92b7-800456526b0c
+spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/ee561821-1ac7-45a8-9409-6ba5eb7a5b97
+- https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
+platformId: 4e9c81ae-2218-5f76-97c2-e00f63298204
 ---
 
 # Entra authentication prompts when running kubectl with Kubernetes RBAC | Microsoft Learn

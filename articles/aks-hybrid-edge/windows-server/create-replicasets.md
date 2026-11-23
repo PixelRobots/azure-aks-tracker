@@ -38,7 +38,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/create-replicasets.md
-platformId: 8c5682fb-1ff5-644e-bdea-d00abc56bb56
+cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/fc3f72c2-fb6f-4cea-95ee-b444e52254ee
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 058a14d3-1a22-e7f3-0826-4e3bff40c20c
 ---
 
 # Create a ReplicaSet in AKS on Windows Server | Microsoft Learn

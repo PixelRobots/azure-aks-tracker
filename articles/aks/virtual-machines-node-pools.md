@@ -41,10 +41,8 @@ item_type: Content
 source_path: articles/aks/virtual-machines-node-pools.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/2ed91286-6cf7-4b83-810d-75d0ee3b09dd
-- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/6735bd7e-4f7b-457d-b58c-29e6f0198677
-- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 platformId: ed4bf53b-802f-cb77-3c46-974d52fa46a5
 ---
 

@@ -38,8 +38,10 @@ monikers: []
 item_type: Content
 source_path: articles/container-registry/container-registry-content-trust-deprecation.md
 cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/64b65f6c-101f-411a-9b83-9f577fab52d0
 - https://authoring-docs-microsoft.poolparty.biz/devrel/cb49e66a-8528-497d-adaa-eade2d009d1b
 spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/1a667fd1-8145-4b11-af0f-9f5de205a6e5
 - https://authoring-docs-microsoft.poolparty.biz/devrel/472c9d15-157b-443c-afa2-e209c8fecf58
 platformId: 33b6b7b7-8bd2-5c6b-65f0-3cdc872171ba
 ---

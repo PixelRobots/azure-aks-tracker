@@ -38,7 +38,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/hyperconverged/kubernetes-monitor-metrics.md
-platformId: 94f33dfd-6273-5b05-15a3-c9889b3a943a
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/07bb3e10-d135-43ff-bc8b-360497cb39fa
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
+platformId: 17ae59a2-2eb3-9179-3b0b-40bba3d5c6fc
 ---
 
 # Metrics and monitoring logs in AKS | Microsoft Learn

@@ -37,7 +37,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/set-multiple-administrators.md
-platformId: ffdba040-a789-d38c-e5e3-1ce6842eecf5
+cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/fc3f72c2-fb6f-4cea-95ee-b444e52254ee
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 75255598-ff42-2566-c16d-c3c5d122b592
 ---
 
 # Set up multiple administrators on AKS on Windows Server | Microsoft Learn

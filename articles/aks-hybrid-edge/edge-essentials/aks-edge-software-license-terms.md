@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
-platformId: 44d4e3ee-e4af-bfa5-7d84-4797850e94e5
+platformId: 146d662f-8346-54bb-6934-a91e6bd6053b
 ---
 
 # Microsoft Software License Terms for AKS Edge Essentials | Microsoft Learn

@@ -42,7 +42,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 3222f0cf-5488-bfa9-a57d-13a13d2e39c7
+platformId: 10ac9609-6cf9-21c6-be83-b9eb0d0d0a99
 ---
 
 # Scale an Azure Kubernetes Service cluster | Microsoft Learn

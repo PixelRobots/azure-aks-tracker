@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/67b2ba1a-6f74-4044-a48a-f0f8ad076b8f
-platformId: 69b98be7-5ea1-432b-b8d3-5f80378c12b7
+platformId: 56896e91-b1a8-2ab7-95ea-b6ea023dbb3f
 ---
 
 # Quickstart to set up AKS on Windows Server using Windows Admin Center | Microsoft Learn

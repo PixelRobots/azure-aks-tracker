@@ -45,7 +45,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
-platformId: c6b4a668-aad6-f3be-832f-c3bf07ba07f7
+platformId: 73772057-7bbb-8af6-cca6-da10054a2ef5
 ---
 
 # Use Key Manager for Kubernetes clusters on AKS Edge Essentials (preview) | Microsoft Learn

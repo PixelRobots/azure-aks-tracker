@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 93155c31-bf0d-53eb-0101-6ea54e1637cc
+platformId: 44f0b906-a0c5-3c1c-a6dc-4f050a8291e9
 ---
 
 # Create a MetalLB load balancer using the Azure CLI | Microsoft Learn

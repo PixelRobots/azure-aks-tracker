@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
-platformId: 9de5dc64-9b14-919f-749e-2327532ce0f9
+platformId: 65b120e1-5302-bfa3-1bb7-71f9c8b15da1
 ---
 
 # Validate Signed Container Images for AKS on Azure Local | Microsoft Learn

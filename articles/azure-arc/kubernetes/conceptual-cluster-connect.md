@@ -39,8 +39,10 @@ item_type: Content
 source_path: articles/azure-arc/kubernetes/conceptual-cluster-connect.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
 platformId: e43bfdb9-7f93-28a3-007f-85587b0f41d6
 ---
 

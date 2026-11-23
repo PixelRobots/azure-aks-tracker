@@ -38,7 +38,11 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/hyperconverged/aks-hci-ip-address-planning.md
-platformId: 43853858-5e17-92e2-8a48-3619ee71809f
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: a4b47c7e-b7ad-ee34-791d-0736d11590c3
 ---
 
 # IP address planning for AKS Hybrid and Edge | Microsoft Learn

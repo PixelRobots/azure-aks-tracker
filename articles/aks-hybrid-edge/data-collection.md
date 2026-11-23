@@ -45,7 +45,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 421a967f-f98a-57dc-729d-820e1408b280
+platformId: db053518-f89f-79db-887d-4af0536bb8c1
 ---
 
 # AKS Hybrid and Edge data collection | Microsoft Learn

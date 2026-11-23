@@ -46,7 +46,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/75670257-a3f0-4627-9981-8046f99219e6
-platformId: c221b4b3-b507-395d-6813-e99c065e6392
+platformId: 34d0b5ea-e68e-4d3a-883a-1dfafa5bc14a
 ---
 
 # Create Kubernetes clusters using Bicep | Microsoft Learn

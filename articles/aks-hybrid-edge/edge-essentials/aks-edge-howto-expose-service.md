@@ -44,7 +44,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 3d88bc02-5168-1fd4-688f-7f0afbff70d3
+platformId: 70a3b559-8aff-8173-9b8a-198072063438
 ---
 
 # Expose services with AKS Edge Essentials | Microsoft Learn

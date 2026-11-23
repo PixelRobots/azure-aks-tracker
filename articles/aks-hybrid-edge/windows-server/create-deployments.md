@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: f01da2c5-92df-332d-c822-9f9f552a2cda
+platformId: d2996270-0169-bc80-bde3-0336a03b379c
 ---
 
 # Create deployments in AKS on Windows Server | Microsoft Learn

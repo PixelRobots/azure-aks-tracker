@@ -40,9 +40,11 @@ item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/ad-sso.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/b1cfdec6-b0c3-4209-818c-736879856e0e
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/37da4cc9-0cfc-42a9-ba5e-805706b01ef8
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/2d0723c1-cf38-4c30-ab3d-5df787b33270
-platformId: b816e9df-0fba-f07e-f212-2df2461c3183
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/3661fb96-d414-4a4e-b7ad-9370637790dd
+platformId: 3c572c7d-3bb0-467c-7679-be228927a6de
 ---
 
 # Use Active Directory single sign-on for secure connection to Kubernetes API server in AKS on Windows Server | Microsoft Learn

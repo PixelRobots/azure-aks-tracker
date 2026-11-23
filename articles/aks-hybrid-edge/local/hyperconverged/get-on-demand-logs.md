@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-platformId: c7c9b25f-fde8-83b2-49a4-904545d5eb19
+platformId: c78b4f7d-dfdb-57c8-43af-df2b1aedb210
 ---
 
 # Get on-demand logs for troubleshooting | Microsoft Learn

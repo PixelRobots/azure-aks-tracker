@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 34cfe2fb-bf77-771f-6679-cb1ff73dd65a
+platformId: ecc6f642-0faa-ad63-bace-cb2827ffb847
 ---
 
 # Use multiple load balancers | Microsoft Learn

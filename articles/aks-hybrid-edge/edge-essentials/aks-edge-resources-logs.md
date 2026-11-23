@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/6735bd7e-4f7b-457d-b58c-29e6f0198677
-platformId: 212c6b2c-726f-4642-3e43-9cc3cbb95e3c
+platformId: 8da72911-51b3-f04f-ec5f-9055e7485e19
 ---
 
 # Logs for AKS Edge Essentials | Microsoft Learn

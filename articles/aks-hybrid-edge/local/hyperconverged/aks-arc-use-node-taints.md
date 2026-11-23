@@ -42,7 +42,7 @@ cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 5509bde2-f777-4bd6-0041-d3f71aeaaaea
+platformId: 622aeb7d-49c4-4af2-a528-1d10a761b6b2
 ---
 
 # Manage node taints for an AKS cluster | Microsoft Learn

@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: a90cce7c-8eca-9821-c0d0-d534c380a4ce
+platformId: 7e513930-915a-7c27-ccba-b3c3d2b78728
 ---
 
 # Security concepts in AKS on Windows Server | Microsoft Learn

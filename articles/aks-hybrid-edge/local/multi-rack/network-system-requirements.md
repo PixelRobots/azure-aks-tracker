@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
-platformId: 6304ecde-9a8a-974b-18d2-c093395e7378
+platformId: 014b6d81-b32f-a717-83ed-2c1ef75c837e
 ---
 
 # Network requirements for AKS on Azure Local for multi-rack deployments | Microsoft Learn

@@ -36,7 +36,15 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/edge-essentials/aks-edge-howto-deploy-azure-iot.md
-platformId: bb855aec-a862-7cc4-cac2-b8716ec80246
+cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f4be6b8f-bf04-4542-b315-044af93b9ad3
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/c21d0a62-47cf-4452-bd24-e1ed14abbeda
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/767eab57-0d4b-481f-892e-db8274bd528d
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+platformId: 5dd47ef3-ae13-8406-b081-7bb90aa61125
 ---
 
 # Azure IoT Operations with AKS Edge Essentials | Microsoft Learn

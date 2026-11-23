@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 - https://authoring-docs-microsoft.poolparty.biz/devrel/6735bd7e-4f7b-457d-b58c-29e6f0198677
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
-platformId: 76153a38-17fb-f7b1-6430-808b4969e351
+platformId: 5cc0cb9a-4dcf-92a6-2e37-64c73612a794
 ---
 
 # Nested virtualization environment for AKS Edge Essentials | Microsoft Learn

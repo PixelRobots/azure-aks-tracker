@@ -36,7 +36,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/edge-essentials/aks-edge-hybrid-howto-update-offline.md
-platformId: b5df4f07-2f5a-05f9-b94d-98c64d6af165
+cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/c21d0a62-47cf-4452-bd24-e1ed14abbeda
+- https://authoring-docs-microsoft.poolparty.biz/devrel/5287f575-02f0-405f-92b7-800456526b0c
+spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
+- https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
+platformId: 9337a9ec-1a6a-08e3-a120-c1d41adca294
 ---
 
 # AKS Edge Essentials update (offline) | Microsoft Learn

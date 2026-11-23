@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: f3558cda-4218-d7cd-813d-dd28701e9a25
+platformId: 5112cbff-ec3d-294c-bf39-fd9bebcf800d
 ---
 
 # Troubleshooting overview for Azure Kubernetes Service on Windows Server | Microsoft Learn

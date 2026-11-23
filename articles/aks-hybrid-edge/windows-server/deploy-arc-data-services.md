@@ -46,7 +46,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
-platformId: 163f4f72-01b5-ac1b-b12b-8478d281424f
+platformId: 0c71cd51-57f5-4f26-556f-9db625716e47
 ---
 
 # Deploy Azure Arc-enabled data services in AKS on Windows Server | Microsoft Learn

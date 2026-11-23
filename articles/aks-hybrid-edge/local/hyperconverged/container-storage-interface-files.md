@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 5dfac7d6-ed4e-b9d5-bafb-61a4a1c3991b
+platformId: b3f36505-4f90-a7a1-e94b-f3a50dd3c921
 ---
 
 # Use Container Storage Interface (CSI) file drivers in AKS Hybrid and Edge | Microsoft Learn

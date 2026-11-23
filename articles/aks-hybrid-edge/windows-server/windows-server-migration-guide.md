@@ -41,7 +41,7 @@ cmProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/fc3f72c2-fb6f-4cea-95ee-b444e52254ee
 spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 467697a6-7c98-f5b4-cb35-d92cf2151199
+platformId: 739a4916-3c10-6bd2-18ac-9dc3567d8c01
 ---
 
 # Migrate from Windows Server 2019 to Windows Server 2022 | Microsoft Learn

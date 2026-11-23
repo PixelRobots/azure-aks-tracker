@@ -37,7 +37,15 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/hyperconverged/cluster-unhealthy-after-kubernetes-upgrade.md
-platformId: b4f2510b-b15d-4238-0fe2-1b387455e8e3
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/eea02214-631d-404a-92d1-5a3357c32a26
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/a3037e20-8a2d-41a9-b8fb-6371107a9f1d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/f42c31d7-eed9-43b7-9757-54caffb53cdc
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/87b08e6e-7379-41da-a73a-9b625a249c69
+platformId: 8581dc38-ab7f-e257-2363-d19c0152e6a0
 ---
 
 # AKS Cluster unhealthy after Kubernetes Upgrade | Microsoft Learn

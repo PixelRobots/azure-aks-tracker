@@ -38,13 +38,13 @@ item_type: Content
 source_path: articles/aks-hybrid-edge/local/multi-rack/deploy-load-balancer-cli.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f98c9a19-e481-4f15-8047-76b641e6ed57
-- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
+- https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
-- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
-platformId: e532985c-952d-177d-96f1-276a0c8fb387
+- https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
+platformId: e950894a-964c-c009-ece6-d443ee3e276f
 ---
 
 # Deploy extension for MetalLB for Azure Arc enabled Kubernetes clusters using Azure CLI | Microsoft Learn

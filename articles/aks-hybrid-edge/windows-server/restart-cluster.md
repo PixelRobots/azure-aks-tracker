@@ -40,7 +40,7 @@ cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 6247c475-be46-e608-8095-2a429b5cbc3e
+platformId: e94063f3-8830-e2b6-c6fd-e7fb4aef3e1e
 ---
 
 # Restart, remove, or reinstall Azure Kubernetes Service | Microsoft Learn

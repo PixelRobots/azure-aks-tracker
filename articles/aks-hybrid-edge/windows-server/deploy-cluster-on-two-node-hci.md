@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: df95ab74-c5a9-107a-a5ea-b24955193d8a
+platformId: e4cb63e2-22a2-944b-3854-ad5bd5e7096f
 ---
 
 # Availability scenarios for Azure Kubernetes Service (AKS) on Windows Server on two-node Azure Local | Microsoft Learn

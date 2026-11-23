@@ -42,7 +42,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: c008f13e-8567-f1a5-7c39-1930bb591230
+platformId: 7a5120e7-cff4-4e6a-9a81-f5eb9f8dc768
 ---
 
 # Use Container Storage Interface (CSI) file drivers in AKS on Windows Server | Microsoft Learn

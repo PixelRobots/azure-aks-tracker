@@ -38,7 +38,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/hyperconverged/configure-ssh-keys.md
-platformId: 5bdf5093-f0bb-1d6e-48f9-55052112ca9a
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://authoring-docs-microsoft.poolparty.biz/devrel/fcc3cd4a-59ea-47a2-9cc1-784142a5a25d
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d7a55faf-a992-4e27-aa3a-eadc9830e778
+platformId: 0ccdd617-963b-d3e0-3fcf-464405b152fd
 ---
 
 # Configure SSH keys for a cluster in AKS Hybrid and Edge | Microsoft Learn

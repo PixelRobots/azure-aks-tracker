@@ -42,7 +42,7 @@ cmProducts:
 spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 072b177e-73d7-34c2-10e7-1ef8320067dd
+platformId: 79bbe073-237a-3e07-1bbb-0a33ca33693c
 ---
 
 # AKS Edge Essentials full Kubernetes | Microsoft Learn

@@ -44,7 +44,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/6735bd7e-4f7b-457d-b58c-29e6f0198677
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: dd81d6ea-78bb-300b-d763-0b9460251835
+platformId: 64eb0ee6-0a43-6704-d3bd-43056daee8c0
 ---
 
 # AKS Edge Essentials clusters and nodes | Microsoft Learn

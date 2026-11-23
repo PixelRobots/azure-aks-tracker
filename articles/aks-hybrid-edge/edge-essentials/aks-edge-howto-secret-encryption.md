@@ -43,7 +43,7 @@ cmProducts:
 spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 1eded6d5-3a07-0854-2ef6-fded44dddd2f
+platformId: af81df62-5bd4-57d5-be47-309dc28aa317
 ---
 
 # Validate and Troubleshoot secret encryption on an AKS Edge Essentials cluster | Microsoft Learn

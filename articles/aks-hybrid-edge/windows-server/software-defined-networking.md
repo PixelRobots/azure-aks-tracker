@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 2dd4b1c2-089f-8a33-f511-87a715310bf0
+platformId: 8f64ccb6-0173-775d-74ab-b9ea960f56a1
 ---
 
 # How to use AKS on Windows Server with SDN and virtual networking infrastructure | Microsoft Learn

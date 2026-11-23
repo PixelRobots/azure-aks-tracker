@@ -40,8 +40,10 @@ monikers: []
 item_type: Content
 source_path: articles/aks/aks-desktop-projects.md
 cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/64b65f6c-101f-411a-9b83-9f577fab52d0
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/1a667fd1-8145-4b11-af0f-9f5de205a6e5
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 platformId: 34af5ec4-8bfe-f9a7-df6e-8b9ae68e1e98
 ---

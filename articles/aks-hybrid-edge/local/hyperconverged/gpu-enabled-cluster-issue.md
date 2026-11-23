@@ -41,7 +41,7 @@ cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 37dfee3f-8271-7fbd-713a-0e5ff727d9d9
+platformId: ab63766f-5b6f-078c-d933-a65ab9823109
 ---
 
 # Troubleshoot issue in which AKS cluster creation fails | Microsoft Learn

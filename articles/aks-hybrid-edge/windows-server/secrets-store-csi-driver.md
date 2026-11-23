@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/02662057-0b9b-40f4-a3c7-537125b6d283
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 210f7d4a-5bdc-f1b9-ab95-fcc82b662231
+platformId: 77318c25-5b13-9fd5-194b-62dff6cf7318
 ---
 
 # Kubernetes Secrets Store CSI driver integration | Microsoft Learn

@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: dc5999ae-f44f-1222-f738-1918802aa3cb
+platformId: 75c6b599-dd3a-6ee0-d405-271d5735e4e8
 ---
 
 # Upgrade the AKS host in AKS on Windows Server using PowerShell | Microsoft Learn

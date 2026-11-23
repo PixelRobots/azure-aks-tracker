@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f42c31d7-eed9-43b7-9757-54caffb53cdc
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: f814dd79-fedc-e9f8-6173-4d48c2a71c38
+platformId: 3561dd0d-7a70-3a63-8a51-c6fa2d80eca3
 ---
 
 # Azure policy guidance for AKS on Windows Server | Microsoft Learn

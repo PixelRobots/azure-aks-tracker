@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/12e559b9-eaf6-4aee-9af7-62334e15f863
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 12cfd9eb-a081-aa61-efc7-12de755f5edf
+platformId: 9aa2f742-4161-a705-64a9-07f5dcbf0f2b
 ---
 
 # Monitor Kubernetes object events in AKS Hybrid and Edge | Microsoft Learn

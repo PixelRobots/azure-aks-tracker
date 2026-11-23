@@ -37,10 +37,14 @@ monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/multi-rack/use-azure-rbac.md
 cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/8046779e-b7d2-4c26-a33a-778fd8bd444c
 - https://authoring-docs-microsoft.poolparty.biz/devrel/68ec7f3a-2bc6-459f-b959-19beb729907d
+- https://authoring-docs-microsoft.poolparty.biz/devrel/beac614b-f66d-40ed-a947-3996de709333
 spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/ce51d519-8846-4bc1-819c-a72fbd6651b2
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-platformId: f0f1e77f-0503-a731-4667-fbc1f478a211
+- https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
+platformId: 2dcdaff0-b74a-72f5-97db-354833e76f68
 ---
 
 # Use Azure RBAC for AKS on Azure Local for multi-rack deployments | Microsoft Learn

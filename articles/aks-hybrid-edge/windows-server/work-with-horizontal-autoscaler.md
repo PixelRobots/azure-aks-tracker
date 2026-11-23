@@ -39,12 +39,14 @@ monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/work-with-horizontal-autoscaler.md
 cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/5cf46315-b33f-4e99-8224-a1592697eff9
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/fc3f72c2-fb6f-4cea-95ee-b444e52254ee
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/715d24c3-3683-4219-82c5-1e3c813fb7fc
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: d9729435-903f-f17a-a102-11d4578152f8
+platformId: a3f4d69f-2305-02f5-234e-5dc3f077ecdb
 ---
 
 # Use PowerShell for cluster autoscaling in AKS on Windows Server | Microsoft Learn

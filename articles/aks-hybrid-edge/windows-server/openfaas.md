@@ -45,7 +45,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/60bfc045-f127-4841-9d00-ea35495a5800
-platformId: 8396ad35-c611-9944-2017-7f07bf37dd99
+platformId: 3508aa80-e38d-19fa-e9b2-801eb311c2e0
 ---
 
 # Use OpenFaaS with AKS on Windows Server | Microsoft Learn

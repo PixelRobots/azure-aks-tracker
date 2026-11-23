@@ -44,7 +44,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/3904bce4-d817-48cf-85fd-b6146fca83b7
-platformId: 20623e53-6999-9f4a-aebb-064463c24529
+platformId: 1966f2bc-986f-8bb6-0b65-ca721f8433a0
 ---
 
 # AKS Edge Essentials system requirements | Microsoft Learn

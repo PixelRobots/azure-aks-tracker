@@ -42,7 +42,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
-platformId: 1428809b-44b3-3eba-91e0-5a7db0522607
+platformId: 2c997576-9b26-c4a7-69df-9124e34c67d9
 ---
 
 # Scale requirements for Azure Kubernetes Service (AKS) on Azure Local, Rack Scale | Microsoft Learn

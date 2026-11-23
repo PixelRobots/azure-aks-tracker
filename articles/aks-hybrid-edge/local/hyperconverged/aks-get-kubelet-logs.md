@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-platformId: aa4d9ec0-17c0-4082-3ded-98b7244233ad
+platformId: 40a0f3f8-ef57-34d8-7ce4-5134e568572b
 ---
 
 # Get kubelet logs from cluster nodes | Microsoft Learn

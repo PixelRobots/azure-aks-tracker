@@ -43,7 +43,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 84351ea8-241c-0915-df45-9c0e9daa76f2
+platformId: 2289f2b1-cb5f-b24c-228b-d0b8ce8da855
 ---
 
 # Azure Kubernetes Service (AKS) on Windows Server pricing details | Microsoft Learn

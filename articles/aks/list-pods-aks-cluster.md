@@ -40,6 +40,10 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks/list-pods-aks-cluster.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 platformId: 66522411-c12a-7f81-dcf0-d2c4d54cdd3e
 ---
 

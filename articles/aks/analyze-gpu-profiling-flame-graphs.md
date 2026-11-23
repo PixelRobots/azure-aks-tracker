@@ -39,6 +39,12 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks/analyze-gpu-profiling-flame-graphs.md
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/540ac133-a371-4dbb-8f94-28d6cc77a70b
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/60bfc045-f127-4841-9d00-ea35495a5800
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 platformId: 93c1e522-418d-08d3-bfb2-945bdecc0f6d
 ---
 

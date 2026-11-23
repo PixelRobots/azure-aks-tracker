@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 85bd0e11-de6f-d47e-45c6-1136ebeebf67
+platformId: 7af8cbd4-ac9c-fd8a-bca6-6ffd032cd93e
 ---
 
 # Before you begin - uninstall the AKS cluster provisioning preview | Microsoft Learn

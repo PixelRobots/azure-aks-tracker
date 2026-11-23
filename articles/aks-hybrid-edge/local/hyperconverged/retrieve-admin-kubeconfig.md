@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
-platformId: 6ce7fd6e-2f34-fdef-52a9-c814d7ce1bd4
+platformId: 79659288-2ccb-a254-ec91-802a71c72d5d
 ---
 
 # Retrieve certificate-based admin kubeconfig in AKS Hybrid and Edge | Microsoft Learn

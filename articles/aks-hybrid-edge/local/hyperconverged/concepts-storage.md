@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 8225d336-5022-3c22-476d-06996aafebea
+platformId: ea685122-4087-d6ae-9aab-dee18f297a9e
 ---
 
 # Concepts - Storage options for applications in AKS Hybrid and Edge | Microsoft Learn

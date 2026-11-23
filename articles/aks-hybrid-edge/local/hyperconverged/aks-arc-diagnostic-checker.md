@@ -41,7 +41,7 @@ cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 30bfebe7-4aaa-6200-2c75-df5ab7b6e5e0
+platformId: bed49903-84dc-a5c0-8526-f52f16fd77b2
 ---
 
 # Use diagnostic checker to identify common causes for failures (preview) | Microsoft Learn

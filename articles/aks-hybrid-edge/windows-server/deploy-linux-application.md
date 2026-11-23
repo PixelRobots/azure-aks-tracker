@@ -46,7 +46,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-platformId: 5d2a7b38-e6bd-189f-db94-3a9e1a78accd
+platformId: 08e68b6c-3f09-4d57-7f79-d6794e912386
 ---
 
 # Deploy a Linux app in AKS on Windows Server | Microsoft Learn

@@ -46,7 +46,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
-platformId: 25afa890-8827-2a55-2cb7-48c9d304c813
+platformId: c4ac5b5b-adbc-c5ad-3a46-0bcc7c9bec8a
 ---
 
 # Create Kubernetes clusters using Azure CLI | Microsoft Learn

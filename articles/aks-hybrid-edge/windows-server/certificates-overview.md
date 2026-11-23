@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 66817a1d-e065-5d0a-dc99-5e5ca3a7c520
+platformId: c9f43345-2fa2-99ac-2fb3-22ca4e61a351
 ---
 
 # Overview of certificate management in AKS on Windows Server | Microsoft Learn

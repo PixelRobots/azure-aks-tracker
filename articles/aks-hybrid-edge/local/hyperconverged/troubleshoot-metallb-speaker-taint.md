@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/32516e21-6665-416f-be21-413febe47d91
-platformId: 91372372-61db-bb87-37d7-d151ffce3176
+platformId: 83ca292a-2bc2-3603-7481-5243acf8135a
 ---
 
 # MetalLB speaker pods don't run on nodes tainted with CriticalAddonsOnly=true:NoSchedule | Microsoft Learn

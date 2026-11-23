@@ -44,7 +44,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 1e882150-b242-9f42-22f9-4aa6726fc02f
+platformId: 600fefd1-cff3-d106-cdce-bd42ceba1a39
 ---
 
 # Uninstall AKS Edge Essentials | Microsoft Learn

@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 74cf3580-61a8-8728-e6ea-29d0cb83bff4
+platformId: 77b5d48d-d734-1ffc-16da-58934b51e43d
 ---
 
 # Create and use a custom load balancer with Azure Kubernetes Service on Windows Server | Microsoft Learn

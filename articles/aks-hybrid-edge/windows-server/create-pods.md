@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 7868fa0c-f67f-3e41-68ce-6f1ac3c60b89
+platformId: eea32ca1-ece7-4cc2-3ce6-328a4c0c66a3
 ---
 
 # Create and delete pods in AKS on Windows Server | Microsoft Learn

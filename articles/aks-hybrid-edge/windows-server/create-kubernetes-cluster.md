@@ -46,7 +46,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/67b2ba1a-6f74-4044-a48a-f0f8ad076b8f
-platformId: fbf85151-aab5-59a9-4225-30ce2fc57e77
+platformId: 08744893-2379-7f37-cfa8-7e65a04f4dd1
 ---
 
 # Quickstart to create a local Kubernetes cluster using Windows Admin Center | Microsoft Learn

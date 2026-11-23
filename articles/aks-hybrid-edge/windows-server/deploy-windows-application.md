@@ -46,7 +46,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/43b2e5aa-8a6d-4de2-a252-692232e5edc8
-platformId: 0a2a8e66-ec68-10bf-b9b6-fb3bb739c04a
+platformId: ef1ba1d2-a316-7d61-2f2a-7ce440076ee5
 ---
 
 # Deploy Windows .NET applications | Microsoft Learn

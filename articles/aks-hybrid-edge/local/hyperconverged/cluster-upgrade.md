@@ -41,7 +41,7 @@ cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 38cf3985-5acc-6ce5-0018-696da1f3aa2d
+platformId: 2aacefff-65e7-d130-a016-fbb347289d03
 ---
 
 # Upgrade an Azure Kubernetes Service (AKS) cluster | Microsoft Learn

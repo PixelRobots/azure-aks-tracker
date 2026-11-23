@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 0688ad11-5f1f-21d6-d366-6c49e977bcc5
+platformId: b9347d49-552e-1f8a-1b3d-3039e57a6508
 ---
 
 # Manage node pools for a cluster in AKS on Windows Server | Microsoft Learn

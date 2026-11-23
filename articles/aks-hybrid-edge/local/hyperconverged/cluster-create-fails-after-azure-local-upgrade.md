@@ -37,7 +37,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/hyperconverged/cluster-create-fails-after-azure-local-upgrade.md
-platformId: 7b9e3f13-19db-ad00-860f-e07d7bdd31bf
+cmProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/289b8734-3abd-4162-bc19-e661c3f4c940
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: c6ad3c2c-e913-bc7d-f24a-cc7fd6088b85
 ---
 
 # AKS cluster creation fails on Azure Local 2511 or 2512 after upgrade from 2510 | Microsoft Learn

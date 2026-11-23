@@ -42,7 +42,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
-platformId: 3fe75f96-9a3a-72d5-890b-5be142055067
+platformId: 929f32dc-85c8-0e09-e31e-63d05be485a3
 ---
 
 # System requirements for AKS on Azure Local | Microsoft Learn

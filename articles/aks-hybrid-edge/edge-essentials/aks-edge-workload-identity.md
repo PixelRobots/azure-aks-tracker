@@ -45,7 +45,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
-platformId: 7ae7fd1f-5f10-d0bb-af98-e1e178802a36
+platformId: 72e8def8-71f2-c8d6-dd10-955690986648
 ---
 
 # Configure Workload Identity on an AKS Edge Essentials cluster (preview) | Microsoft Learn

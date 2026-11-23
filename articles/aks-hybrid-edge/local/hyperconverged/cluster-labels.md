@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 71e19fa6-b26c-78e7-4d5e-76a9fda3152c
+platformId: dba855d1-efa4-0523-1452-cc40e7f672e7
 ---
 
 # Use cluster labels in AKS Hybrid and Edge | Microsoft Learn

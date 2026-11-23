@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
-platformId: fed6db0d-04f5-4d7b-aa0f-7cf6059d45b3
+platformId: 8c178837-cfbc-02b6-36a7-170cb9e03184
 ---
 
 # Quickstart for AKS Edge Essentials | Microsoft Learn

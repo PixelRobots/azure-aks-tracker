@@ -45,7 +45,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9a7f703b-30bb-4d62-9eb4-97213f571849
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: 69d82dbd-d226-6a22-0e40-52c51fb5f798
+platformId: cf1420b3-9f11-0c32-9ad5-4e621e2fd377
 ---
 
 # Node virtual machine networking in AKS on Windows Server | Microsoft Learn

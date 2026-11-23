@@ -36,7 +36,13 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/local/multi-rack/deploy-gpu-node-pool.md
-platformId: 8c989168-1a6c-4f24-0bbf-f3d60d7bed68
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/289b8734-3abd-4162-bc19-e661c3f4c940
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+- https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/6a94795e-9024-410d-b38e-b67941440893
+platformId: fcb77d37-187f-3147-85d7-2c8213f104e9
 ---
 
 # Use GPUs for compute-intensive workloads in AKS on Azure Local for multi-rack deployments | Microsoft Learn

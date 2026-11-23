@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: b975b5ae-d71a-d318-492c-dcdf3ed0b9a9
+platformId: 6a690b33-730c-8ec7-4d93-cb0deabb77cd
 ---
 
 # Upgrade the Kubernetes version of Azure Kubernetes Service workload clusters with Windows Admin Center | Microsoft Learn

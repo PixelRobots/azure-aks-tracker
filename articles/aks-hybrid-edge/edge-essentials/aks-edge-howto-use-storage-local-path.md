@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
-platformId: 04deef6c-a2f0-ffc5-81ee-8eb674acf44a
+platformId: 585a4f55-2d80-490d-eaf2-cd3c42517cd9
 ---
 
 # Local Path Provisioner on AKS Edge | Microsoft Learn

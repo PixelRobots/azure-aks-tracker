@@ -38,7 +38,11 @@ moniker_range_name:
 monikers: []
 item_type: Content
 source_path: articles/aks-hybrid-edge/windows-server/support-policies.md
-platformId: a25c1762-7f21-cf4f-6a92-68447c68f2d4
+cmProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/d44a5346-5de4-439c-b804-7b2a536cbb55
+spProducts:
+- https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
+platformId: 334ef347-a19a-ab06-87c2-26721725e7cd
 ---
 
 # Support policies for AKS on Windows Server | Microsoft Learn

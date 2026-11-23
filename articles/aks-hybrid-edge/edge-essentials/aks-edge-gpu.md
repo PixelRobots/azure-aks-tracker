@@ -46,7 +46,7 @@ spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
-platformId: 03e76818-6a40-7112-2b7a-c1e677da5216
+platformId: 8f654a0c-a201-efd5-0437-ef3747b3c814
 ---
 
 # GPU acceleration for AKS Edge Essentials (preview) | Microsoft Learn

@@ -43,7 +43,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: 7180d154-5c50-6b4e-5ba1-de40dcd65c68
+platformId: 9c8f30c1-e9f1-9dbe-36d0-478035d0047a
 ---
 
 # Troubleshoot the "Failed to either reach kube-apiserver or control plane IP of Kubernetes cluster from Arc Resource Bridge IP" error | Microsoft Learn

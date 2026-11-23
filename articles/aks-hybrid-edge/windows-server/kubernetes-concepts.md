@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f12cf087-582d-48ac-a085-0c19adf1e391
-platformId: dbdc5173-f6a9-b389-46a7-e6546570a0a2
+platformId: 791b9cc3-1e1f-f9d4-5af0-25e38a66b6bb
 ---
 
 # Kubernetes cluster architecture for AKS on Windows Server | Microsoft Learn

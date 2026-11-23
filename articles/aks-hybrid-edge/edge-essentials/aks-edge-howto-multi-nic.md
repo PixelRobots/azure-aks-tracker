@@ -40,7 +40,7 @@ cmProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/c21d0a62-47cf-4452-bd24-e1ed14abbeda
 spProducts:
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
-platformId: 41709080-eb68-d2cf-1a9b-0c8a1dd650bb
+platformId: 43b268ed-6a5f-42fe-9149-dfdee7a68e46
 ---
 
 # Configure multiple NICs for AKS Edge Essentials | Microsoft Learn

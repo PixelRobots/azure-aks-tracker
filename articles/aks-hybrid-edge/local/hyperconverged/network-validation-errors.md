@@ -44,7 +44,7 @@ cmProducts:
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/da41a22b-b7a0-42d3-9c35-50da1c2b7b87
 - https://authoring-docs-microsoft.poolparty.biz/devrel/06e86142-34c2-4b94-ab9c-9477c21f7152
-platformId: b42c8608-562e-07c1-70b9-7e07335e87aa
+platformId: edb8e1fe-7d93-acc6-8f2f-689cdeb48fa8
 ---
 
 # Troubleshoot network validation errors | Microsoft Learn

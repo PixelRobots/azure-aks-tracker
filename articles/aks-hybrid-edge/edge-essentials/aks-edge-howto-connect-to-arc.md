@@ -44,7 +44,7 @@ spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/90370425-aca4-4a39-9533-d52e5e002a5d
 - https://microsoft-devrel.poolparty.biz/DevRelOfferingOntology/f43eaf81-15c1-41e2-95b2-89fb1560c563
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9da05372-4706-43ec-a899-f436adab380d
-platformId: 752a2455-8722-17ae-50aa-df3c1c0bc449
+platformId: cace4579-8069-6fe8-7798-1af582bb1df1
 ---
 
 # Arc-connected AKS Edge Essentials | Microsoft Learn
