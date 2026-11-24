@@ -24,7 +24,7 @@ author: schaffererin
 ms.author: schaffererin
 ms.custom: linux-related-content
 ms.topic: overview
-ms.date: 2026-04-28T00:00:00.0000000Z
+ms.date: 2026-11-23T00:00:00.0000000Z
 locale: en-us
 document_id: 2fbac03d-b96f-6188-b3b3-0c29e123cca6
 document_version_independent_id: 1617099f-9818-f91c-9829-e8c1f0b456a4
@@ -64,7 +64,7 @@ ACL is a secure, minimal OS that includes only the critical components required 
 
 | Benefit | Description |
 | --- | --- |
-| **Layered OS security** | ACL combines an immutable OS, mandatory access controls, verified boot, and trusted build processes to protect nodes from boot through runtime. For details, see [ACL security features](/en-us/articles/azure-linux/azure-container-linux-security-features.md). |
+| **Layered OS security** | ACL combines an immutable OS, mandatory access controls, verified boot, and trusted build processes to protect nodes from boot through runtime. For details, see [ACL security features](/en-us/azure/azure-linux/azure-container-linux-security-features). |
 | **Minimal container host** | ACL includes only the components required to run containers, reducing OS complexity and simplifying node management. |
 | **Consistent node servicing** | Weekly image-based updates provide security patches and bug fixes while keeping the OS version consistent across each node image. |
 | **Open-source transparency** | Flatcar as well as many of the underlying technologies (dm-verity and SELinux) are upstream or open source, and Microsoft has tooling and contributions to support these features. |
@@ -75,6 +75,7 @@ ACL supports the following AKS capabilities:
 
 - **NVIDIA GPU node support**: ACL supports NVIDIA GPU-enabled node pools on AMD64 architectures, allowing you to run high-performance computing (HPC) and AI/ML workloads on AKS with a hardened, container-optimized OS. ACL doesn't support ARM64 architectures for GPU-enabled node pools.
 - **FIPS**: ACL supports FIPS-enabled node pools.
+- **Artifact Streaming**: ACL supports [Artifact Streaming](artifact-streaming).
 - **AMD64 and ARM64 architecture support**: ACL is available for both AMD64 and ARM64 architectures on AKS.
 - **[Node auto-provisioning](/en-us/azure/aks/node-auto-provisioning)**: ACL supports node auto-provisioning (NAP).
 - **[Confidential VM](/en-us/azure/aks/use-cvm)**: ACL is available as a confidential VM (CVM) image for AKS, with a FIPS-enabled option.

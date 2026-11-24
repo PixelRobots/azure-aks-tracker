@@ -23,7 +23,7 @@ ms.service: azure-kubernetes-service
 description: Learn how to capture pod state for faster startup on Azure Kubernetes Service (AKS) with the Pod snapshot cluster extension.
 author: wangyira
 ms.author: wangamanda
-ms.date: 2026-11-13T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
 ms.topic: how-to
 ms.custom: references_regions
 zone_pivot_groups: aks-agent-sandbox-runtime
@@ -93,8 +93,7 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 
 - Use an AKS cluster running Kubernetes version 1.35 or later with Pod sandboxing enabled and Kata VM isolation v2 configured. A cluster without Pod sandboxing isn't sufficient. For general background, see [Pod sandboxing](use-pod-sandboxing) and [Pod sandboxing considerations](considerations-pod-sandboxing). Verify Kata v2 support by following the checks in this article before installing the extension.
 - A Bash environment with [Azure CLI](/en-us/cli/azure/install-azure-cli) version 2.85.0 or later, `kubectl`, and `envsubst` installed. The `envsubst` command is provided by GNU gettext. Use Azure Cloud Shell in Bash mode or a local Bash environment on Linux, macOS, or Windows Subsystem for Linux (WSL).
-- Kata VM isolation v2 runtime supports only v6 VM SKUs in these families: Dasv6, Dadsv6, Dalsv6, Daldsv6, Easv6, Eadsv6, Falsv6, Fasv6, and Famsv6. To request quota for your AKS cluster, follow the [AKS quota request guidance](quotas-skus-regions#quota-limits-on-aks-managed-clusters).
-- Two Ready nodes with the same supported VM SKU for this walkthrough. Restore requires the exact source VM SKU.
+- Two Ready nodes with the same VM SKU for this walkthrough. Restore requires the exact source VM SKU.
 - An available system node pool for the snapshot access broker. The snapshot access broker is a component that the pod snapshot cluster extension runs in the `pod-snapshot-system` namespace. It authenticates to Azure Blob Storage by using workload identity and gives node workers short-lived access scoped to their operations.
 - Permission to create the storage account, managed identity, and cluster extension; assign Azure roles; and manage the Kubernetes resources and restore permissions in the example namespace.
 - An AKS OIDC issuer and Microsoft Entra Workload ID enabled for the broker's workload identity. For an existing cluster, follow [Enable OIDC issuer and Microsoft Entra Workload ID on an AKS cluster](workload-identity-deploy-cluster#enable-oidc-issuer-and-microsoft-entra-workload-id-on-an-aks-cluster) and select **Update an existing AKS cluster** before continuing.
@@ -104,7 +103,7 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 
 ## Limitations
 
-- Use a region that has both AKS release `1025` (see the [AKS Release Tracker](https://releases.aks.azure.com/AKSRelease)) and Azure Linux node image `202610.30.1` or newer (see the [Azure Linux Node Images Release Tracker](https://releases.aks.azure.com/AzureLinux)).
+- Use a region that has both AKS release `1025` (see the [AKS Release Tracker](https://releases.aks.azure.com/AKSRelease)) and Azure Linux node image `202611.13.0` or newer (see the [Azure Linux Node Images Release Tracker](https://releases.aks.azure.com/AzureLinux)).
 - Source and destination VM SKUs must match exactly. The examples don't establish support for restore across architectures, regions, or unqualified runtime versions.
 - Snapshot and restore are validated with Kata guests configured with up to 32 GiB of memory.
 - Restore uses the standard 32 MiB memory overhead of the kata-vm-isolation-v2 RuntimeClass.
@@ -166,7 +165,7 @@ Run all commands in this article in the same Bash session so exported variables 
     Use an image that your Kata nodes can pull, and configure image pull credentials if required. Use the same immutable image reference throughout capture and restore. Your workload doesn't need a specific HTTP endpoint to use Pod snapshot.
 
     If you already have a compatible cluster, skip the next three steps.
-3. For a new cluster, create a resource group in `$LOCATION`. Use a region with AKS release `1025` and Azure Linux node image `202610.30.1` or newer, as described in the limitations. Confirm that `Standard_D4as_v6` is available and that your subscription has sufficient quota in that region.
+3. For a new cluster, create a resource group in `$LOCATION`. Use a region with AKS release `1025` and Azure Linux node image `202611.13.0` or newer, as described in the limitations. Confirm that `Standard_D4as_v6` is available and that your subscription has sufficient quota in that region.
 
     ```azurecli
     az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
@@ -190,7 +189,7 @@ Run all commands in this article in the same Bash session so exported variables 
       --enable-workload-identity \
       --generate-ssh-keys
     ```
-5. Add a User node pool with Pod sandboxing enabled. The two nodes use the same supported v6 VM SKU, `Standard_D4as_v6`. Restore requires the exact source VM SKU. Alternatively, pod sandboxing supports v6 VM SKUs in these families: Dasv6, Dadsv6, Dalsv6, Daldsv6, Easv6, Eadsv6, Falsv6, Fasv6, and Famsv6.
+5. Add a User node pool with Pod sandboxing enabled. The two nodes use the same VM SKU, `Standard_D4as_v6`. Restore requires the exact source VM SKU.
 
     ```azurecli
     az aks nodepool add \
@@ -236,7 +235,7 @@ Run all commands in this article in the same Bash session so exported variables 
       --output table
     ```
 
-    The output must show `KataVmIsolation` and `AzureLinux`. Confirm that the VM size meets the Kata VM isolation v2 prerequisites. These properties alone don't distinguish Kata VM isolation v2 from the earlier Kata runtime.
+    The output must show `KataVmIsolation` and `AzureLinux`. These properties alone don't distinguish Kata VM isolation v2 from the earlier Kata runtime.
 9. Verify the RuntimeClass handler and confirm that every node in the pool supports Kata v2 before waiting for readiness.
 
     ```bash

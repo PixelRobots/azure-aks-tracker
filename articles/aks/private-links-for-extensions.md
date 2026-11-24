@@ -545,4 +545,4 @@ Expected results:
 
 - [Tutorial: Deploy applications by using GitOps with Flux v2](/en-us/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2)
 - [Private endpoints overview](/en-us/azure/private-link/private-endpoint-overview)
-- [Create or update a private AKS cluster](/en-us/azure/aks/private-clusters)
+- [Create or update a private AKS cluster](private-clusters)

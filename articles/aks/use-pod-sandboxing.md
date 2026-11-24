@@ -25,7 +25,7 @@ ms.topic: how-to
 ms.subservice: aks-security
 ms.custom: devx-track-azurecli, build-2023
 zone_pivot_groups: pod-sandboxing-runtime-class
-ms.date: 2026-11-17T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
 author: allyford
 ms.author: allyford
 ai-usage: ai-assisted
@@ -90,13 +90,14 @@ The following constraints apply to Pod sandboxing with `kata-vm-isolation`:
 
 The following constraints apply to Pod sandboxing with `kata-vm-isolation-v2`:
 
-- `kata-vm-isolation-v2` is in preview. You must register the `KataVMIsolationV2Preview` feature flag and use Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
+- `kata-vm-isolation-v2` is in preview. You must register the `KataVMIsolationV2Preview` feature flag and use Azure Linux node image version `202611.13.0` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
 - Kata containers might not reach the IOPS performance limits that traditional containers can reach on Azure Files and high-performance local SSD.
 - [Microsoft Defender for Containers](/en-us/azure/defender-for-cloud/defender-for-containers-introduction) doesn't support assessing Kata runtime pods.
 - [Kata host-network access](https://github.com/kata-containers/kata-containers/blob/main/docs/Limitations.md#host-network) isn't supported. You can't directly access host networking configuration from within the pod VM.
 - Runtime-class migration is an explicit workload change. Don't assume behavior is identical to `kata-vm-isolation` across all workload and storage patterns.
 - For `emptyDir` volumes, explicitly set `medium: Memory` and `sizeLimit` in the pod spec. For more information, see [Pod sandboxing considerations](considerations-pod-sandboxing).
-- CPU and memory sizing behavior can differ from `kata-vm-isolation` and `kata-vm-isolation-v2` when you initialize the template VM with the DaemonSet in Create sandboxed pods from a paused, preinitialized template VM (`kata-vm-isolation-v2` preview). After the template is initialized, each v2 pod receives a 2 GiB, 2 vCPU guest regardless of pod limits. For memory sizing and overhead details, see RuntimeClass memory overhead.
+- Pod VM sizing depends on whether you initialize the template VM with the DaemonSet in Create sandboxed pods from a paused, preinitialized template VM (`kata-vm-isolation-v2` preview). Without a template, Kata sizes each pod VM at boot to the pod memory limit, or 2 GiB if no limit is set. With a template, each v2 pod receives a fixed 2-GiB, 2-vCPU guest regardless of pod limits. For details, see [Pod VM memory size for `kata-vm-isolation-v2`](considerations-pod-sandboxing#pod-vm-memory-size-for-kata-vm-isolation-v2).
+- You must register the `KataVMIsolationV2Preview` feature flag *before* you create the cluster or Pod sandboxing node pool. Registering the feature flag doesn't enable `kata-vm-isolation-v2` on existing clusters or node pools, and running `az aks update` or upgrading the node image doesn't apply it. To use v2 with an existing cluster, add a new Pod sandboxing node pool after registration completes.
 - Pod sandboxing is supported only on Azure Linux. Ubuntu, Windows, and Azure Container Linux aren't supported. For more information, see [Azure Linux container host for AKS](use-azure-linux).
 - You can't enable [Federal Information Processing Standard (FIPS)](enable-fips-nodes) or [Trusted Launch](use-trusted-launch) on a node pool that uses Pod sandboxing.
 - Arm64 architecture isn't supported on a node pool that uses Pod sandboxing.
@@ -125,10 +126,13 @@ Before you use `kata-vm-isolation-v2`, confirm all of the following prerequisite
 - `kubectl` is installed and configured for your cluster.
 - The `KataVMIsolationV2Preview` feature is registered in your subscription.
 - The cluster runs Kubernetes version 1.34.0 or later.
-- The target Pod sandboxing node pool uses Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
-- `kata-vm-isolation-v2` supports v6 and v7 VM SKUs in these families: Dasv6, Dadsv6, Dalsv6, Daldsv6, Easv6, Eadsv6, Falsv6, Fasv6, and Famsv6.
+- The target Pod sandboxing node pool uses Azure Linux node image version `202611.13.0` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
 
 ### Register the `KataVMIsolationV2Preview` feature flag
+
+Important
+
+Complete feature registration before you create the cluster or Pod sandboxing node pool. Clusters and node pools that exist before registration don't get `kata-vm-isolation-v2`, even after you run `az aks update`. For an existing cluster, add a new Pod sandboxing node pool after the feature shows *Registered*.
 
 1. Register the `KataVMIsolationV2Preview` feature flag by using the [`az feature register`](/en-us/cli/azure/feature#az-feature-register) command.
 
@@ -428,7 +432,7 @@ Use the following steps to run a new workload with `runtimeClassName: kata-vm-is
 
 ### Deploy an application with the Kata runtime (`kata-vm-isolation-v2`)
 
-1. Confirm your target Pod sandboxing node pool is eligible (Kubernetes 1.34.0 or later and Azure Linux node image version `202610.30.1` or later).
+1. Confirm your target Pod sandboxing node pool is eligible (Kubernetes 1.34.0 or later and Azure Linux node image version `202611.13.0` or later).
 2. Verify the runtime class and node label by using the steps in Verify the runtime class and node label.
 3. Create a file named `kata-v2-app.yaml` with the following manifest.
 
@@ -465,9 +469,9 @@ If you created a new cluster with a node pool that supports `--workload-runtime 
 Before you use this path, confirm the following limitations and requirements:
 
 - The workload uses `runtimeClassName: kata-vm-isolation-v2`.
-- The target node pool runs Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
+- The target node pool runs Azure Linux node image version `202611.13.0` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
 - You initialize the template VM on each eligible node.
-- In the current preview, the template path can use a fixed 2-GiB memory and 2-vCPU guest VM size after template initialization. Keep pod requests and limits aligned, and validate scheduling behavior for your workload.
+- After template initialization, each pod VM uses a fixed 2-GiB memory and 2-vCPU guest size, regardless of pod limits. The template path can't resize pod VMs because resizing requires memory hot-plug, which is incompatible with the copy-on-write snapshot and restore path. If your workload needs a different pod VM size, don't initialize the template on that node pool; without a template, Kata sizes each pod VM at boot to the pod memory limit. For examples, see [Pod VM memory size for `kata-vm-isolation-v2`](considerations-pod-sandboxing#pod-vm-memory-size-for-kata-vm-isolation-v2).
 
 Important
 
@@ -572,7 +576,7 @@ spec:
 
 Before you migrate, review the [runtime-class migration considerations](considerations-pod-sandboxing#runtime-class-migration-guidance-v1-to-v2-preview) and v2 limitations. Use these steps to migrate an existing workload from `kata-vm-isolation` (v1) to `kata-vm-isolation-v2` (preview):
 
-1. Complete the v2 preview prerequisites and feature registration. If your existing node pool isn't using a supported VM size and node image, and if you created it before feature registration, you might need to recreate it.
+1. Complete the v2 preview prerequisites and feature registration. Node pools created before feature registration don't support `kata-vm-isolation-v2`. If your existing Pod sandboxing node pool was created before registration, or doesn't use a supported node image, add a new Pod sandboxing node pool and move your workloads to it.
 2. Verify that the runtime class exists by running `kubectl get runtimeclass kata-vm-isolation-v2`.
 3. Change [`runtimeClassName: kata-vm-isolation`](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation#deploy-an-application-with-the-kata-runtime) to `runtimeClassName: kata-vm-isolation-v2` in your workload manifest. For a Deployment or another controller-managed workload, update the pod template.
 4. Apply the updated controller manifest so the controller creates replacement pods. For a standalone Pod, delete the existing pod and recreate it from the updated manifest; you can't change `runtimeClassName` on an existing pod. Plan for any workload disruption before replacing pods.
@@ -593,7 +597,7 @@ Before you migrate, review the [runtime-class migration considerations](consider
     kubectl get runtimeclass kata-vm-isolation-v2
     ```
 
-    If the runtime class is missing, recheck feature registration, run `az aks update`, wait for reconciliation to complete, and run the command again.
+    If the runtime class is missing, confirm that feature registration completed *before* you created the cluster or Pod sandboxing node pool. Registering the feature flag after the cluster or node pool exists doesn't enable v2 on them, and `az aks update` doesn't apply it. Add a new Pod sandboxing node pool after registration completes. If you just added the node pool, wait a few minutes for reconciliation and run the command again.
 2. Verify that nodes in the target Pod sandboxing pool carry the Kata runtime label. Replace `nodepool2` with your node pool name:
 
     ```bash
@@ -602,7 +606,7 @@ Before you migrate, review the [runtime-class migration considerations](consider
       -o 'custom-columns=NAME:.metadata.name,KATA_V2:.metadata.labels.kubernetes.azure.com/kata-vm-isolation-v2'
     ```
 
-    If the label is missing, ensure the node pool meets the v2 prerequisites (supported VM SKU, required Kubernetes version, and Azure Linux node image version `202610.30.1` or later). Then upgrade the node image (`az aks nodepool upgrade --node-image-only`) and recheck. If the label is still missing, recreate the node pool with the required prerequisites.
+    If the label is missing, ensure the node pool meets the v2 prerequisites (required Kubernetes version and Azure Linux node image version `202611.13.0` or later). If the node pool was created before feature registration, upgrading the node image doesn't add the label; add a new Pod sandboxing node pool instead. Otherwise, upgrade the node image (`az aks nodepool upgrade --node-image-only`) and recheck. If the label is still missing, recreate the node pool with the required prerequisites.
 
 ### Check which runtime class your workloads use (optional)
 

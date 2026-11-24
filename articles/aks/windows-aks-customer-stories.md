@@ -67,7 +67,7 @@ Learn directly from the customer stories listed here.
 
 LaserPro document management software is key to the Finastra vision of delivering the future of banking. Migrating from an on-premises management system to a cloud-based infrastructure using Windows containers on Azure Kubernetes Service significantly increased agility through biweekly updates and reduced support costs for both customers and developers.
 
-For more information, visit [Finastra's Windows AKS customer story](https://customers.microsoft.com/story/1759082810297807726-finastra-azure-kubernetes-service-professional-services-en-united-kingdom).
+For more information, visit [Finastra & Microsoft Trade Modernization Announcement](https://www.finastra.com/press-media/finastra-signs-global-agreement-microsoft-accelerate-trade-platform-modernization).
 
 ### Relativity
 

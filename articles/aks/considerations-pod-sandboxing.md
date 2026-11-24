@@ -23,7 +23,7 @@ description: Learn about resource management, memory management, CPU management,
 ms.topic: how-to
 ms.subservice: aks-security
 ms.custom: devx-track-azurecli, ignite-2025
-ms.date: 2026-10-23T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
 ms.author: allyford
 author: allyford
 ai-usage: ai-assisted
@@ -82,11 +82,22 @@ For `kata-vm-isolation`, the [Kubernetes pod memory limit](https://kubernetes.io
 
 #### Pod VM memory size for `kata-vm-isolation-v2`
 
-For `kata-vm-isolation-v2` (preview), sizing behavior can vary with template initialization.
+For `kata-vm-isolation-v2` (preview), sizing behavior depends on whether you initialize a template VM on the node.
+
+- **Without a template:** Kata sizes the pod VM at boot to the [Kubernetes pod memory limit](https://kubernetes.io/docs/tasks/configure-pod-container/assign-memory-resource/#specify-a-memory-request-and-a-memory-limit), like `kata-vm-isolation`. If you don't specify a memory limit, the pod VM uses the default static size of 2 GiB.
+- **With a template:** Each pod VM is cloned from the template and receives the template's fixed guest size of 2 GiB, regardless of the pod memory limit. Resizing a cloned pod VM requires hot-plugging more memory, which is incompatible with the copy-on-write snapshot and restore path that templating uses.
+
+The following table shows the resulting pod VM memory size for example pod memory limits:
+
+| `limits.memory` | `kata-vm-isolation-v2`without template | `kata-vm-isolation-v2`with template |
+| --- | --- | --- |
+| Not specified (static size) | 2Gi | 2Gi |
+| `256Mi` | 256Mi | 2Gi |
+| `3Gi` | 3Gi | 2Gi |
 
 Important
 
-`kata-vm-isolation-v2` pods without an initialized template are sized from pod limits like v1. After template initialization, each v2 pod receives a 2 GiB guest. This value is configurable and you can change it to smaller or larger based on your general usage.
+If your workload needs a pod VM larger or smaller than the 2-GiB template size, don't initialize the template VM on the node pool that runs the workload. Without a template, Kata right-sizes each pod VM at boot to the pod memory limit.
 
 ### `RuntimeClass` memory overhead
 
@@ -95,7 +106,7 @@ Pod sandboxing workloads come with a default Kata `RuntimeClass` (`kata-vm-isola
 | Runtime class | Status | Typical memory-overhead behavior | Notes |
 | --- | --- | --- | --- |
 | `kata-vm-isolation` | Generally available | 600Mi flat (not scaling with pod size) overhead of runtime components, on top of the pod VM size. | Baseline runtime for existing workloads. |
-| [`kata-vm-isolation-v2`](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview) | Preview | 32Mi flat (not scaling with pod size) overhead of runtime components, on top of the pod VM size. | Requires preview registration, node pools that run Azure Linux node image version `202610.30.1` or later, and workload validation before migration. Regional rollout can vary by region. See the [AKS release tracker](https://releases.aks.azure.com/AKSRelease). |
+| [`kata-vm-isolation-v2`](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview) | Preview | 32Mi flat (not scaling with pod size) overhead of runtime components, on top of the pod VM size. | Requires preview registration, node pools that run Azure Linux node image version `202611.13.0` or later, and workload validation before migration. Regional rollout can vary by region. See the [AKS release tracker](https://releases.aks.azure.com/AKSRelease). |
 
 You can create a specialized runtime and specify the memory overhead through the `overhead` field in your `RuntimeClass` manifest. [For example](https://kubernetes.io/docs/concepts/scheduling-eviction/pod-overhead/#usage-example), the following manifest creates a runtime for workloads expected to use 120Mi of memory for the kata host components:
 
@@ -191,7 +202,7 @@ The following table compares the v1 and v2 runtimes:
 
 ### Runtime-class migration guidance (v1 to v2 preview)
 
-To move workloads from `kata-vm-isolation` to [kata-vm-isolation-v2 (preview)](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview), follow the [v1-to-v2 migration instructions](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview). The v2 runtime class requires that you register the `KataVMIsolationV2Preview` feature flag and use Azure Linux node image version `202610.30.1` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
+To move workloads from `kata-vm-isolation` to [kata-vm-isolation-v2 (preview)](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview), follow the [v1-to-v2 migration instructions](/en-us/azure/aks/use-pod-sandboxing?pivots=kata-vm-isolation-v2-preview#use-kata-vm-isolation-v2-preview). The v2 runtime class requires that you register the `KataVMIsolationV2Preview` feature flag and use Azure Linux node image version `202611.13.0` or later. Regional rollout can vary by region. For current availability, see the [AKS release tracker](https://releases.aks.azure.com/AKSRelease).
 
 Important
 

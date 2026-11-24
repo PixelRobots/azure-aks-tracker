@@ -23,7 +23,7 @@ ms.service: azure-kubernetes-service
 description: Learn how to run isolated AI agent workloads on Azure Kubernetes Service (AKS) with the Agent Sandbox cluster extension.
 author: wangyira
 ms.author: wangamanda
-ms.date: 2026-11-13T00:00:00.0000000Z
+ms.date: 2026-11-18T00:00:00.0000000Z
 ms.topic: how-to
 ms.custom: references_regions
 zone_pivot_groups: aks-agent-sandbox-runtime
@@ -90,7 +90,6 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 - Use a managed-identity AKS cluster running Kubernetes version 1.35 or later with Pod sandboxing enabled and Kata VM isolation v2 configured. Cluster extensions don't support service-principal-based clusters; [switch to managed identity](system-assigned-managed-identity#update-an-existing-cluster-to-use-a-system-assigned-managed-identity) before continuing. A cluster without Pod sandboxing isn't sufficient. For general background, see [Pod sandboxing](use-pod-sandboxing) and [Pod sandboxing considerations](considerations-pod-sandboxing). Verify Kata v2 support by following the checks in this article before installing the extension.
 - To capture and restore workload state, also meet the requirements for the optional [Pod snapshot cluster extension (preview)](pod-snapshot-cluster-extension).
 - Azure CLI version 2.85.0 or later for cluster extension commands. Run `az --version` to find your version and `az upgrade` to upgrade. Also meet the CLI requirements in the linked Kata v2 setup instructions. For more information, see [Install Azure CLI](/en-us/cli/azure/install-azure-cli).
-- Kata VM isolation v2 runtime supports only v6 VM SKUs in these families: Dasv6, Dadsv6, Dalsv6, Daldsv6, Easv6, Eadsv6, Falsv6, Fasv6, and Famsv6. To request quota for your AKS cluster, follow the [AKS quota request guidance](quotas-skus-regions#quota-limits-on-aks-managed-clusters).
 - The `k8s-extension` Azure CLI extension installed. Install or update it with `az extension add --name k8s-extension --upgrade`.
 - The `Microsoft.KubernetesConfiguration` resource provider [registered](/en-us/cli/azure/provider#az-provider-register) in your subscription.
 
@@ -118,7 +117,7 @@ Use an existing compatible cluster or create one by using the optional commands 
     ```
 
     For an existing cluster, set `NODEPOOL_NAME` to its Pod sandboxing node pool name and skip the next three steps.
-3. For a new cluster, select a region and create a resource group. Use a region with AKS release `1025` and Azure Linux node image `202610.30.1` or newer. Check the [AKS Release Tracker](https://releases.aks.azure.com/AKSRelease) and [Azure Linux Node Images Release Tracker](https://releases.aks.azure.com/AzureLinux). Confirm that `Standard_D4as_v6` is available and that your subscription has sufficient quota in that region.
+3. For a new cluster, select a region and create a resource group. Use a region with AKS release `1025` and Azure Linux node image `202611.13.0` or newer. Check the [AKS Release Tracker](https://releases.aks.azure.com/AKSRelease) and [Azure Linux Node Images Release Tracker](https://releases.aks.azure.com/AzureLinux). Confirm that `Standard_D4as_v6` is available and that your subscription has sufficient quota in that region.
 
     ```bash
     export LOCATION="<supported-azure-region>"
@@ -146,7 +145,7 @@ Use an existing compatible cluster or create one by using the optional commands 
       --enable-workload-identity \
       --generate-ssh-keys
     ```
-5. Add a User node pool with Pod sandboxing enabled. This example uses two nodes with the same `Standard_D4as_v6` SKU, which meets the Pod snapshot walkthrough's node-count and VM-family requirements. Restore requires the exact source VM SKU. Alternatively, pod sandboxing supports v6 VM SKUs in these families: Dasv6, Dadsv6, Dalsv6, Daldsv6, Easv6, Eadsv6, Falsv6, Fasv6, and Famsv6.
+5. Add a User node pool with Pod sandboxing enabled. This example uses two nodes with the same `Standard_D4as_v6` SKU, which meets the Pod snapshot walkthrough's node-count requirement. Restore requires the exact source VM SKU.
 
     ```azurecli
     az aks nodepool add \
@@ -192,7 +191,7 @@ Use an existing compatible cluster or create one by using the optional commands 
       --output table
     ```
 
-    The output must show `KataVmIsolation` and `AzureLinux`. Confirm that the VM size meets the Kata VM isolation v2 prerequisites. For Pod snapshot, require a supported v6 SKU and Azure Linux node image `202610.30.1` or newer. These properties alone don't distinguish Kata VM isolation v2 from the earlier Kata runtime.
+    The output must show `KataVmIsolation` and `AzureLinux`. For Pod snapshot, require Azure Linux node image `202611.13.0` or newer. These properties alone don't distinguish Kata VM isolation v2 from the earlier Kata runtime.
 9. Verify the RuntimeClass handler and confirm that every node in the pool supports Kata v2 before waiting for readiness.
 
     ```bash
