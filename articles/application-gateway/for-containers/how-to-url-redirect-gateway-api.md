@@ -19,12 +19,12 @@ learn_banner_products:
 - azure
 manager: kumud
 ms.reviewer: mbender
-description: Learn how to redirect URLs in Gateway API for Application Gateway for Containers.
+description: Learn how to redirect URLs in Gateway API for Application Gateway for Containers, including 301, 302, 307, and 308 redirects.
 services: application gateway
 author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.topic: how-to
-ms.date: 2024-11-05T00:00:00.0000000Z
+ms.date: 2026-11-23T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: edaddef6-393e-9cf3-ad97-c7976bd23dab
@@ -42,16 +42,14 @@ item_type: Content
 source_path: articles/application-gateway/for-containers/how-to-url-redirect-gateway-api.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d4cf20b3-3e54-4ed9-8b09-370a52eee81b
-- https://authoring-docs-microsoft.poolparty.biz/devrel/f98c9a19-e481-4f15-8047-76b641e6ed57
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9ecc2643-be13-4271-a1f4-87114737d63a
-- https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
 platformId: 327b73c5-6a59-cd57-2323-95a2e667f92f
 ---
 
 # URL Redirect for Azure Application Gateway for Containers - Gateway API | Microsoft Learn
 
-Application Gateway for Containers allows you to return a redirect response to the client based three aspects of a URL: protocol, hostname, and path. For each redirect, a defined HTTP status code may be returned to the client to define the nature of the redirect.
+Application Gateway for Containers can return a redirect response to the client based on three aspects of a URL: protocol, hostname, and path. For each redirect, you choose the HTTP status code returned to the client, which tells the client whether the redirect is permanent or temporary and whether the request method and body must be preserved.
 
 ## Usage details
 
@@ -59,19 +57,36 @@ URL redirects take advantage of the [RequestRedirect rule filter](https://gatewa
 
 ## Redirection
 
-A redirect sets the response status code returned to clients to understand the purpose of the redirect. The following types of redirection are supported:
+A redirect sets the response status code returned to clients to help them understand the purpose of the redirect. Application Gateway for Containers supports the following status codes in the `statusCode` field of the RequestRedirect filter:
 
-- 301 (Moved permanently): Indicates that the target resource is assigned a new permanent URI. Future references to this resource use one of the enclosed URIs. Use 301 status code for HTTP to HTTPS redirection.
-- 302 (Found): Indicates that the target resource is temporarily under a different URI. Since the redirection can change on occasion, the client should continue to use the effective request URI for future requests.
+| Status code | Meaning | Permanent | Preserves method and body |
+| --- | --- | --- | --- |
+| 301 | Moved Permanently | Yes | No. Clients may change POST to GET. |
+| 302 | Found | No | No. Clients may change POST to GET. |
+| 303 | See Other | No | No. The client follows up with GET (or HEAD) and drops the body. |
+| 307 | Temporary Redirect | No | Yes. A client that automatically follows the redirect must preserve the method and body. |
+| 308 | Permanent Redirect | Yes | Yes. A client that automatically follows the redirect must preserve the method and body. |
+
+- **301 (Moved Permanently):** The target resource has a new permanent URI. Future references to this resource should use one of the enclosed URIs. Use 301 for HTTP to HTTPS redirection of browser traffic.
+- **302 (Found):** The target resource is temporarily under a different URI. Since the redirection can change, the client should continue to use the effective request URI for future requests.
+- **303 (See Other):** The target resource redirects the user agent to a different resource, as indicated by a URI in the `Location` header field.
+- **307 (Temporary Redirect):** The resource is temporarily available at another URI. A client that automatically follows the redirect must preserve the request method and body. Future requests should continue using the original URI.
+- **308 (Permanent Redirect):** The resource has a new permanent URI. A client that automatically follows the redirect must preserve the request method and body. Future requests should use the new URI.
+
+Tip
+
+Many clients rewrite a POST to a GET when they follow a 301 or 302 redirect, and the request body is dropped. If the redirected request isn't a GET or HEAD, use 307 or 308 instead. For example, use 308 rather than 301 for a permanent HTTP-to-HTTPS redirect when POST or other method/body-sensitive requests must retain their semantics.
+
+If you don't specify `statusCode`, Application Gateway for Containers returns 302, the Gateway API default.
 
 ## Redirection capabilities
 
-- Protocol redirection is commonly used to tell the client to move from an unencrypted traffic scheme to traffic, such as HTTP to HTTPS redirection.
-- Hostname redirection matches the fully qualified domain name (FQDN) of the request. This is commonly observed in redirecting an old domain name to a new domain name; such as `contoso.com` to `fabrikam.com`.
-- Path redirection has two different variants: `prefix` and `full`.
+- Use protocol redirection to move the client from an unencrypted traffic scheme to an encrypted one, such as HTTP to HTTPS redirection.
+- Use hostname redirection to match the fully qualified domain name (FQDN) of the request. Commonly, you use this type of redirection to redirect an old domain name to a new domain name, such as `contoso.com` to `fabrikam.com`.
+- Use path redirection to replace parts of the path. This type of redirection has two variants: `ReplacePrefixMatch` and `ReplaceFullPath`.
 
-    - `Prefix` redirection type will redirect all requests starting with a defined value. For example: a prefix of /shop would match /shop and any text after. For example, /shop, /shop/checkout, and /shop/item-a would all redirect to /shop as well.
-    - `Full` redirection type matches an exact value. For example: /shop could redirect to /store, but /shop/checkout wouldn't redirect to /store.
+    - `ReplacePrefixMatch` replaces only the matched prefix and keeps the rest of the path. For example, with a `PathPrefix` match of `/shop` and a replacement of `/store`, `/shop` redirects to `/store` and `/shop/checkout` redirects to `/store/checkout`.
+    - `ReplaceFullPath` replaces the entire path with a fixed value. For example, `/shop` and `/shop/checkout` both redirect to `/store`.
 
 The following figure illustrates an example of a request destined for *contoso.com/summer-promotion* being redirected to *contoso.com/shop/category/5*. In addition, a second request initiated to contoso.com via http protocol returns a redirect to initiate a new connection to its https variant.
 
@@ -80,10 +95,10 @@ The following figure illustrates an example of a request destined for *contoso.c
 ## Prerequisites
 
 1. If following the BYO deployment strategy, ensure you set up your Application Gateway for Containers resources and ALB Controller ([Add-on](quickstart-deploy-application-gateway-for-containers-alb-controller-addon) or [Helm](quickstart-deploy-application-gateway-for-containers-alb-controller-helm)).
-2. If following the ALB managed deployment strategy, ensure you provision your ALB Controller ([Add-on](quickstart-deploy-application-gateway-for-containers-alb-controller-addon) or [Helm](quickstart-deploy-application-gateway-for-containers-alb-controller-helm)) and provision the Application Gateway for Containers resources via the [ApplicationLoadBalancer custom resource](quickstart-create-application-gateway-for-containers-managed-by-alb-controller).
+2. If you're using the ALB managed deployment strategy, provision your ALB Controller ([Add-on](quickstart-deploy-application-gateway-for-containers-alb-controller-addon) or [Helm](quickstart-deploy-application-gateway-for-containers-alb-controller-helm)) and provision the Application Gateway for Containers resources via the [ApplicationLoadBalancer custom resource](quickstart-create-application-gateway-for-containers-managed-by-alb-controller).
 3. Deploy sample HTTP application:
 
-    Apply the following deployment.yaml file on your cluster to deploy a sample TLS certificate to demonstrate redirect capabilities.
+    Apply the following deployment.yaml file on your cluster to deploy a sample application and TLS certificate to demonstrate redirect capabilities.
 
     ```bash
     kubectl apply -f https://raw.githubusercontent.com/MicrosoftDocs/azure-docs/refs/heads/main/articles/application-gateway/for-containers/examples/https-scenario/ssl-termination/deployment.yaml
@@ -244,7 +259,9 @@ status:
       kind: HTTPRoute
 ```
 
-Create an HTTPRoute resource for `contoso.com` that handles traffic received via https.
+### Route HTTPS traffic to the backend
+
+Create an HTTPRoute resource for `contoso.com` that handles traffic received via HTTPS.
 
 ```bash
 kubectl apply -f - <<EOF
@@ -269,7 +286,7 @@ EOF
 When the HTTPRoute resource is created, ensure the HTTPRoute resource shows *Accepted* and the Application Gateway for Containers resource is *Programmed*.
 
 ```bash
-kubectl get httproute rewrite-example -n test-infra -o yaml
+kubectl get httproute https-contoso -n test-infra -o yaml
 ```
 
 Verify the Application Gateway for Containers resource is successfully updated for each HTTPRoute.
@@ -304,7 +321,9 @@ status:
       namespace: test-infra
 ```
 
-Once the gateway is created, create an HTTPRoute resource for `contoso.com` with a RequestRedirect filter that redirects http traffic to https.
+### Redirect HTTP to HTTPS (301 or 308)
+
+Create an HTTPRoute resource for `contoso.com` with a RequestRedirect filter that redirects HTTP traffic to HTTPS. This example uses 301, which suits browser traffic.
 
 ```bash
 kubectl apply -f - <<EOF
@@ -320,19 +339,22 @@ spec:
   hostnames:
   - "contoso.com"
   rules:
-    - matches:
-      filters:
-        - type: RequestRedirect
-          requestRedirect:
-            scheme: https
-            statusCode: 301
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
 EOF
 ```
+
+Note
+
+If clients send POST, PUT, PATCH, or DELETE requests over HTTP, such as API clients or webhooks, set `statusCode: 308` instead. A 308 redirect tells the client to repeat the same request, including its method and body, over HTTPS.
 
 When the HTTPRoute resource is created, ensure the HTTPRoute resource shows *Accepted* and the Application Gateway for Containers resource is *Programmed*.
 
 ```bash
-kubectl get httproute rewrite-example -n test-infra -o yaml
+kubectl get httproute http-to-https-contoso-redirect -n test-infra -o yaml
 ```
 
 Verify the Application Gateway for Containers resource is successfully updated for each HTTPRoute.
@@ -367,19 +389,25 @@ status:
       namespace: test-infra
 ```
 
-Create an HTTPRoute resource for `contoso.com` that handles a redirect for the path /summer-promotion to a specific URL. By eliminating sectionName, demonstrated in the http to https HTTPRoute resources, this redirect rule applies to both HTTP and HTTPS requests.
+### Redirect paths (302 and 307)
+
+Create an HTTPRoute resource for `contoso.com` with two path redirects:
+
+- `/summer-promotion` returns a 302 redirect to the fixed path `/shop/category/5`, which suits a temporary campaign link opened in a browser.
+- `/api/v1` returns a 307 redirect that replaces the prefix with `/api/v2`, so `/api/v1/orders` redirects to `/api/v2/orders`. Because 307 preserves the method and body, a POST to `/api/v1/orders` is repeated as a POST to `/api/v2/orders`. Use 308 instead if the move is permanent.
+
+Because this HTTPRoute omits `sectionName`, unlike the http to https HTTPRoute resource, these redirect rules apply to both HTTP and HTTPS requests.
 
 ```bash
 kubectl apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: summer-promotion-redirect
+  name: path-redirects
   namespace: test-infra
 spec:
   parentRefs:
   - name: gateway-01
-    sectionName: https-listener
   hostnames:
   - "contoso.com"
   rules:
@@ -388,22 +416,30 @@ spec:
         type: PathPrefix
         value: /summer-promotion
     filters:
-      - type: RequestRedirect
-        requestRedirect:
-          path:
-            type: ReplaceFullPath
-            replaceFullPath: /shop/category/5
-          statusCode: 302
-  - backendRefs:
-    - name: echo
-      port: 80
+    - type: RequestRedirect
+      requestRedirect:
+        path:
+          type: ReplaceFullPath
+          replaceFullPath: /shop/category/5
+        statusCode: 302
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api/v1
+    filters:
+    - type: RequestRedirect
+      requestRedirect:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /api/v2
+        statusCode: 307
 EOF
 ```
 
 When the HTTPRoute resource is created, ensure the HTTPRoute resource shows *Accepted* and the Application Gateway for Containers resource is *Programmed*.
 
 ```bash
-kubectl get httproute rewrite-example -n test-infra -o yaml
+kubectl get httproute path-redirects -n test-infra -o yaml
 ```
 
 Verify the Application Gateway for Containers resource is successfully updated for each HTTPRoute.
@@ -440,16 +476,18 @@ status:
 
 ## Test access to the application
 
-Now we're ready to send some traffic to our sample application, via the FQDN assigned to the frontend. Use the following command to get the FQDN.
+Now you're ready to send some traffic to your sample application, via the FQDN assigned to the frontend. Use the following command to get the FQDN and its IP address.
 
 ```bash
 fqdn=$(kubectl get gateway gateway-01 -n test-infra -o jsonpath='{.status.addresses[0].value}')
+fqdnIp=$(dig +short $fqdn)
 ```
+
+### Test the HTTP to HTTPS redirect
 
 When you specify the server name indicator using the curl command, `http://contoso.com` should return a response from the Application Gateway for Containers with a `location` header defining a 301 redirect to `https://contoso.com`.
 
 ```bash
-fqdnIp=$(dig +short $fqdn)
 curl -k --resolve contoso.com:80:$fqdnIp http://contoso.com/ -v
 ```
 
@@ -475,10 +513,13 @@ Via the response we should see:
 * Connection #0 to host contoso.com left intact
 ```
 
-When you specify the server name indicator using the curl command, `https://contoso.com/summer-promotion` Application Gateway for Containers should return a 302 redirect to `https://contoso.com/shop/category/5`.
+If you set `statusCode: 308` on the HTTP to HTTPS HTTPRoute, the response shows `HTTP/1.1 308 Permanent Redirect` with the same `location` header.
+
+### Test the 302 path redirect
+
+When you specify the server name indicator by using the curl command, `https://contoso.com/summer-promotion` returns a 302 redirect to `https://contoso.com/shop/category/5`.
 
 ```bash
-fqdnIp=$(dig +short $fqdn)
 curl -k --resolve contoso.com:443:$fqdnIp https://contoso.com/summer-promotion -v
 ```
 
@@ -490,13 +531,6 @@ Via the response we should see:
 > user-agent: curl/7.81.0
 > accept: */*
 >
-* TLSv1.2 (IN), TLS header, Supplemental data (23):
-* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
-* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
-* old SSL session ID is stale, removing
-* TLSv1.2 (IN), TLS header, Supplemental data (23):
-* TLSv1.2 (OUT), TLS header, Supplemental data (23):
-* TLSv1.2 (IN), TLS header, Supplemental data (23):
 < HTTP/2 302
 < location: https://contoso.com/shop/category/5
 < date: Mon, 26 Feb 2024 22:58:43 GMT
@@ -505,4 +539,32 @@ Via the response we should see:
 * Connection #0 to host contoso.com left intact
 ```
 
-Congratulations, you have installed ALB Controller, deployed a backend application, and used Gateway API to configure both an HTTP to HTTPS redirect and path based redirection to specific client requests.
+### Test the 307 path redirect
+
+Send a POST request to `https://contoso.com/api/v1/orders`. Application Gateway for Containers returns a 307 redirect to `https://contoso.com/api/v2/orders`.
+
+```bash
+curl -k --resolve contoso.com:443:$fqdnIp -X POST -d '{"item":"a"}' -H "Content-Type: application/json" https://contoso.com/api/v1/orders -v
+```
+
+Through the response you see:
+
+```text
+> POST /api/v1/orders HTTP/2
+> Host: contoso.com
+> user-agent: curl/7.81.0
+> accept: */*
+> content-type: application/json
+> content-length: 12
+>
+< HTTP/2 307
+< location: https://contoso.com/api/v2/orders
+< date: Thu, 05 Nov 2026 20:45:00 GMT
+< server: Microsoft-Azure-Application-LB/AGC
+<
+* Connection #0 to host contoso.com left intact
+```
+
+To see the client follow the redirect with the original method and body, add `-L` to the curl command. curl repeats the request as `POST /api/v2/orders` with the same body. If you use a 301 or 302 redirect, curl switches the follow-up request to a GET and drops the body.
+
+Congratulations, you installed ALB Controller, deployed a backend application, and used Gateway API to configure an HTTP to HTTPS redirect, path-based redirection, and a method-preserving 307 redirect.

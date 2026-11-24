@@ -24,7 +24,7 @@ services: application gateway
 author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.topic: how-to
-ms.date: 2025-03-07T00:00:00.0000000Z
+ms.date: 2026-11-23T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: e3cfc421-53ab-c298-209c-2363637b2ba1
@@ -42,10 +42,8 @@ item_type: Content
 source_path: articles/application-gateway/for-containers/how-to-url-redirect-ingress-api.md
 cmProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/d4cf20b3-3e54-4ed9-8b09-370a52eee81b
-- https://authoring-docs-microsoft.poolparty.biz/devrel/f98c9a19-e481-4f15-8047-76b641e6ed57
 spProducts:
 - https://authoring-docs-microsoft.poolparty.biz/devrel/9ecc2643-be13-4271-a1f4-87114737d63a
-- https://authoring-docs-microsoft.poolparty.biz/devrel/f5685781-a4fd-40f1-8126-59abde4643bf
 platformId: e3597fd7-ec63-ccdf-c37b-1bda78a6da68
 ---
 
@@ -59,10 +57,25 @@ URL redirects take advantage of the [RequestRedirect rule filter](https://gatewa
 
 ## Redirection
 
-A redirect sets the response status code returned to clients to understand the purpose of the redirect. The following types of redirection are supported:
+A redirect sets the response status code that Application Gateway for Containers returns to clients. This status code helps clients understand the purpose of the redirect. Application Gateway for Containers supports the following status codes in the `statusCode` field of the RequestRedirect filter:
 
-- 301 (Moved permanently): Indicates that the target resource is assigned a new permanent URI. Any future references to this resource use one of the enclosed URIs. Use 301 status code for HTTP to HTTPS redirection.
-- 302 (Found): Indicates that the target resource is temporarily under a different URI. Since the redirection can change on occasion, the client should continue to use the effective request URI for future requests.
+| Status code | Meaning | Permanent | Preserves method and body |
+| --- | --- | --- | --- |
+| 301 | Moved Permanently | Yes | No. Clients may change POST to GET. |
+| 302 | Found | No | No. Clients may change POST to GET. |
+| 303 | See Other | No | No. The client follows up with GET (or HEAD) and drops the body. |
+| 307 | Temporary Redirect | No | Yes. A client that automatically follows the redirect must preserve the method and body. |
+| 308 | Permanent Redirect | Yes | Yes. A client that automatically follows the redirect must preserve the method and body. |
+
+- **301 (Moved Permanently):** The target resource has a new permanent URI. Future references to this resource should use one of the enclosed URIs. Use 301 for HTTP to HTTPS redirection of browser traffic.
+- **302 (Found):** The target resource is temporarily under a different URI. Since the redirection can change, the client should continue to use the effective request URI for future requests.
+- **303 (See Other):** The target resource redirects the user agent to a different resource, as indicated by a URI in the `Location` header field.
+- **307 (Temporary Redirect):** The resource is temporarily available at another URI. A client that automatically follows the redirect must preserve the request method and body. Future requests should continue using the original URI.
+- **308 (Permanent Redirect):** The resource has a new permanent URI. A client that automatically follows the redirect must preserve the request method and body. Future requests should use the new URI.
+
+Tip
+
+Many clients rewrite a POST to a GET when they follow a 301 or 302 redirect, and the request body is dropped. If the redirected request isn't a GET or HEAD, use 307 or 308 instead. For example, use 308 rather than 301 for a permanent HTTP-to-HTTPS redirect when POST or other method/body-sensitive requests must retain their semantics.
 
 ## Redirection capabilities
 
