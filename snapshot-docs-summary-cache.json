@@ -1400,7 +1400,7 @@
       "cache_key": "3625b376d43ff2d28a82f7a35c65ab165311ccb6a99d0aef28306a8c4298d8fb",
       "cache_version": "openai-responses-v2",
       "file": "articles/aks/migrate-nodes-azure-container-linux.md",
-      "summary": "The documentation now specifies that Artifact Streaming is not supported when migrating existing nodes to Azure Container Linux for Azure Kubernetes Service. This clarification informs users about a limitation they need to consider during the migration process.",
+      "summary": "The documentation removed this statement: \"Artifact Streaming isn't supported.\" Removal alone does not establish current support or behavior.",
       "category": "General",
       "score": 0.9,
       "cached_at": "2026-11-24T06:48:20.1489990+00:00"

@@ -1046,6 +1046,27 @@ function Convert-MarkdownToPlain([string]$md) {
   $t.Trim()
 }
 
+function Get-SnapshotRemovalSummary($items) {
+  if (@($items).Count -ne 1 -or $items[0].status -ne 'modified' -or
+      [int]$items[0].additions -ne 0 -or [int]$items[0].deletions -lt 1) {
+    return $null
+  }
+
+  $patchLines = @(([string]$items[0].patch -split "`n") | Select-Object -Skip 2)
+  $removed = @($patchLines | Where-Object { $_.StartsWith('-') })
+  if ($removed.Count -ne [int]$items[0].deletions -or
+      @($patchLines | Where-Object { $_.StartsWith('+') }).Count -gt 0) {
+    throw "Snapshot change counts do not match patch: $($items[0].filename)"
+  }
+  if ($removed.Count -eq 1) {
+    $text = Convert-MarkdownToPlain ($removed[0].Substring(1).Trim())
+    if ($text -and $text.Length -le 300) {
+      return "The documentation removed this statement: `"$text`" Removal alone does not establish current support or behavior."
+    }
+  }
+  return 'The documentation removed content. Review the captured changes; removal alone does not establish current support or behavior.'
+}
+
 # Title-casing + acronyms
 function Convert-ToTitleCase([string]$s) {
   if ([string]::IsNullOrWhiteSpace($s)) { return $s }
@@ -3698,6 +3719,16 @@ if ($forcedModified.Count -gt 0) {
   Log "Force-keeping $($forcedModified.Count) modified page(s) the AI skipped."
   $aiVerdicts.ordered += $forcedModified
   foreach ($f in $forcedModified) { $aiVerdicts.byFile[$f.file] = @{ summary = $f.summary; category = $f.category; score = $f.score } }
+}
+
+if ($SnapshotMode) {
+  foreach ($item in $aiVerdicts.ordered) {
+    $removalSummary = Get-SnapshotRemovalSummary -items $filteredGroups[$item.file]
+    if ($null -ne $removalSummary) {
+      $item.summary = $removalSummary
+      [void]$script:SnapshotAiFiles.Remove([string]$item.file)
+    }
+  }
 }
 
 # Apply final filtering to remove trivial changes and duplicates

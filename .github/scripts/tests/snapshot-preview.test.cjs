@@ -288,12 +288,17 @@ test('renderer escapes content, rejects unsafe URLs, and uses detection dates an
   assert.throws(() => render(data), /Unsafe/);
 }));
 
-test('existing generator produces isolated no-AI summaries and matching HTML without network collection', () => fixture(({ repo, build }) => {
+test('existing generator corrects removal-only summaries, including cached summaries', () => fixture(({ repo, build }) => {
   const input = path.join(repo, 'changes.json');
   const output = path.join(repo, 'output');
-  fs.writeFileSync(input, JSON.stringify(build({ demo: true })));
+  const changes = build({ demo: true });
+  const removal = changes.changes.find(item => item.filename === article);
+  removal.additions = 0;
+  removal.deletions = 1;
+  removal.patch = "--- before.md\n+++ after.md\n@@ -1 +0,0 @@\n-- [Artifact Streaming](/en-us/azure/aks/artifact-streaming) isn't supported.\n";
+  fs.writeFileSync(input, JSON.stringify(changes));
   const command = `$ErrorActionPreference='Stop'; & '${path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''")}' 1> '${path.join(repo, 'summaries.json').replace(/'/g, "''")}'`;
-  const result = spawnSync('pwsh', ['-NoProfile', '-Command', command], {
+  const options = {
     encoding: 'utf8', timeout: 120000,
     env: {
       ...process.env, DOCS_SOURCE: 'snapshots', DOCS_PREVIEW_ONLY: 'true',
@@ -301,11 +306,14 @@ test('existing generator produces isolated no-AI summaries and matching HTML wit
       GITHUB_TOKEN: 'fixture-not-used', OpenAIKey: '', AZURE_OPENAI_APIURI: '',
       DOCS_PREVIEW_REQUIRE_AI: 'false', CVE_ONLY: '', CVE_REFRESH_VHD: ''
     }
-  });
+  };
+  const result = spawnSync('pwsh', ['-NoProfile', '-Command', command], options);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const data = JSON.parse(fs.readFileSync(path.join(repo, 'summaries.json'), 'utf8').replace(/^\uFEFF/, ''));
   assert.equal(data.items.length, 11);
   assert.equal(data.ai_summary_count, 0);
+  const expected = `The documentation removed this statement: "Artifact Streaming isn't supported." Removal alone does not establish current support or behavior.`;
+  assert.equal(data.items.find(item => item.filename === article).summary, expected);
   assert.equal(new Set(data.items.map(item => item.product)).size, 11);
   assert.ok(fs.existsSync(path.join(output, 'docs-summary-cache.json')));
   assert.equal(data.preview_only, true);
@@ -315,7 +323,49 @@ test('existing generator produces isolated no-AI summaries and matching HTML wit
   assert.ok(render(data).includes('<option value="AKS Automatic">AKS Automatic</option>'));
   assert.equal(result.stdout.includes('Processing AKS repository'), false);
   assert.equal(result.stdout.includes('Fetching AKS CVE'), false);
+
+  const cachePath = path.join(output, 'docs-summary-cache.json');
+  const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8').replace(/^\uFEFF/, ''));
+  cache.entries.find(entry => entry.file === article).summary = 'The documentation now states Artifact Streaming is not supported.';
+  fs.writeFileSync(cachePath, JSON.stringify(cache));
+  const cachedResult = spawnSync('pwsh', ['-NoProfile', '-Command', command], options);
+  assert.equal(cachedResult.status, 0, cachedResult.stdout + cachedResult.stderr);
+  const cached = JSON.parse(fs.readFileSync(path.join(repo, 'summaries.json'), 'utf8').replace(/^\uFEFF/, ''));
+  assert.equal(cached.items.find(item => item.filename === article).summary, expected);
+  assert.equal(JSON.parse(fs.readFileSync(cachePath, 'utf8').replace(/^\uFEFF/, '')).entries.find(entry => entry.file === article).summary, expected);
 }));
+
+test('snapshot removal summaries preserve direction and reject inconsistent counts', () => {
+  const script = path.join(root, '.github/scripts/generate-aks-updates.ps1').replace(/'/g, "''");
+  const result = spawnSync('pwsh', ['-NoProfile', '-Command', `
+    $ErrorActionPreference='Stop'
+    $ast=[System.Management.Automation.Language.Parser]::ParseFile('${script}',[ref]$null,[ref]$null)
+    $ast.FindAll({param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+      $node.Name -in @('Convert-MarkdownToPlain','Get-SnapshotRemovalSummary')},$true) |
+      ForEach-Object { Invoke-Expression $_.Extent.Text }
+    $item=[pscustomobject]@{ filename='test.md'; status='modified'; additions=0; deletions=1
+      patch="--- before.md\`n+++ after.md\`n@@ -1 +0,0 @@\`n-- [Artifact Streaming](/url) isn't supported.\`n" }
+    $single=Get-SnapshotRemovalSummary @($item)
+    $item.deletions=2
+    $failed=$false
+    try { Get-SnapshotRemovalSummary @($item) } catch { $failed=$_.Exception.Message -match 'counts do not match' }
+    $item.patch += "-Another removed line.\`n"
+    $multiple=Get-SnapshotRemovalSummary @($item)
+    $item.patch += "+An added line.\`n"
+    $failedAdded=$false
+    try { Get-SnapshotRemovalSummary @($item) } catch { $failedAdded=$_.Exception.Message -match 'counts do not match' }
+    $item.additions=1
+    $mixed=Get-SnapshotRemovalSummary @($item)
+    @{single=$single;multiple=$multiple;mixed=$mixed;failed=$failed;failedAdded=$failedAdded} | ConvertTo-Json -Compress
+  `], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const data = JSON.parse(result.stdout);
+  assert.equal(data.single, `The documentation removed this statement: "Artifact Streaming isn't supported." Removal alone does not establish current support or behavior.`);
+  assert.match(data.multiple, /^The documentation removed content\./);
+  assert.equal(data.mixed, null);
+  assert.equal(data.failed, true);
+  assert.equal(data.failedAdded, true);
+});
 
 test('snapshot AI receives batched article identities and diffs directly and rejects invalid responses', () => fixture(({ repo, build }) => {
   const groups = build({ demo: true }).changes.map(item => ({

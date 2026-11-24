@@ -77,6 +77,10 @@ reuse the existing pipeline. Production snapshot summaries have a separate
 `snapshot-docs-summary-cache.json`; legacy summaries cannot satisfy new-source
 requests. Failed configured snapshot AI calls are explicit failures, not a
 metadata-only GitHub Models fallback.
+For removal-only modified snapshots, the published summary describes the
+removal directly instead of relying on the AI's interpretation. A single short
+removed line is quoted; longer or multi-line removals refer readers to the
+captured changes. Removal alone is not treated as proof of current support.
 
 Current snapshot AI validation covers **OpenAI**, using the existing repository
 secret and Responses API. With no provider configured the existing heuristic
