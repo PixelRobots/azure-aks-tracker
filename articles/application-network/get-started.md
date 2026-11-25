@@ -73,6 +73,7 @@ This quickstart creates a public AKS cluster. For an eligible private AKS cluste
     - [Managed Kubernetes Gateway API installation](/en-us/azure/aks/managed-gateway-api) is enabled.
 - Verify support for your existing Kubernetes cluster using the [support policy](supported-versions).
 - Meet the network access requirements for your cluster's API server and data plane.
+- Check that your cluster's admission policies allow the [managed ztunnel DaemonSet](security#ztunnel-pod-security-requirements) in `applink-system`.
 
 ## Network access requirements
 
@@ -270,6 +271,18 @@ You can't change a member's parent Application Network, location, subscription, 
       "type": "microsoft.applink/applinks/applinkmembers"
     }
     ```
+
+### Verify ztunnel readiness
+
+On the member cluster, check that ztunnel has one ready pod per eligible node. A member provisioning state of `Succeeded` isn't a live pod health check.
+
+```bash
+kubectl -n applink-system get daemonset ztunnel
+```
+
+With eligible nodes present, `READY` should match `DESIRED`. On AKS Automatic, both can be zero before an eligible node is provisioned. Check again after that node is ready; zero desired pods doesn't confirm a working data plane.
+
+If `DESIRED` is nonzero but `READY` stays below it, run `kubectl -n applink-system describe daemonset ztunnel`. Check the **Events** section for `FailedCreate`: if admission denied the pod, the event can name the policy and the rejected setting. There might be no pod logs because no pod was created.
 
 ### Get the managed control plane hostname
 

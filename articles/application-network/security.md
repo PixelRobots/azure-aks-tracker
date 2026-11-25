@@ -62,6 +62,18 @@ This article provides an overview of the security features in Azure Kubernetes A
 
 - Certificates are currently issued by an Azure Kubernetes Application Network-managed certificate authority (CA) and aren't chained to a public CA.
 
+## Ztunnel pod security requirements
+
+On each eligible Linux node, the managed `ztunnel` DaemonSet handles mesh traffic for enrolled pods. Its `istio-proxy` container in `applink-system` requires the following settings:
+
+| Setting | Why ztunnel needs it |
+| --- | --- |
+| `runAsUser: 0`, `allowPrivilegeEscalation: true` | The proxy runs as root and enters workload network namespaces. It doesn't request a fully privileged container (`privileged: false`). |
+| Linux capabilities `NET_ADMIN`, `SYS_ADMIN`, and `NET_RAW` | The proxy drops all capabilities, then adds these three for transparent proxying, switching network namespaces, and socket operations. |
+| `hostPath` mount at `/var/run/ztunnel` | The proxy uses a node-local socket to communicate with the Istio CNI agent. |
+
+Before joining a cluster, review all admission policies that apply to `applink-system`, including Azure Policy assignments inherited from a management group and policies enforced by other admission controllers. An AKS Deployment Safeguards exclusion doesn't change those policies. If an exception is needed, have your policy owner scope it to the managed workload as narrowly as the policy allows. Keep application workloads out of `applink-system` and keep their protections in place.
+
 ## mTLS
 
 Application Network uses mTLS to provide identity-based, encrypted communication between workloads. Each service in an Application Network connected cluster automatically receives a certificate that allows it to prove its identity and establish trusted, encrypted connections with other services in the same Application Network. Encryption in transit uses FIPS-compliant cryptography.

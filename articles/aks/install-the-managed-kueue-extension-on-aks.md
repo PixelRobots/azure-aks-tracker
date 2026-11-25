@@ -62,6 +62,7 @@ AKS preview features are available on a self-service, opt-in basis. Previews are
 ## Prerequisites
 
 - An AKS cluster that runs Kubernetes 1.34 or later. To create one, see [Create an AKS cluster using the Azure CLI](learn/quick-kubernetes-deploy-cli).
+- The AKS cluster must use a managed identity. Service principal-based clusters aren't supported by cluster extensions. See [Cluster extension prerequisites](deploy-extensions-az-cli#prerequisites) for migration guidance.
 - A current version of the [Azure CLI](/en-us/cli/azure/install-azure-cli) and the `k8s-extension` CLI extension version 1.9.3 or later.
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) compatible with your cluster version.
 - Permissions to manage cluster extensions, retrieve cluster credentials, and read the Kubernetes resources used to verify the installation.

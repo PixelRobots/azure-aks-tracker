@@ -23,7 +23,7 @@ ms.author: florataagen
 ms.service: microsoft-linux
 ms.custom: linux-related-content
 ms.topic: overview
-ms.date: 2026-10-13T00:00:00.0000000Z
+ms.date: 2026-11-23T00:00:00.0000000Z
 ai-usage: ai-assisted
 locale: en-us
 document_id: c8d44b5e-8ce4-7251-0986-5184d51b7d4d
@@ -75,6 +75,7 @@ ACL supports the following AKS capabilities:
 
 - **NVIDIA GPU node support**: ACL supports NVIDIA GPU-enabled node pools on AMD64 architectures, allowing you to run high-performance computing (HPC) and AI/ML workloads on AKS with a hardened, container-optimized OS. ACL doesn't support ARM64 architectures for GPU-enabled node pools.
 - **FIPS**: ACL supports FIPS-enabled node pools.
+- **Artifact Streaming**: ACL supports [Artifact Streaming](/en-us/azure/aks/artifact-streaming).
 - **AMD64 and ARM64 architecture support**: ACL is available for both AMD64 and ARM64 architectures on AKS.
 - **[Node auto-provisioning](/en-us/azure/aks/node-auto-provisioning)**: ACL supports node auto-provisioning (NAP).
 - **[Confidential VM](/en-us/azure/aks/use-cvm)**: ACL is available as a confidential VM (CVM) image for AKS, with a FIPS-enabled option.

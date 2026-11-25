@@ -22,7 +22,7 @@ author: kavyamsft
 ms.author: schaffererin
 ms.service: microsoft-linux
 ms.topic: get-started
-ms.date: 2026-04-28T00:00:00.0000000Z
+ms.date: 2026-11-23T00:00:00.0000000Z
 locale: en-us
 document_id: 68462a2d-2e8c-ad30-d429-6d61cf34ab86
 document_version_independent_id: a1f5775d-f164-ede9-0fe0-d228de822877
@@ -69,7 +69,7 @@ The following table summarizes the key differences between Azure Linux Container
 | **GPU support** | All NVIDIA GPU AMD64 VM sizes on AKS | All NVIDIA GPU AMD64 VM sizes on AKS |
 | **FIPS support** | Supported | Supported |
 | **Pod Sandboxing** | Supported | Not supported |
-| **Artifact Streaming** | Supported | Not yet supported |
+| **Artifact Streaming** | Supported | Supported |
 | **Confidential VMs** | Supported | Supported |
 
 ## When to use Azure Linux Container Host

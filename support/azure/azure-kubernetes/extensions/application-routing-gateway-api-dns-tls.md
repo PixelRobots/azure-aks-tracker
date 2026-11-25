@@ -9,12 +9,12 @@ uhfHeaderId: Azure
 feedback_product_url: https://feedback.azure.com/d365community/forum/aabe212a-f724-ec11-b6e6-000d3a4f0da0
 manager: dcscontentpm
 audience: itpro
-author: jaiveerk
-ms.author: jkatariya
+author: kaushika-msft
+ms.author: kaushika
 ms.topic: troubleshooting-general
 description: Learn how to troubleshoot Azure DNS and TLS integration issues for AKS Gateway API, and fix missing certificates or DNS records.
 ms.date: 2026-06-15T00:00:00.0000000Z
-ms.reviewer: nshankar
+ms.reviewer: nshankar, jkatariya
 ms.service: azure-kubernetes-service
 ms.custom: sap:Extensions, Policies and Add-Ons
 locale: en-us

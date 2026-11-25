@@ -22,7 +22,7 @@ author: kavyamsft
 ms.author: schaffererin
 ms.service: microsoft-linux
 ms.topic: quickstart
-ms.date: 2026-04-28T00:00:00.0000000Z
+ms.date: 2026-11-23T00:00:00.0000000Z
 locale: en-us
 document_id: 4397e36d-588d-b924-895e-1750ad2be18a
 document_version_independent_id: 3213e3ce-5f26-e973-8a22-05ceb0c83c04
@@ -60,7 +60,6 @@ Before you begin, review the following considerations and limitations for ACL:
 - ACL requires [Trusted Launch](/en-us/azure/aks/use-trusted-launch) with Secure Boot and vTPM. Non-Trusted Launch variants are not available.
 - ACL on Arm64 requires Cobalt-based (v6) SKUs to enable Trusted Launch compatibility.
 - `NodeImage` and `None` are the only supported [OS upgrade channels](/en-us/azure/aks/auto-upgrade-node-os-image). `Unmanaged` and `SecurityPatch` are incompatible with ACL due to the immutable `/usr` directory.
-- [Artifact Streaming](/en-us/azure/aks/artifact-streaming) isn't supported.
 - [Pod Sandboxing](/en-us/azure/aks/use-pod-sandboxing) isn't supported.
 - [Generation 1 VMs](/en-us/azure/aks/aks-virtual-machine-sizes#vm-support-on-aks) aren't supported.
 
