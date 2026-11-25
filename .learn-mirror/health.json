@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "checked_at": "2026-11-25T00:16:22.181Z",
+  "checked_at": "2026-11-25T02:35:21.688Z",
   "complete": true,
   "errors": 0,
   "unreached": 0,
@@ -18,7 +18,7 @@
     "Azure Linux",
     "Fleet"
   ],
-  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/45515834847",
+  "run_url": "https://github.com/PixelRobots/azure-aks-tracker/actions/runs/45533197439",
   "attempted": 1550,
   "failed_pages": [],
   "publishable": true
