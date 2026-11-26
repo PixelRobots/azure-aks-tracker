@@ -55,6 +55,10 @@ Open-source software is mentioned throughout AKS documentation and samples. Soft
 
 Microsoft takes responsibility for building the open-source packages that we deploy on AKS. That responsibility includes having complete ownership of the build, scan, sign, validate, and hotfix process, along with control over the binaries in container images. For more information, see [Vulnerability management for AKS](concepts-vulnerability-management#aks-container-images) and [AKS support coverage](support-policies#aks-support-coverage).
 
+## Managed alternative
+
+Instead of database pods on AKS, consider [Azure DocumentDB](/en-us/azure/documentdb/overview), a separate managed service with MongoDB compatibility. [Assess compatibility and plan migration](/en-us/azure/documentdb/migration-options) before switching from this Percona-based deployment.
+
 ## What is MongoDB?
 
 [MongoDB](https://www.mongodb.com/) is a popular NoSQL database management system that is designed to handle large volumes of unstructured data. Unlike traditional relational databases that use tables and rows, MongoDB uses a flexible, document-oriented approach.

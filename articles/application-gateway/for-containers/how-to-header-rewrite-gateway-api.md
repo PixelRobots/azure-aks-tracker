@@ -24,7 +24,7 @@ services: application gateway
 author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.topic: how-to
-ms.date: 2025-10-27T00:00:00.0000000Z
+ms.date: 2026-11-25T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: 2b063f3c-3e56-7edb-3da2-b7d082b2569e
@@ -56,6 +56,10 @@ Application Gateway for Containers allows you to rewrite HTTP headers of client 
 ## Usage details
 
 Header rewrites take advantage of [filters](https://gateway-api.sigs.k8s.io/references/spec/#gateway.networking.k8s.io/v1.HTTPURLRewriteFilter) as defined by Kubernetes Gateway API.
+
+Note
+
+Response-header names are returned in lowercase for both HTTP/1.1 and HTTP/2, including headers configured through rewrite filters. Header-value casing is preserved. For more information, see [Response header casing](application-gateway-for-containers-components#response-header-casing).
 
 ## Background
 
@@ -212,6 +216,8 @@ In this example, we look for the user agent used by the Bing search engine and s
 
 This example also demonstrates addition of a new header called `AGC-Header-Add` with a value of `AGC-value` and removes a request header called `client-custom-header`.
 
+For requests that match the Bing user-agent rule, a `ResponseHeaderModifier` filter sets the response header `X-AGC-Response` to `MiXeD-Case-Value`.
+
 Tip
 
 For this example, while we can use the HTTPHeaderMatch of "Exact" for a string match, a demonstration is used in regular expression for illustration of further capabilities.
@@ -245,6 +251,11 @@ spec:
               - name: AGC-Header-Add
                 value: AGC-value
             remove: ["client-custom-header"]
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              - name: X-AGC-Response
+                value: MiXeD-Case-Value
       backendRefs:
         - name: backend-v2
           port: 8080
@@ -382,6 +393,27 @@ Via the response we should see:
 }
 ```
 
+### Verify the response header
+
+Send a request with the matching Bing user-agent header and use `-D -` to display the response headers. The `-o /dev/null` option discards the response body.
+
+```bash
+curl --http1.1 -sS -D - -o /dev/null \
+  -H "Host: contoso.com" \
+  -H "user-agent: Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/" \
+  "http://$fqdn/"
+```
+
+The response headers include:
+
+```http
+x-agc-response: MiXeD-Case-Value
+```
+
+The response-header name is lowercase, even though the filter specifies `X-AGC-Response`. The value retains its configured casing.
+
+### Verify request header removal
+
 Specifying a `client-custom-header` header with the value `moo` should be stripped from the request when Application Gateway for Containers initiates the connection to the backend service:
 
 ```bash
@@ -421,4 +453,4 @@ Via the response we should see:
 }
 ```
 
-Congratulations, you have installed ALB Controller, deployed a backend application and modified header values via Gateway API on Application Gateway for Containers.
+Congratulations, you installed ALB Controller, deployed a backend application, and modified request and response headers through Gateway API on Application Gateway for Containers.

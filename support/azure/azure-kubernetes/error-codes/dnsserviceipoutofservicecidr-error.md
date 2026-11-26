@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot DnsServiceIpOutOfServiceCidr Error Code - Azure | Microsoft Learn
+title: Troubleshoot DnsServiceIpOutOfServiceCidr error code - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/error-codes/dnsserviceipoutofservicecidr-error
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to fix the DnsServiceIpOutOfServiceCidr error when creating or upgrading an AKS cluster, and use the steps to deploy successfully.
-ms.date: 2024-10-17T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: rissing, chiragpa, edneto, v-leedennis
+description: Learn how to fix the DnsServiceIpOutOfServiceCidr error when you create or upgrade an AKS cluster. Follow these steps to align your DNS service IP with the service CIDR.
+ms.date: 2026-11-25T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, edneto, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: 44a84abf-c3f7-484d-ca04-02f539e3b215
 document_version_independent_id: 44a84abf-c3f7-484d-ca04-02f539e3b215
@@ -45,15 +45,15 @@ spProducts:
 platformId: 696cce38-123c-53ac-a900-09192e14090f
 ---
 
-# Troubleshoot DnsServiceIpOutOfServiceCidr Error Code - Azure | Microsoft Learn
+# Troubleshoot DnsServiceIpOutOfServiceCidr error code - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to identify and resolve the `DnsServiceIpOutOfServiceCidr` error that occurs when you try to create or upgrade an Azure Kubernetes Service (AKS) cluster.
+This article helps you fix the `DnsServiceIpOutOfServiceCidr` error that occurs when you create or upgrade an Azure Kubernetes Service (AKS) cluster. Learn how to identify the cause and set a Domain Name System (DNS) service IP that falls within the service Classless Inter‑Domain Routing (CIDR) range so your deployment succeeds.
 
 ## Prerequisites
 
-This article requires Azure CLI version 2.0.65 or a later version. To find the version number, run `az --version`. If you have to install or upgrade Azure CLI, see [How to install the Azure CLI](/en-us/cli/azure/install-azure-cli).
+This article requires Azure CLI version 2.0.65 or a later version. To find the version number, run `az --version`. To install or upgrade Azure CLI, see [How to install the Azure CLI](/en-us/cli/azure/install-azure-cli).
 
 For more detailed information about the upgrade process, see [Upgrade an AKS cluster](/en-us/azure/aks/upgrade-cluster#upgrade-an-aks-cluster).
 
@@ -74,4 +74,4 @@ This error occurs if the DNS service IP (`--dns-service-ip`) for AKS is out of t
 
 ## Solution
 
-Make sure that the DNS service IP is within the range that's defined by service CIDR.
+Ensure that the DNS service IP is within the range that's defined by the service CIDR.

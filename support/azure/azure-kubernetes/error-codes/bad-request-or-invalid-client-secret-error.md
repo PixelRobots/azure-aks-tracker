@@ -13,8 +13,8 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Identify and resolve expired or invalid service principal client secrets that block AKS cluster creation or upgrade. Learn how to fix them now.
-ms.date: 2026-09-21T00:00:00.0000000Z
-ms.reviewer: pihe, shiyao, zhixinsun
+ms.date: 2026-11-24T00:00:00.0000000Z
+ms.reviewer: pihe, shiyao, zhixinsun, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
 ai-usage: ai-assisted

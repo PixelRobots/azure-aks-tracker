@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Azure Kubernetes Service (AKS) Common Error Codes - Azure | Microsoft Learn
+title: Azure Kubernetes Service common error codes - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/error-codes/aks-error-code-page
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -11,12 +11,13 @@ manager: dcscontentpm
 audience: itpro
 author: kaushika-msft
 ms.author: kaushika
-ms.topic: error-reference
+ms.topic: troubleshooting
 description: Find common AKS error codes, understand causes, and follow mitigation links to fix cluster create, upgrade, and networking issues quickly. Start troubleshooting now.
-ms.date: 2025-10-23T00:00:00.0000000Z
-ms.reviewer: v-ryanberg, chiragpa, albarqaw
+ms.date: 2026-11-23T00:00:00.0000000Z
+ms.reviewer: chiragpa, albarqaw, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:AKS error codes, AKS errors
+ai-usage: ai-assisted
 locale: en-us
 document_id: 9ae0d29c-0a51-6c11-2e10-0a06116f7ef1
 document_version_independent_id: 9ae0d29c-0a51-6c11-2e10-0a06116f7ef1
@@ -44,27 +45,29 @@ spProducts:
 platformId: 00895740-a8cf-8f87-e2e1-0cb40b7f6184
 ---
 
-# Azure Kubernetes Service (AKS) Common Error Codes - Azure | Microsoft Learn
+# Azure Kubernetes Service common error codes - Azure | Microsoft Learn
 
 ## Summary
 
-This article lists common AKS error codes and provides mitigation links to help you troubleshoot cluster issues faster.
+Use this article to look up common Azure Kubernetes Service (AKS) error codes and find mitigation links to quickly troubleshoot cluster creation, upgrade, and networking issues.
 
 ## A-K error codes
 
+The following table lists common AKS error codes, their descriptions, and links to detailed mitigation guidance.
+
 | **Error code** | **Description** | **Details and mitigation** |
 | --- | --- | --- |
-| AADSTS7000222 - BadRequest or InvalidClientSecret | Authentication failure with Azure Active Directory. | This involves invalid or expired service principal credentials. For more information, see [AADSTS7000222 - BadRequest or InvalidClientSecret error](../create-upgrade-delete/error-code-badrequest-or-invalidclientsecret). |
+| AADSTS7000222 - BadRequest or InvalidClientSecret | Authentication failure with Azure Active Directory. | This error involves invalid or expired service principal credentials. For more information, see [AADSTS7000222 - BadRequest or InvalidClientSecret error](../create-upgrade-delete/error-code-badrequest-or-invalidclientsecret). |
 | AKSCapacityError | Regional capacity constraints. | There's insufficient Azure capacity in the target region. For more information, see [Troubleshoot the AksCapacityHeavyUsage error code](akscapacityheavyusage-error). |
 | AksCapacityHeavyUsage | Insufficient capacity in the Azure region. | There's high demand or limited resources in the selected region. For more information, see [Troubleshoot the AksCapacityHeavyUsage error code](akscapacityheavyusage-error). |
 | AKSOperationPreempted | Cluster operation is interrupted by a higher priority operation. | There are concurrent operations on the cluster, causing conflicts. For more information, see [AKSOperationPreempted or AKSOperationPreemptedByDelete error when performing a new operation](aksoperationpreempted-error). |
 | AKS upgrade blocked | Upgrade fails due to version compatibility issues. | There's version skew, incompatibility, or an unsupported upgrade path. For more information, see [Troubleshoot AKS upgrade errors because of version skew, incompatibility, or lack of support](aks-upgrade-blocked). |
 | Argument list too long | Application fails due to command line argument limitations. | The command line arguments exceed system limits in containerized applications. For more information, see [Application failures caused by the "argument list too long" error message](../create-upgrade-delete/application-fails-argument-list-too-long). |
-| AvailabilityZoneNotSupported | Selected availability zone isn't supported. | the virtual machine (VM) size or region doesn't support the specified availability zone. For more information, see [Troubleshoot the AvailabilityZoneNotSupported error code](availabilityzonenotsupported-error). |
-| BadRequest or InvalidClientSecret | Authentication or request validation failed. | This involves an invalid service principal credentials or a malformed request. For more information, see [Error AADSTS7000222 - BadRequest or InvalidClientSecret](bad-request-or-invalid-client-secret-error). |
-| CannotDeleteLoadBalancerWithPrivateLinkService or PrivateLinkServiceWithPrivateEndpointConnectionsCannotBeDeleted | Unable to delete load balancer with active private link connections. | The load balancer has active private endpoint connections that must be removed first. For more information, see [Cluster autoscaler fails to scale with "cannot scale cluster autoscaler enabled node pool" error](lb-pvtlinksvcwithpvtendptconn-error). |
-| Can't scale cluster autoscaler-enabled node pool | Manual scaling conflicts with autoscaler. | This happens when attempting a manual scaling on a node pool with autoscaler enabled. For more information, see [A load balancer with a private link service or a private link service with private endpoint connections cannot be deleted](../create-upgrade-delete/cannot-scale-cluster-autoscaler-enabled-node-pool). |
-| Changing property "imageReference" is not allowed | Unable to modify the VM image reference. | This happens when attempting to change immutable VM properties on existing nodes. For more information, see ["Changing property 'imageReference' is not allowed" error message while upgrading or scaling an AKS cluster](../create-upgrade-delete/changing-property-imagereference-not-allowed). |
+| AvailabilityZoneNotSupported | Selected availability zone isn't supported. | The virtual machine (VM) size or region doesn't support the specified availability zone. For more information, see [Troubleshoot the AvailabilityZoneNotSupported error code](availabilityzonenotsupported-error). |
+| BadRequest or InvalidClientSecret | Authentication or request validation failed. | This error involves invalid service principal credentials or a malformed request. For more information, see [Error AADSTS7000222 - BadRequest or InvalidClientSecret](bad-request-or-invalid-client-secret-error). |
+| CannotDeleteLoadBalancerWithPrivateLinkService or PrivateLinkServiceWithPrivateEndpointConnectionsCannotBeDeleted | Unable to delete load balancer with active private link connections. | The load balancer has active private endpoint connections that you must remove first. For more information, see [Cluster autoscaler fails to scale with "cannot scale cluster autoscaler enabled node pool" error](lb-pvtlinksvcwithpvtendptconn-error). |
+| Can't scale cluster autoscaler-enabled node pool | Manual scaling conflicts with autoscaler. | This error happens when you attempt manual scaling on a node pool with autoscaler enabled. For more information, see [A load balancer with a private link service or a private link service with private endpoint connections cannot be deleted](../create-upgrade-delete/cannot-scale-cluster-autoscaler-enabled-node-pool). |
+| Changing property "imageReference" is not allowed | Unable to modify the VM image reference. | This error happens when you attempt to change immutable VM properties on existing nodes. For more information, see ["Changing property 'imageReference' is not allowed" error message while upgrading or scaling an AKS cluster](../create-upgrade-delete/changing-property-imagereference-not-allowed). |
 | CniDownloadTimeoutVMExtensionError (41) | Container Network Interface (CNI) download times out. | There are network connectivity issues preventing the CNI plugin download. For more information, see [Troubleshoot Container Network Interface download failures](../create-upgrade-delete/error-code-cnidownloadtimeoutvmextensionerror). |
 | CreateOrUpdateVirtualNetworkLinkFailed | Failed to create or update DNS zone virtual network link. | Insufficient permissions or networking conflicts with private DNS zones. For more information, see [CreateOrUpdateVirtualNetworkLinkFailed error when updating or upgrading an AKS cluster](createorupdatevirtualnetworklinkfailed-error). |
 | CustomPrivateDNSZoneMissingPermissionError | Permissions missing for custom private DNS zone. | The service principal lacks required permissions on the private DNS zone. For more information, see [Troubleshoot the CustomPrivateDNSZoneMissingPermissionError error code](customprivatednszonemissingpermissions-error). |
@@ -84,6 +87,8 @@ This article lists common AKS error codes and provides mitigation links to help 
 
 ## L-S error codes
 
+The following table lists common AKS error codes, their descriptions, and links to detailed mitigation guidance.
+
 | **Error code** | **Description** | **Details and mitigation** |
 | --- | --- | --- |
 | LB/PvtLinkSvcWithPvtEndptConn deletion error | Can't delete resources with active private endpoint connections. | Private link services have active connections that prevent deletion. For more information, see [A load balancer with a private link service or a private link service with private endpoint connections can't be deleted](../create-upgrade-delete/cannot-delete-load-balancer-private-link-service). |
@@ -92,7 +97,7 @@ This article lists common AKS error codes and provides mitigation links to help 
 | LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet | Network resources are in use by scale sets. | The load balancer or network security group (NSG) is attached to active VM scale sets. For more information, see [Troubleshoot LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code](networksecuritygroupinusebyvirtualmachinescaleset-error). |
 | Missing or invalid service principal | Service principal credentials are missing or invalid. | The service principal either doesn't exist, is expired, or lacks the required permissions. For more information, see [Missing or invalid service principal when creating an AKS cluster](../create-upgrade-delete/missing-or-invalid-service-principal). |
 | MissingSubscriptionRegistration | Required resource provider aren't registered. | The Azure subscription is missing registration information for required resource providers. For more information, see [Troubleshoot the MissingSubscriptionRegistration error code](missingsubscriptionregistration-error). |
-| NetworkSecurityGroupInUseByVirtualMachineScaleSet | Network security group (NSG) is in use by VM scale sets. | The NSG cannot be modified while attached to scale sets. For more information, see [Troubleshoot the LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code](../create-upgrade-delete/load-balancer-or-nsg-in-use-by-vm-scale-set). |
+| NetworkSecurityGroupInUseByVirtualMachineScaleSet | Network security group (NSG) is in use by VM scale sets. | The NSG can't be modified while attached to scale sets. For more information, see [Troubleshoot the LoadBalancerInUseByVirtualMachineScaleSet or NetworkSecurityGroupInUseByVirtualMachineScaleSet error code](../create-upgrade-delete/load-balancer-or-nsg-in-use-by-vm-scale-set). |
 | NodePoolMcVersionIncompatible | Node pool version incompatible with control plane. | The node pool Kubernetes version isn't compatible with the control plane version. For more information, see [Can't upgrade AKS cluster because of the NodePoolMcVersionIncompatible error](nodepoolmcversionincompatible-error). |
 | OperationIsNotAllowed | Operation not permitted in current state. | The requested operation conflicts with cluster state or configuration. For more information, see [Cluster pending operation (OperationNotAllowed) errors](../create-upgrade-delete/operationnotallowed). |
 | OperationNotAllowed or PublicIPCountLimitReached | Operation blocked or public IP limit reached. | The public IP quota is exceeded or the operation isn't allowed by policy. For more information, see [Troubleshoot the OperationNotAllowed or PublicIPCountLimitReached quota error](operationnotallowed-publicipcountlimitreached-error). |
@@ -101,7 +106,7 @@ This article lists common AKS error codes and provides mitigation links to help 
 | OutboundConnFailVMExtensionError (50) | Node can't establish outbound connectivity. | A firewall, network security group (NSG), or routing prevents outbound connections. For more information, see [Troubleshoot the OutboundConnFailVMExtensionError error code (50)](../create-upgrade-delete/error-code-outboundconnfailvmextensionerror). |
 | PublicIPAddr/InUseSubnet/NetSecGrp deletion error | Can't delete in-use networking resources. | Resources have active dependencies that must be removed. For more information, see [A public IP address/subnet/network security group in use can't be deleted](../create-upgrade-delete/cannot-delete-ip-subnet-nsg). |
 | PublicIPAddressCannotBeDeleted, InUseSubnetCannotBeDeleted, or InUseNetworkSecurityGroupCannotBeDeleted | Networking resources have active dependencies. | Network resources are in use and can't be deleted without removing dependencies. For more information, see [A public IP address/subnet/network security group in use cannot be deleted](publicipaddr-inusesubnet-netsecgrp-error). |
-| PublicIPCountLimitReached | Public IP address quota exceeded. | The subscription or region has reached the public IP address limit. For more information, see [Troubleshoot the PublicIPCountLimitReached error code](publicipcountlimitreached-error). |
+| PublicIPCountLimitReached | Public IP address quota exceeded. | The subscription or region reached the public IP address limit. For more information, see [Troubleshoot the PublicIPCountLimitReached error code](publicipcountlimitreached-error). |
 | QuotaExceeded or InsufficientVCPUQuota | Virtual machine quota exceeded | There's insufficient vCPU quota for the requested VM sizes or count. For more information, see [Troubleshoot the "Quotaexceeded" error code](quota-exceeded-error). |
 | QuotaExceeded or InsufficientVCPUQuota (creation/upgrade) | Quota limit prevents cluster operation. | The vCPU quota is insufficient for cluster creation or upgrade. For more information, see ["QuotaExceeded" or "InsufficientVCPUQuota" error during AKS creation or upgrade](../create-upgrade-delete/quota-exceeded-during-creation-upgrade). |
 | RequestDisallowedByPolicy | Azure policy blocks the request. | The request violates assigned Azure policy definitions. For more information, see [RequestDisallowedByPolicy error when deploying an AKS cluster](requestdisallowedbypolicy-error). |
@@ -116,6 +121,8 @@ This article lists common AKS error codes and provides mitigation links to help 
 |  |  |  |
 
 ## T-Z error codes
+
+The following table lists common AKS error codes, their descriptions, and links to detailed mitigation guidance.
 
 | **Error code** | **Description** | **Details and mitigation** |
 | --- | --- | --- |
@@ -140,8 +147,6 @@ This article lists common AKS error codes and provides mitigation links to help 
 | WINDOWS\_CSE\_ERROR\_CHECK\_API\_SERVER\_CONNECTIVITY (5) | Windows Custom Script Extension API connectivity error. | Windows node provisioning fails due to API server connectivity. For more information, see [Troubleshoot WINDOWS_CSE_ERROR_CHECK_API_SERVER_CONNECTIVITY error (5)](../create-upgrade-delete/windows-cse-error-check-api-server-connectivity). |
 | ZonalAllocationFailed, AllocationFailed, or OverconstrainedAllocationRequest | VM allocation fails. | You're unable to allocate VMs due to capacity, zone, or constraint issues. For more information, see [Troubleshoot the ZonalAllocationFailed, AllocationFailed, or OverconstrainedAllocationRequest error code](zonalallocation-allocationfailed-error). |
 |  |  |  |
-
-## References
 
 **Third-party information disclaimer**
 

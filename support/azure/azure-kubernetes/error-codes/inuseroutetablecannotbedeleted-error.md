@@ -1,6 +1,6 @@
 ---
 layout: Conceptual
-title: Troubleshoot InUseRouteTableCannotBeDeleted Error Code - Azure | Microsoft Learn
+title: Troubleshoot InUseRouteTableCannotBeDeleted error code in AKS - Azure | Microsoft Learn
 canonicalUrl: https://learn.microsoft.com/en-us/troubleshoot/azure/azure-kubernetes/error-codes/inuseroutetablecannotbedeleted-error
 breadcrumb_path: /support/breadcrumb/toc.json
 feedback_system: Standard
@@ -12,12 +12,12 @@ audience: itpro
 author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
-description: Learn how to resolve the InUseRouteTableCannotBeDeleted error when you try to delete an Azure Kubernetes Service (AKS) cluster.
-ms.date: 2025-03-28T00:00:00.0000000Z
-editor: v-jsitser
-ms.reviewer: rissing, chiragpa, edneto, wonkilee, v-leedennis
+description: Learn how to resolve the InUseRouteTableCannotBeDeleted error when you delete an Azure Kubernetes Service (AKS) cluster. Follow these steps to fix it.
+ms.date: 2026-11-25T00:00:00.0000000Z
+ms.reviewer: rissing, chiragpa, edneto, wonkilee, v-leedennis, kaushika
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
+ai-usage: ai-assisted
 locale: en-us
 document_id: f40761d4-7611-bde2-cbdd-7aa44e5d40a7
 document_version_independent_id: f40761d4-7611-bde2-cbdd-7aa44e5d40a7
@@ -43,15 +43,15 @@ spProducts:
 platformId: e395b4b5-ac84-d84e-edc5-38ae966371ae
 ---
 
-# Troubleshoot InUseRouteTableCannotBeDeleted Error Code - Azure | Microsoft Learn
+# Troubleshoot InUseRouteTableCannotBeDeleted error code in AKS - Azure | Microsoft Learn
 
 ## Summary
 
-This article discusses how to identify and resolve the `InUseRouteTableCannotBeDeleted` error that occurs when you try to delete a Microsoft Azure Kubernetes Service (AKS) cluster.
+This article helps you troubleshoot the `InUseRouteTableCannotBeDeleted` error that occurs when you delete an Azure Kubernetes Service (AKS) cluster. Remove the route table association from the subnet to complete the deletion.
 
 ## Symptoms
 
-When you try to delete an AKS cluster, you receive the following error message:
+When you try to delete an AKS cluster, you receive the following error message.
 
 > 
 > Error Code: "InUseRouteTableCannotBeDeleted"
@@ -68,4 +68,4 @@ You tried to delete the AKS cluster while its associated route table was still i
 
 ## Solution
 
-Remove the associated route table from the subnet. For instructions, see [Dissociate a route table from a subnet](/en-us/azure/virtual-network/manage-route-table#dissociate-a-route-table-from-a-subnet). Then, try again to delete the AKS cluster.
+Remove the associated route table from the subnet. For more information (including instructions), see [Dissociate a route table from a subnet](/en-us/azure/virtual-network/manage-route-table#dissociate-a-route-table-from-a-subnet). Then, try again to delete the AKS cluster.

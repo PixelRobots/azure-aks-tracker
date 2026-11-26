@@ -24,7 +24,7 @@ services: application-gateway
 author: mbender-ms
 ms.service: azure-application-gateway-containers
 ms.topic: concept-article
-ms.date: 2026-11-02T00:00:00.0000000Z
+ms.date: 2026-11-25T00:00:00.0000000Z
 ms.author: mbender
 locale: en-us
 document_id: 5d535881-5b99-260f-7542-aa11f19c2dd8
@@ -187,6 +187,12 @@ A set of routing rules evaluates how the request for that hostname should be ini
 Application Gateway for Containers supports both HTTP/2 and HTTP/1.1 protocols for communication between the client and the frontend. The HTTP/2 setting is always enabled and can't be changed. If clients prefer to use HTTP/1.1 for their communication to the frontend of Application Gateway for Containers, they can continue to negotiate accordingly.
 
 Communication between Application Gateway for Containers and the backend target is always via HTTP/1.1, except for gRPC, which uses HTTP/2.
+
+### Response header casing
+
+Application Gateway for Containers returns response-header names in lowercase for both HTTP/1.1 and HTTP/2 and preserves the casing of response-header values. For example, a backend response header of `X-Custom-Header: AbCd123` is returned to the client as `x-custom-header: AbCd123`. There's no setting to preserve response-header name casing.
+
+HTTP/2 requires lowercase header names, as defined in [RFC 9113, section 8.2.1](https://www.rfc-editor.org/rfc/rfc9113.html#section-8.2.1).
 
 ### Modifications to the request
 
