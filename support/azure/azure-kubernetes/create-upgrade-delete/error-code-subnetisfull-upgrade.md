@@ -13,8 +13,8 @@ author: kaushika-msft
 ms.author: kaushika
 ms.topic: troubleshooting
 description: Learn how to troubleshoot the SubnetIsFull error during an Azure Kubernetes Service (AKS) cluster upgrade. Free up IP addresses or add a node pool today.
-ms.date: 2026-11-16T00:00:00.0000000Z
-ms.reviewer: chiragpa, albarqaw, v-leedennis, kaushika
+ms.date: 2026-11-25T00:00:00.0000000Z
+ms.reviewer: chiragpa, albarqaw, v-leedennis, kaushika, addobres
 ms.service: azure-kubernetes-service
 ms.custom: sap:Create, Upgrade, Scale and Delete operations (cluster or nodepool)
 ai-usage: ai-assisted
@@ -70,7 +70,7 @@ This error occurs if your cluster doesn't have enough IP addresses to create a n
 
 When you plan an upgrade or scaling operation, consider the number of required IP addresses. If the IP address range that you configured in the cluster supports only a fixed number of nodes, the upgrade or scaling operation fails. For more information, see [IP address planning for your Azure Kubernetes Service (AKS) clusters](/en-us/azure/aks/concepts-network-ip-address-planning).
 
-## Solution
+## Solution 1: Not enough node subnet capacity → Free IP addresses or use a larger subnet
 
 Reduce the cluster nodes to reserve IP addresses for the upgrade.
 
@@ -83,6 +83,27 @@ Follow these steps:
 3. Scale up the user node pool.
 4. Scale down the original node pool.
 
+## Solution 2: Expand the pod CIDR for an Azure CNI Overlay cluster
+
+If your cluster uses **Azure CNI Overlay** and the **pod CIDR** doesn't have sufficient address space for the additional nodes created during the upgrade, expand the pod CIDR before retrying the upgrade.
+
+Pod CIDR expansion has the following requirements and limitations:
+
+- The cluster must use Azure CNI Overlay.
+- The cluster must use Linux nodes. Windows nodes and hybrid node scenarios aren't supported.
+- The new pod CIDR must be a larger superset that contains the complete original range.
+- Shrinking or changing the pod CIDR isn't supported.
+- Adding a discontinuous pod CIDR isn't supported.
+- IPv6 pod CIDR expansion isn't supported.
+
+For the complete procedure, please visit [Expand POD CIDR space in Azure CNI Overlay](/en-us/azure/aks/azure-cni-overlay-pod-expand).
+
+Note
+
+Pod CIDR space and the Azure virtual network subnet used by the cluster nodes are separate address spaces. Expanding the pod CIDR provides additional address space for pod allocation but doesn't increase the available IP addresses in the node subnet. If the node subnet itself doesn't have sufficient available IP addresses, use **Solution 1**.
+
 ## References
 
 - [InsufficientSubnetSize error code](../connectivity/insufficientsubnetsize-error-advanced-networking)
+- [Expand POD CIDR space in Azure CNI Overlay](/en-us/azure/aks/azure-cni-overlay-pod-expand)
+- [Azure CNI Overlay in AKS concepts](/en-us/azure/aks/concepts-network-azure-cni-overlay)
